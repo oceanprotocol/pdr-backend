@@ -46,6 +46,12 @@ def get_table_df(network, st_ut, fin_ut, config):
     print(network, st_ut, fin_ut, config)
     return pl.DataFrame([mocked_object], table_df_schema)
 
+def _get_lake_dir(ppss):
+    # if ppss.lake_ss has an attribute lake_dir, return it
+    if hasattr(ppss.lake_ss, "lake_dir"):
+        return ppss.lake_ss.lake_dir
+    # otherwise, return the default lake_dir
+    return ppss.lake_ss.parquet_dir
 
 table_df_schema = {
     "ID": Utf8,
@@ -93,12 +99,14 @@ def test_csv_data_store(
 
     # Initialize Table, fill with data, validate
     table = NamedTable.from_dataclass(Prediction)
+
+    ppss.lake_ss.lake_dir = _get_lake_dir(ppss)
     table._append_to_csv(_gql_datafactory_first_predictions_df, ppss)
 
     assert CSVDataStore.from_table(table, ppss).has_data()
 
     csv_file_path = os.path.join(
-        ppss.lake_ss.lake_dir,
+        _get_lake_dir(ppss),
         table.table_name,
         f"{table.table_name}_from_1701503000000_to_.csv",
     )
@@ -113,13 +121,13 @@ def test_csv_data_store(
     # Add second batch of predictions, validate
     table._append_to_csv(_gql_datafactory_1k_predictions_df, ppss)
 
-    files = os.listdir(os.path.join(ppss.lake_ss.lake_dir, table.table_name))
+    files = os.listdir(os.path.join(_get_lake_dir(ppss), table.table_name))
     files.sort(reverse=True)
 
     assert len(files) == 2
 
     new_file_path = os.path.join(
-        ppss.lake_ss.lake_dir,
+        _get_lake_dir(ppss),
         table.table_name,
         files[0],
     )
@@ -148,7 +156,7 @@ def test_persistent_store(
 
     predictions_table_name = Prediction.get_lake_table_name()
     # Initialize Table, fill with data, validate
-    db = DuckDBDataStore(ppss.lake_ss.lake_dir)
+    db = DuckDBDataStore(_get_lake_dir(ppss))
     db._create_and_fill_table(
         _gql_datafactory_first_predictions_df, predictions_table_name
     )
@@ -193,6 +201,8 @@ def test_append_to_db(caplog):
 
     table = NamedTable.from_dataclass(Prediction)
     data = pl.DataFrame([mocked_object], Prediction.get_lake_schema())
+
+    ppss.lake_ss.lake_dir = _get_lake_dir(ppss)
     table._append_to_db(data, ppss)
 
     assert "Appended 1 rows to db table: pdr_predictions" in caplog.text

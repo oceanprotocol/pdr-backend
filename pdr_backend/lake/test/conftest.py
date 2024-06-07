@@ -13,6 +13,7 @@ from pdr_backend.subgraph.legacy.trueval import Trueval, mock_truevals, mock_tru
 from pdr_backend.subgraph.legacy.payout import Payout, mock_payouts, mock_payout
 
 from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.legacy.plutil import _object_list_to_df as _object_list_to_df_legacy
 from pdr_backend.lake.table_pdr_payouts import payouts_schema
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.lake.table_pdr_truevals import truevals_schema
@@ -269,7 +270,7 @@ def mock_etl_truevals() -> List[Trueval]:
 @pytest.fixture()
 def _gql_datafactory_etl_payouts_df():
     _payouts = mock_etl_payouts()
-    payouts_df = _object_list_to_df(_payouts, payouts_schema)
+    payouts_df = _object_list_to_df_legacy(_payouts, payouts_schema)
     payouts_df = payouts_df.with_columns(
         [pl.col("timestamp").mul(1000).alias("timestamp")]
     )
@@ -280,7 +281,7 @@ def _gql_datafactory_etl_payouts_df():
 @pytest.fixture()
 def _gql_datafactory_etl_predictions_df():
     _predictions = mock_etl_predictions()
-    predictions_df = _object_list_to_df(_predictions, predictions_schema)
+    predictions_df = _object_list_to_df_legacy(_predictions, predictions_schema)
     predictions_df = predictions_df.with_columns(
         [pl.col("timestamp").mul(1000).alias("timestamp")]
     )
@@ -291,7 +292,7 @@ def _gql_datafactory_etl_predictions_df():
 @pytest.fixture()
 def _gql_datafactory_etl_truevals_df():
     _truevals = mock_etl_truevals()
-    truevals_df = _object_list_to_df(_truevals, truevals_schema)
+    truevals_df = _object_list_to_df_legacy(_truevals, truevals_schema)
     truevals_df = truevals_df.with_columns(
         [pl.col("timestamp").mul(1000).alias("timestamp")]
     )

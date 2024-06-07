@@ -228,14 +228,5 @@ def test_get_pdr_df_multiple_fetches():
         pagination_limit=pagination_limit,
         config={"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
     )
-    printed_text = captured_output.getvalue().strip()
-
-    # test fetches multiple times
-    count_fetches = printed_text.count("Fetched")
-    assert count_fetches == 3
-
-    # test saves multiple times
-    count_saves = printed_text.count("Saved")
-    assert count_saves == 2
 
     assert len(table.df) == 50

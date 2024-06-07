@@ -12,7 +12,7 @@ from pdr_backend.subgraph.legacy.subscription import mock_subscriptions
 from pdr_backend.subgraph.legacy.trueval import Trueval, mock_truevals, mock_trueval
 from pdr_backend.subgraph.legacy.payout import Payout, mock_payouts, mock_payout
 
-from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.legacy.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_payouts import payouts_schema
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.lake.table_pdr_truevals import truevals_schema
