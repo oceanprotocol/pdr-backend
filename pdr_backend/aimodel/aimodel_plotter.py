@@ -208,6 +208,7 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
       regr_response -- want classifier response or regressor response?
         (Can only do regressor response if model.do_regr == True)
     """
+    # pylint: disable=too-many-statements
     # aimodel data
     d = aimodel_plotdata
     X, ytrue = d.X_train, d.ytrue_train
