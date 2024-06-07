@@ -155,13 +155,18 @@ class Aimodel:
         if is_constant:
             return flat_imps_avg, flat_imps_stddev
 
-        skm = self if self.do_regr else self._sk_classif
+        if self.do_regr:
+            skm = self
+            scoring = "neg_root_mean_squared_error"
+        else:
+            skm = self._sk_classif
+            scoring = "f1"
         imps_bunch = permutation_importance(
             skm,
             X,
             ytrue,
-            scoring="accuracy",
-            n_repeats=30,
+            scoring=scoring,
+            n_repeats=30,  # magic number
         )
         imps_avg = imps_bunch.importances_mean
 
@@ -190,7 +195,7 @@ class Aimodel:
         imps_tup = (imps_avg, imps_stddev)
         return imps_tup
 
-    # so that permutation_importance() works
+    # for permutation_importance()
     def fit(self):
         return
 

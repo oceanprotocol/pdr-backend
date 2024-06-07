@@ -103,12 +103,12 @@ class AimodelFactory:
         # in-place fit model
         sk_regrs = []
         n_regrs = 10  # magic number
-        for i in range(n_regrs):
+        for _ in range(n_regrs):
             N = len(ycont)
             I = np.random.choice(a=N, size=N, replace=True)
-            X_i, ycont_I = X[I, :], ycont[I]
+            X_I, ycont_I = X[I, :], ycont[I]
             sk_regr = _approach_to_skm(ss.approach)
-            _fit(sk_regr, X, ycont, show_warnings)
+            _fit(sk_regr, X_I, ycont_I, show_warnings)
             sk_regrs.append(sk_regr)
 
         # model
@@ -239,6 +239,8 @@ def _fit(skm, X, y, show_warnings: bool):
 
 @enforce_types
 def _approach_to_skm(approach: str):
+    # pylint: disable=too-many-return-statements
+
     # regressor approaches
     if approach == "RegrLinearLS":
         return LinearRegression()

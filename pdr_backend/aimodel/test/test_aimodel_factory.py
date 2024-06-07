@@ -17,7 +17,7 @@ from pdr_backend.aimodel.aimodel_plotter import (
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
 
-SHOW_PLOT = False  # only turn on for manual testing
+SHOW_PLOT = True  # only turn on for manual testing
 
 
 @enforce_types
