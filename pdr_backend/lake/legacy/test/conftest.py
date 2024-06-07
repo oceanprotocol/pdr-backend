@@ -8,9 +8,9 @@ from pdr_backend.subgraph.legacy.prediction import (
     mock_daily_predictions,
     mock_prediction,
 )
-from pdr_backend.subgraph.subscription import mock_subscriptions
-from pdr_backend.subgraph.trueval import Trueval, mock_truevals, mock_trueval
-from pdr_backend.subgraph.payout import Payout, mock_payouts, mock_payout
+from pdr_backend.subgraph.legacy.subscription import mock_subscriptions
+from pdr_backend.subgraph.legacy.trueval import Trueval, mock_truevals, mock_trueval
+from pdr_backend.subgraph.legacy.payout import Payout, mock_payouts, mock_payout
 
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_payouts import payouts_schema

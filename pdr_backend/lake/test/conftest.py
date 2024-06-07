@@ -23,6 +23,7 @@ from pdr_backend.lake.prediction import (
     mock_second_predictions,
 )
 
+
 @pytest.fixture()
 def sample_payouts():
     return mock_payouts()
@@ -296,6 +297,7 @@ def _gql_datafactory_etl_truevals_df():
     )
 
     return truevals_df
+
 
 @pytest.fixture()
 def _get_test_CSVDataStore():
