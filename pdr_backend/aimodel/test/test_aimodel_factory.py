@@ -28,16 +28,16 @@ def test_aimodel_factory_SHOW_PLOT():
 
 # Do *not* parameterize the following tests. We keep them separate to
 # facilitate rapid-turnaround manual testing and debugging
-def test_aimodel_Constant():
-    _test_aimodel_2vars(approach="Constant")
-
-
 def test_aimodel_LinearLogistic():
     _test_aimodel_2vars(approach="LinearLogistic")
 
 
 def test_aimodel_LinearSVC():
     _test_aimodel_2vars(approach="LinearSVC")
+
+
+def test_aimodel_ClassifConstant():
+    _test_aimodel_2vars(approach="ClassifConstant")
 
 
 def test_aimodel_RegrLinearLS():
@@ -54,6 +54,10 @@ def test_aimodel_RegrLinearRidge():
 
 def test_aimodel_RegrLinearElasticNet():
     _test_aimodel_2vars(approach="RegrLinearElasticNet")
+
+
+def test_aimodel_RegrConstant():
+    _test_aimodel_2vars(approach="RegrConstant")
 
 
 @enforce_types
@@ -82,7 +86,7 @@ def _test_aimodel_2vars(approach: str):
     assert ytrue_hat.dtype == bool
     assert yptrue_hat.dtype == float
 
-    if approach != "Constant":
+    if approach not in ["ClassifConstant", "RegrConstant"]:
         assert classif_acc(ytrue_hat, ytrue) > 0.8
         assert 0 <= min(yptrue_hat) <= max(yptrue_hat) <= 1.0
     assert_array_equal(yptrue_hat > 0.5, ytrue_hat)
@@ -119,9 +123,10 @@ def _test_aimodel_2vars(approach: str):
 
 
 @enforce_types
-def test_aimodel_factory_constantdata_classif():
-    # approach cannot be constant! That has to emerge
-    ss = AimodelSS(aimodel_ss_test_dict(weight_recent="None"))
+def test_aimodel_can_ClassifConstant_emerge():
+    d = aimodel_ss_test_dict(approach="LinearLogistic", weight_recent="None")
+    ss = AimodelSS(d)
+    assert not ss.do_regr
     factory = AimodelFactory(ss)
 
     N = 1000
@@ -129,18 +134,43 @@ def test_aimodel_factory_constantdata_classif():
 
     ytrue = np.full((N,), True)
     model = factory.build(X, ytrue)
+    assert not model.do_regr
     assert_array_equal(model.predict_true(X), np.full((N,), True))
     assert_array_equal(model.predict_ptrue(X), np.full((N,), 1.0))
 
     ytrue = np.full((N,), False)
     model = factory.build(X, ytrue)
+    assert not model.do_regr
     assert_array_equal(model.predict_true(X), np.full((N,), False))
     assert_array_equal(model.predict_ptrue(X), np.full((N,), 0.0))
 
 
 @enforce_types
-def test_aimodel_factory_constantdata_regr():
-    raise NotImplementedError("build me")
+def test_aimodel_can_RegrConstant_emerge():
+    d = aimodel_ss_test_dict(approach="RegrLinearLS", weight_recent="None")
+    ss = AimodelSS(d)
+    assert ss.do_regr
+    factory = AimodelFactory(ss)
+
+    N = 1000
+    X = np.random.uniform(-10.0, +10.0, (N, 2))
+
+    ytrue = None  # shouldn't need to fill this
+    ycont = 3.0 * np.ones(N, dtype=float)
+
+    y_thr = 2.0
+    model = factory.build(X, ytrue, ycont, y_thr)
+    assert model.do_regr
+    assert_array_equal(model.predict_ycont(X), np.full((N,), 3.0))
+    assert_array_equal(model.predict_true(X), np.full((N,), True))
+    assert_array_equal(model.predict_ptrue(X), np.full((N,), 1.0))
+
+    y_thr = 4.0
+    model = factory.build(X, ytrue, ycont, y_thr)
+    assert model.do_regr
+    assert_array_equal(model.predict_ycont(X), np.full((N,), 3.0))
+    assert_array_equal(model.predict_true(X), np.full((N,), False))
+    assert_array_equal(model.predict_ptrue(X), np.full((N,), 0.0))
 
 
 @enforce_types
@@ -299,7 +329,15 @@ def test_aimodel_factory_4vars_response():
 
     # plot model response
     slicing_x = np.array([0.1, 1.0, 2.0, 3.0])  # arbitrary
-    aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
+    sweep_vars = [0, 1]
+    aimodel_plotdata = AimodelPlotdata(
+        model,
+        X,
+        ytrue,
+        colnames,
+        slicing_x,
+        sweep_vars,
+    )
 
     figure = plot_classif_response(aimodel_plotdata)
     assert isinstance(figure, Figure)

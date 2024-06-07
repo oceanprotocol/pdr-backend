@@ -9,11 +9,12 @@ APPROACH_OPTIONS = [
     "LinearLogistic",
     "LinearLogistic_Balanced",
     "LinearSVC",
-    "Constant",
+    "ClassifConstant",
     "RegrLinearLS",
     "RegrLinearLasso",
     "RegrLinearRidge",
     "RegrLinearElasticNet",
+    "RegrConstant",
 ]
 WEIGHT_RECENT_OPTIONS = ["10x_5x", "None"]
 BALANCE_CLASSES_OPTIONS = ["SMOTE", "RandomOverSampler", "None"]

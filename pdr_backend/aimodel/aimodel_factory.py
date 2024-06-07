@@ -7,7 +7,7 @@ import numpy as np
 from enforce_typing import enforce_types
 from imblearn.over_sampling import SMOTE, RandomOverSampler  # type: ignore[import-untyped]
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.dummy import DummyClassifier
+from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.linear_model import (
     ElasticNet,
     Lasso,
@@ -71,10 +71,7 @@ class AimodelFactory:
     ) -> Aimodel:
         ss = self.ss
         assert ss.do_regr
-        if not _approach_to_skm(ss.approach):
-            raise ValueError(ss.approach)
-        do_constant = min(ycont) == max(ycont)
-        assert not do_constant, "FIXME handle constant build_wrapped_regr"
+        do_constant = min(ycont) == max(ycont) or ss.approach == "RegrConstant"
 
         # weight newest sample 10x, and 2nd-newest sample 5x
         # - assumes that newest sample is at index -1, and 2nd-newest at -2
@@ -101,15 +98,20 @@ class AimodelFactory:
         X = scaler.transform(X)
 
         # in-place fit model
-        sk_regrs = []
-        n_regrs = 10  # magic number
-        for _ in range(n_regrs):
-            N = len(ycont)
-            I = np.random.choice(a=N, size=N, replace=True)
-            X_I, ycont_I = X[I, :], ycont[I]
-            sk_regr = _approach_to_skm(ss.approach)
-            _fit(sk_regr, X_I, ycont_I, show_warnings)
-            sk_regrs.append(sk_regr)
+        if do_constant:
+            sk_regr = DummyRegressor(strategy="constant", constant=ycont[0])
+            _fit(sk_regr, X, ycont, show_warnings)
+            sk_regrs = [sk_regr]
+        else:
+            sk_regrs = []
+            n_regrs = 10  # magic number
+            for _ in range(n_regrs):
+                N = len(ycont)
+                I = np.random.choice(a=N, size=N, replace=True)
+                X_I, ycont_I = X[I, :], ycont[I]
+                sk_regr = _approach_to_skm(ss.approach)
+                _fit(sk_regr, X_I, ycont_I, show_warnings)
+                sk_regrs.append(sk_regr)
 
         # model
         model = Aimodel(scaler, sk_regrs, y_thr, None)
@@ -130,11 +132,9 @@ class AimodelFactory:
     ) -> Aimodel:
         ss = self.ss
         assert not ss.do_regr
-        if not _approach_to_skm(ss.approach):
-            raise ValueError(ss.approach)
         n_True, n_False = sum(ytrue), sum(np.invert(ytrue))
         smallest_n = min(n_True, n_False)
-        do_constant = (smallest_n == 0) or ss.approach == "Constant"
+        do_constant = (smallest_n == 0) or ss.approach == "ClassifConstant"
 
         # initialize sk_classif (sklearn model)
         if do_constant:
@@ -240,6 +240,8 @@ def _fit(skm, X, y, show_warnings: bool):
 @enforce_types
 def _approach_to_skm(approach: str):
     # pylint: disable=too-many-return-statements
+    if approach in ["ClassifConstant", "RegrConstant"]:
+        raise ValueError("should have handled constants before this")
 
     # regressor approaches
     if approach == "RegrLinearLS":
