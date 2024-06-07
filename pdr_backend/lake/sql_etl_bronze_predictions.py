@@ -18,9 +18,6 @@ def _do_sql_bronze_predictions(
     temp_update_bronze_prediction_table = TempUpdateTable.from_dataclass(BronzePrediction)
 
     query = f"""
-    -- Start a transaction
-    BEGIN TRANSACTION;
-
     -- 1. let's group all update events by ID to reduce into a single row
     WITH UpdatedRows AS (
     SELECT
@@ -58,10 +55,7 @@ def _do_sql_bronze_predictions(
     FROM UpdatedRows
     LEFT JOIN {temp_update_bronze_prediction_table.table_name}
     ON UpdatedRows.ID = {temp_update_bronze_prediction_table.table_name}.ID
-
-    -- Commit the transaction
-    COMMIT;
     """
 
-    db.create_table_if_not_exists(temp_update_bronze_prediction_table.table_name)
+    db.create_table_if_not_exists(temp_update_bronze_prediction_table.table_name, BronzePrediction.get_lake_schema())
     db.execute_sql(query)

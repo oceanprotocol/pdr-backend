@@ -13,26 +13,21 @@ def _do_sql_predictions(
     temp_bronze_prediction_table = TempTable.from_dataclass(BronzePrediction)
 
     query = f"""
-    -- Start a transaction
-    BEGIN TRANSACTION;
-
     -- Define a CTE to select data once and use it multiple times
     WITH SelectedData AS (
     SELECT
-        {prediction_table.table_name}.ID as ID,
-        "predictoorPrediction" as eventName,
-        "new" as eventType,
-        SPLIT_PART({prediction_table.table_name}.ID, '-', 1)
-            || '-' || SPLIT_PART({prediction_table.table_name}.ID, '-', 2) AS slotID,
+        {prediction_table.table_name}.ID,
         {prediction_table.table_name}.contract,
-        {prediction_table.table_name}.slot,
-        {prediction_table.table_name}.user,
         {prediction_table.table_name}.pair,
         {prediction_table.table_name}.timeframe,
-        {prediction_table.table_name}.source,
+        {prediction_table.table_name}.predvalue,
         {prediction_table.table_name}.stake,
-        {prediction_table.table_name}.predVal,
-        {prediction_table.table_name}.timestamp
+        {prediction_table.table_name}.truevalue,
+        {prediction_table.table_name}.timestamp,
+        {prediction_table.table_name}.source,
+        {prediction_table.table_name}.payout,
+        {prediction_table.table_name}.slot,
+        {prediction_table.table_name}.user
     from
         {prediction_table.table_name}
     where
@@ -42,10 +37,7 @@ def _do_sql_predictions(
 
     INSERT INTO {temp_bronze_prediction_table.table_name}
     SELECT * FROM SelectedData;
-
-    -- Commit the transaction
-    COMMIT;
     """
 
-    db.create_table_if_not_exists(temp_bronze_prediction_table.table_name)
+    db.create_table_if_not_exists(temp_bronze_prediction_table.table_name, BronzePrediction.get_lake_schema())
     db.execute_sql(query)
