@@ -3,7 +3,7 @@ from enforce_typing import enforce_types
 import pytest
 import polars as pl
 
-from pdr_backend.subgraph.prediction import (
+from pdr_backend.subgraph.legacy.prediction import (
     Prediction,
     mock_daily_predictions,
     mock_prediction,
