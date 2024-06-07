@@ -6,7 +6,7 @@ from polars import Boolean, Float64, Int64, Utf8
 from pdr_backend.lake.plutil import (
     pick_df_and_ids_on_period,
 )
-from pdr_backend.lake.table import Table
+from pdr_backend.lake.legacy.table import Table
 from pdr_backend.ppss.ppss import PPSS
 
 
