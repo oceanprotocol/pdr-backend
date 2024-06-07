@@ -21,7 +21,7 @@ def plot_classif_response(aimodel_plotdata: AimodelPlotdata):
     if d.n_sweep == 1 and d.n > 1:
         return _plot_aimodel_lineplot_nvars(aimodel_plotdata)
 
-    return _plot_aimodel_contour(aimodel_plotdata)
+    return _plot_classif_contour(aimodel_plotdata)
 
 
 J = np.array([], dtype=float)  # jitter
@@ -171,7 +171,7 @@ def _plot_aimodel_lineplot_nvars(aimodel_plotdata: AimodelPlotdata):
 
 
 @enforce_types
-def _plot_aimodel_contour(
+def _plot_classif_contour(
     aimodel_plotdata: AimodelPlotdata,
 ):
     """
