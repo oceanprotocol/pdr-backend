@@ -4,7 +4,7 @@ from plotly.graph_objs import Figure
 
 from pdr_backend.sim.dash_plots.util import get_figures_by_state
 from pdr_backend.sim.dash_plots.view_elements import (
-    arrange_figures,
+    get_tabs,
     figure_names,
     get_header_elements,
     get_waiting_template,
@@ -33,16 +33,12 @@ def test_get_header_elements():
     assert result[1].className == "finalState"
 
 
-def test_arrange_figures():
+def test_get_tabs():
     figures = {key: Figure() for key in figure_names}
-    result = arrange_figures(figures)
-    seen = set()
-    for div in result:
-        for graph in div.children:
-            if hasattr(graph, "id"):
-                seen.add(graph.id)
-
-    assert len(seen) == len(figure_names)
+    result = get_tabs(figures)
+    for tab in result:
+        assert "name" in tab
+        assert "components" in tab
 
 
 def test_selected_var_checklist():
