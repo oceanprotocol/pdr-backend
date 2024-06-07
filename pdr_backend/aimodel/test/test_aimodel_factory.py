@@ -27,8 +27,8 @@ def test_aimodel_factory_SHOW_PLOT():
 
 # Do *not* parameterize the following tests. We keep them separate to
 # facilitate rapid-turnaround manual testing and debugging
-def test_aimodel_LinearLogistic():
-    _test_aimodel_2vars(approach="LinearLogistic")
+def test_aimodel_ClassifLinearRidge():
+    _test_aimodel_2vars(approach="ClassifLinearRidge")
 
 
 def test_aimodel_LinearSVC():
@@ -129,7 +129,7 @@ def _test_aimodel_2vars(approach: str):
 
 @enforce_types
 def test_aimodel_can_ClassifConstant_emerge():
-    d = aimodel_ss_test_dict(approach="LinearLogistic", weight_recent="None")
+    d = aimodel_ss_test_dict(approach="ClassifLinearRidge", weight_recent="None")
     ss = AimodelSS(d)
     assert not ss.do_regr
     factory = AimodelFactory(ss)
@@ -207,8 +207,8 @@ def test_aimodel_accuracy_from_create_xy():
     assert_array_equal(yptrue_trn_hat > 0.5, ytrue_trn_hat)
 
 
-def test_aimodel_1var_LinearLogistic():
-    _test_aimodel_1var("LinearLogistic")
+def test_aimodel_1var_ClassifLinearRidge():
+    _test_aimodel_1var("ClassifLinearRidge")
 
 
 def test_aimodel_1var_RegrLinearLS():
@@ -259,7 +259,7 @@ def _test_aimodel_1var(approach: str):
 def test_aimodel_factory_5varmodel_lineplot():
     """5 input vars; sweep 1 var."""
     # settings, factory
-    ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
+    ss = AimodelSS(aimodel_ss_test_dict(approach="ClassifLinearRidge"))
     factory = AimodelFactory(ss)
 
     # data
@@ -308,7 +308,7 @@ def test_aimodel_factory_5varmodel_lineplot():
 def test_aimodel_factory_4vars_response():
     """4 input vars. It will plot the 2 most important vars"""
     # settings, factory
-    ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
+    ss = AimodelSS(aimodel_ss_test_dict(approach="ClassifLinearRidge"))
     factory = AimodelFactory(ss)
 
     # data

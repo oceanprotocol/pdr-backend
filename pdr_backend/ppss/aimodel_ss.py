@@ -6,8 +6,8 @@ from enforce_typing import enforce_types
 from pdr_backend.util.strutil import StrMixin
 
 APPROACH_OPTIONS = [
-    "LinearLogistic",
-    "LinearLogistic_Balanced",
+    "ClassifLinearRidge",
+    "ClassifLinearRidge_Balanced",
     "LinearSVC",
     "ClassifConstant",
     "RegrLinearLS",
@@ -63,7 +63,7 @@ class AimodelSS(StrMixin):
 
     @property
     def approach(self) -> str:
-        """eg 'LinearLogistic'"""
+        """eg 'ClassifLinearRidge'"""
         return self.d["approach"]
 
     @property
@@ -130,7 +130,7 @@ def aimodel_ss_test_dict(
         "max_n_train": 7 if max_n_train is None else max_n_train,
         "train_every_n_epochs": 1,
         "autoregressive_n": 3 if autoregressive_n is None else autoregressive_n,
-        "approach": approach or "LinearLogistic",
+        "approach": approach or "ClassifLinearRidge",
         "weight_recent": weight_recent or "10x_5x",
         "balance_classes": balance_classes or "SMOTE",
         "calibrate_probs": calibrate_probs or "CalibratedClassifierCV_Sigmoid",

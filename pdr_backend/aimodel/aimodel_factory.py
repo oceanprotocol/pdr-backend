@@ -254,9 +254,9 @@ def _approach_to_skm(approach: str):
         return ElasticNet()
 
     # classifier approaches
-    if approach == "LinearLogistic":
+    if approach == "ClassifLinearRidge":
         return LogisticRegression(max_iter=1000)
-    if approach == "LinearLogistic_Balanced":
+    if approach == "ClassifLinearRidge_Balanced":
         return LogisticRegression(max_iter=1000, class_weight="balanced")
     if approach == "LinearSVC":
         return SVC(kernel="linear", probability=True, C=0.025)
