@@ -57,10 +57,10 @@ class AimodelFactory:
         """
         # regressor, wrapped by classifier
         if self.ss.do_regr:
-            return self._build_wrapped_regr(X, ycont, y_thr, show_warnings)
+            return self._build_wrapped_regr(X, ycont, y_thr, show_warnings)  # type: ignore
 
         # direct classifier
-        return self._build_direct_classif(X, ytrue, show_warnings)
+        return self._build_direct_classif(X, ytrue, show_warnings)  # type: ignore
 
     def _build_wrapped_regr(
         self,

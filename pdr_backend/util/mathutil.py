@@ -55,11 +55,11 @@ def has_nan(
         return has_None or np.isnan(np.min(x))
 
     if isinstance(x, pl.Series):
-        has_None = x.has_nulls()
+        has_None = x.has_nulls()  # type: ignore[attr-defined]
         return has_None or sum(x.is_nan()) > 0  # type: ignore[union-attr]
 
     if isinstance(x, pl.DataFrame):
-        has_None = any(col.has_nulls() for col in x)
+        has_None = any(col.has_nulls() for col in x)  # type: ignore[attr-defined]
         return has_None or sum(sum(x).is_nan()) > 0  # type: ignore[union-attr]
 
     # pd.Series or pd.DataFrame

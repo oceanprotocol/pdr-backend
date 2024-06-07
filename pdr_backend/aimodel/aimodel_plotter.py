@@ -222,8 +222,9 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
     assert nvars >= 2
 
     # take 2 most impt vars
-    assert len(aimodel_plotdata.sweep_vars) >= 2
-    chosen_I = aimodel_plotdata.sweep_vars[:2]
+    sweep_vars = np.array(aimodel_plotdata.sweep_vars)
+    assert len(sweep_vars) >= 2
+    chosen_I = sweep_vars[:2]
     chosen_X = X[:, chosen_I]
     chosen_colnames = [d.colnames[i] for i in chosen_I]
 
