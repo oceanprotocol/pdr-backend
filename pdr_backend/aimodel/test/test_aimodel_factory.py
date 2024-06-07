@@ -10,9 +10,8 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.aimodel.aimodel_plotter import (
+    plot_aimodel_response,
     plot_aimodel_varimps,
-    plot_classif_response,
-    plot_regr_response,
 )
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.util.mathutil import classif_acc
@@ -102,7 +101,7 @@ def _test_aimodel_2vars(approach: str):
     slicing_x = np.array([0.0, 1.0])  # arbitrary
     sweep_vars = [0, 1]
     d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x, sweep_vars)
-    classif_figure = plot_classif_response(d)
+    classif_figure = plot_aimodel_response(d, regr_response=False)
     assert isinstance(classif_figure, Figure)
     if SHOW_PLOT:
         classif_figure.show()
@@ -116,7 +115,7 @@ def _test_aimodel_2vars(approach: str):
 
     # plot regressor response
     d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x, sweep_vars)
-    regr_figure = plot_regr_response(d)
+    regr_figure = plot_aimodel_response(d, regr_response=True)
     assert isinstance(regr_figure, Figure)
     if SHOW_PLOT:
         regr_figure.show()
@@ -244,7 +243,7 @@ def _test_aimodel_1var(approach: str):
         slicing_x,
         sweep_vars,
     )
-    figure = plot_classif_response(aimodel_plotdata)
+    figure = plot_aimodel_response(aimodel_plotdata)
     assert isinstance(figure, Figure)
     if SHOW_PLOT:
         figure.show()
@@ -292,7 +291,7 @@ def test_aimodel_factory_5varmodel_lineplot():
         slicing_x,
         sweep_vars,
     )
-    figure = plot_classif_response(aimodel_plotdata)
+    figure = plot_aimodel_response(aimodel_plotdata)
     assert isinstance(figure, Figure)
 
     if SHOW_PLOT:
@@ -339,7 +338,7 @@ def test_aimodel_factory_4vars_response():
         sweep_vars,
     )
 
-    figure = plot_classif_response(aimodel_plotdata)
+    figure = plot_aimodel_response(aimodel_plotdata)
     assert isinstance(figure, Figure)
 
     if SHOW_PLOT:

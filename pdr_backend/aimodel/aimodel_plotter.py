@@ -7,17 +7,9 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
 
 @enforce_types
-def plot_classif_response(aimodel_plotdata: AimodelPlotdata):
-    return _plot_response(aimodel_plotdata, regr_response=False)
-
-
-@enforce_types
-def plot_regr_response(aimodel_plotdata: AimodelPlotdata):
-    return _plot_response(aimodel_plotdata, regr_response=True)
-
-
-@enforce_types
-def _plot_response(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
+def plot_aimodel_response(
+    aimodel_plotdata: AimodelPlotdata, regr_response: bool = False
+):
     """
     @description
       Plot the model response in a line plot (1 var) or contour plot (2 vars).
@@ -25,7 +17,8 @@ def _plot_response(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
 
     @arguments
       aimodel_plotdata --
-      regr_response -- want classifier response or regressor response?
+      regr_response -- if doing contour plot, do we want a
+        classifier response or regressor response?
         (Can only do regressor response if model.do_regr == True)
 
     @return
