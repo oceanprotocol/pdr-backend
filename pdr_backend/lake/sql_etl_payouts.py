@@ -1,13 +1,13 @@
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.util.time_types import UnixTimeMS
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import NamedTable, UpdateTable
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
-def _process_payouts(
-        db:DuckDBDataStore, 
-        st_ms: UnixTimeMS, 
-        fin_ms: UnixTimeMS ) -> None:
+def _do_sql_payouts(
+        db: DuckDBDataStore, 
+        st_ms: UnixTimeMs,
+        fin_ms: UnixTimeMs ) -> None:
     
     payout_table = NamedTable.from_dataclass(Payout)
     update_bronze_prediction_table = UpdateTable.from_dataclass(BronzePrediction)

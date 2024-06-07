@@ -1,16 +1,16 @@
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.util.time_types import UnixTimeMS
-from pdr_backend.lake.table import NamedTable, EventTable
+from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.table import NamedTable, TempTable
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 def _do_sql_predictions(
         db:DuckDBDataStore, 
-        st_ms: UnixTimeMS, 
-        fin_ms: UnixTimeMS ) -> None:
+        st_ms: UnixTimeMs, 
+        fin_ms: UnixTimeMs ) -> None:
     
     prediction_table = NamedTable.from_dataclass(Prediction)
-    event_bronze_prediction_table = EventTable.from_dataclass(BronzePrediction)
+    temp_bronze_prediction_table = TempTable.from_dataclass(BronzePrediction)
 
     query = f"""
     -- Start a transaction
@@ -40,12 +40,12 @@ def _do_sql_predictions(
         and {prediction_table.table_name}.timestamp < {fin_ms}
     )
 
-    INSERT INTO {event_bronze_prediction_table.table_name}
+    INSERT INTO {temp_bronze_prediction_table.table_name}
     SELECT * FROM SelectedData;
 
     -- Commit the transaction
     COMMIT;
     """
 
-    db.create_table_if_not_exists(event_bronze_prediction_table.table_name)
+    db.create_table_if_not_exists(temp_bronze_prediction_table.table_name)
     db.execute_sql(query)
