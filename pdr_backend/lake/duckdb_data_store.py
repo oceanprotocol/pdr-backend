@@ -4,6 +4,7 @@ import logging
 import os
 from typing import Optional
 
+import datacompy
 import duckdb
 import polars as pl
 from enforce_typing import enforce_types
@@ -124,7 +125,17 @@ class DuckDBDataStore(BaseDataStore):
         if table_name in table_names:
             logger.info("insert_to_table table_name = %s", table_name)
             logger.info("insert_to_table DF = %s", df)
-            self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
+            cols = df.columns
+            existing_rows = self.query_data(f"SELECT * FROM {table_name}")
+            comp_res = datacompy.PolarsCompare(df, existing_rows, join_columns=cols)
+            # TODO: should we order the differential in any way?
+            differential = comp_res.df1_unq_rows
+
+            if len(differential):
+                self.duckdb_conn.execute(
+                    f"INSERT INTO {table_name} SELECT * FROM differential"
+                )
+
             return
 
         logger.info("create_and_fill_table = %s", table_name)

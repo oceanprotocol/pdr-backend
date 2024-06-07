@@ -13,6 +13,7 @@ install_requirements = [
     "bumpversion",
     "ccxt==4.3.21",
     "coverage",
+    "datacompy==0.12.1",
     "dateparser==1.2.0",
     "duckdb==0.10.1",
     "dash==2.17.0",

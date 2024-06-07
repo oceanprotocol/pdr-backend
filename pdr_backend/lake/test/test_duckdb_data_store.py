@@ -49,7 +49,10 @@ def test_insert_to_exist_table(tmpdir):
     assert table_exists
 
     # Check if the new data is inserted
-    result = db.duckdb_conn.execute(f"SELECT * FROM {table_name}").fetchall()
+    result = db.duckdb_conn.execute(
+        f"SELECT * FROM {table_name} ORDER BY timestamp"
+    ).fetchall()
+
     assert len(result) == 6
     assert result[3][0] == "2022-04-01"
     assert result[3][1] == 40
@@ -341,3 +344,26 @@ def test_create_table_if_not_exists(tmpdir):
     # Check if the table is registered
     check_result = db.table_exists(table_name)
     assert check_result
+
+
+def test_duplicate_rows(tmpdir):
+    """
+    Test duplicate rows.
+    """
+    db, example_df, table_name = _setup_fixture(tmpdir)
+    db.insert_to_table(example_df, table_name)
+    db.insert_to_table(example_df, table_name)
+
+    rows = db.query_data(f"SELECT * FROM {table_name}")
+    assert len(rows) == len(example_df)
+
+    # one row is common to the OG example df => should be discarded
+    # one has same timestamp but changed value => should be inserted
+    # one is completely new => should be inserted
+    example_df = pl.DataFrame(
+        {"timestamp": ["2022-04-01", "2022-03-01", "2022-06-01"], "value": [50, 30, 60]}
+    )
+
+    db.insert_to_table(example_df, table_name)
+    rows = db.query_data(f"SELECT * FROM {table_name}")
+    assert len(rows) == len(example_df) + 2
