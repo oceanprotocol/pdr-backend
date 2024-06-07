@@ -215,10 +215,18 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
     assert nvars >= 2
 
     # take 2 most impt vars
-    assert aimodel_plotdata.sweep_vars is not None
-    sweep_vars = np.array(aimodel_plotdata.sweep_vars)
-    assert len(sweep_vars) >= 2
-    chosen_I = sweep_vars[:2]
+    nvars = X.shape[1]
+    sweep_vars = aimodel_plotdata.sweep_vars
+    assert nvars > 1
+    if nvars == 1:
+        chosen_I = [0, 0]
+    elif nvars == 2:
+        chosen_I = [0, 1]
+    elif sweep_vars is not None and len(sweep_vars) >= 2:
+        chosen_I = list(sweep_vars)[:2]
+    else:
+        imps = d.model.importance_per_var()
+        chosen_I = np.argsort(imps)[::-1][:2]  # type:ignore[assignment]
     chosen_X = X[:, chosen_I]
     chosen_colnames = [d.colnames[i] for i in chosen_I]
 
@@ -232,7 +240,7 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
     feature_y = np.linspace(x1_min, x1_max, 200)
     dim0, dim1 = np.meshgrid(feature_x, feature_y)
     mesh_0, mesh_1 = dim0.ravel(), dim1.ravel()
-    mesh_chosen_X = np.array([mesh_0, mesh_1]).T  # [sample_i][impt_var_i]
+    mesh_chosen_X = np.array([mesh_0, mesh_1]).T  # [sample_i][chosen_var_i]
     slicing_X = np.reshape(d.slicing_x, (1, nvars))  # [0][var_i]
     mesh_N = mesh_chosen_X.shape[0]
     mesh_X = np.repeat(slicing_X, mesh_N, axis=0)  # [sample_i][var_i]

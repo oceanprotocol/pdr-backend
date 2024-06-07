@@ -73,7 +73,7 @@ def _test_aimodel_2vars(approach: str):
     y_thr = 2.0
     ytrue = ycont > y_thr
 
-    # build model
+    # build model, with all data in
     model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
     assert model.do_regr == ss.do_regr
 
@@ -89,6 +89,12 @@ def _test_aimodel_2vars(approach: str):
         assert classif_acc(ytrue_hat, ytrue) > 0.8
         assert 0 <= min(yptrue_hat) <= max(yptrue_hat) <= 1.0
     assert_array_equal(yptrue_hat > 0.5, ytrue_hat)
+
+    # test build model, with minimal data in
+    if ss.do_regr:
+        _ = factory.build(X, None, ycont, y_thr, show_warnings=False)
+    else:
+        _ = factory.build(X, ytrue, None, None, show_warnings=False)
 
     # test variable importances
     imps = model.importance_per_var()
