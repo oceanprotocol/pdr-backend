@@ -20,6 +20,7 @@ app.layout = html.Div(
             n_intervals=0,
             disabled=False,
         ),
+        dcc.Store(id="selected-tab"),
     ],
     style={"height": "100vh"},
 )
