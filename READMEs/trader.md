@@ -78,6 +78,7 @@ Let's visualize results. Open a separate console, and:
 ```console
 cd ~/code/pdr-backend # or wherever your pdr-backend dir is
 source venv/bin/activate
+export PATH=$PATH:.
 
 #start the plots server
 pdr sim_plots
