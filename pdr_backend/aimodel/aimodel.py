@@ -16,10 +16,10 @@ class Aimodel:
         sk_classif,
     ):
         self._scaler = scaler  # for scaling X-inputs
-        self._sk_regrs = sk_regrs # list of sklearn regressor model
-        self._y_thr = y_thr # threshold value for True vs False
+        self._sk_regrs = sk_regrs  # list of sklearn regressor model
+        self._y_thr = y_thr  # threshold value for True vs False
         self._sk_classif = sk_classif  # sklearn classifier model
-        self._imps_tup = None # tuple of (imps_avg, imps_stddev)
+        self._imps_tup = None  # tuple of (imps_avg, imps_stddev)
 
     @property
     def do_regr(self) -> bool:
@@ -105,9 +105,9 @@ class Aimodel:
         n_regrs = len(self._sk_regrs)
         Ycont = np.zeros((N, n_regrs), dtype=float)
         for i in range(n_regrs):
-            Ycont[:,i] = self._sk_regrs[i].predict(X)
+            Ycont[:, i] = self._sk_regrs[i].predict(X)
         return Ycont
-    
+
     @enforce_types
     def importance_per_var(self, include_stddev: bool = False):
         """
@@ -127,7 +127,7 @@ class Aimodel:
     def set_importance_per_var(self, X: np.ndarray, ytrue: np.ndarray):
         """
         @arguments
-          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs        
+          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
           ytrue -- 1d array of [sample_i]:bool_value -- classifier model outputs
 
         @return
@@ -140,7 +140,7 @@ class Aimodel:
     def _calc_importance_per_var(self, X, ytrue) -> tuple:
         """
         @arguments
-          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs        
+          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
           ytrue -- 1d array of [sample_i]:bool_value -- classifier model outputs
 
         @return
@@ -193,5 +193,6 @@ class Aimodel:
     # so that permutation_importance() works
     def fit(self):
         return
+
     def predict(self, X):
         return self.predict_ptrue(X)

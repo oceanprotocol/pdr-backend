@@ -103,7 +103,7 @@ class AimodelSS(StrMixin):
         if c == "CalibratedClassifierCV_Isotonic":
             return "isotonic"
         raise ValueError(c)
-    
+
     # --------------------------------
     # derivative properties
     @property

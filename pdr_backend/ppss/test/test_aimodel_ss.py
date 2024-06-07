@@ -47,7 +47,7 @@ def test_aimodel_ss__nondefault_values():
     for approach in APPROACH_OPTIONS:
         ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
         assert ss.approach == approach and approach in str(ss)
-        
+
         do_regr = approach in [
             "RegrLinearLS",
             "RegrLinearLasso",

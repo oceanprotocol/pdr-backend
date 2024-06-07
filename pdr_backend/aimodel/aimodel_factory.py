@@ -44,7 +44,7 @@ class AimodelFactory:
 
         @arguments
           X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
-        
+
           ytrue -- 1d array of [sample_i]:bool_value -- classifier model outputs
           <or>
           ycont -- 1d array of [sample_i]:float_value -- regressor model outputs
@@ -54,7 +54,7 @@ class AimodelFactory:
 
         @return
           model -- Aimodel
-        """        
+        """
         # regressor, wrapped by classifier
         if self.ss.do_regr:
             return self._build_wrapped_regr(X, ycont, y_thr, show_warnings)
@@ -82,7 +82,7 @@ class AimodelFactory:
             pass
         elif ss.weight_recent == "10x_5x":
             n_repeat1, n_repeat2 = 10, 5
-            
+
             xrecent1, xrecent2 = X[-1, :], X[-2, :]
             X = np.append(X, np.repeat(xrecent1[None], n_repeat1, axis=0), axis=0)
             X = np.append(X, np.repeat(xrecent2[None], n_repeat2, axis=0), axis=0)
@@ -94,7 +94,7 @@ class AimodelFactory:
         # balance data
         if ss.balance_classes != "None":
             logger.warning("In regression, non-None balance_classes is useless")
-        
+
         # scale inputs
         scaler = StandardScaler()
         scaler.fit(X)
@@ -102,25 +102,24 @@ class AimodelFactory:
 
         # in-place fit model
         sk_regrs = []
-        n_regrs = 10 # magic number
+        n_regrs = 10  # magic number
         for i in range(n_regrs):
             N = len(ycont)
             I = np.random.choice(a=N, size=N, replace=True)
-            X_i, ycont_I = X[I,:], ycont[I]
+            X_i, ycont_I = X[I, :], ycont[I]
             sk_regr = _approach_to_skm(ss.approach)
             _fit(sk_regr, X, ycont, show_warnings)
             sk_regrs.append(sk_regr)
 
         # model
         model = Aimodel(scaler, sk_regrs, y_thr, None)
-                
+
         # variable importances
         ytrue = ycont > y_thr
         model.set_importance_per_var(X, ytrue)
 
         # return
         return model
-
 
     # pylint: disable=too-many-statements
     def _build_direct_classif(
@@ -136,7 +135,7 @@ class AimodelFactory:
         n_True, n_False = sum(ytrue), sum(np.invert(ytrue))
         smallest_n = min(n_True, n_False)
         do_constant = (smallest_n == 0) or ss.approach == "Constant"
-        
+
         # initialize sk_classif (sklearn model)
         if do_constant:
             # force two classes in sk_classif
@@ -154,7 +153,7 @@ class AimodelFactory:
             pass
         elif ss.weight_recent == "10x_5x":
             n_repeat1, n_repeat2 = 10, 5
-            
+
             xrecent1, xrecent2 = X[-1, :], X[-2, :]
             X = np.append(X, np.repeat(xrecent1[None], n_repeat1, axis=0), axis=0)
             X = np.append(X, np.repeat(xrecent2[None], n_repeat2, axis=0), axis=0)
@@ -191,7 +190,7 @@ class AimodelFactory:
         ]:
             N = X.shape[0]
             method = ss.calibrate_probs_skmethod(N)  # 'sigmoid' or 'isotonic'
-            cv = 5 # number of cv folds. magic number
+            cv = 5  # number of cv folds. magic number
             cv = min(smallest_n, cv)
             if cv > 1:
                 sk_classif = CalibratedClassifierCV(
@@ -209,16 +208,16 @@ class AimodelFactory:
 
         # model
         model = Aimodel(scaler, None, None, sk_classif)
-        
+
         # variable importances
         model.set_importance_per_var(X, ytrue)
 
         # return
         return model
 
-    
+
 @enforce_types
-def _fit(skm, X, y, show_warnings:bool):
+def _fit(skm, X, y, show_warnings: bool):
     """
     @description
       In-place fit a regressor or a classifier model
@@ -232,12 +231,11 @@ def _fit(skm, X, y, show_warnings:bool):
     if show_warnings:
         skm.fit(X, y)
         return
-    
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         skm.fit(X, y)
 
-        
 
 @enforce_types
 def _approach_to_skm(approach: str):
@@ -259,5 +257,5 @@ def _approach_to_skm(approach: str):
     if approach == "LinearSVC":
         return SVC(kernel="linear", probability=True, C=0.025)
 
-    # unidentified      
+    # unidentified
     return None

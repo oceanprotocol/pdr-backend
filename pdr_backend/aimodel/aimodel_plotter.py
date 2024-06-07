@@ -5,14 +5,17 @@ from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
+
 @enforce_types
 def plot_classif_response(aimodel_plotdata: AimodelPlotdata):
     return _plot_response(aimodel_plotdata, regr_response=False)
-    
+
+
 @enforce_types
 def plot_regr_response(aimodel_plotdata: AimodelPlotdata):
     return _plot_response(aimodel_plotdata, regr_response=True)
-                   
+
+
 @enforce_types
 def _plot_response(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
     """
@@ -26,7 +29,7 @@ def _plot_response(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
         (Can only do regressor response if model.do_regr == True)
 
     @return
-      figure -- 
+      figure --
     """
     d = aimodel_plotdata
 
@@ -37,6 +40,7 @@ def _plot_response(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
         return _plot_lineplot_nvars(aimodel_plotdata)
 
     return _plot_contour(aimodel_plotdata, regr_response)
+
 
 J = np.array([], dtype=float)  # jitter
 
@@ -66,7 +70,7 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     # calc model classifier response
     yptrue_hat = d.model.predict_ptrue(mesh_X)
     ytrue_hat = d.model.predict_true(X)
-    
+
     # calc model regressor response
     ycont_hat = None
     if d.model.do_regr:
@@ -180,7 +184,7 @@ def _plot_lineplot_nvars(aimodel_plotdata: AimodelPlotdata):
 
     # calc classifier model response
     yptrue = d.model.predict_ptrue(X)  # [sample_i]: prob_of_being_true
-    
+
     # build up "fig"...
     fig = go.Figure()
 
@@ -197,7 +201,7 @@ def _plot_lineplot_nvars(aimodel_plotdata: AimodelPlotdata):
 
     return fig
 
-    
+
 @enforce_types
 def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
     """
@@ -246,7 +250,7 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
         title = "Contours = model regressor response"
     else:
         Z = d.model.predict_ptrue(mesh_X)
-        colorscale = "RdBu" # red=False, blue=True, white=between
+        colorscale = "RdBu"  # red=False, blue=True, white=between
         title = "Contours = model prob(true) response"
     Z = Z.reshape(dim1.shape)
 
@@ -293,7 +297,7 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
             name="true",
         )
     )
-    
+
     # scatterplots: brown=training_F
     fig.add_trace(
         go.Scatter(
@@ -362,7 +366,7 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
             labelalias[varnames[i]] = ""
 
         colors.append("#636EFA" if not sweep_vars or i in sweep_vars else "#D4D5DD")
-    
+
     # build up "fig"...
     fig = go.Figure()
 
@@ -384,10 +388,12 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
         error_x_width=err_lw,
     )
 
-    fig.update_layout(yaxis={
-        "categoryorder": "total ascending",
-        "labelalias": labelalias,
-    })
+    fig.update_layout(
+        yaxis={
+            "categoryorder": "total ascending",
+            "labelalias": labelalias,
+        }
+    )
     fig.update_layout(xaxis_title="Relative importance (%)")
     fig.update_layout(title="Variable importances")
 

@@ -30,28 +30,34 @@ def test_aimodel_factory_SHOW_PLOT():
 # facilitate rapid-turnaround manual testing and debugging
 def test_aimodel_Constant():
     _test_aimodel_2vars(approach="Constant")
-    
+
+
 def test_aimodel_LinearLogistic():
     _test_aimodel_2vars(approach="LinearLogistic")
+
 
 def test_aimodel_LinearSVC():
     _test_aimodel_2vars(approach="LinearSVC")
 
+
 def test_aimodel_RegrLinearLS():
     _test_aimodel_2vars(approach="RegrLinearLS")
+
 
 def test_aimodel_RegrLinearLasso():
     _test_aimodel_2vars(approach="RegrLinearLasso")
 
+
 def test_aimodel_RegrLinearRidge():
     _test_aimodel_2vars(approach="RegrLinearRidge")
+
 
 def test_aimodel_RegrLinearElasticNet():
     _test_aimodel_2vars(approach="RegrLinearElasticNet")
 
 
 @enforce_types
-def _test_aimodel_2vars(approach:str):
+def _test_aimodel_2vars(approach: str):
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
@@ -103,7 +109,7 @@ def _test_aimodel_2vars(approach:str):
     ycont_hat = model.predict_ycont(X)
     assert ycont_hat.shape == (N,)
     assert ycont_hat.dtype == float
-    
+
     # plot regressor response
     d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x, sweep_vars)
     regr_figure = plot_regr_response(d)
@@ -131,9 +137,11 @@ def test_aimodel_factory_constantdata_classif():
     assert_array_equal(model.predict_true(X), np.full((N,), False))
     assert_array_equal(model.predict_ptrue(X), np.full((N,), 0.0))
 
+
 @enforce_types
 def test_aimodel_factory_constantdata_regr():
     raise NotImplementedError("build me")
+
 
 @enforce_types
 def test_aimodel_accuracy_from_create_xy():
@@ -166,12 +174,14 @@ def test_aimodel_accuracy_from_create_xy():
 
 def test_aimodel_1var_LinearLogistic():
     _test_aimodel_1var("LinearLogistic")
-    
+
+
 def test_aimodel_1var_RegrLinearLS():
     _test_aimodel_1var("RegrLinearLS")
-    
+
+
 @enforce_types
-def _test_aimodel_1var(approach:str):
+def _test_aimodel_1var(approach: str):
     """1 input var. It will plot that var on both axes"""
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
@@ -208,9 +218,8 @@ def _test_aimodel_1var(approach:str):
     assert isinstance(figure, Figure)
     if SHOW_PLOT:
         figure.show()
-        
 
-    
+
 @enforce_types
 def test_aimodel_factory_5varmodel_lineplot():
     """5 input vars; sweep 1 var."""
