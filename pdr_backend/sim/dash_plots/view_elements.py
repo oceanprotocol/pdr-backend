@@ -43,17 +43,23 @@ def get_header_elements(run_id, st, ts):
     ]
 
 
-def side_by_side_graphs(figures, name1, name2):
+def side_by_side_graphs(
+    figures, name1, name2, height=50, width_graph1=50, width_graph2=50
+):
     return html.Div(
         [
-            dcc.Graph(figure=figures[name1], id=name1, style={"width": "50%"}),
-            dcc.Graph(figure=figures[name2], id=name2, style={"width": "50%"}),
+            dcc.Graph(
+                figure=figures[name1], id=name1, style={"width": f"{width_graph1}%"}
+            ),
+            dcc.Graph(
+                figure=figures[name2], id=name2, style={"width": f"{width_graph2}%"}
+            ),
         ],
         style={
             "display": "flex",
             "justifyContent": "space-between",
             "width": "100%",
-            "height": "50%",
+            "height": f"{height}%",
         },
     )
 
@@ -92,7 +98,9 @@ def get_tabs(figures):
         {
             "name": "Model response",
             "components": [
-                side_by_side_graphs(figures, "aimodel_varimps", "aimodel_response")
+                side_by_side_graphs(
+                    figures, "aimodel_varimps", "aimodel_response", 100, 35, 65
+                )
             ],
         },
     ]
@@ -110,7 +118,7 @@ def selected_var_checklist(state_options, selected_vars_old):
 def get_tabs_component(elements):
     return dcc.Tabs(
         id="tabs",
-        value=elements[0]["name"],
+        value=elements[2]["name"],
         children=[
             dcc.Tab(
                 label=e["name"],

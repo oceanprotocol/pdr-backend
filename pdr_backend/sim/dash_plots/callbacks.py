@@ -78,6 +78,15 @@ def get_callbacks(app):
         elements.append(selected_var_checklist(state_options, selected_vars_old))
 
         figures = get_figures_by_state(sim_plotter, selected_vars)
+        figures["aimodel_response"].update_layout(
+            legend=dict(
+                orientation="h",  # horizontal legend
+                yanchor="top",  # anchor the top of the legend box
+                y=1.07,  # position the legend at the bottom
+                xanchor="right",  # anchor the center of the legend box
+                x=1,  # center the legend horizontally
+            )
+        )
         tabs = get_tabs(figures)
         elements = elements + [get_tabs_component(tabs)]
 
