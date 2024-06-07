@@ -8,13 +8,14 @@ import os
 import shutil
 from io import StringIO
 from tempfile import mkdtemp
-from typing import List, Dict, Iterable, Union, Tuple
+from typing import Iterable, List, Tuple, Union
 
 import numpy as np
 import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
+from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("lake_plutil")
@@ -185,13 +186,24 @@ def text_to_df(s: str) -> pl.DataFrame:
 
 
 @enforce_types
-def _object_list_to_df(objects: List[object], schema: Dict) -> pl.DataFrame:
+def _object_list_to_df(objects: List[LakeMapper], fallback_schema=None) -> pl.DataFrame:
     """
     @description
         Convert list objects to a dataframe using their __dict__ structure.
     """
+    if len(objects) == 0:
+        return pl.DataFrame({}, schema=fallback_schema)
+
+    types = {type(obj) for obj in objects}
+    if len(types) != 1:
+        raise ValueError("All objects must be of the same type")
+
+    assert hasattr(objects[0], "get_lake_schema")
+
+    schema = objects[0].get_lake_schema()
+
     # Get all predictions into a dataframe
-    obj_dicts = [object.__dict__ for object in objects]
+    obj_dicts = [obj.__dict__ for obj in objects]
     obj_df = pl.DataFrame(obj_dicts, schema=schema, orient="row")
     assert obj_df.schema == schema
 

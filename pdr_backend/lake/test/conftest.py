@@ -3,20 +3,25 @@ from enforce_typing import enforce_types
 import pytest
 import polars as pl
 
-from pdr_backend.subgraph.prediction import (
+from pdr_backend.subgraph.legacy.prediction import (
     Prediction,
     mock_daily_predictions,
     mock_prediction,
 )
-from pdr_backend.subgraph.subscription import mock_subscriptions
-from pdr_backend.subgraph.trueval import Trueval, mock_truevals, mock_trueval
-from pdr_backend.subgraph.payout import Payout, mock_payouts, mock_payout
+from pdr_backend.subgraph.legacy.subscription import mock_subscriptions
+from pdr_backend.subgraph.legacy.trueval import Trueval, mock_truevals, mock_trueval
+from pdr_backend.subgraph.legacy.payout import Payout, mock_payouts, mock_payout
 
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_payouts import payouts_schema
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 from pdr_backend.lake.table_pdr_truevals import truevals_schema
 
+from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.prediction import (
+    mock_first_predictions,
+    mock_second_predictions,
+)
 
 @pytest.fixture()
 def sample_payouts():
@@ -291,3 +296,43 @@ def _gql_datafactory_etl_truevals_df():
     )
 
     return truevals_df
+
+@pytest.fixture()
+def _get_test_CSVDataStore():
+    def create_csv_datastore_identifier(tmpdir, name):
+        return CSVDataStore(tmpdir, name)
+
+    return create_csv_datastore_identifier
+
+
+@pytest.fixture()
+def _gql_datafactory_first_predictions_df():
+    _predictions = mock_first_predictions()
+    predictions_df = _object_list_to_df(_predictions)
+    predictions_df = predictions_df.with_columns(
+        [pl.col("timestamp").mul(1000).alias("timestamp")]
+    )
+
+    return predictions_df
+
+
+@pytest.fixture()
+def _gql_datafactory_1k_predictions_df():
+    _predictions = mock_first_predictions(500)
+    predictions_df = _object_list_to_df(_predictions)
+    predictions_df = predictions_df.with_columns(
+        [pl.col("timestamp").mul(1000).alias("timestamp")]
+    )
+
+    return predictions_df
+
+
+@pytest.fixture()
+def _gql_datafactory_second_predictions_df():
+    _predictions = mock_second_predictions()
+    predictions_df = _object_list_to_df(_predictions)
+    predictions_df = predictions_df.with_columns(
+        [pl.col("timestamp").mul(1000).alias("timestamp")]
+    )
+
+    return predictions_df

@@ -7,7 +7,7 @@ from pdr_backend.lake.table_pdr_predictions import (
 )
 from pdr_backend.lake.legacy.table import Table
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.subgraph.prediction import Prediction
+from pdr_backend.subgraph.legacy.prediction import Prediction
 from pdr_backend.cli import cli_module
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.web3_config import Web3Config
