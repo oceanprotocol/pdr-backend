@@ -1,23 +1,27 @@
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.util.time_types import UnixTimeMS
-from pdr_backend.lake.table import NamedTable, TempTable, ETLTable, EventTable
-from pdr_backend.lake.payout import Payout
-from pdr_backend.lake.prediction import Prediction
+from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.table import UpdateTable, TempUpdateTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 def _do_sql_bronze_predictions(
         db:DuckDBDataStore, 
-        st_ms: UnixTimeMS, 
-        fin_ms: UnixTimeMS ) -> None:
+        st_ms: UnixTimeMs, 
+        fin_ms: UnixTimeMs ) -> None:
     
-    update_bronze_prediction_table = EventTable.from_dataclass(BronzePrediction)
-    temp_bronze_prediction_table = EventTable.from_dataclass(BronzePrediction)
+    # new prediction events - to be inserted into prod tables
+    update_bronze_prediction_table = UpdateTable.from_dataclass(BronzePrediction)
+
+    # update prediction events - to be joined w/ prod records
+    update_bronze_prediction_table = UpdateTable.from_dataclass(BronzePrediction)
+    
+    # prod + updated records joined - to be swapped with prod tables
+    temp_update_bronze_prediction_table = TempUpdateTable.from_dataclass(BronzePrediction)
 
     query = f"""
     -- Start a transaction
     BEGIN TRANSACTION;
 
-    -- 1. let's group all update events by ID, to reduce multiples
+    -- 1. let's group all update events by ID to reduce into a single row
     WITH UpdatedRows AS (
     SELECT
         *,
@@ -29,8 +33,10 @@ def _do_sql_bronze_predictions(
         {update_bronze_prediction_table.table_name}
     GROUP BY ID
 
-    -- 2. now update _temp table
-    UPDATE {temp_bronze_prediction_table.table_name}
+    -- 2. now, we need to update our tables
+    -- 2a. update any records that may be in the _temp table, already to-be-merged
+    -- Because these records are not in the live table, we can just update their columns.
+    UPDATE {temp_update_bronze_prediction_table.table_name}
     SET
         trueval = COALESCE(UpdatedRows.trueval, live_table.trueval),
         payout = COALESCE(UpdatedRows.payout, live_table.payout),
@@ -39,21 +45,23 @@ def _do_sql_bronze_predictions(
     FROM UpdatedRows
     WHERE live_table.ID = UpdatedRows.ID;
 
-    -- 3. now insert into _temp_update
-    # 1. WE'RE GOING TO NOW, FINALLY, AND ONLY ONCE, JOIN WITH THE ETL BRONZE_TABLE
-    # 2. We're going to then insert into _temp_update table
-    # 3. _temp_update will have a different merge strategy
+    -- 2b. Join w/ existing records and yield the row to _temp_update table
+    -- Step #1 - Because these records are from the live table, we can't modify them
+    -- Step #2 - Yield updated records into _temp_update table
+    -- Step #3 - Use a swap strategy to get _temp_update records into prod table
     INSERT INTO _temp_update_bronze_predictions
     SELECT
-        *{temp_bronze_prediction_table.table_name},
-        lastEventTimestamp
+        *{temp_update_bronze_prediction_table.table_name},
+        COALESCE(UpdatedRows.trueval, {temp_update_bronze_prediction_table.table_name}.trueval) as trueval,
+        COALESCE(UpdatedRows.payout, {temp_update_bronze_prediction_table.table_name}.payout) as payout,
+        MAX(UpdatedRows.lastEventTimestamp, {temp_update_bronze_prediction_table.table_name}.lastEventTimestamp) as lastEventTimestamp)
     FROM UpdatedRows
-    LEFT JOIN {temp_bronze_prediction_table.table_name}
-    ON UpdatedRows.ID = {temp_bronze_prediction_table.table_name}.ID
+    LEFT JOIN {temp_update_bronze_prediction_table.table_name}
+    ON UpdatedRows.ID = {temp_update_bronze_prediction_table.table_name}.ID
 
     -- Commit the transaction
     COMMIT;
     """
 
-    db.create_table_if_not_exists(update_bronze_prediction_table.table_name)
+    db.create_table_if_not_exists(temp_update_bronze_prediction_table.table_name)
     db.execute_sql(query)

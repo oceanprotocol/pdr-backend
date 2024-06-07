@@ -9,15 +9,10 @@ from pdr_backend.lake.gql_data_factory import (
     GQLDataFactory,
     _GQLDF_REGISTERED_TABLE_NAMES,
 )
-from pdr_backend.lake.table import ETLTable, NamedTable, TempTable, UpdateTable, TempUpdateTable
+from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
-
-from pdr_backend.lake.sql_etl_predictions import _process_predictions_query
-from pdr_backend.lake.sql_etl_payouts import _process_payouts_query
-from pdr_backend.lake.sql_etl_bronze_predictions import _process_predictions_query
-
 
 logger = logging.getLogger("etl")
 
@@ -29,11 +24,6 @@ _ETL_REGISTERED_TABLE_NAMES = [
     t.get_lake_table_name() for t in _ETL_REGISTERED_LAKE_TABLES
 ]
 
-_ETL_REGISTERED_QUERIES = [
-    _process_predictions_query,
-    _process_payouts_query,
-    _process_predictions_query
-]
 
 class ETL:
     """
@@ -322,60 +312,3 @@ class ETL:
             # For each bronze table that we process, that data will be entered into TEMP
             # Create view so downstream queries can access production + TEMP data
             self.create_etl_view(dataclass.get_lake_table_name())
-
-    def do_bronze_queries(self):
-        """
-        @description
-            Run all bronze queries to process new + update events
-        """
-        logger.info("do_bronze_queries - start")
-
-        # st_timestamp and fin_timestamp should be valid UnixTimeMS
-        st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
-        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-
-        for etl_query in _ETL_REGISTERED_QUERIES:
-            etl_query(
-                db,
-                st_ms=st_timestamp,
-                fin_ms=fin_timestamp,
-            )
-
-            logger.info(
-                "do_bronze_queries - completed query %s",
-                etl_query,
-            )
-    
-    def _upsert_bronze_rows_to_prod(self):
-        """
-        @description
-            Merge the ETL tables
-        """
-        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        
-        etl_tables = ["bronze_predictions"]
-        for table_name in etl_tables:
-            prod_table = NamedTable(table_name)
-            temp_table = TempTable(table_name)
-            update_table = UpdateTable(table_name)
-            temp_update_table = TempUpdateTable(table_name)
-            if db.table_exists(update_table.fullname):
-                # Insert new records into live tables
-                db.move_table_data(temp_table, prod_table)
-                
-                # drop all records that were updated
-                db.drop_records_from_table_by_ids(
-                    drop_tabe=prod_table,
-                    ids=update_table.ids
-                )
-
-                # Finally, insert the updated records into live table
-                db.move_table_data(temp_update_table, prod_table)
-
-                # Drop the update table 
-                db.drop_table(update_table.fullname)
-                db.drop_table(temp_update_table.fullname)
-
-        raw_tables = ["pdr_predictions", "pdr_payouts"]
-        for table_name in raw_tables:
-            db.drop_table(update_table.fullname)
