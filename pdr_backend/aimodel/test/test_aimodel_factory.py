@@ -31,8 +31,8 @@ def test_aimodel_ClassifLinearRidge():
     _test_aimodel_2vars(approach="ClassifLinearRidge")
 
 
-def test_aimodel_LinearSVC():
-    _test_aimodel_2vars(approach="LinearSVC")
+def test_aimodel_ClassifLinearSVM():
+    _test_aimodel_2vars(approach="ClassifLinearSVM")
 
 
 def test_aimodel_ClassifConstant():

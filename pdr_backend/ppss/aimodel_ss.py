@@ -8,7 +8,7 @@ from pdr_backend.util.strutil import StrMixin
 APPROACH_OPTIONS = [
     "ClassifLinearRidge",
     "ClassifLinearRidge_Balanced",
-    "LinearSVC",
+    "ClassifLinearSVM",
     "ClassifConstant",
     "RegrLinearLS",
     "RegrLinearLasso",

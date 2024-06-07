@@ -258,7 +258,7 @@ def _approach_to_skm(approach: str):
         return LogisticRegression(max_iter=1000)
     if approach == "ClassifLinearRidge_Balanced":
         return LogisticRegression(max_iter=1000, class_weight="balanced")
-    if approach == "LinearSVC":
+    if approach == "ClassifLinearSVM":
         return SVC(kernel="linear", probability=True, C=0.025)
 
     # unidentified
