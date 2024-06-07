@@ -3,6 +3,7 @@ from typing import List, Dict
 import polars as pl
 from enforce_typing import enforce_types
 
+
 @enforce_types
 def _object_list_to_df(objects: List[object], schema: Dict) -> pl.DataFrame:
     """
