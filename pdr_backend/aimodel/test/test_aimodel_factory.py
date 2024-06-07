@@ -4,6 +4,7 @@ import numpy as np
 from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
 from plotly.graph_objs._figure import Figure
+import pytest
 from pytest import approx
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
@@ -13,7 +14,11 @@ from pdr_backend.aimodel.aimodel_plotter import (
     plot_aimodel_response,
     plot_aimodel_varimps,
 )
-from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
+from pdr_backend.ppss.aimodel_ss import (
+    AimodelSS,
+    aimodel_ss_test_dict,
+    APPROACH_OPTIONS,
+)
 from pdr_backend.util.mathutil import classif_acc
 
 SHOW_PLOT = False  # only turn on for manual testing
@@ -25,38 +30,17 @@ def test_aimodel_factory_SHOW_PLOT():
     assert not SHOW_PLOT
 
 
-# Do *not* parameterize the following tests. We keep them separate to
-# facilitate rapid-turnaround manual testing and debugging
-def test_aimodel_ClassifLinearRidge():
-    _test_aimodel_2vars(approach="ClassifLinearRidge")
+def test_aimodel_typical_classif():
+    _test_aimodel_2vars("ClassifLinearRidge")
 
 
-def test_aimodel_ClassifLinearSVM():
-    _test_aimodel_2vars(approach="ClassifLinearSVM")
+def test_aimodel_typical_regr():
+    _test_aimodel_2vars("RegrLinearRidge")
 
 
-def test_aimodel_ClassifConstant():
-    _test_aimodel_2vars(approach="ClassifConstant")
-
-
-def test_aimodel_RegrLinearLS():
-    _test_aimodel_2vars(approach="RegrLinearLS")
-
-
-def test_aimodel_RegrLinearLasso():
-    _test_aimodel_2vars(approach="RegrLinearLasso")
-
-
-def test_aimodel_RegrLinearRidge():
-    _test_aimodel_2vars(approach="RegrLinearRidge")
-
-
-def test_aimodel_RegrLinearElasticNet():
-    _test_aimodel_2vars(approach="RegrLinearElasticNet")
-
-
-def test_aimodel_RegrConstant():
-    _test_aimodel_2vars(approach="RegrConstant")
+@pytest.mark.parametrize("approach", APPROACH_OPTIONS)
+def test_aimodel_parameterized(approach):
+    _test_aimodel_2vars(approach)
 
 
 @enforce_types

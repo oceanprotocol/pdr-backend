@@ -6,8 +6,12 @@ from enforce_typing import enforce_types
 from pdr_backend.util.strutil import StrMixin
 
 APPROACH_OPTIONS = [
+    "ClassifLinearLasso",
+    "ClassifLinearLasso_Balanced",
     "ClassifLinearRidge",
     "ClassifLinearRidge_Balanced",
+    "ClassifLinearElasticNet",
+    "ClassifLinearElasticNet_Balanced",
     "ClassifLinearSVM",
     "ClassifConstant",
     "RegrLinearLS",
