@@ -30,9 +30,9 @@ _ETL_REGISTERED_TABLE_NAMES = [
 ]
 
 _ETL_REGISTERED_QUERIES = [
-    _do_sql_predictions,
-    _do_sql_payouts,
-    _do_sql_bronze_predictions
+    _do_sql_predictions
+    # _do_sql_payouts,
+    # _do_sql_bronze_predictions
 ]
 
 class ETL:
@@ -91,7 +91,7 @@ class ETL:
         """
 
         st_ts = time.time_ns() / 1e9
-        logger.info("do_etl - Start ETL.")
+        logger.info(">>>> REQUIRED ETL - do_etl - Start ETL.")
 
         try:
             # Drop any build tables if they already exist
@@ -123,16 +123,16 @@ class ETL:
             Now, let's build the bronze tables
             key tables: [bronze_pdr_predictions]
         """
-        logger.info("do_bronze_step - Build bronze tables.")
+        logger.info(">>>> REQUIRED ETL - do_bronze_step - Build bronze tables.")
 
         # Update bronze tables
         # let's keep track of time passed so we can log how long it takes for this step to complete
         st_ts = time.time_ns() / 1e9
 
-        self.update_bronze_pdr()
+        self.do_bronze_queries()
 
         end_ts = time.time_ns() / 1e9
-        logger.info("do_bronze_step - Completed in %s sec.", end_ts - st_ts)
+        logger.info(">>>> REQUIRED ETL - do_bronze_step - Completed in %s sec.", end_ts - st_ts)
 
     @enforce_types
     def _get_max_timestamp_values_from(
@@ -203,7 +203,7 @@ class ETL:
         )
 
         logger.info(
-            "get_timestamp_values - max_timestamp_values: %s", max_timestamp_values
+            ">>>> REQUIRED ETL - get_timestamp_values - max_timestamp_values: %s", max_timestamp_values
         )
         # check if all values are None in max_timestamp_values
         # and return the default_timestr if so
@@ -301,7 +301,7 @@ class ETL:
         @description
             Update bronze tables
         """
-        logger.info("update_bronze_pdr - Update bronze tables.")
+        logger.info(">>>> REQUIRED ETL - Update bronze tables.")
 
         # st_timestamp and fin_timestamp should be valid UnixTimeMS
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
@@ -359,7 +359,7 @@ class ETL:
             temp_table = TempTable(table_name)
             update_table = UpdateTable(table_name)
             temp_update_table = TempUpdateTable(table_name)
-            
+
             if db.table_exists(update_table.fullname):
                 # Insert new records into live tables
                 db.move_table_data(temp_table, prod_table)

@@ -13,9 +13,6 @@ def _do_sql_payouts(
     update_bronze_prediction_table = UpdateTable.from_dataclass(BronzePrediction)
 
     query = f"""
-    -- Start a transaction
-    BEGIN TRANSACTION;
-
     -- Define a CTE to select data once and use it multiple times
     WITH SelectedData AS (
     SELECT
@@ -41,10 +38,7 @@ def _do_sql_payouts(
         *.payout as payout,
         *.timestamp as timestamp
     FROM SelectedData;
-
-    -- Commit the transaction
-    COMMIT;
     """
 
-    db.create_table_if_not_exists(update_bronze_prediction_table.table_name)
+    db.create_table_if_not_exists(update_bronze_prediction_table.table_name, BronzePrediction.get_lake_schema())
     db.execute_sql(query)
