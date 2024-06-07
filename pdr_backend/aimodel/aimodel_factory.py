@@ -104,7 +104,7 @@ class AimodelFactory:
 
         # in-place fit model
         sk_regrs = []
-        n_regrs = 5
+        n_regrs = 10 # magic number
         for i in range(n_regrs):
             N = len(ycont)
             I = np.random.choice(a=N, size=N, replace=True)
@@ -193,7 +193,8 @@ class AimodelFactory:
         ]:
             N = X.shape[0]
             method = ss.calibrate_probs_skmethod(N)  # 'sigmoid' or 'isotonic'
-            cv = min(smallest_n, 5)
+            cv = 5 # number of cv folds. magic number
+            cv = min(smallest_n, cv)
             if cv > 1:
                 sk_classif = CalibratedClassifierCV(
                     sk_classif,
