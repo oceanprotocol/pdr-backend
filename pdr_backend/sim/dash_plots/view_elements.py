@@ -107,10 +107,10 @@ def selected_var_checklist(state_options, selected_vars_old):
     )
 
 
-def get_tabs_component(elements):
+def get_tabs_component(elements, selectedTab):
     return dcc.Tabs(
         id="tabs",
-        value=elements[0]["name"],
+        value=selectedTab,
         children=[
             dcc.Tab(
                 label=e["name"],

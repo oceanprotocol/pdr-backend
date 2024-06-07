@@ -60,9 +60,10 @@ def get_callbacks(app):
         Input("interval-component", "n_intervals"),
         Input("selected_vars", "value"),
         State("selected_vars", "value"),
+        State("selected-tab", "data"),
     )
     # pylint: disable=unused-argument
-    def update_graph_live(n, selected_vars, selected_vars_old):
+    def update_graph_live(n, selected_vars, selected_vars_old, selected_tab):
         run_id = app.run_id if app.run_id else SimPlotter.get_latest_run_id()
         sim_plotter = SimPlotter()
 
@@ -79,6 +80,12 @@ def get_callbacks(app):
 
         figures = get_figures_by_state(sim_plotter, selected_vars)
         tabs = get_tabs(figures)
-        elements = elements + [get_tabs_component(tabs)]
+        selected_tab_value = selected_tab if selected_tab else tabs[0]["name"]
+        elements = elements + [get_tabs_component(tabs, selected_tab_value)]
 
         return elements, header
+
+    @app.callback(Output("selected-tab", "data"), Input("tabs", "value"))
+    # pylint: disable=unused-argument
+    def update_selected_tab_state(selected_tab):
+        return selected_tab
