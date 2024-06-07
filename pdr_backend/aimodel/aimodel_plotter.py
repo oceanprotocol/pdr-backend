@@ -6,7 +6,7 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
 
 @enforce_types
-def plot_aimodel_response(aimodel_plotdata: AimodelPlotdata):
+def plot_classif_response(aimodel_plotdata: AimodelPlotdata):
     """
     @description
       Plot the model response in a line plot (1 var) or contour plot (2 vars).

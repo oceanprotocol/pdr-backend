@@ -70,7 +70,7 @@ def test_get_figures_by_state():
     with patch(
         "pdr_backend.sim.dash_plots.util.aimodel_plotter"
     ) as mock_aimodel_plotter:
-        mock_aimodel_plotter.plot_aimodel_response.return_value = Figure()
+        mock_aimodel_plotter.plot_classif_response.return_value = Figure()
         mock_aimodel_plotter.plot_aimodel_varimps.return_value = Figure()
 
         result = get_figures_by_state(mock_sim_plotter, ["var1", "var2"])

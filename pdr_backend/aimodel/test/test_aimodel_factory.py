@@ -10,7 +10,7 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.aimodel.aimodel_plotter import (
-    plot_aimodel_response,
+    plot_classif_response,
     plot_aimodel_varimps,
 )
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
@@ -90,7 +90,7 @@ def _test_aimodel_2vars(approach:str):
     colnames = ["x0", "x1"]
     slicing_x = np.array([0.0, 1.0])  # arbitrary
     d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
-    classif_figure = plot_aimodel_response(d)
+    classif_figure = plot_classif_response(d)
     assert isinstance(classif_figure, Figure)
     if SHOW_PLOT:
         classif_figure.show()
@@ -204,11 +204,10 @@ def _test_aimodel_1var(approach:str):
         slicing_x,
         sweep_vars,
     )
-    figure = plot_aimodel_response(aimodel_plotdata)
+    figure = plot_classif_response(aimodel_plotdata)
     assert isinstance(figure, Figure)
     if SHOW_PLOT:
         figure.show()
-
 
 
     
@@ -254,7 +253,7 @@ def test_aimodel_factory_5varmodel_lineplot():
         slicing_x,
         sweep_vars,
     )
-    figure = plot_aimodel_response(aimodel_plotdata)
+    figure = plot_classif_response(aimodel_plotdata)
     assert isinstance(figure, Figure)
 
     if SHOW_PLOT:
@@ -293,7 +292,7 @@ def test_aimodel_factory_4vars_response():
     slicing_x = np.array([0.1, 1.0, 2.0, 3.0])  # arbitrary
     aimodel_plotdata = AimodelPlotdata(model, X, ytrue, colnames, slicing_x)
 
-    figure = plot_aimodel_response(aimodel_plotdata)
+    figure = plot_classif_response(aimodel_plotdata)
     assert isinstance(figure, Figure)
 
     if SHOW_PLOT:
