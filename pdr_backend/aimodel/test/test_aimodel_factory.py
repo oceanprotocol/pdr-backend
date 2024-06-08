@@ -90,8 +90,17 @@ def _test_aimodel_2vars(approach: str):
     colnames = ["x0", "x1"]
     slicing_x = np.array([0.0, 1.0])  # arbitrary
     sweep_vars = [0, 1]
-    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x, sweep_vars)
-    classif_figure = plot_aimodel_response(d, regr_response=False)
+    d = AimodelPlotdata(
+        model,
+        X,
+        ytrue,
+        ycont,
+        y_thr,
+        colnames,
+        slicing_x,
+        sweep_vars,
+    )
+    classif_figure = plot_aimodel_response(d)
     assert isinstance(classif_figure, Figure)
     if SHOW_PLOT:
         classif_figure.show()
@@ -102,13 +111,6 @@ def _test_aimodel_2vars(approach: str):
     ycont_hat = model.predict_ycont(X)
     assert ycont_hat.shape == (N,)
     assert ycont_hat.dtype == float
-
-    # plot regressor response
-    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x, sweep_vars)
-    regr_figure = plot_aimodel_response(d, regr_response=True)
-    assert isinstance(regr_figure, Figure)
-    if SHOW_PLOT:
-        regr_figure.show()
 
 
 @enforce_types
@@ -229,6 +231,8 @@ def _test_aimodel_1var(approach: str):
         model,
         X,
         ytrue,
+        ycont,
+        y_thr,
         colnames,
         slicing_x,
         sweep_vars,
@@ -239,11 +243,19 @@ def _test_aimodel_1var(approach: str):
         figure.show()
 
 
+def test_aimodel_5varmodel_lineplot_ClassifLinearRidge():
+    _test_aimodel_5varmodel_lineplot("ClassifLinearRidge")
+
+
+def test_aimodel_5varmodel_lineplot_RegrLinearLS():
+    _test_aimodel_5varmodel_lineplot("RegrLinearLS")
+
+
 @enforce_types
-def test_aimodel_factory_5varmodel_lineplot():
+def _test_aimodel_5varmodel_lineplot(approach):
     """5 input vars; sweep 1 var."""
     # settings, factory
-    ss = AimodelSS(aimodel_ss_test_dict(approach="ClassifLinearRidge"))
+    ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
 
     # data
@@ -262,7 +274,7 @@ def test_aimodel_factory_5varmodel_lineplot():
     ytrue = ycont > y_thr
 
     # build model
-    model = factory.build(X, ytrue, show_warnings=False)
+    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
 
     # test variable importances
     imps = model.importance_per_var()
@@ -277,6 +289,8 @@ def test_aimodel_factory_5varmodel_lineplot():
         model,
         X,
         ytrue,
+        ycont,
+        y_thr,
         colnames,
         slicing_x,
         sweep_vars,
@@ -323,6 +337,8 @@ def test_aimodel_factory_4vars_response():
         model,
         X,
         ytrue,
+        ycont,
+        y_thr,
         colnames,
         slicing_x,
         sweep_vars,

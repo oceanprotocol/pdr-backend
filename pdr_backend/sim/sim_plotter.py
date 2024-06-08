@@ -230,9 +230,9 @@ class SimPlotter:
         )
 
         # fill in subplots
-        self._add_subplot_accuracy_vs_time(fig)  # row 1
-        self._add_subplot_f1_precision_recall_vs_time(fig)  # row 2
-        self._add_subplot_log_loss_vs_time(fig)  # row 3
+        self._add_subplot_accuracy_vs_time(fig, row=1)
+        self._add_subplot_f1_precision_recall_vs_time(fig, row=2)
+        self._add_subplot_log_loss_vs_time(fig, row=3)
 
         # global: set minor ticks
         minor = {"ticks": "inside", "showgrid": True}
@@ -256,7 +256,7 @@ class SimPlotter:
         return fig
 
     @enforce_types
-    def _add_subplot_accuracy_vs_time(self, fig):
+    def _add_subplot_accuracy_vs_time(self, fig, row):
         clm = self.st.clm
         acc_ests = [100 * a for a in clm.acc_ests]
         df = pd.DataFrame(acc_ests, columns=["accuracy"])
@@ -300,13 +300,13 @@ class SimPlotter:
                     marker_color="grey",
                 ),
             ],
-            rows=[1, 1, 1, 1],
+            rows=[row] * 4,
             cols=[1, 1, 1, 1],
         )
         fig.update_yaxes(title_text="accuracy (%)", row=1, col=1)
 
     @enforce_types
-    def _add_subplot_f1_precision_recall_vs_time(self, fig):
+    def _add_subplot_f1_precision_recall_vs_time(self, fig, row):
         clm = self.st.clm
         df = pd.DataFrame(clm.f1s, columns=["f1"])
         df["precisions"] = clm.precisions
@@ -348,20 +348,20 @@ class SimPlotter:
                     marker_color="grey",
                 ),
             ],
-            rows=[2, 2, 2, 2],
+            rows=[row] * 4,
             cols=[1, 1, 1, 1],
         )
         fig.update_yaxes(title_text="f1, etc", row=2, col=1)
 
     @enforce_types
-    def _add_subplot_log_loss_vs_time(self, fig):
+    def _add_subplot_log_loss_vs_time(self, fig, row):
         clm = self.st.clm
         df = pd.DataFrame(clm.losses, columns=["log loss"])
         df["time"] = range(len(clm.losses))
 
         fig.add_trace(
             go.Scatter(x=df["time"], y=df["log loss"], mode="lines", name="log loss"),
-            row=3,
+            row=row,
             col=1,
         )
         fig.update_yaxes(title_text="log loss", row=3, col=1)
