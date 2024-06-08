@@ -50,7 +50,7 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     d = aimodel_plotdata
     assert d.n == 1
     assert d.n_sweep == 1
-    X, ytrue = d.X_train, d.ytrue_train
+    X, ytrue, ycont, y_thr = d.X_train, d.ytrue_train, d.ycont_train, d.y_thr
 
     x = X[:, 0]
     N = len(x)
@@ -61,13 +61,19 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     mesh_X = np.reshape(mesh_x, (mesh_N, 1))
 
     # calc model classifier response
-    yptrue_hat = d.model.predict_ptrue(mesh_X)
+    mesh_yptrue_hat = d.model.predict_ptrue(mesh_X)
     ytrue_hat = d.model.predict_true(X)
 
     # calc model regressor response
-    ycont_hat = None
+    mesh_ycont_hat = None
     if d.model.do_regr:
-        ycont_hat = d.model.predict_ycont(mesh_X)
+        mesh_ycont_hat = d.model.predict_ycont(mesh_X)
+
+    # HACK
+    ycont_hat = d.model.predict_ycont(X)
+    for i in range(10):
+        err = abs(ycont[i] - ycont_hat[i])
+        print(f"true={ycont[i]}, pred={ycont_hat[i]}, err={err}")
 
     # build up "fig"...
     fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -76,7 +82,7 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     correct = ytrue_hat == ytrue
     wrong = np.invert(correct)
     for i, xi in enumerate(x[wrong]):
-        label = "wrong" if i == 0 else None
+        label = "classif: wrong" if i == 0 else None
         fig.add_trace(
             go.Scatter(
                 x=[xi, xi],
@@ -92,20 +98,20 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     fig.add_trace(
         go.Scatter(
             x=mesh_x,
-            y=yptrue_hat,
+            y=mesh_yptrue_hat,
             mode="lines",
             line={"color": "blue"},
-            name="model prob(true)",
+            name="classif: model prob(true)",
         )
     )
 
     # scatterplots blue=training_T, brown=training_F
     global J
     while J.shape[0] < N:
-        J = np.append(J, np.random.rand() * 0.05)
+        J = np.append(J, np.random.rand() * 0.03)
     yfalse = np.invert(ytrue)
-    y1 = ytrue[ytrue] - J[ytrue] + 0.025
-    y2 = ytrue[yfalse] + J[yfalse] - 0.025
+    y1 = ytrue[ytrue] - J[ytrue] + 0.015
+    y2 = ytrue[yfalse] + J[yfalse] - 0.015
 
     fig.add_trace(
         go.Scatter(
@@ -113,7 +119,7 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
             y=y1,
             mode="markers",
             marker={"color": "blue", "size": 5},
-            name="trn data true",
+            name="classif: trn data class=true",
         )
     )
 
@@ -123,25 +129,45 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
             y=y2,
             mode="markers",
             marker={"color": "brown", "size": 5},
-            name="trn data false",
+            name="classif: trn data class=false",
         )
     )
-    fig.update_yaxes(title_text="prob(True)", secondary_y=False)
+    fig.update_yaxes(title_text="classif: prob(True)", secondary_y=False)
 
-    # line plot: regressor response
+    # line plot: regressor response, training data
     if d.model.do_regr:
-        assert ycont_hat is not None
+        assert mesh_ycont_hat is not None
         fig.add_trace(
             go.Scatter(
                 x=mesh_x,
-                y=ycont_hat,
+                y=mesh_ycont_hat,
                 mode="lines",
                 line={"color": "black"},
-                name="model regr response",
+                name="regr: model yhat",
             ),
             secondary_y=True,
         )
-        fig.update_yaxes(title_text="model regr response", secondary_y=True)
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=ycont,
+                mode="markers",
+                marker={"color": "black", "size": 5},
+                name="regr: trn data y",
+            ),
+            secondary_y=True,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[min(mesh_x), max(mesh_x)],
+                y=[y_thr, y_thr],
+                mode="lines",
+                line={"color": "black", "dash": "dot"},
+                name="regr: threshold up/down",
+            ),
+            secondary_y=True,
+        )
+        fig.update_yaxes(title_text="regr: y-value", secondary_y=True)
 
     return fig
 
@@ -188,7 +214,7 @@ def _plot_lineplot_nvars(aimodel_plotdata: AimodelPlotdata):
             y=yptrue,
             mode="lines",
             line={"color": "blue"},
-            name="model prob(true)",
+            name="classif: model prob(true)",
         )
     )
 
@@ -287,7 +313,7 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
             y=chosen_X[:, 1][wrong],
             mode="markers",
             marker={"color": "orange", "size": 10},
-            name="wrong",
+            name="classif: wrong",
         )
     )
 

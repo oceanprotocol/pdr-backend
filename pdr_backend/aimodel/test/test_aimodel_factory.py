@@ -21,7 +21,7 @@ from pdr_backend.ppss.aimodel_ss import (
 )
 from pdr_backend.util.mathutil import classif_acc
 
-SHOW_PLOT = False  # only turn on for manual testing
+SHOW_PLOT = True  # only turn on for manual testing
 
 
 @enforce_types
@@ -197,6 +197,9 @@ def test_aimodel_1var_ClassifLinearRidge():
 
 def test_aimodel_1var_RegrLinearLS():
     _test_aimodel_1var("RegrLinearLS")
+    
+def test_aimodel_1var_RegrLinearRidge():
+    _test_aimodel_1var("RegrLinearRidge")
 
 
 @enforce_types
@@ -229,6 +232,8 @@ def _test_aimodel_1var(approach: str):
         model,
         X,
         ytrue,
+        ycont,
+        y_thr,
         colnames,
         slicing_x,
         sweep_vars,
