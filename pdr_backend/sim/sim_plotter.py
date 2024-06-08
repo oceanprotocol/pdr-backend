@@ -173,7 +173,7 @@ class SimPlotter:
         s = f"accuracy = {clm.acc_ests[-1]*100:.2f}% "
         s += f"[{clm.acc_ls[-1]*100:.2f}%, {clm.acc_us[-1]*100:.2f}%]"
 
-        y = "% correct (lower, upper bound)"
+        y = "% correct"
         acc_ests = [100 * a for a in clm.acc_ests]
         df = pd.DataFrame(acc_ests, columns=[y])
         df["acc_ls"] = [100 * a for a in clm.acc_ls]
@@ -196,7 +196,7 @@ class SimPlotter:
                     mode="lines",
                     fill="tonexty",
                     name="accuracy lower bound",
-                    marker_color="#1F77B4",
+                    marker_color="#636EFA",
                 ),
             ]
         )
@@ -226,8 +226,6 @@ class SimPlotter:
         s = f"f1={clm.f1s[-1]:.4f}"
         s += f" [recall={clm.recalls[-1]:.4f}"
         s += f", precision={clm.precisions[-1]:.4f}]"
-
-        y = "% correct (lower, upper bound)"
         df = pd.DataFrame(clm.f1s, columns=["f1"])
         df["precisions"] = clm.precisions
         df["recalls"] = clm.recalls
@@ -265,7 +263,7 @@ class SimPlotter:
         fig.add_hline(y=0.5, line_dash="dot", line_color="grey")
         fig.update_layout(title=s)
         fig.update_xaxes(title="time")
-        fig.update_yaxes(title=y)
+        fig.update_yaxes(title="f1, etc")
 
         return fig
 
