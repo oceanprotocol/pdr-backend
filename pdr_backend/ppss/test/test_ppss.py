@@ -162,7 +162,7 @@ def test_verify_feed_dependencies():
     # - check for matching {exchange, pair, timeframe} but not {signal}
     good_feed = "binance BTC/USDT c 5m"
     for wrong_feed in [
-        "dydx BTC/USDT c 5m",  # bad exchange
+        "fooexch BTC/USDT c 5m",  # bad exchange
         "binance DOT/USDT c 5m",  # bad pair
         "binance BTC/USDT c 1h",  # bad timeframe
     ]:

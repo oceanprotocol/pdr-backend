@@ -38,7 +38,6 @@ exchange_mgr_ss: # used by trader and sim
   ccxt_params:
     createMarketBuyOrderRequiresPrice: False
     defaultType: spot
-  dydx_params:
 
 trader_ss:
   feed: binance BTC/USDT c 5m
