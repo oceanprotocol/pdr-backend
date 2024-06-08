@@ -243,6 +243,8 @@ class SimEngine:
                 model,
                 X_train,
                 ytrue_train,
+                ycont_train,
+                y_thr,
                 colnames,
                 slicing_x,
             )
