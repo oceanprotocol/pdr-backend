@@ -9,7 +9,7 @@ from pdr_backend.util.strutil import StrMixin
 
 class ExchangeMgrSS(StrMixin, CCXTExchangeMixin):
     """
-    This ss has parameters across all exchange APIs (ccxt, dydx, ..).
+    This ss has parameters across all exchange APIs (ccxt, ..).
     It's used by ExchangeMgr.
 
     It explicitly does *not* hold an exchange name, because
@@ -38,14 +38,6 @@ class ExchangeMgrSS(StrMixin, CCXTExchangeMixin):
             if not isinstance(key, str):
                 raise TypeError(ccxt_params)
 
-        # check dydx_params
-        dydx_params = d["dydx_params"] or {}
-        if not isinstance(dydx_params, dict):
-            raise TypeError(dydx_params)
-        for key in dydx_params.keys():
-            if not isinstance(key, str):
-                raise TypeError(dydx_params)
-
     # --------------------------------
     # yaml properties
     @property
@@ -56,10 +48,6 @@ class ExchangeMgrSS(StrMixin, CCXTExchangeMixin):
     def ccxt_params(self) -> dict:
         return self.d["ccxt_params"]
 
-    @property
-    def dydx_params(self) -> dict:
-        return self.d["dydx_params"]
-
 
 # =========================================================
 # utilities for testing
@@ -69,7 +57,6 @@ class ExchangeMgrSS(StrMixin, CCXTExchangeMixin):
 def exchange_mgr_ss_test_dict(
     timeout: Optional[Union[int, float]] = None,
     ccxt_params: Optional[dict] = None,
-    dydx_params: Optional[dict] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct ExchangeMgrSS(d)"""
     d = {
@@ -79,6 +66,5 @@ def exchange_mgr_ss_test_dict(
             "createMarketBuyOrderRequiresPrice": False,
             "defaultType": "spot",
         },
-        "dydx_params": dydx_params or {},
     }
     return d
