@@ -11,7 +11,7 @@ class ArgExchange:
         if not exchange_str:
             raise ValueError(exchange_str)
 
-        if not (exchange_str == "dydx" or hasattr(ccxt, exchange_str)):
+        if not hasattr(ccxt, exchange_str):
             raise ValueError(exchange_str)
 
         self.exchange_str = exchange_str

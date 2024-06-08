@@ -2,7 +2,6 @@ import ccxt
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.exchange.dydx_exchange import DydxExchange
 from pdr_backend.exchange.mock_exchange import MockExchange
 from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.ppss.exchange_mgr_ss import exchange_mgr_ss_test_dict, ExchangeMgrSS
@@ -17,7 +16,6 @@ def test_exchange_mgr_main():
     assert isinstance(mgr.exchange("binance"), ccxt.binance)
     assert isinstance(mgr.exchange("binanceus"), ccxt.binanceus)
     assert isinstance(mgr.exchange("kraken"), ccxt.kraken)
-    assert isinstance(mgr.exchange("dydx"), DydxExchange)
 
     with pytest.raises(AttributeError):
         mgr.exchange("foo")
