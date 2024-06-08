@@ -9,6 +9,8 @@ from pdr_backend.aimodel.aimodel import Aimodel
 class AimodelPlotdata:
     """Simple class to manage many inputs going into plot_model."""
 
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(
         self,
         model: Aimodel,
@@ -33,6 +35,7 @@ class AimodelPlotdata:
             -- If 1 entry, do line plot (1 var), where y-axis is response
             -- If 2 entries, do contour plot (2 vars), where z-axis is response
         """
+
         # preconditions
         N, n = X_train.shape
         assert len(colnames) == n, (len(colnames), n)
@@ -68,4 +71,3 @@ class AimodelPlotdata:
             return 1
 
         return len(self.sweep_vars)
-

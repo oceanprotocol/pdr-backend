@@ -42,12 +42,12 @@ def get_header_elements(run_id, st, ts):
 
 
 def side_by_side_graphs(
-        figures,
-        name1:str,
-        name2:str,
-        height:str="50%",
-        width1:str="50%",
-        width2:str="50%",
+    figures,
+    name1: str,
+    name2: str,
+    height: str = "50%",
+    width1: str = "50%",
+    width2: str = "50%",
 ):
     return html.Div(
         [
@@ -96,11 +96,11 @@ def get_tabs(figures):
             "components": [
                 side_by_side_graphs(
                     figures,
-                    name1 = "aimodel_varimps",
-                    name2 = "aimodel_response",
-                    height = "100%",
-                    width1 = "30%",
-                    width2 = "70%",
+                    name1="aimodel_varimps",
+                    name2="aimodel_response",
+                    height="100%",
+                    width1="30%",
+                    width2="70%",
                 )
             ],
         },

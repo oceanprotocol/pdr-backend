@@ -21,7 +21,7 @@ from pdr_backend.ppss.aimodel_ss import (
 )
 from pdr_backend.util.mathutil import classif_acc
 
-SHOW_PLOT = True  # only turn on for manual testing
+SHOW_PLOT = False  # only turn on for manual testing
 
 
 @enforce_types
@@ -91,7 +91,14 @@ def _test_aimodel_2vars(approach: str):
     slicing_x = np.array([0.0, 1.0])  # arbitrary
     sweep_vars = [0, 1]
     d = AimodelPlotdata(
-        model, X, ytrue, ycont, y_thr, colnames, slicing_x, sweep_vars,
+        model,
+        X,
+        ytrue,
+        ycont,
+        y_thr,
+        colnames,
+        slicing_x,
+        sweep_vars,
     )
     classif_figure = plot_aimodel_response(d)
     assert isinstance(classif_figure, Figure)
@@ -192,7 +199,6 @@ def test_aimodel_1var_ClassifLinearRidge():
 
 def test_aimodel_1var_RegrLinearLS():
     _test_aimodel_1var("RegrLinearLS")
-    
 
 
 @enforce_types
@@ -244,7 +250,7 @@ def test_aimodel_5varmodel_lineplot_ClassifLinearRidge():
 def test_aimodel_5varmodel_lineplot_RegrLinearLS():
     _test_aimodel_5varmodel_lineplot("RegrLinearLS")
 
-    
+
 @enforce_types
 def _test_aimodel_5varmodel_lineplot(approach):
     """5 input vars; sweep 1 var."""
@@ -331,6 +337,8 @@ def test_aimodel_factory_4vars_response():
         model,
         X,
         ytrue,
+        ycont,
+        y_thr,
         colnames,
         slicing_x,
         sweep_vars,

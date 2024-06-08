@@ -300,7 +300,7 @@ class SimPlotter:
                     marker_color="grey",
                 ),
             ],
-            rows=[row]*4,
+            rows=[row] * 4,
             cols=[1, 1, 1, 1],
         )
         fig.update_yaxes(title_text="accuracy (%)", row=1, col=1)
@@ -348,7 +348,7 @@ class SimPlotter:
                     marker_color="grey",
                 ),
             ],
-            rows=[row]*4,
+            rows=[row] * 4,
             cols=[1, 1, 1, 1],
         )
         fig.update_yaxes(title_text="f1, etc", row=2, col=1)

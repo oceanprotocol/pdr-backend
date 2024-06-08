@@ -23,12 +23,11 @@ def plot_aimodel_response(aimodel_plotdata: AimodelPlotdata):
 
     if d.n_sweep == 1:
         return _plot_lineplot_1var(aimodel_plotdata)
-    
+
     return _plot_contour(aimodel_plotdata)
 
 
 J = np.array([], dtype=float)  # jitter
-    
 
 
 @enforce_types
@@ -171,9 +170,9 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
             secondary_y=True,
         )
         fig.update_yaxes(title_text="regr: y-value", secondary_y=True)
-        
+
     fig.update_xaxes(title_text=colname)
-    
+
     return fig
 
 
@@ -231,9 +230,11 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata):
     s1 = "classif: contours = model prob(true)"
     s2 = "regr: contours = model y-value"
     if d.model.do_regr:
-        fig = make_subplots(rows=2, cols=1, subplot_titles=(s1, s2), vertical_spacing=0.07)
+        fig = make_subplots(
+            rows=2, cols=1, subplot_titles=(s1, s2), vertical_spacing=0.07
+        )
     else:
-        fig = make_subplots(rows=1, cols=1, subplot_titles=(s1))
+        fig = make_subplots(rows=1, cols=1, subplot_titles=s1)
 
     # subplot at row 1: classifier response
     Z = d.model.predict_ptrue(mesh_X)
@@ -254,7 +255,7 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata):
     xlabel_row = 2 if d.model.do_regr else 1
     fig.update_xaxes(title=chosen_colnames[0], row=xlabel_row, col=1)
     fig.update_yaxes(title=chosen_colnames[1])
-    
+
     return fig
 
 
@@ -267,10 +268,6 @@ def _add_contour_subplot(d, chosen_I, dim0, dim1, Z, colorscale, fig, row):
     X = d.X_train
     ytrue = d.ytrue_train
     chosen_X = X[:, chosen_I]
-
-    # calc min/max
-    x0_min, x0_max = min(chosen_X[:, 0]), max(chosen_X[:, 0])
-    x1_min, x1_max = min(chosen_X[:, 1]), max(chosen_X[:, 1])
 
     # calc other data for plots
     ytrue_hat = d.model.predict_true(X)
@@ -301,7 +298,7 @@ def _add_contour_subplot(d, chosen_I, dim0, dim1, Z, colorscale, fig, row):
             mode="markers",
             marker={"color": "orange", "size": 10},
             name="classif: wrong",
-            showlegend=(row==1),
+            showlegend=(row == 1),
         ),
         row=row,
         col=1,
@@ -315,7 +312,7 @@ def _add_contour_subplot(d, chosen_I, dim0, dim1, Z, colorscale, fig, row):
             mode="markers",
             marker={"color": "blue", "size": 5},
             name="true",
-            showlegend=(row==1),
+            showlegend=(row == 1),
         ),
         row=row,
         col=1,
@@ -329,7 +326,7 @@ def _add_contour_subplot(d, chosen_I, dim0, dim1, Z, colorscale, fig, row):
             mode="markers",
             marker={"color": "brown", "size": 5},
             name="false",
-            showlegend=(row==1),
+            showlegend=(row == 1),
         ),
         row=row,
         col=1,
@@ -397,10 +394,11 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
         go.Bar(
             x=imps_avg,
             y=varnames,
-            error_x={"type": "data",
-                     "array": error_x_upper,
-                     "arrayminus": error_x_lower,
-                     },
+            error_x={
+                "type": "data",
+                "array": error_x_upper,
+                "arrayminus": error_x_lower,
+            },
             orientation="h",
             marker_color=colors,
         )
