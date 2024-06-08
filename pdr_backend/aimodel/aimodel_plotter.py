@@ -372,6 +372,10 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
     # put in percent scales
     imps_avg = imps_avg * 100.0
     imps_stddev = imps_stddev * 100.0
+    imps_lower = np.clip(imps_avg - imps_stddev * 2.0, 0.0, np.inf)
+    imps_upper = imps_avg + imps_stddev * 2.0
+    error_x_lower = imps_stddev - imps_lower
+    error_x_upper = imps_upper - imps_stddev
 
     labelalias = {}
     colors = []
@@ -393,7 +397,10 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
         go.Bar(
             x=imps_avg,
             y=varnames,
-            error_x={"type": "data", "array": imps_stddev * 2},
+            error_x={"type": "data",
+                     "array": error_x_upper,
+                     "arrayminus": error_x_lower,
+                     },
             orientation="h",
             marker_color=colors,
         )
