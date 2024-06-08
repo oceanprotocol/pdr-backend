@@ -26,12 +26,9 @@ def plot_aimodel_response(
     """
     d = aimodel_plotdata
 
-    if d.n_sweep == 1 and d.n == 1 or d.n == 1:
+    if d.n_sweep == 1:
         return _plot_lineplot_1var(aimodel_plotdata)
-
-    if d.n_sweep == 1 and d.n > 1:
-        return _plot_lineplot_nvars(aimodel_plotdata)
-
+    
     return _plot_contour(aimodel_plotdata, regr_response)
 
 
@@ -48,17 +45,33 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     """
     # aimodel data
     d = aimodel_plotdata
-    assert d.n == 1
     assert d.n_sweep == 1
     X, ytrue, ycont, y_thr = d.X_train, d.ytrue_train, d.ycont_train, d.y_thr
 
-    x = X[:, 0]
+    # take 1 var
+    nvars = X.shape[1]
+    sweep_vars = aimodel_plotdata.sweep_vars
+    assert nvars > 0
+    if nvars == 1:
+        chosen_i = 0
+    elif sweep_vars is not None and len(sweep_vars) >= 1:
+        chosen_i = sweep_vars[0]
+    else:
+        imps = d.model.importance_per_var()
+        chosen_i = np.argsort(imps)[::-1][0]  # type:ignore[assignment]
+
+    # base data
+    x = X[:, chosen_i]
+    colname = d.colnames[chosen_i]
     N = len(x)
 
-    # calc mesh_X = uniform grid
-    mesh_x = np.linspace(min(x), max(x), 200)
-    mesh_N = len(mesh_x)
-    mesh_X = np.reshape(mesh_x, (mesh_N, 1))
+    # calc mesh_X = uniform grid on chosen_i,
+    #  and every other dimension i has value slicing_x[i]
+    mesh_chosen_x = np.linspace(min(x), max(x), 200)
+    slicing_X = np.reshape(d.slicing_x, (1, nvars))  # [0][var_i]
+    mesh_N = len(mesh_chosen_x)
+    mesh_X = np.repeat(slicing_X, mesh_N, axis=0)  # [sample_i][var_i]
+    mesh_X[:, chosen_i] = mesh_chosen_x
 
     # calc model classifier response
     mesh_yptrue_hat = d.model.predict_ptrue(mesh_X)
@@ -91,7 +104,7 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     # blue line curve: classifier probability response
     fig.add_trace(
         go.Scatter(
-            x=mesh_x,
+            x=mesh_chosen_x,
             y=mesh_yptrue_hat,
             mode="lines",
             line={"color": "blue"},
@@ -133,7 +146,7 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
         assert mesh_ycont_hat is not None
         fig.add_trace(
             go.Scatter(
-                x=mesh_x,
+                x=mesh_chosen_x,
                 y=mesh_ycont_hat,
                 mode="lines",
                 line={"color": "black"},
@@ -153,7 +166,7 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
         )
         fig.add_trace(
             go.Scatter(
-                x=[min(mesh_x), max(mesh_x)],
+                x=[min(mesh_chosen_x), max(mesh_chosen_x)],
                 y=[y_thr, y_thr],
                 mode="lines",
                 line={"color": "black", "dash": "dot"},
@@ -162,56 +175,9 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
             secondary_y=True,
         )
         fig.update_yaxes(title_text="regr: y-value", secondary_y=True)
-
-    return fig
-
-
-@enforce_types
-def _plot_lineplot_nvars(aimodel_plotdata: AimodelPlotdata):
-    """
-    @description
-      Do a 1d lineplot, when >1 input x-var, and we have chosen the var.
-      Because >1 var total, we can show more info of true-vs-actual
-
-    @return
-      figure -- go.Figure object
-    """
-    # input data
-    d = aimodel_plotdata
-    assert d.n >= 1
-    assert d.n_sweep == 1
-
-    # construct sweep_x
-    sweepvar_i = d.sweep_vars[0]  #  type: ignore[index]
-    mn_x, mx_x = min(d.X_train[:, sweepvar_i]), max(d.X_train[:, sweepvar_i])
-    N = 200
-    sweep_x = np.linspace(mn_x, mx_x, N)
-
-    # construct X
-    X = np.empty((N, d.n), dtype=float)
-    X[:, sweepvar_i] = sweep_x
-    for var_i in range(d.n):
-        if var_i == sweepvar_i:
-            continue
-        X[:, var_i] = d.slicing_x[var_i]
-
-    # calc classifier model response
-    yptrue = d.model.predict_ptrue(X)  # [sample_i]: prob_of_being_true
-
-    # build up "fig"...
-    fig = go.Figure()
-
-    # line plot: classifier model response
-    fig.add_trace(
-        go.Scatter(
-            x=sweep_x,
-            y=yptrue,
-            mode="lines",
-            line={"color": "blue"},
-            name="classif: model prob(true)",
-        )
-    )
-
+        
+    fig.update_xaxes(title_text=colname)
+    
     return fig
 
 
@@ -235,7 +201,7 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
     nvars = d.n
     assert nvars >= 2
 
-    # take 2 most impt vars
+    # take 2 vars
     nvars = X.shape[1]
     sweep_vars = aimodel_plotdata.sweep_vars
     assert nvars > 1

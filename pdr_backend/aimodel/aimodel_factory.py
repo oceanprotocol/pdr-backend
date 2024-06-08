@@ -71,6 +71,7 @@ class AimodelFactory:
     ) -> Aimodel:
         ss = self.ss
         assert ss.do_regr
+        assert ycont is not None
         do_constant = min(ycont) == max(ycont) or ss.approach == "RegrConstant"
 
         # weight newest sample 10x, and 2nd-newest sample 5x

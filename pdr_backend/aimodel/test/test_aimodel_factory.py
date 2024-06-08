@@ -198,8 +198,6 @@ def test_aimodel_1var_ClassifLinearRidge():
 def test_aimodel_1var_RegrLinearLS():
     _test_aimodel_1var("RegrLinearLS")
     
-def test_aimodel_1var_RegrLinearRidge():
-    _test_aimodel_1var("RegrLinearRidge")
 
 
 @enforce_types
@@ -244,11 +242,19 @@ def _test_aimodel_1var(approach: str):
         figure.show()
 
 
+def test_aimodel_5varmodel_lineplot_ClassifLinearRidge():
+    _test_aimodel_5varmodel_lineplot("ClassifLinearRidge")
+
+
+def test_aimodel_5varmodel_lineplot_RegrLinearLS():
+    _test_aimodel_5varmodel_lineplot("RegrLinearLS")
+
+    
 @enforce_types
-def test_aimodel_factory_5varmodel_lineplot():
+def _test_aimodel_5varmodel_lineplot(approach):
     """5 input vars; sweep 1 var."""
     # settings, factory
-    ss = AimodelSS(aimodel_ss_test_dict(approach="ClassifLinearRidge"))
+    ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
 
     # data
@@ -267,7 +273,7 @@ def test_aimodel_factory_5varmodel_lineplot():
     ytrue = ycont > y_thr
 
     # build model
-    model = factory.build(X, ytrue, show_warnings=False)
+    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
 
     # test variable importances
     imps = model.importance_per_var()
@@ -282,6 +288,8 @@ def test_aimodel_factory_5varmodel_lineplot():
         model,
         X,
         ytrue,
+        ycont,
+        y_thr,
         colnames,
         slicing_x,
         sweep_vars,
