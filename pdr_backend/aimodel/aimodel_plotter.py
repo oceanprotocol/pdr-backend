@@ -69,13 +69,6 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     if d.model.do_regr:
         mesh_ycont_hat = d.model.predict_ycont(mesh_X)
 
-    # HACK
-    ycont_hat = d.model.predict_ycont(X)
-    for i in range(10):
-        t, p = ycont[i], ycont_hat[i]
-        err = abs(t-p)
-        print(f"x={X[i,0]:0.1f}, true={t:.1f}, pred={p:.1f}, err={err:.1f}")
-
     # build up "fig"...
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
