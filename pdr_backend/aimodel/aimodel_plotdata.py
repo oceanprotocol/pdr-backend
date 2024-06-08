@@ -68,3 +68,4 @@ class AimodelPlotdata:
             return 1
 
         return len(self.sweep_vars)
+

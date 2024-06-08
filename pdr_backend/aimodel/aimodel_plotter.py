@@ -7,9 +7,7 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
 
 @enforce_types
-def plot_aimodel_response(
-    aimodel_plotdata: AimodelPlotdata, regr_response: bool = False
-):
+def plot_aimodel_response(aimodel_plotdata: AimodelPlotdata):
     """
     @description
       Plot the model response in a line plot (1 var) or contour plot (2 vars).
@@ -17,9 +15,6 @@ def plot_aimodel_response(
 
     @arguments
       aimodel_plotdata --
-      regr_response -- if doing contour plot, do we want a
-        classifier response or regressor response?
-        (Can only do regressor response if model.do_regr == True)
 
     @return
       figure --
@@ -29,10 +24,11 @@ def plot_aimodel_response(
     if d.n_sweep == 1:
         return _plot_lineplot_1var(aimodel_plotdata)
     
-    return _plot_contour(aimodel_plotdata, regr_response)
+    return _plot_contour(aimodel_plotdata)
 
 
 J = np.array([], dtype=float)  # jitter
+    
 
 
 @enforce_types
@@ -182,7 +178,7 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
 
 
 @enforce_types
-def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
+def _plot_contour(aimodel_plotdata: AimodelPlotdata):
     """
     @description
       Plot the model, when there's >=2 input x-vars. Use a contour plot.
@@ -191,13 +187,11 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
 
     @arguments
       aimodel_plotdata --
-      regr_response -- want classifier response or regressor response?
-        (Can only do regressor response if model.do_regr == True)
     """
     # pylint: disable=too-many-statements
     # aimodel data
     d = aimodel_plotdata
-    X, ytrue = d.X_train, d.ytrue_train
+    X = d.X_train
     nvars = d.n
     assert nvars >= 2
 
@@ -233,25 +227,56 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
     mesh_X = np.repeat(slicing_X, mesh_N, axis=0)  # [sample_i][var_i]
     mesh_X[:, chosen_I] = mesh_chosen_X
 
-    # calc Z = model response
-    if regr_response:
+    # make subplots
+    s1 = "classif: contours = model prob(true)"
+    s2 = "regr: contours = model y-value"
+    if d.model.do_regr:
+        fig = make_subplots(rows=2, cols=1, subplot_titles=(s1, s2), vertical_spacing=0.07)
+    else:
+        fig = make_subplots(rows=1, cols=1, subplot_titles=(s1))
+
+    # subplot at row 1: classifier response
+    Z = d.model.predict_ptrue(mesh_X)
+    colorscale = "RdBu"  # red=False, blue=True, white=between
+    _add_contour_subplot(d, chosen_I, dim0, dim1, Z, colorscale, fig, row=1)
+
+    # subplot at row 2: regressor response
+    if d.model.do_regr:
         Z = d.model.predict_ycont(mesh_X)
         colorscale = "Greys"
-        title = "Contours = model regressor response"
-    else:
-        Z = d.model.predict_ptrue(mesh_X)
-        colorscale = "RdBu"  # red=False, blue=True, white=between
-        title = "Contours = model prob(true) response"
+        _add_contour_subplot(d, chosen_I, dim0, dim1, Z, colorscale, fig, row=2)
+
+    # global: axes ranges
+    fig.update_xaxes(range=[x0_min, x0_max])
+    fig.update_yaxes(range=[x1_min, x1_max])
+
+    # global: axes labels
+    xlabel_row = 2 if d.model.do_regr else 1
+    fig.update_xaxes(title=chosen_colnames[0], row=xlabel_row, col=1)
+    fig.update_yaxes(title=chosen_colnames[1])
+    
+    return fig
+
+
+@enforce_types
+def _add_contour_subplot(d, chosen_I, dim0, dim1, Z, colorscale, fig, row):
+    """In-place update 'fig' at specified subplot row"""
     Z = Z.reshape(dim1.shape)
+
+    # base data
+    X = d.X_train
+    ytrue = d.ytrue_train
+    chosen_X = X[:, chosen_I]
+
+    # calc min/max
+    x0_min, x0_max = min(chosen_X[:, 0]), max(chosen_X[:, 0])
+    x1_min, x1_max = min(chosen_X[:, 1]), max(chosen_X[:, 1])
 
     # calc other data for plots
     ytrue_hat = d.model.predict_true(X)
     correct = ytrue_hat == ytrue
     wrong = np.invert(correct)
     yfalse = np.invert(ytrue)
-
-    # build up "fig"...
-    fig = go.Figure()
 
     # contour plot: model response
     fig.add_trace(
@@ -263,7 +288,9 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
             line_width=0,
             ncontours=25,
             colorscale=colorscale,
-        )
+        ),
+        row=row,
+        col=1,
     )
 
     # scatterplots: orang_outline=misclassified
@@ -274,7 +301,10 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
             mode="markers",
             marker={"color": "orange", "size": 10},
             name="classif: wrong",
-        )
+            showlegend=(row==1),
+        ),
+        row=row,
+        col=1,
     )
 
     # scatterplots: blue=training_T
@@ -285,7 +315,10 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
             mode="markers",
             marker={"color": "blue", "size": 5},
             name="true",
-        )
+            showlegend=(row==1),
+        ),
+        row=row,
+        col=1,
     )
 
     # scatterplots: brown=training_F
@@ -296,16 +329,11 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
             mode="markers",
             marker={"color": "brown", "size": 5},
             name="false",
-        )
+            showlegend=(row==1),
+        ),
+        row=row,
+        col=1,
     )
-
-    fig.update_layout(yaxis={"range": [x1_min, x1_max]})
-    fig.update_layout(xaxis={"range": [x0_min, x0_max]})
-    fig.update_xaxes(title_text=chosen_colnames[0])
-    fig.update_yaxes(title_text=chosen_colnames[1])
-    fig.update_layout(title=title)
-
-    return fig
 
 
 @enforce_types

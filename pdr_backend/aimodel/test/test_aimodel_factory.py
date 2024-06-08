@@ -90,8 +90,10 @@ def _test_aimodel_2vars(approach: str):
     colnames = ["x0", "x1"]
     slicing_x = np.array([0.0, 1.0])  # arbitrary
     sweep_vars = [0, 1]
-    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x, sweep_vars)
-    classif_figure = plot_aimodel_response(d, regr_response=False)
+    d = AimodelPlotdata(
+        model, X, ytrue, ycont, y_thr, colnames, slicing_x, sweep_vars,
+    )
+    classif_figure = plot_aimodel_response(d)
     assert isinstance(classif_figure, Figure)
     if SHOW_PLOT:
         classif_figure.show()
@@ -102,13 +104,6 @@ def _test_aimodel_2vars(approach: str):
     ycont_hat = model.predict_ycont(X)
     assert ycont_hat.shape == (N,)
     assert ycont_hat.dtype == float
-
-    # plot regressor response
-    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x, sweep_vars)
-    regr_figure = plot_aimodel_response(d, regr_response=True)
-    assert isinstance(regr_figure, Figure)
-    if SHOW_PLOT:
-        regr_figure.show()
 
 
 @enforce_types
