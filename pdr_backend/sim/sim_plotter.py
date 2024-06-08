@@ -218,22 +218,40 @@ class SimPlotter:
         s2 = f"f1={clm.f1s[-1]:.4f}"
         s2 += f" [recall={clm.recalls[-1]:.4f}"
         s2 += f", precision={clm.precisions[-1]:.4f}]"
-        
+
         s3 = f"log loss = {clm.losses[-1]:.4f}"
-        
+
         # make subplots
         fig = make_subplots(
-            rows=3, cols=1, shared_xaxes=True, #vertical_spacing=0.02,
+            rows=3,
+            cols=1,
             subplot_titles=(s1, s2, s3),
+            vertical_spacing=0.08,
         )
 
         # fill in subplots
-        self._add_subplot_accuracy_vs_time(fig) # row 1
-        self._add_subplot_f1_precision_recall_vs_time(fig) # row 2
-        self._add_subplot_log_loss_vs_time(fig) # row 3
+        self._add_subplot_accuracy_vs_time(fig)  # row 1
+        self._add_subplot_f1_precision_recall_vs_time(fig)  # row 2
+        self._add_subplot_log_loss_vs_time(fig)  # row 3
 
-        # global
-        fig.update_xaxes(title="time")
+        # global: set minor ticks
+        minor = {"ticks": "inside", "showgrid": True}
+        for row in [1, 2, 3]:
+            fig.update_yaxes(minor=minor, row=row, col=1)
+            fig.update_xaxes(minor=minor, row=row, col=1)
+
+        # global: share x-axes of subplots
+        fig.update_layout(
+            {
+                "xaxis": {"matches": "x", "showticklabels": True},
+                "xaxis2": {"matches": "x", "showticklabels": True},
+                "xaxis3": {"matches": "x", "showticklabels": True},
+            }
+        )
+        fig.update_xaxes(title="time", row=3, col=1)
+
+        # global: don't show legend
+        fig.update_layout(showlegend=False)
 
         return fig
 
@@ -257,7 +275,6 @@ class SimPlotter:
                     name="accuracy upper bound",
                     marker_color="#636EFA",
                 ),
-
                 # line: upper bound
                 go.Scatter(
                     x=df["time"],
@@ -267,7 +284,6 @@ class SimPlotter:
                     name="accuracy lower bound",
                     marker_color="#636EFA",
                 ),
-
                 # line: estimated accuracy
                 go.Scatter(
                     x=df["time"],
@@ -276,20 +292,19 @@ class SimPlotter:
                     name="accuracy",
                     marker_color="#000000",
                 ),
-
                 # line: 50% horizontal
                 go.Scatter(
                     x=[min(df["time"]), max(df["time"])],
-                    y=[50,50],
+                    y=[50, 50],
                     mode="lines",
                     marker_color="grey",
                 ),
             ],
-            rows=[1,1,1,1],
-            cols=[1,1,1,1],
+            rows=[1, 1, 1, 1],
+            cols=[1, 1, 1, 1],
         )
         fig.update_yaxes(title_text="accuracy (%)", row=1, col=1)
-        
+
     @enforce_types
     def _add_subplot_f1_precision_recall_vs_time(self, fig):
         clm = self.st.clm
@@ -333,8 +348,8 @@ class SimPlotter:
                     marker_color="grey",
                 ),
             ],
-            rows=[2,2,2,2],
-            cols=[1,1,1,1],
+            rows=[2, 2, 2, 2],
+            cols=[1, 1, 1, 1],
         )
         fig.update_yaxes(title_text="f1, etc", row=2, col=1)
 

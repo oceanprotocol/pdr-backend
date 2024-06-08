@@ -77,10 +77,10 @@ def get_tabs(figures):
                         dcc.Graph(
                             figure=figures["model_performance_vs_time"],
                             id="model_performance_vs_time",
-                            style={"width": "100%"},
+                            style={"width": "100%", "height": "100%"},
                         ),
                     ],
-                    style={"width": "100%", "height": "50%"},
+                    style={"width": "100%", "height": "100%"},
                 ),
             ],
         },
