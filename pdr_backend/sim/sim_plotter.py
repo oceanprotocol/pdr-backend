@@ -5,10 +5,11 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from enforce_typing import enforce_types
+from plotly.subplots import make_subplots
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
@@ -148,128 +149,6 @@ class SimPlotter:
         return fig
 
     @enforce_types
-    def plot_trader_profit_vs_time(self):
-        y10 = list(np.cumsum(self.st.trader_profits_USD))
-
-        s = f"Trader profit vs time. Current: ${y10[-1]:.2f}"
-        y = "trader profit (USD)"
-        df = pd.DataFrame(y10, columns=[y])
-        df["time"] = range(len(y10))
-
-        fig = go.Figure(
-            go.Scatter(x=df["time"], y=df[y], mode="lines", name="trader profit")
-        )
-
-        fig.add_hline(y=0, line_dash="dot", line_color="grey")
-        fig.update_layout(title=s)
-        fig.update_xaxes(title="time")
-        fig.update_yaxes(title=y)
-
-        return fig
-
-    @enforce_types
-    def plot_accuracy_vs_time(self):
-        clm = self.st.clm
-        s = f"accuracy = {clm.acc_ests[-1]*100:.2f}% "
-        s += f"[{clm.acc_ls[-1]*100:.2f}%, {clm.acc_us[-1]*100:.2f}%]"
-
-        y = "% correct (lower, upper bound)"
-        acc_ests = [100 * a for a in clm.acc_ests]
-        df = pd.DataFrame(acc_ests, columns=[y])
-        df["acc_ls"] = [100 * a for a in clm.acc_ls]
-        df["acc_us"] = [100 * a for a in clm.acc_us]
-        df["time"] = range(len(clm.acc_ests))
-
-        fig = go.Figure(
-            [
-                go.Scatter(
-                    x=df["time"],
-                    y=df["acc_us"],
-                    mode="lines",
-                    fill=None,
-                    name="accuracy upper bound",
-                    marker_color="#636EFA",
-                ),
-                go.Scatter(
-                    x=df["time"],
-                    y=df["acc_ls"],
-                    mode="lines",
-                    fill="tonexty",
-                    name="accuracy lower bound",
-                    marker_color="#1F77B4",
-                ),
-            ]
-        )
-
-        fig.update_layout(showlegend=False)
-
-        fig.add_trace(
-            go.Scatter(
-                x=df["time"],
-                y=df[y],
-                mode="lines",
-                name="accuracy",
-                marker_color="#000000",
-            )
-        )
-
-        fig.add_hline(y=50, line_dash="dot", line_color="grey")
-        fig.update_layout(title=s)
-        fig.update_xaxes(title="time")
-        fig.update_yaxes(title=y)
-
-        return fig
-
-    @enforce_types
-    def plot_f1_precision_recall_vs_time(self):
-        clm = self.st.clm
-        s = f"f1={clm.f1s[-1]:.4f}"
-        s += f" [recall={clm.recalls[-1]:.4f}"
-        s += f", precision={clm.precisions[-1]:.4f}]"
-
-        y = "% correct (lower, upper bound)"
-        df = pd.DataFrame(clm.f1s, columns=["f1"])
-        df["precisions"] = clm.precisions
-        df["recalls"] = clm.recalls
-        df["time"] = range(len(clm.f1s))
-
-        fig = go.Figure(
-            go.Scatter(
-                x=df["time"],
-                y=df["f1"],
-                mode="lines",
-                name="f1",
-                marker_color="#72B7B2",
-            ),
-        )
-
-        fig.add_traces(
-            [
-                go.Scatter(
-                    x=df["time"],
-                    y=df["precisions"],
-                    mode="lines",
-                    name="precision",
-                    marker_color="#AB63FA",
-                ),
-                go.Scatter(
-                    x=df["time"],
-                    y=df["recalls"],
-                    mode="lines",
-                    name="recall",
-                    marker_color="#636EFA",
-                ),
-            ]
-        )
-
-        fig.add_hline(y=0.5, line_dash="dot", line_color="grey")
-        fig.update_layout(title=s)
-        fig.update_xaxes(title="time")
-        fig.update_yaxes(title=y)
-
-        return fig
-
-    @enforce_types
     def plot_pdr_profit_vs_ptrue(self):
         avg = np.average(self.st.pdr_profits_OCEAN)
         s = f"pdr profit dist. avg={avg:.2f} OCEAN"
@@ -310,23 +189,182 @@ class SimPlotter:
         return fig
 
     @enforce_types
-    def plot_log_loss_vs_time(self):
-        clm = self.st.clm
-        s = f"log loss = {clm.losses[-1]:.4f}"
+    def plot_trader_profit_vs_time(self):
+        y10 = list(np.cumsum(self.st.trader_profits_USD))
 
-        y = "log loss"
-        df = pd.DataFrame(clm.losses, columns=[y])
-        df["time"] = range(len(clm.losses))
+        s = f"Trader profit vs time. Current: ${y10[-1]:.2f}"
+        y = "trader profit (USD)"
+        df = pd.DataFrame(y10, columns=[y])
+        df["time"] = range(len(y10))
 
         fig = go.Figure(
-            go.Scatter(x=df["time"], y=df[y], mode="lines", name="log loss")
+            go.Scatter(x=df["time"], y=df[y], mode="lines", name="trader profit")
         )
 
+        fig.add_hline(y=0, line_dash="dot", line_color="grey")
         fig.update_layout(title=s)
         fig.update_xaxes(title="time")
         fig.update_yaxes(title=y)
 
         return fig
+
+    @enforce_types
+    def plot_model_performance_vs_time(self):
+        # set titles
+        clm = self.st.clm
+        s1 = f"accuracy = {clm.acc_ests[-1]*100:.2f}% "
+        s1 += f"[{clm.acc_ls[-1]*100:.2f}%, {clm.acc_us[-1]*100:.2f}%]"
+
+        s2 = f"f1={clm.f1s[-1]:.4f}"
+        s2 += f" [recall={clm.recalls[-1]:.4f}"
+        s2 += f", precision={clm.precisions[-1]:.4f}]"
+
+        s3 = f"log loss = {clm.losses[-1]:.4f}"
+
+        # make subplots
+        fig = make_subplots(
+            rows=3,
+            cols=1,
+            subplot_titles=(s1, s2, s3),
+            vertical_spacing=0.08,
+        )
+
+        # fill in subplots
+        self._add_subplot_accuracy_vs_time(fig)  # row 1
+        self._add_subplot_f1_precision_recall_vs_time(fig)  # row 2
+        self._add_subplot_log_loss_vs_time(fig)  # row 3
+
+        # global: set minor ticks
+        minor = {"ticks": "inside", "showgrid": True}
+        for row in [1, 2, 3]:
+            fig.update_yaxes(minor=minor, row=row, col=1)
+            fig.update_xaxes(minor=minor, row=row, col=1)
+
+        # global: share x-axes of subplots
+        fig.update_layout(
+            {
+                "xaxis": {"matches": "x", "showticklabels": True},
+                "xaxis2": {"matches": "x", "showticklabels": True},
+                "xaxis3": {"matches": "x", "showticklabels": True},
+            }
+        )
+        fig.update_xaxes(title="time", row=3, col=1)
+
+        # global: don't show legend
+        fig.update_layout(showlegend=False)
+
+        return fig
+
+    @enforce_types
+    def _add_subplot_accuracy_vs_time(self, fig):
+        clm = self.st.clm
+        acc_ests = [100 * a for a in clm.acc_ests]
+        df = pd.DataFrame(acc_ests, columns=["accuracy"])
+        df["acc_ls"] = [100 * a for a in clm.acc_ls]
+        df["acc_us"] = [100 * a for a in clm.acc_us]
+        df["time"] = range(len(clm.acc_ests))
+
+        fig.add_traces(
+            [
+                # line: lower bound
+                go.Scatter(
+                    x=df["time"],
+                    y=df["acc_us"],
+                    mode="lines",
+                    fill=None,
+                    name="accuracy upper bound",
+                    marker_color="#636EFA",
+                ),
+                # line: upper bound
+                go.Scatter(
+                    x=df["time"],
+                    y=df["acc_ls"],
+                    mode="lines",
+                    fill="tonexty",
+                    name="accuracy lower bound",
+                    marker_color="#636EFA",
+                ),
+                # line: estimated accuracy
+                go.Scatter(
+                    x=df["time"],
+                    y=df["accuracy"],
+                    mode="lines",
+                    name="accuracy",
+                    marker_color="#000000",
+                ),
+                # line: 50% horizontal
+                go.Scatter(
+                    x=[min(df["time"]), max(df["time"])],
+                    y=[50, 50],
+                    mode="lines",
+                    marker_color="grey",
+                ),
+            ],
+            rows=[1, 1, 1, 1],
+            cols=[1, 1, 1, 1],
+        )
+        fig.update_yaxes(title_text="accuracy (%)", row=1, col=1)
+
+    @enforce_types
+    def _add_subplot_f1_precision_recall_vs_time(self, fig):
+        clm = self.st.clm
+        df = pd.DataFrame(clm.f1s, columns=["f1"])
+        df["precisions"] = clm.precisions
+        df["recalls"] = clm.recalls
+        df["time"] = range(len(clm.f1s))
+
+        fig.add_traces(
+            [
+                # line: f1
+                go.Scatter(
+                    x=df["time"],
+                    y=df["f1"],
+                    mode="lines",
+                    name="f1",
+                    marker_color="#72B7B2",
+                ),
+                # line: precision
+                go.Scatter(
+                    x=df["time"],
+                    y=df["precisions"],
+                    mode="lines",
+                    name="precision",
+                    marker_color="#AB63FA",
+                ),
+                # line: recall
+                go.Scatter(
+                    x=df["time"],
+                    y=df["recalls"],
+                    mode="lines",
+                    name="recall",
+                    marker_color="#636EFA",
+                ),
+                # line: 0.5 horizontal
+                go.Scatter(
+                    x=[min(df["time"]), max(df["time"])],
+                    y=[0.5, 0.5],
+                    mode="lines",
+                    name="",
+                    marker_color="grey",
+                ),
+            ],
+            rows=[2, 2, 2, 2],
+            cols=[1, 1, 1, 1],
+        )
+        fig.update_yaxes(title_text="f1, etc", row=2, col=1)
+
+    @enforce_types
+    def _add_subplot_log_loss_vs_time(self, fig):
+        clm = self.st.clm
+        df = pd.DataFrame(clm.losses, columns=["log loss"])
+        df["time"] = range(len(clm.losses))
+
+        fig.add_trace(
+            go.Scatter(x=df["time"], y=df["log loss"], mode="lines", name="log loss"),
+            row=3,
+            col=1,
+        )
+        fig.update_yaxes(title_text="log loss", row=3, col=1)
 
 
 def file_age_in_seconds(pathname):

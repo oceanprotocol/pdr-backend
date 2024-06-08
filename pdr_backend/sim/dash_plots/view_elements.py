@@ -4,13 +4,11 @@ from plotly.graph_objs import Figure
 figure_names = [
     "pdr_profit_vs_time",
     "trader_profit_vs_time",
-    "accuracy_vs_time",
     "pdr_profit_vs_ptrue",
     "trader_profit_vs_ptrue",
+    "model_performance_vs_time",
     "aimodel_varimps",
     "aimodel_response",
-    "f1_precision_recall_vs_time",
-    "log_loss_vs_time",
 ]
 
 empty_selected_vars = dcc.Checklist([], [], id="selected_vars")
@@ -77,15 +75,12 @@ def get_tabs(figures):
                 html.Div(
                     [
                         dcc.Graph(
-                            figure=figures["accuracy_vs_time"],
-                            id="accuracy_vs_time",
-                            style={"width": "100%"},
+                            figure=figures["model_performance_vs_time"],
+                            id="model_performance_vs_time",
+                            style={"width": "100%", "height": "100%"},
                         ),
                     ],
-                    style={"width": "100%", "height": "50%"},
-                ),
-                side_by_side_graphs(
-                    figures, "f1_precision_recall_vs_time", "log_loss_vs_time"
+                    style={"width": "100%", "height": "100%"},
                 ),
             ],
         },
