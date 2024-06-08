@@ -102,6 +102,7 @@ class Aimodel:
         """
         assert self.do_regr
         N = X.shape[0]
+        X = self._scaler.transform(X)
         n_regrs = len(self._sk_regrs)
         Ycont = np.zeros((N, n_regrs), dtype=float)
         for i in range(n_regrs):
