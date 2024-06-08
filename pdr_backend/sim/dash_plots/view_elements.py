@@ -41,17 +41,24 @@ def get_header_elements(run_id, st, ts):
     ]
 
 
-def side_by_side_graphs(figures, name1, name2):
+def side_by_side_graphs(
+        figures,
+        name1:str,
+        name2:str,
+        height:str="50%",
+        width1:str="50%",
+        width2:str="50%",
+):
     return html.Div(
         [
-            dcc.Graph(figure=figures[name1], id=name1, style={"width": "50%"}),
-            dcc.Graph(figure=figures[name2], id=name2, style={"width": "50%"}),
+            dcc.Graph(figure=figures[name1], id=name1, style={"width": width1}),
+            dcc.Graph(figure=figures[name2], id=name2, style={"width": width2}),
         ],
         style={
             "display": "flex",
             "justifyContent": "space-between",
             "width": "100%",
-            "height": "50%",
+            "height": height,
         },
     )
 
@@ -87,7 +94,14 @@ def get_tabs(figures):
         {
             "name": "Model response",
             "components": [
-                side_by_side_graphs(figures, "aimodel_varimps", "aimodel_response")
+                side_by_side_graphs(
+                    figures,
+                    name1 = "aimodel_varimps",
+                    name2 = "aimodel_response",
+                    height = "100%",
+                    width1 = "30%",
+                    width2 = "70%",
+                )
             ],
         },
     ]
