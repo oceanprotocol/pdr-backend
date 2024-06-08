@@ -52,11 +52,9 @@ def test_get_figures_by_state():
     mock_sim_plotter = Mock(spec=SimPlotter)
     mock_sim_plotter.plot_pdr_profit_vs_time.return_value = Figure()
     mock_sim_plotter.plot_trader_profit_vs_time.return_value = Figure()
-    mock_sim_plotter.plot_accuracy_vs_time.return_value = Figure()
     mock_sim_plotter.plot_pdr_profit_vs_ptrue.return_value = Figure()
     mock_sim_plotter.plot_trader_profit_vs_ptrue.return_value = Figure()
-    mock_sim_plotter.plot_f1_precision_recall_vs_time.return_value = Figure()
-    mock_sim_plotter.plot_log_loss_vs_time.return_value = Figure()
+    mock_sim_plotter.plot_model_performance_vs_time.return_value = Figure()
 
     plotdata = Mock()
     plotdata.colnames = ["var1", "var2"]
