@@ -129,7 +129,7 @@ def compactSmallNum(x: Union[float, int]) -> str:
     if x == 0:
         return "0"
 
-    if x >= 0.01:
+    if abs(x) >= 0.01:
         return f"{x:6.2f}".strip()
 
     s = f"{x:6.2e}"
