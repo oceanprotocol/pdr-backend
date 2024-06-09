@@ -3,8 +3,8 @@ from plotly.graph_objs import Figure
 
 figure_names = [
     "pdr_profit_vs_time",
-    "trader_profit_vs_time",
     "pdr_profit_vs_ptrue",
+    "trader_profit_vs_time",
     "trader_profit_vs_ptrue",
     "model_performance_vs_time",
     "aimodel_varimps",
@@ -66,13 +66,52 @@ def side_by_side_graphs(
 def get_tabs(figures):
     return [
         {
-            "name": "Profit",
+            "name": "Predictoor Profit",
             "components": [
-                side_by_side_graphs(
-                    figures, "pdr_profit_vs_time", "trader_profit_vs_time"
+                html.Div(
+                    [
+                        dcc.Graph(
+                            figure=figures["pdr_profit_vs_time"],
+                            id="pdr_profit_vs_time",
+                            style={"width": "100%", "height": "100%"},
+                        ),
+                    ],
+                    style={"width": "100%", "height": "100%"},
                 ),
-                side_by_side_graphs(
-                    figures, "pdr_profit_vs_ptrue", "trader_profit_vs_ptrue"
+                html.Div(
+                    [
+                        dcc.Graph(
+                            figure=figures["pdr_profit_vs_ptrue"],
+                            id="pdr_profit_vs_ptrue",
+                            style={"width": "100%", "height": "100%"},
+                        ),
+                    ],
+                    style={"width": "50%", "height": "100%"},
+                ),
+            ],
+        },
+        {
+            "name": "Trader Profit",
+            "components": [
+                html.Div(
+                    [
+                        dcc.Graph(
+                            figure=figures["trader_profit_vs_time"],
+                            id="trader_profit_vs_time",
+                            style={"width": "100%", "height": "100%"},
+                        ),
+                    ],
+                    style={"width": "100%", "height": "100%"},
+                ),
+                html.Div(
+                    [
+                        dcc.Graph(
+                            figure=figures["trader_profit_vs_ptrue"],
+                            id="trader_profit_vs_ptrue",
+                            style={"width": "100%", "height": "100%"},
+                        ),
+                    ],
+                    style={"width": "50%", "height": "100%"},
                 ),
             ],
         },
