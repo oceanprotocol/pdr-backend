@@ -371,8 +371,8 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
     imps_stddev = imps_stddev * 100.0
     imps_lower = np.clip(imps_avg - imps_stddev * 2.0, 0.0, np.inf)
     imps_upper = imps_avg + imps_stddev * 2.0
-    error_x_lower = imps_stddev - imps_lower
-    error_x_upper = imps_upper - imps_stddev
+    error_x_lower = imps_avg - imps_lower
+    error_x_upper = imps_upper - imps_avg
 
     labelalias = {}
     colors = []
