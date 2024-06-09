@@ -303,10 +303,20 @@ def _test_aimodel_5varmodel_lineplot(approach):
 
 
 @enforce_types
-def test_aimodel_factory_4vars_response():
+def test_aimodel_4vars_response_ClassifLinearRidge():
+    _test_aimodel_4vars_response("ClassifLinearRidge")
+
+
+@enforce_types
+def _test_aimodel_4vars_response_RegrLinearRidge():
+    _test_aimodel_4vars_response("RegrLinearRidge")
+
+
+@enforce_types
+def _test_aimodel_4vars_response(approach):
     """4 input vars. It will plot the 2 most important vars"""
     # settings, factory
-    ss = AimodelSS(aimodel_ss_test_dict(approach="ClassifLinearRidge"))
+    ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
 
     # data
@@ -352,47 +362,8 @@ def test_aimodel_factory_4vars_response():
 
 
 @enforce_types
-def test_aimodel_factory_1var_varimps():
-    _test_aimodel_factory_nvars_varimps(n=1)
-
-
-@enforce_types
-def test_aimodel_factory_2vars_varimps():
-    _test_aimodel_factory_nvars_varimps(n=2)
-
-
-@enforce_types
-def test_aimodel_factory_3vars_varimps():
-    _test_aimodel_factory_nvars_varimps(n=3)
-
-
-@enforce_types
-def test_aimodel_factory_4vars_varimps():
-    _test_aimodel_factory_nvars_varimps(n=4)
-
-
-@enforce_types
-def test_aimodel_factory_5vars_varimps():
-    _test_aimodel_factory_nvars_varimps(n=5)
-
-
-@enforce_types
-def test_aimodel_factory_10vars_varimps():
-    _test_aimodel_factory_nvars_varimps(n=5)
-
-
-@enforce_types
-def test_aimodel_factory_25vars_varimps():
-    _test_aimodel_factory_nvars_varimps(25)
-
-
-@enforce_types
-def test_aimodel_factory_100vars_varimps():
-    _test_aimodel_factory_nvars_varimps(100)
-
-
-@enforce_types
-def _test_aimodel_factory_nvars_varimps(n: int):
+@pytest.mark.parametrize("n", [1, 2, 3, 4, 5, 10, 25, 100])
+def test_aimodel_nvars_varimps(n: int):
     varnames = [f"x{i}" for i in range(n)]
     imps_avg = np.array([n - i + 1 for i in range(n)])
     assert imps_avg.shape[0] == n
