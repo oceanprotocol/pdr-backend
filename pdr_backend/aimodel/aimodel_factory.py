@@ -118,8 +118,7 @@ class AimodelFactory:
         model = Aimodel(scaler, sk_regrs, y_thr, None)
 
         # variable importances
-        ytrue = ycont > y_thr
-        model.set_importance_per_var(X, ytrue)
+        model.set_importance_per_var(X, ycont)
 
         # return
         return model
