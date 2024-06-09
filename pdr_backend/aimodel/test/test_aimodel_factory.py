@@ -360,6 +360,7 @@ def _test_aimodel_4vars_response(approach):
     if SHOW_PLOT:
         figure.show()
 
+
 @enforce_types
 @pytest.mark.parametrize("n", [1, 2, 3, 4, 5, 10, 25, 100])
 def test_aimodel_nvars_varimps(n: int):
