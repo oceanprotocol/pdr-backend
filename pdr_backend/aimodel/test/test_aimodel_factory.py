@@ -303,18 +303,32 @@ def _test_aimodel_5varmodel_lineplot(approach):
 
 
 @enforce_types
-def test_aimodel_4vars_response_ClassifLinearRidge():
-    _test_aimodel_4vars_response("ClassifLinearRidge")
+def test_aimodel_4vars_response_ClassifLinearRidge_1_class_in_data():
+    # if just 1 class in the data, it should have flat var impacts
+    _test_aimodel_4vars_response("ClassifLinearRidge", 1)
 
 
 @enforce_types
-def _test_aimodel_4vars_response_RegrLinearRidge():
-    _test_aimodel_4vars_response("RegrLinearRidge")
+def test_aimodel_4vars_response_ClassifLinearRidge_2_classes_in_data():
+    _test_aimodel_4vars_response("ClassifLinearRidge", 2)
 
 
 @enforce_types
-def _test_aimodel_4vars_response(approach):
-    """4 input vars. It will plot the 2 most important vars"""
+def test_aimodel_4vars_response_RegrLinearRidge_1_class_in_data():
+    # even if just 1 class in the data, it should still have sane var impacts
+    _test_aimodel_4vars_response("RegrLinearRidge", 1)
+
+
+@enforce_types
+def test_aimodel_4vars_response_RegrLinearRidge_2_classes_in_data():
+    _test_aimodel_4vars_response("RegrLinearRidge", 2)
+
+
+@enforce_types
+def _test_aimodel_4vars_response(approach: str, target_n_classes: int):
+    """4 input vars. It will plot the 2 most important vars."""
+    assert target_n_classes in [1, 2]
+
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
@@ -324,21 +338,27 @@ def _test_aimodel_4vars_response(approach):
     mn, mx = -10.0, +10.0
     X = np.random.uniform(mn, mx, (N, 4))
     ycont = 3.0 + 4.0 * X[:, 0] + 3.0 * X[:, 1] + 2.0 * X[:, 2] + 1.0 * X[:, 3]
-    y_thr = np.average(ycont)  # avg gives good class balance
+    if target_n_classes == 2:
+        y_thr = np.average(ycont)  # avg gives good class balance
+    else:
+        y_thr = 1000.0
     ytrue = ycont > y_thr
     colnames = ["x0", "x1", "x3", "x4"]
 
     # build model
-    model = factory.build(X, ytrue, show_warnings=False)
+    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
 
     # test variable importances
     imps = model.importance_per_var()
-    assert imps[0] > imps[1] > imps[2] > imps[3] > 0.0
-    assert sum(imps) == approx(1.0, 0.01)
-    assert imps[0] == approx(4.0 / 10.0, abs=0.2)
-    assert imps[1] == approx(3.0 / 10.0, abs=0.2)
-    assert imps[2] == approx(2.0 / 10.0, abs=0.2)
-    assert imps[3] == approx(1.0 / 10.0, abs=0.2)
+    if model.do_regr or target_n_classes == 2:  # expect sane var impacts
+        assert imps[0] > imps[1] > imps[2] > imps[3] > 0.0
+        assert sum(imps) == approx(1.0, 0.01)
+        assert imps[0] == approx(4.0 / 10.0, abs=0.2)
+        assert imps[1] == approx(3.0 / 10.0, abs=0.2)
+        assert imps[2] == approx(2.0 / 10.0, abs=0.2)
+        assert imps[3] == approx(1.0 / 10.0, abs=0.2)
+    else:
+        assert min(imps) == max(imps) == 0.25
 
     # plot model response
     slicing_x = np.array([0.1, 1.0, 2.0, 3.0])  # arbitrary
