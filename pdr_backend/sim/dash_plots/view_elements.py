@@ -77,7 +77,7 @@ def get_tabs(figures):
                         ),
                     ],
                     style={"width": "100%", "height": "100%"},
-                ),  
+                ),
                 html.Div(
                     [
                         dcc.Graph(
@@ -87,7 +87,7 @@ def get_tabs(figures):
                         ),
                     ],
                     style={"width": "50%", "height": "100%"},
-                ),              
+                ),
             ],
         },
         {
@@ -102,7 +102,7 @@ def get_tabs(figures):
                         ),
                     ],
                     style={"width": "100%", "height": "100%"},
-                ),  
+                ),
                 html.Div(
                     [
                         dcc.Graph(
@@ -112,7 +112,7 @@ def get_tabs(figures):
                         ),
                     ],
                     style={"width": "50%", "height": "100%"},
-                ),              
+                ),
             ],
         },
         {
