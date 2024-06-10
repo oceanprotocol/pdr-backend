@@ -42,7 +42,7 @@ install_requirements = [
     "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
     "types-pyYAML==6.0.12.20240311",
-    "types-requests==2.32.0.20240523",
+    "types-requests==2.32.0.20240602",
     "dash_bootstrap_components==1.6.0",
     "web3==6.19.0",
     "sapphire.py==0.2.3",
