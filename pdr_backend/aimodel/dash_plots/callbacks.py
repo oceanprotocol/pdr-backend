@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from dash import Input, Output, State, html
 import dash_bootstrap_components as dbc
-from scipy import stats
 
 from pdr_backend.aimodel.autocorrelation import AutocorrelationPlotdataFactory
 from pdr_backend.aimodel.autocorrelation_plotter import (
@@ -29,6 +28,7 @@ from pdr_backend.aimodel.seasonal_plotter import (
     plot_relative_energies,
 )
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
+from pdr_backend.statutil.boxcox import safe_boxcox
 from pdr_backend.util.time_types import UnixTimeS
 
 DATE_STRING_FORMAT = "%Y-%m-%d"
@@ -104,7 +104,7 @@ def get_callbacks(app):
         # get data for autocorelation
         y = np.array(y)
         if do_boxcox:
-            y, _ = stats.boxcox(y)
+            y = safe_boxcox(y)
 
         for _ in range(differencing_order):
             y = y[1:] - y[:-1]
@@ -198,7 +198,10 @@ def get_callbacks(app):
     def create_transition_chart(
         div, date_picker_start_date, date_picker_end_date, feed_data, files_data
     ):
-        files_data[feed_data] = files_data[feed_data] = filter_file_data_by_date(
+        if not files_data:
+            return dash.no_update
+
+        files_data[feed_data] = filter_file_data_by_date(
             files_data[feed_data],
             datetime.strptime(date_picker_start_date, DATE_STRING_FORMAT),
             datetime.strptime(date_picker_end_date, DATE_STRING_FORMAT),
