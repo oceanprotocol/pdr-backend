@@ -17,17 +17,20 @@ def _do_sql_predictions(
     WITH SelectedData AS (
     SELECT
         {prediction_table.table_name}.ID,
+        SPLIT_PART({prediction_table.table_name}.ID, '-', 1)
+            || '-' || SPLIT_PART({prediction_table.table_name}.ID, '-', 2) AS slot_id,
         {prediction_table.table_name}.contract,
+        {prediction_table.table_name}.slot,
+        {prediction_table.table_name}.user,
         {prediction_table.table_name}.pair,
         {prediction_table.table_name}.timeframe,
-        {prediction_table.table_name}.predvalue,
-        {prediction_table.table_name}.stake,
-        {prediction_table.table_name}.truevalue,
-        {prediction_table.table_name}.timestamp,
         {prediction_table.table_name}.source,
+        {prediction_table.table_name}.predvalue,
+        {prediction_table.table_name}.truevalue,
+        {prediction_table.table_name}.stake,
         {prediction_table.table_name}.payout,
-        {prediction_table.table_name}.slot,
-        {prediction_table.table_name}.user
+        {prediction_table.table_name}.timestamp,
+        {prediction_table.table_name}.timestamp as last_event_timestamp,
     from
         {prediction_table.table_name}
     where
