@@ -20,6 +20,9 @@ def _do_sql_bronze_predictions(
     # prod + updated records joined - to be swapped with prod tables
     temp_update_bronze_prediction_table = TempUpdateTable.from_dataclass(BronzePrediction)
 
+    df = db.query_data(f"SELECT * FROM {temp_bronze_prediction_table.fullname}")
+    df.write_csv("pre_query_temp_bronze_prediction_table.csv")
+
     query = f"""
     -- Consider that trueval + payout events can happen within seconds from each other
     -- To optimize this whole process we will group update events by ID, and only THEN perform the join
@@ -33,65 +36,71 @@ def _do_sql_bronze_predictions(
         null as pair,
         null as timeframe,
         null as source,
-        MAX({update_bronze_prediction_table.table_name}.predvalue) as predvalue,
-        MAX({update_bronze_prediction_table.table_name}.truevalue) as truevalue,
-        MAX({update_bronze_prediction_table.table_name}.stake) as stake,
-        MAX({update_bronze_prediction_table.table_name}.revenue) as revenue,
-        MAX({update_bronze_prediction_table.table_name}.payout) as payout,
+        MAX({update_bronze_prediction_table.fullname}.predvalue) as predvalue,
+        MAX({update_bronze_prediction_table.fullname}.truevalue) as truevalue,
+        MAX({update_bronze_prediction_table.fullname}.stake) as stake,
+        MAX({update_bronze_prediction_table.fullname}.revenue) as revenue,
+        MAX({update_bronze_prediction_table.fullname}.payout) as payout,
         null as timestamp,
-        MAX({update_bronze_prediction_table.table_name}.timestamp) as last_event_timestamp
+        MAX({update_bronze_prediction_table.fullname}.timestamp) as last_event_timestamp
     FROM
-        {update_bronze_prediction_table.table_name}
+        {update_bronze_prediction_table.fullname}
     GROUP BY ID;
     
     -- 2. now, we need to update our tables
     -- 2a. first, we're going to enrich the new records that are in the _temp table
     -- These records are ready-to-be-merged and not in prod tables, so, just update their columns.
-    UPDATE {temp_bronze_prediction_table.table_name}
+    UPDATE {temp_bronze_prediction_table.fullname}
     SET
-        predvalue = COALESCE({temp_bronze_prediction_table.table_name}.predvalue, u.predvalue),
-        truevalue = COALESCE({temp_bronze_prediction_table.table_name}.truevalue, u.truevalue),
-        stake = COALESCE({temp_bronze_prediction_table.table_name}.stake, u.stake),
-        revenue = COALESCE({temp_bronze_prediction_table.table_name}.revenue, u.revenue),
-        payout = COALESCE({temp_bronze_prediction_table.table_name}.payout, u.payout),
+        predvalue = COALESCE({temp_bronze_prediction_table.fullname}.predvalue, u.predvalue),
+        truevalue = COALESCE({temp_bronze_prediction_table.fullname}.truevalue, u.truevalue),
+        stake = COALESCE({temp_bronze_prediction_table.fullname}.stake, u.stake),
+        revenue = COALESCE({temp_bronze_prediction_table.fullname}.revenue, u.revenue),
+        payout = COALESCE({temp_bronze_prediction_table.fullname}.payout, u.payout),
         last_event_timestamp = COALESCE(
-            {update_bronze_prediction_table.table_name}.last_event_timestamp, 
+            {update_bronze_prediction_table.fullname}.last_event_timestamp, 
             u.last_event_timestamp
         )
     FROM _update as u
-    WHERE {temp_bronze_prediction_table.table_name}.ID = u.ID;
+    WHERE {temp_bronze_prediction_table.fullname}.ID = u.ID;
 
     -- 2b. Finally join w/ larger historical records from prod table and yield the row to _temp_update table
     -- Step #1 - We can't modify prod table records directly since this would violate atomic properties
     -- Step #2 - Yield updated records into _temp_update table
     -- Step #3 - Use a swap strategy to get _temp_update records into prod table
-    INSERT INTO {temp_update_bronze_prediction_table.table_name}
+    INSERT INTO {temp_update_bronze_prediction_table.fullname}
     SELECT
-        {bronze_prediction_table.table_name}.ID,
-        {bronze_prediction_table.table_name}.slot_id,
-        {bronze_prediction_table.table_name}.contract,
-        {bronze_prediction_table.table_name}.slot,
-        {bronze_prediction_table.table_name}.user,
-        {bronze_prediction_table.table_name}.pair,
-        {bronze_prediction_table.table_name}.timeframe,
-        {bronze_prediction_table.table_name}.source,
-        COALESCE(u.predvalue, {bronze_prediction_table.table_name}.predvalue) as predvalue,
-        COALESCE(u.truevalue, {bronze_prediction_table.table_name}.truevalue) as truevalue,
-        COALESCE(u.stake, {bronze_prediction_table.table_name}.stake) as stake,
-        COALESCE(u.revenue, {bronze_prediction_table.table_name}.revenue) as revenue,
-        COALESCE(u.payout, {bronze_prediction_table.table_name}.payout) as payout,
-        {bronze_prediction_table.table_name}.timestamp,
+        {bronze_prediction_table.fullname}.ID,
+        {bronze_prediction_table.fullname}.slot_id,
+        {bronze_prediction_table.fullname}.contract,
+        {bronze_prediction_table.fullname}.slot,
+        {bronze_prediction_table.fullname}.user,
+        {bronze_prediction_table.fullname}.pair,
+        {bronze_prediction_table.fullname}.timeframe,
+        {bronze_prediction_table.fullname}.source,
+        COALESCE(u.predvalue, {bronze_prediction_table.fullname}.predvalue) as predvalue,
+        COALESCE(u.truevalue, {bronze_prediction_table.fullname}.truevalue) as truevalue,
+        COALESCE(u.stake, {bronze_prediction_table.fullname}.stake) as stake,
+        COALESCE(u.revenue, {bronze_prediction_table.fullname}.revenue) as revenue,
+        COALESCE(u.payout, {bronze_prediction_table.fullname}.payout) as payout,
+        {bronze_prediction_table.fullname}.timestamp,
         GREATEST(
             u.last_event_timestamp,
-            {bronze_prediction_table.table_name}.last_event_timestamp
+            {bronze_prediction_table.fullname}.last_event_timestamp
         ) as last_event_timestamp
     FROM _update as u
-    LEFT JOIN {bronze_prediction_table.table_name}
-    ON u.ID = {bronze_prediction_table.table_name}.ID;
+    LEFT JOIN {bronze_prediction_table.fullname}
+    ON u.ID = {bronze_prediction_table.fullname}.ID;
 
     -- Drop the view
     DROP VIEW _update;
     """
 
-    db.create_table_if_not_exists(temp_update_bronze_prediction_table.table_name, BronzePrediction.get_lake_schema())
-    db.execute_sql(query)
+    # db.create_table_if_not_exists(temp_update_bronze_prediction_table.fullname, BronzePrediction.get_lake_schema())
+    # db.execute_sql(query)
+
+    # df = db.query_data(f"SELECT * FROM {temp_bronze_prediction_table.fullname}")
+    # df.write_csv("post_query_temp_bronze_prediction_table.csv")
+
+    # df = db.query_data(f"SELECT * FROM {temp_update_bronze_prediction_table.fullname}")
+    # df.write_csv("temp_update_bronze_predictions.csv")

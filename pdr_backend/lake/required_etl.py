@@ -32,7 +32,7 @@ _ETL_REGISTERED_TABLE_NAMES = [
 _ETL_REGISTERED_QUERIES = [
     _do_sql_predictions,
     _do_sql_payouts,
-    _do_sql_bronze_predictions
+    # _do_sql_bronze_predictions
 ]
 
 class ETL:
@@ -64,6 +64,8 @@ class ETL:
             table_name = dataclass.get_lake_table_name()
             db.drop_view(ETLTable(table_name).fullname)
             db.drop_table(TempTable(table_name).fullname)
+            db.drop_table(UpdateTable(table_name).fullname)
+            db.drop_table(TempUpdateTable(table_name).fullname)
 
     def _move_from_temp_tables_to_live(self):
         """
@@ -83,6 +85,40 @@ class ETL:
 
                 db.drop_view(ETLTable(table_name).fullname)
                 db.drop_table(temp_table.fullname)
+
+    def _do_bronze_swap_to_prod(self):
+        """
+        @description
+            Merge the bronze ETL tables against prod database
+            This needs to become a single transaction per table
+            Such that it remains atomic, and is able to resume if it fails
+        """
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        
+        etl_tables = ["bronze_predictions"]
+        for table_name in etl_tables:
+            prod_table = NamedTable(table_name)
+            temp_table = TempTable(table_name)
+            update_table = UpdateTable(table_name)
+            temp_update_table = TempUpdateTable(table_name)
+
+            if db.table_exists(update_table.fullname):
+                # Insert new records into live tables
+                db.move_table_data(temp_table, prod_table)
+                
+                # drop all records that were updated
+                db.drop_records_from_table_by_ids(
+                    drop_tabe=prod_table,
+                    ids=update_table.ids
+                )
+
+                # Finally, insert the updated records into live table
+                db.move_table_data(temp_update_table, prod_table)
+
+                # Drop the update table 
+                db.drop_table(temp_table.fullname)
+                db.drop_table(update_table.fullname)
+                db.drop_table(temp_update_table.fullname)
 
     def do_etl(self):
         """
@@ -345,38 +381,3 @@ class ETL:
                 "do_bronze_queries - completed query %s",
                 etl_query,
             )
-    
-    def _upsert_bronze_rows_to_prod(self):
-        """
-        @description
-            Merge the ETL tables
-        """
-        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        
-        etl_tables = ["bronze_predictions"]
-        for table_name in etl_tables:
-            prod_table = NamedTable(table_name)
-            temp_table = TempTable(table_name)
-            update_table = UpdateTable(table_name)
-            temp_update_table = TempUpdateTable(table_name)
-
-            if db.table_exists(update_table.fullname):
-                # Insert new records into live tables
-                db.move_table_data(temp_table, prod_table)
-                
-                # drop all records that were updated
-                db.drop_records_from_table_by_ids(
-                    drop_tabe=prod_table,
-                    ids=update_table.ids
-                )
-
-                # Finally, insert the updated records into live table
-                db.move_table_data(temp_update_table, prod_table)
-
-                # Drop the update table 
-                db.drop_table(update_table.fullname)
-                db.drop_table(temp_update_table.fullname)
-
-        raw_tables = ["pdr_predictions", "pdr_payouts"]
-        for table_name in raw_tables:
-            db.drop_table(update_table.fullname)

@@ -102,6 +102,8 @@ class NamedTable:
             return f"_etl_{self.table_name}"
         if self.table_type == TableType.UPDATE:
             return f"_update_{self.table_name}"
+        if self.table_type == TableType.TEMP_UPDATE:
+            return f"_temp_update_{self.table_name}"
 
         return self.table_name
 
@@ -192,9 +194,9 @@ class UpdateTable(NamedTable):
     # type: ignore[override]
     # pylint: disable=arguments-differ
     def from_dataclass(dataclass: Type[LakeMapper]) -> "UpdateTable":
-        etl_table = UpdateTable(dataclass.get_lake_table_name())
-        etl_table._dataclass = dataclass
-        return etl_table
+        update_table = UpdateTable(dataclass.get_lake_table_name())
+        update_table._dataclass = dataclass
+        return update_table
 
 class TempUpdateTable(NamedTable):
     def __init__(self, table_name: str):
@@ -204,6 +206,6 @@ class TempUpdateTable(NamedTable):
     # type: ignore[override]
     # pylint: disable=arguments-differ
     def from_dataclass(dataclass: Type[LakeMapper]) -> "TempUpdateTable":
-        etl_table = UpdateTable(dataclass.get_lake_table_name())
-        etl_table._dataclass = dataclass
-        return etl_table
+        temp_update_table = TempUpdateTable(dataclass.get_lake_table_name())
+        temp_update_table._dataclass = dataclass
+        return temp_update_table
