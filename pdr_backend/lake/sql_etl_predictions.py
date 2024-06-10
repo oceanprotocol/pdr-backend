@@ -28,6 +28,7 @@ def _do_sql_predictions(
         {prediction_table.table_name}.predvalue,
         {prediction_table.table_name}.truevalue,
         {prediction_table.table_name}.stake,
+        null as revenue,
         {prediction_table.table_name}.payout,
         {prediction_table.table_name}.timestamp,
         {prediction_table.table_name}.timestamp as last_event_timestamp,
