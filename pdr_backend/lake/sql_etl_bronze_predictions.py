@@ -21,6 +21,8 @@ def _do_sql_bronze_predictions(
     temp_update_bronze_prediction_table = TempUpdateTable.from_dataclass(BronzePrediction)
 
     query = f"""
+    -- Consider that trueval + payout events can happen within seconds from each other
+    -- To optimize this whole process we will group update events by ID, and only THEN perform the join
     CREATE TEMPORARY VIEW _update AS
     SELECT
         {update_bronze_prediction_table.table_name}.ID,
@@ -43,7 +45,7 @@ def _do_sql_bronze_predictions(
     GROUP BY ID;
     
     -- 2. now, we need to update our tables
-    -- 2a. update new records that may be in the _temp table
+    -- 2a. first, we're going to enrich the new records that are in the _temp table
     -- These records are ready-to-be-merged and not in prod tables, so, just update their columns.
     UPDATE {temp_bronze_prediction_table.table_name}
     SET
@@ -60,7 +62,7 @@ def _do_sql_bronze_predictions(
     WHERE {temp_bronze_prediction_table.table_name}.ID = u.ID;
 
     -- 2b. Finally join w/ larger historical records from prod table and yield the row to _temp_update table
-    -- Step #1 - Because these records are from the prod table, we can't modify them
+    -- Step #1 - We can't modify prod table records directly since this would violate atomic properties
     -- Step #2 - Yield updated records into _temp_update table
     -- Step #3 - Use a swap strategy to get _temp_update records into prod table
     INSERT INTO {temp_update_bronze_prediction_table.table_name}
