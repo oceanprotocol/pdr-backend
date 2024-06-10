@@ -2,7 +2,7 @@ from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 
-from pdr_backend.aimodel.autocorrelation import (
+from pdr_backend.statutil.autocorrelation import (
     AutocorrelationPlotdata,
     AutocorrelationPlotdataFactory,
     plot_autocorrelation,

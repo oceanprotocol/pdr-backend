@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 import pandas as pd
 
-from pdr_backend.aimodel.seasonal import (
+from pdr_backend.statutil.seasonal import (
     SeasonalDecomposeFactory,
     plot_seasonal,
     SeasonalPlotdata,

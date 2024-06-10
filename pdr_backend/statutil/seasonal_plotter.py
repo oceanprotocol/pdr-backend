@@ -2,7 +2,7 @@ import plotly.graph_objects as go
 from enforce_typing import enforce_types
 from plotly.subplots import make_subplots
 
-from pdr_backend.aimodel.seasonal import SeasonalPlotdata
+from pdr_backend.statutil.seasonal import SeasonalPlotdata
 
 colors = ["black", "blue", "green", "red"]
 minor = {"ticks": "inside", "showgrid": True}
