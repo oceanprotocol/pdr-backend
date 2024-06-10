@@ -2,7 +2,7 @@ import unittest
 import shutil
 import os
 import pandas as pd
-from pdr_backend.aimodel.dash_plots.util import (
+from pdr_backend.statutil.dash_plots.util import (
     read_files_from_directory,
     filter_file_data_by_date,
 )

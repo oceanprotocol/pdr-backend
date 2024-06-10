@@ -6,24 +6,24 @@ import pandas as pd
 from dash import Input, Output, State, html
 import dash_bootstrap_components as dbc
 
-from pdr_backend.aimodel.autocorrelation import AutocorrelationPlotdataFactory
-from pdr_backend.aimodel.autocorrelation_plotter import (
+from pdr_backend.statutil.autocorrelation import AutocorrelationPlotdataFactory
+from pdr_backend.statutil.autocorrelation_plotter import (
     get_transitions,
     plot_acf,
     plot_pacf,
 )
-from pdr_backend.aimodel.dash_plots.tooltips_text import (
+from pdr_backend.statutil.dash_plots.tooltips_text import (
     AUTOCORRELATION_TOOLTIP,
     SEASONAL_DECOMP_TOOLTIP,
     TRANSITION_TOOLTIP,
 )
-from pdr_backend.aimodel.dash_plots.util import (
+from pdr_backend.statutil.dash_plots.util import (
     filter_file_data_by_date,
     read_files_from_directory,
 )
-from pdr_backend.aimodel.dash_plots.view_elements import get_column_graphs
-from pdr_backend.aimodel.seasonal import SeasonalDecomposeFactory, SeasonalPlotdata
-from pdr_backend.aimodel.seasonal_plotter import (
+from pdr_backend.statutil.dash_plots.view_elements import get_column_graphs
+from pdr_backend.statutil.seasonal import SeasonalDecomposeFactory, SeasonalPlotdata
+from pdr_backend.statutil.seasonal_plotter import (
     create_seasonal_plot,
     plot_relative_energies,
 )
