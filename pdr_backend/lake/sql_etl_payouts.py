@@ -16,23 +16,23 @@ def _do_sql_payouts(
     -- Define a CTE to select data once and use it multiple times
     WITH _payout AS (
     SELECT
-        {payout_table.table_name}.ID,
-        {payout_table.table_name}.slot,
-        {payout_table.table_name}.user,
-        {payout_table.table_name}.stake,
-        {payout_table.table_name}.predvalue,
-        {payout_table.table_name}.payout,
-        {payout_table.table_name}.timestamp,
+        {payout_table.fullname}.ID,
+        {payout_table.fullname}.slot,
+        {payout_table.fullname}.user,
+        {payout_table.fullname}.stake,
+        {payout_table.fullname}.predvalue,
+        {payout_table.fullname}.payout,
+        {payout_table.fullname}.timestamp,
     from
-        {payout_table.table_name}
+        {payout_table.fullname}
     where
-        {payout_table.table_name}.timestamp >= {st_ms}
-        and {payout_table.table_name}.timestamp < {fin_ms}
+        {payout_table.fullname}.timestamp >= {st_ms}
+        and {payout_table.fullname}.timestamp < {fin_ms}
     )
 
     -- We track data we need from payout into _update_prediction_predctions table
     -- All other params are null.
-    INSERT INTO {update_bronze_prediction_table.table_name}
+    INSERT INTO {update_bronze_prediction_table.fullname}
     SELECT 
         p.ID,
         SPLIT_PART(p.ID, '-', 1)
@@ -50,9 +50,9 @@ def _do_sql_payouts(
         null as revenue,
         p.payout,
         p.timestamp,
-        null as last_event_timestamp
+        p.timestamp as last_event_timestamp
     FROM _payout as p;
     """
 
-    db.create_table_if_not_exists(update_bronze_prediction_table.table_name, BronzePrediction.get_lake_schema())
+    db.create_table_if_not_exists(update_bronze_prediction_table.fullname, BronzePrediction.get_lake_schema())
     db.execute_sql(query)
