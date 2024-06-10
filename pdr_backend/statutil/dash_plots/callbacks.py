@@ -12,16 +12,16 @@ from pdr_backend.aimodel.autocorrelation_plotter import (
     plot_acf,
     plot_pacf,
 )
-from pdr_backend.aimodel.dash_plots.tooltips_text import (
+from pdr_backend.statutil.dash_plots.tooltips_text import (
     AUTOCORRELATION_TOOLTIP,
     SEASONAL_DECOMP_TOOLTIP,
     TRANSITION_TOOLTIP,
 )
-from pdr_backend.aimodel.dash_plots.util import (
+from pdr_backend.statutil.dash_plots.util import (
     filter_file_data_by_date,
     read_files_from_directory,
 )
-from pdr_backend.aimodel.dash_plots.view_elements import get_column_graphs
+from pdr_backend.statutil.dash_plots.view_elements import get_column_graphs
 from pdr_backend.aimodel.seasonal import SeasonalDecomposeFactory, SeasonalPlotdata
 from pdr_backend.aimodel.seasonal_plotter import (
     create_seasonal_plot,

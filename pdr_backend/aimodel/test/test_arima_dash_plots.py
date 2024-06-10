@@ -1,7 +1,7 @@
 from dash import dcc, html
 from plotly.graph_objs import Figure
 
-from pdr_backend.aimodel.dash_plots.view_elements import (
+from pdr_backend.statutil.dash_plots.view_elements import (
     get_graphs_container,
     display_plots_view,
     display_on_column_graphs,
