@@ -14,7 +14,7 @@ def _do_sql_predictions(
 
     query = f"""
     -- Define a CTE to select data once and use it multiple times
-    WITH SelectedData AS (
+    WITH _predictions AS (
     SELECT
         {prediction_table.table_name}.ID,
         SPLIT_PART({prediction_table.table_name}.ID, '-', 1)
@@ -40,7 +40,9 @@ def _do_sql_predictions(
     )
 
     INSERT INTO {temp_bronze_prediction_table.table_name}
-    SELECT * FROM SelectedData;
+    SELECT 
+        * 
+    FROM _predictions as p;
     """
 
     db.create_table_if_not_exists(temp_bronze_prediction_table.table_name, BronzePrediction.get_lake_schema())

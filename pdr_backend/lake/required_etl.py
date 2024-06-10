@@ -31,8 +31,8 @@ _ETL_REGISTERED_TABLE_NAMES = [
 
 _ETL_REGISTERED_QUERIES = [
     _do_sql_predictions,
-    _do_sql_payouts
-    # _do_sql_bronze_predictions
+    _do_sql_payouts,
+    _do_sql_bronze_predictions
 ]
 
 class ETL:
