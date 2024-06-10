@@ -1,13 +1,13 @@
 from enforce_typing import enforce_types
-import pandas as pd
 import numpy as np
-from scipy import stats
+import pandas as pd
 
 from pdr_backend.aimodel.autocorrelation import (
     AutocorrelationPlotdata,
     AutocorrelationPlotdataFactory,
     plot_autocorrelation,
 )
+from pdr_backend.statutil.boxcox import safe_boxcox
 
 DATA_FILE = (
     "./pdr_backend/lake/test/merged_ohlcv_df_BTC-ETH_2024-02-01_to_2024-03-08.csv"
@@ -33,7 +33,7 @@ def test_autocorrelation():
     #
     y = np.array(_get_data())  # [:1000]
     if do_boxcox:
-        y, _ = stats.boxcox(y)
+        y = safe_boxcox(y)
     for _ in range(differencing_order):
         y = y[1:] - y[:-1]
 

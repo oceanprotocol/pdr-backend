@@ -2,13 +2,13 @@ import numpy as np
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
 from plotly.subplots import make_subplots
-from scipy import stats
 from statsmodels.tsa.stattools import adfuller
 
 from pdr_backend.aimodel.autocorrelation import (
     AutocorrelationPlotdata,
     _add_corr_traces,
 )
+from pdr_backend.statutil.boxcox import safe_boxcox
 
 
 @enforce_types
@@ -92,7 +92,7 @@ def get_transitions(selected_idx=None, y=[]):
     adf_results["BC=F,D=0"] = adf_result
 
     # Box-Cox transformation without differencing
-    y_bc, _ = stats.boxcox(y)
+    y_bc = safe_boxcox(y)
     adf_result = adfuller(y_bc)
     adf_results["BC=T,D=0"] = adf_result
 
