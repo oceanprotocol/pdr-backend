@@ -47,9 +47,6 @@ class SimEngine:
         self.st = SimState(
             copy.copy(self.ppss.trader_ss.init_holdings),
         )
-        self.st.trader_profits_USD.append(0)
-
-
 
         self.sim_plotter = SimPlotter()
 
