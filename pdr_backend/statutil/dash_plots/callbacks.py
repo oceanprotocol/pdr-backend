@@ -4,30 +4,33 @@ import dash
 import numpy as np
 import pandas as pd
 from dash import Input, Output, State, html
-from scipy import stats
+import dash_bootstrap_components as dbc
 
-from pdr_backend.aimodel.autocorrelation import AutocorrelationPlotdataFactory
-from pdr_backend.aimodel.autocorrelation_plotter import (
+from pdr_backend.statutil.autocorrelation_plotdata import (
+    AutocorrelationPlotdataFactory,
+)
+from pdr_backend.statutil.autocorrelation_plotter import (
     get_transitions,
     plot_acf,
     plot_pacf,
 )
-from pdr_backend.aimodel.dash_plots.tooltips_text import (
+from pdr_backend.statutil.dash_plots.tooltips_text import (
     AUTOCORRELATION_TOOLTIP,
     SEASONAL_DECOMP_TOOLTIP,
     TRANSITION_TOOLTIP,
 )
-from pdr_backend.aimodel.dash_plots.util import (
+from pdr_backend.statutil.dash_plots.util import (
     filter_file_data_by_date,
     read_files_from_directory,
 )
-from pdr_backend.aimodel.dash_plots.view_elements import get_column_graphs
-from pdr_backend.aimodel.seasonal import SeasonalDecomposeFactory, SeasonalPlotdata
-from pdr_backend.aimodel.seasonal_plotter import (
+from pdr_backend.statutil.dash_plots.view_elements import get_column_graphs
+from pdr_backend.statutil.seasonal import SeasonalDecomposeFactory, SeasonalPlotdata
+from pdr_backend.statutil.seasonal_plotter import (
     create_seasonal_plot,
     plot_relative_energies,
 )
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
+from pdr_backend.statutil.boxcox import safe_boxcox
 from pdr_backend.util.time_types import UnixTimeS
 
 DATE_STRING_FORMAT = "%Y-%m-%d"
@@ -42,9 +45,23 @@ def get_callbacks(app):
         return data
 
     @app.callback(
-        Output("error-message", "children"),
-        [Input("file-data", "data")],
+        Output("loading", "custom_spinner"), Input("autocorelation-lag", "value")
     )
+    def custom_spinner(autocorelation_lag):
+        lag = int(autocorelation_lag) if autocorelation_lag else 0
+        return html.H2(
+            [
+                (
+                    "This could take several seconds, please be patient "
+                    if lag > 50
+                    else ""
+                ),
+                dbc.Spinner(),
+            ],
+            style={"height": "100%"},
+        )
+
+    @app.callback(Output("error-message", "children"), Input("file-data", "data"))
     def display_read_data_error(store_data):
         if not store_data:
             return html.H2(
@@ -89,7 +106,7 @@ def get_callbacks(app):
         # get data for autocorelation
         y = np.array(y)
         if do_boxcox:
-            y, _ = stats.boxcox(y)
+            y = safe_boxcox(y)
 
         for _ in range(differencing_order):
             y = y[1:] - y[:-1]
@@ -105,7 +122,7 @@ def get_callbacks(app):
                 {"fig": acf, "graph_id": "autocorelation"},
                 {"fig": pacf, "graph_id": "pautocorelation"},
             ],
-            title="Autocorrelation (ACF)" + transition_text,
+            title="ACF & PACF" + transition_text,
             tooltip=AUTOCORRELATION_TOOLTIP,
         )
         return autocorelation_charts
@@ -183,7 +200,10 @@ def get_callbacks(app):
     def create_transition_chart(
         div, date_picker_start_date, date_picker_end_date, feed_data, files_data
     ):
-        files_data[feed_data] = files_data[feed_data] = filter_file_data_by_date(
+        if not files_data:
+            return dash.no_update
+
+        files_data[feed_data] = filter_file_data_by_date(
             files_data[feed_data],
             datetime.strptime(date_picker_start_date, DATE_STRING_FORMAT),
             datetime.strptime(date_picker_end_date, DATE_STRING_FORMAT),

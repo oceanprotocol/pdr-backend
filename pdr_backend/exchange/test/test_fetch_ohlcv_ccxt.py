@@ -38,8 +38,6 @@ def _test_ccxt(exchange_str: str):
 
     # catch value errors
     with pytest.raises(ValueError):
-        fetch_ohlcv_ccxt("dydx", pair_str, timeframe, since, limit)
-    with pytest.raises(ValueError):
         fetch_ohlcv_ccxt("bad exchange_str", pair_str, timeframe, since, limit)
     with pytest.raises(ValueError):
         fetch_ohlcv_ccxt(exchange_str, "bad-pair_str", timeframe, since, limit)

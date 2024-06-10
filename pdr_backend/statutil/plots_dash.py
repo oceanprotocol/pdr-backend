@@ -5,8 +5,8 @@ import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html
 from enforce_typing import enforce_types
 
-from pdr_backend.aimodel.dash_plots.callbacks import get_callbacks
-from pdr_backend.aimodel.dash_plots.view_elements import (
+from pdr_backend.statutil.dash_plots.callbacks import get_callbacks
+from pdr_backend.statutil.dash_plots.view_elements import (
     get_graphs_container,
     get_input_elements,
 )
@@ -31,7 +31,8 @@ app.layout = html.Div(
             id="loading",
             type="default",
             children=get_graphs_container(),
-            style={"height": "100%"},
+            style={"height": "100%", "display": "flex", "alignItems": "flexStart"},
+            custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
         ),
     ]
 )

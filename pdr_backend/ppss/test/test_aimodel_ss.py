@@ -20,7 +20,7 @@ def test_aimodel_ss__default_values():
     assert ss.max_n_train == d["max_n_train"] == 7
     assert ss.autoregressive_n == d["autoregressive_n"] == 3
 
-    assert ss.approach == d["approach"] == "LinearLogistic"
+    assert ss.approach == d["approach"] == "ClassifLinearRidge"
     assert ss.weight_recent == d["weight_recent"] == "10x_5x"
     assert ss.balance_classes == d["balance_classes"] == "SMOTE"
     assert (
@@ -30,6 +30,7 @@ def test_aimodel_ss__default_values():
     # str
     assert "AimodelSS" in str(ss)
     assert "approach" in str(ss)
+    assert not ss.do_regr
 
 
 @enforce_types
@@ -46,6 +47,15 @@ def test_aimodel_ss__nondefault_values():
     for approach in APPROACH_OPTIONS:
         ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
         assert ss.approach == approach and approach in str(ss)
+
+        do_regr = approach in [
+            "RegrLinearLS",
+            "RegrLinearLasso",
+            "RegrLinearRidge",
+            "RegrLinearElasticNet",
+            "RegrConstant",
+        ]
+        assert ss.do_regr == do_regr
 
     for weight_recent in WEIGHT_RECENT_OPTIONS:
         ss = AimodelSS(aimodel_ss_test_dict(weight_recent=weight_recent))

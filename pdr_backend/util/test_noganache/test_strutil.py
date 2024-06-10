@@ -33,10 +33,10 @@ def testStrMixin1():
     s3 = f.longstr()
     assert s3 == s
 
-    f.__class__.__STR_GIVES_NEWLinearLogisticE__ = True
+    f.__class__.__STR_GIVES_NEWClassifLinearRidgeE__ = True
     s4 = f.longstr()
     assert "\n" in s4
-    f.__class__.__STR_GIVES_NEWLinearLogisticE__ = False
+    f.__class__.__STR_GIVES_NEWClassifLinearRidgeE__ = False
 
 
 def testStrMixin2():
@@ -344,6 +344,9 @@ def test_compactSmallNum():
         (0.5, "0.50"),
         (0.333333, "0.33"),
         (0.003333333, "3.33e-3"),
+        (-0.5, "-0.50"),
+        (-0.333333, "-0.33"),
+        (-0.003333333, "-3.33e-3"),
     ]
 
     for x, target_s in pairs:

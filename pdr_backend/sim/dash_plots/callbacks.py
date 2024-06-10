@@ -4,10 +4,11 @@ from dash import Input, Output, State
 
 from pdr_backend.sim.dash_plots.util import get_figures_by_state
 from pdr_backend.sim.dash_plots.view_elements import (
-    arrange_figures,
+    get_tabs,
     get_header_elements,
     get_waiting_template,
     selected_var_checklist,
+    get_tabs_component,
 )
 from pdr_backend.sim.sim_plotter import SimPlotter
 
@@ -54,27 +55,37 @@ def get_callbacks(app):
         return selected_vars
 
     @app.callback(
-        Output("live-graphs", "children"),
+        Output("tabs-container", "children"),
+        Output("header", "children"),
         Input("interval-component", "n_intervals"),
         Input("selected_vars", "value"),
         State("selected_vars", "value"),
+        State("selected-tab", "data"),
     )
     # pylint: disable=unused-argument
-    def update_graph_live(n, selected_vars, selected_vars_old):
+    def update_graph_live(n, selected_vars, selected_vars_old, selected_tab):
         run_id = app.run_id if app.run_id else SimPlotter.get_latest_run_id()
         sim_plotter = SimPlotter()
 
         try:
             st, ts = wait_for_state(sim_plotter, run_id)
         except Exception as e:
-            return [get_waiting_template(e)]
+            return [], [get_waiting_template(e)]
 
-        elements = get_header_elements(run_id, st, ts)
+        header = get_header_elements(run_id, st, ts)
+        elements = []
 
         state_options = sim_plotter.aimodel_plotdata.colnames
         elements.append(selected_var_checklist(state_options, selected_vars_old))
 
         figures = get_figures_by_state(sim_plotter, selected_vars)
-        elements = elements + arrange_figures(figures)
+        tabs = get_tabs(figures)
+        selected_tab_value = selected_tab if selected_tab else tabs[0]["name"]
+        elements = elements + [get_tabs_component(tabs, selected_tab_value)]
 
-        return elements
+        return elements, header
+
+    @app.callback(Output("selected-tab", "data"), Input("tabs", "value"))
+    # pylint: disable=unused-argument
+    def update_selected_tab_state(selected_tab):
+        return selected_tab

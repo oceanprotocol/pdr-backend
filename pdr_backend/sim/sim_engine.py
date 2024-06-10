@@ -140,12 +140,9 @@ class SimEngine:
         ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
-        if (
-            self.st.iter_number
-            % self.ppss.predictoor_ss.aimodel_ss.train_every_n_epochs
-        ) == 0:
+        if self.st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0:
             model_f = AimodelFactory(pdr_ss.aimodel_ss)
-            model = model_f.build(X_train, ytrue_train)
+            model = model_f.build(X_train, ytrue_train, ycont_train, y_thr)
             self.crt_trained_model = model
         else:
             assert self.crt_trained_model is not None
@@ -253,6 +250,8 @@ class SimEngine:
                 model,
                 X_train,
                 ytrue_train,
+                ycont_train,
+                y_thr,
                 colnames,
                 slicing_x,
             )
