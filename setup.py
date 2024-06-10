@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 # or pip install -e .
 install_requirements = [
     "bumpversion",
-    "ccxt==4.3.38",
+    "ccxt==4.3.42",
     "coverage",
     "dash==2.17.0",
     "dash_bootstrap_components==1.6.0",
