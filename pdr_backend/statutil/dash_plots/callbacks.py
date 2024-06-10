@@ -6,7 +6,9 @@ import pandas as pd
 from dash import Input, Output, State, html
 import dash_bootstrap_components as dbc
 
-from pdr_backend.statutil.autocorrelation import AutocorrelationPlotdataFactory
+from pdr_backend.statutil.autocorrelation_plotdata import (
+    AutocorrelationPlotdataFactory,
+)
 from pdr_backend.statutil.autocorrelation_plotter import (
     get_transitions,
     plot_acf,
@@ -120,7 +122,7 @@ def get_callbacks(app):
                 {"fig": acf, "graph_id": "autocorelation"},
                 {"fig": pacf, "graph_id": "pautocorelation"},
             ],
-            title="Autocorrelation (ACF)" + transition_text,
+            title="ACF & PACF" + transition_text,
             tooltip=AUTOCORRELATION_TOOLTIP,
         )
         return autocorelation_charts
