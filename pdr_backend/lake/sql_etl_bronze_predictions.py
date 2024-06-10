@@ -1,6 +1,6 @@
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.table import UpdateTable, TempUpdateTable
+from pdr_backend.lake.table import NamedTable, TempTable, UpdateTable, TempUpdateTable
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 def _do_sql_bronze_predictions(
@@ -8,8 +8,11 @@ def _do_sql_bronze_predictions(
         st_ms: UnixTimeMs, 
         fin_ms: UnixTimeMs ) -> None:
     
+    # historical prediction events
+    bronze_prediction_table = NamedTable.from_dataclass(BronzePrediction)
+    
     # new prediction events - to be inserted into prod tables
-    update_bronze_prediction_table = UpdateTable.from_dataclass(BronzePrediction)
+    temp_bronze_prediction_table = TempTable.from_dataclass(BronzePrediction)
 
     # update prediction events - to be joined w/ prod records
     update_bronze_prediction_table = UpdateTable.from_dataclass(BronzePrediction)
@@ -18,43 +21,74 @@ def _do_sql_bronze_predictions(
     temp_update_bronze_prediction_table = TempUpdateTable.from_dataclass(BronzePrediction)
 
     query = f"""
-    -- 1. let's group all update events by ID to reduce into a single row
-    WITH UpdatedRows AS (
+    CREATE TEMPORARY VIEW _update AS
     SELECT
-        *,
-        MIN(timestamp) as timestamp,
-        MAX(trueval) AS trueval,
-        MAX(payout) AS payout,
-        MAX(timestamp) AS lastEventTimestamp,
+        {update_bronze_prediction_table.table_name}.ID,
+        null as slot_id,
+        null as contract,
+        null as slot,
+        null as user,
+        null as pair,
+        null as timeframe,
+        null as source,
+        MAX({update_bronze_prediction_table.table_name}.predvalue) as predvalue,
+        MAX({update_bronze_prediction_table.table_name}.truevalue) as truevalue,
+        MAX({update_bronze_prediction_table.table_name}.stake) as stake,
+        MAX({update_bronze_prediction_table.table_name}.revenue) as revenue,
+        MAX({update_bronze_prediction_table.table_name}.payout) as payout,
+        null as timestamp,
+        MAX({update_bronze_prediction_table.table_name}.timestamp) as last_event_timestamp
     FROM
         {update_bronze_prediction_table.table_name}
-    GROUP BY ID
-
+    GROUP BY ID;
+    
     -- 2. now, we need to update our tables
-    -- 2a. update any records that may be in the _temp table, already to-be-merged
-    -- Because these records are not in the live table, we can just update their columns.
-    UPDATE {temp_update_bronze_prediction_table.table_name}
+    -- 2a. update new records that may be in the _temp table
+    -- These records are ready-to-be-merged and not in prod tables, so, just update their columns.
+    UPDATE {temp_bronze_prediction_table.table_name}
     SET
-        trueval = COALESCE(UpdatedRows.trueval, live_table.trueval),
-        payout = COALESCE(UpdatedRows.payout, live_table.payout),
-        timestamp = UpdatedRows.lastEventTimestamp,
-        slot = UpdatedRows.slot
-    FROM UpdatedRows
-    WHERE live_table.ID = UpdatedRows.ID;
+        predvalue = COALESCE({temp_bronze_prediction_table.table_name}.predvalue, u.predvalue),
+        truevalue = COALESCE({temp_bronze_prediction_table.table_name}.truevalue, u.truevalue),
+        stake = COALESCE({temp_bronze_prediction_table.table_name}.stake, u.stake),
+        revenue = COALESCE({temp_bronze_prediction_table.table_name}.revenue, u.revenue),
+        payout = COALESCE({temp_bronze_prediction_table.table_name}.payout, u.payout),
+        last_event_timestamp = COALESCE(
+            {update_bronze_prediction_table.table_name}.last_event_timestamp, 
+            u.last_event_timestamp
+        )
+    FROM _update as u
+    WHERE {temp_bronze_prediction_table.table_name}.ID = u.ID;
 
-    -- 2b. Join w/ existing records and yield the row to _temp_update table
-    -- Step #1 - Because these records are from the live table, we can't modify them
+    -- 2b. Finally join w/ larger historical records from prod table and yield the row to _temp_update table
+    -- Step #1 - Because these records are from the prod table, we can't modify them
     -- Step #2 - Yield updated records into _temp_update table
     -- Step #3 - Use a swap strategy to get _temp_update records into prod table
-    INSERT INTO _temp_update_bronze_predictions
+    INSERT INTO {temp_update_bronze_prediction_table.table_name}
     SELECT
-        *{temp_update_bronze_prediction_table.table_name},
-        COALESCE(UpdatedRows.trueval, {temp_update_bronze_prediction_table.table_name}.trueval) as trueval,
-        COALESCE(UpdatedRows.payout, {temp_update_bronze_prediction_table.table_name}.payout) as payout,
-        MAX(UpdatedRows.lastEventTimestamp, {temp_update_bronze_prediction_table.table_name}.lastEventTimestamp) as lastEventTimestamp)
-    FROM UpdatedRows
-    LEFT JOIN {temp_update_bronze_prediction_table.table_name}
-    ON UpdatedRows.ID = {temp_update_bronze_prediction_table.table_name}.ID
+        {bronze_prediction_table.table_name}.ID,
+        {bronze_prediction_table.table_name}.slot_id,
+        {bronze_prediction_table.table_name}.contract,
+        {bronze_prediction_table.table_name}.slot,
+        {bronze_prediction_table.table_name}.user,
+        {bronze_prediction_table.table_name}.pair,
+        {bronze_prediction_table.table_name}.timeframe,
+        {bronze_prediction_table.table_name}.source,
+        COALESCE(u.predvalue, {bronze_prediction_table.table_name}.predvalue) as predvalue,
+        COALESCE(u.truevalue, {bronze_prediction_table.table_name}.truevalue) as truevalue,
+        COALESCE(u.stake, {bronze_prediction_table.table_name}.stake) as stake,
+        COALESCE(u.revenue, {bronze_prediction_table.table_name}.revenue) as revenue,
+        COALESCE(u.payout, {bronze_prediction_table.table_name}.payout) as payout,
+        {bronze_prediction_table.table_name}.timestamp,
+        GREATEST(
+            u.last_event_timestamp,
+            {bronze_prediction_table.table_name}.last_event_timestamp
+        ) as last_event_timestamp
+    FROM _update as u
+    LEFT JOIN {bronze_prediction_table.table_name}
+    ON u.ID = {bronze_prediction_table.table_name}.ID;
+
+    -- Drop the view
+    DROP VIEW _update;
     """
 
     db.create_table_if_not_exists(temp_update_bronze_prediction_table.table_name, BronzePrediction.get_lake_schema())

@@ -14,7 +14,7 @@ def _do_sql_payouts(
 
     query = f"""
     -- Define a CTE to select data once and use it multiple times
-    WITH Payout AS (
+    WITH _payout AS (
     SELECT
         {payout_table.table_name}.ID,
         {payout_table.table_name}.slot,
@@ -51,7 +51,7 @@ def _do_sql_payouts(
         p.payout,
         p.timestamp,
         null as last_event_timestamp
-    FROM Payout as p;
+    FROM _payout as p;
     """
 
     db.create_table_if_not_exists(update_bronze_prediction_table.table_name, BronzePrediction.get_lake_schema())
