@@ -198,7 +198,10 @@ def get_callbacks(app):
     def create_transition_chart(
         div, date_picker_start_date, date_picker_end_date, feed_data, files_data
     ):
-        files_data[feed_data] = files_data[feed_data] = filter_file_data_by_date(
+        if not files_data:
+            return dash.no_update
+
+        files_data[feed_data] = filter_file_data_by_date(
             files_data[feed_data],
             datetime.strptime(date_picker_start_date, DATE_STRING_FORMAT),
             datetime.strptime(date_picker_end_date, DATE_STRING_FORMAT),
