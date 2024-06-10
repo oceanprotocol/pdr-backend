@@ -14,14 +14,15 @@ def _do_sql_payouts(
 
     query = f"""
     -- Define a CTE to select data once and use it multiple times
-    WITH SelectedData AS (
+    WITH Payout AS (
     SELECT
-        {payout_table.table_name}.ID as ID,
-        {payout_table.table_name}.slot as slot
-        {payout_table.table_name}.user as user,
-        {payout_table.table_name}.trueval as trueval,
-        {payout_table.table_name}.payout as payout,
-        {payout_table.table_name}.timestamp as timestamp
+        {payout_table.table_name}.ID,
+        {payout_table.table_name}.slot,
+        {payout_table.table_name}.user,
+        {payout_table.table_name}.stake,
+        {payout_table.table_name}.predvalue,
+        {payout_table.table_name}.payout,
+        {payout_table.table_name}.timestamp,
     from
         {payout_table.table_name}
     where
@@ -29,15 +30,28 @@ def _do_sql_payouts(
         and {payout_table.table_name}.timestamp < {fin_ms}
     )
 
-    -- We insert the update events into _update_prediction_predctions table
+    -- We track data we need from payout into _update_prediction_predctions table
     -- All other params are null.
     INSERT INTO {update_bronze_prediction_table.table_name}
-        *.ID as ID,
-        *.slot as slot,
-        *.user as user,
-        *.payout as payout,
-        *.timestamp as timestamp
-    FROM SelectedData;
+    SELECT 
+        p.ID,
+        SPLIT_PART(p.ID, '-', 1)
+            || '-' || SPLIT_PART(p.ID, '-', 2) AS slot_id,
+        null as contract,
+        p.slot,
+        p.user,
+        null as pair,
+        null as timeframe,
+        null as source,
+        p.predvalue,
+        null as truevalue,
+        p.stake,
+        -- do not use revenue from payout, it's not correct
+        null as revenue,
+        p.payout,
+        p.timestamp,
+        null as last_event_timestamp
+    FROM Payout as p;
     """
 
     db.create_table_if_not_exists(update_bronze_prediction_table.table_name, BronzePrediction.get_lake_schema())
