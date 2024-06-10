@@ -19,7 +19,7 @@ from pdr_backend.ppss.aimodel_ss import (
     aimodel_ss_test_dict,
     APPROACH_OPTIONS,
 )
-from pdr_backend.util.mathutil import classif_acc
+from pdr_backend.statutil.scoring import classif_acc
 
 SHOW_PLOT = False  # only turn on for manual testing
 
