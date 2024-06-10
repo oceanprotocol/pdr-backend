@@ -2,10 +2,12 @@
 # Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
-from typing import Dict, List, Optional
+from typing import List, Optional, Tuple
 
 import dash_bootstrap_components as dbc
-from dash import Dash, Input, Output, html
+import plotly.graph_objects as go
+from dash import Dash, Input, Output, State, callback_context, dcc, html
+from plotly.graph_objs import Figure
 
 from pdr_backend.lake_info.html_components import (
     alert_validation_error,
@@ -15,12 +17,107 @@ from pdr_backend.lake_info.html_components import (
     simple_badge,
 )
 
+GRAPHABLE = ["pdr_predictions", "_temp_pdr_predictions"]
+
 
 class HtmlRenderer:
     def __init__(self, lake_info, table_views_overview, validation_overview):
         self.lake_info = lake_info
         self.table_views_overview = table_views_overview
         self.validation_overview = validation_overview
+
+    def _filter_table(self, info_key, table_name, filter_value):
+        df = getattr(self.table_views_overview, info_key)[table_name]
+
+        if not filter_value:
+            return df.limit(100)
+
+        result = self.table_views_overview.get_filtered_result(table_name, filter_value)
+
+        return result
+
+    def get_graph_xy(self, table_name: str) -> Tuple[str, List[str]]:
+        # TODO: define graphable columns for each table, extend list of graphable tables
+        if table_name in ["pdr_predictions", "_temp_pdr_predictions"]:
+            return "timestamp", ["stake", "payout"]
+
+        raise ValueError(
+            f"Table {table_name} not supported for graphing but in GRAPHABLE!"
+        )
+
+    def get_figure(
+        self, table_name: str, filter_value: None, small: bool = False
+    ) -> Figure:
+
+        filtered_df = self._filter_table("table_info", table_name, filter_value)
+        x, ys = self.get_graph_xy(table_name)
+
+        figure = Figure(
+            [
+                go.Scatter(x=filtered_df[x], y=filtered_df[y], mode="lines", name=y)
+                for y in ys
+            ]
+        )
+
+        if small:
+            figure.update_layout(margin={"t": 0, "l": 0, "b": 0, "r": 0})
+            figure.update_xaxes(showticklabels=False)
+            figure.update_yaxes(showticklabels=False)
+            figure.update_layout(
+                legend={
+                    "orientation": "h",
+                    "yanchor": "bottom",
+                    "y": 1.02,
+                    "xanchor": "right",
+                    "x": 1,
+                }
+            )
+
+        return figure
+
+    def get_graph_info(self, table_name: str, filter_value: None):
+        if table_name not in GRAPHABLE:
+            return []
+
+        small_fig = self.get_figure(table_name, filter_value, True)
+        large_fig = self.get_figure(table_name, filter_value)
+
+        modal = html.Div(
+            [
+                dcc.Graph(
+                    figure=small_fig,
+                    id=f"graph_small_{table_name}",
+                    style={"height": "200px", "width": "100%"},
+                ),
+                dbc.Button(
+                    "View larger", id=f"open_{table_name}", n_clicks=0, size="sm"
+                ),
+                dbc.Modal(
+                    [
+                        dbc.ModalHeader(
+                            dbc.ModalTitle(f"Table {table_name} (filters may apply)")
+                        ),
+                        dbc.ModalBody(
+                            dcc.Graph(figure=large_fig, id=f"graph_large_{table_name}"),
+                        ),
+                        dbc.ModalFooter(
+                            dbc.Button(
+                                "Close",
+                                id=f"close_{table_name}",
+                                className="ms-auto",
+                                n_clicks=0,
+                            )
+                        ),
+                    ],
+                    id=f"modal_{table_name}",
+                    is_open=False,
+                    size="xl",
+                ),
+            ],
+            style={"margin-bottom": "20px"},
+        )
+
+        return [modal]
 
     def get_side_info(self, info_key: str, table_name: str):
         result = []
@@ -44,16 +141,12 @@ class HtmlRenderer:
     def _get_main_info(
         self, info_key: str, table_name: str, filter_value: Optional[str] = None
     ):
-        df = getattr(self.table_views_overview, info_key)[table_name]
-
         if not filter_value:
             table_type = "Preview:"
-            filtered_df = df.limit(100)
         else:
             table_type = "Results (ltd. to 100 rows):"
-            filtered_df = self.table_views_overview.get_filtered_result(
-                table_name, filter_value
-            )
+
+        filtered_df = self._filter_table(info_key, table_name, filter_value)
 
         table = dbc.Table.from_dataframe(
             filtered_df.to_pandas(),
@@ -83,6 +176,7 @@ class HtmlRenderer:
 
         result = []
         for table_name in getattr(self.table_views_overview, info_key):
+            graph_info = self.get_graph_info(table_name, None)
             side_info = self.get_side_info(info_key, table_name)
             main_info = self.get_main_info(info_key, table_name)
 
@@ -92,7 +186,7 @@ class HtmlRenderer:
                     children=[
                         dbc.Row(
                             [
-                                dbc.Col(side_info, width=3),
+                                dbc.Col(graph_info + side_info, width=3),
                                 dbc.Col(main_info, width=9),
                             ],
                         ),
@@ -202,20 +296,69 @@ class HtmlRenderer:
 
 
 def get_callbacks(html_renderer, app):
-    table_wrapper_ids = []
+    outputs = []
 
     for info_key in ["table_info", "view_info"]:
-        for table_name in getattr(html_renderer.table_views_overview, info_key):
-            table_wrapper_ids.append(f"tinfo_{info_key}_{table_name}")
+        outputs += [
+            Output(f"tinfo_{info_key}_{table_name}", "children")
+            for table_name in getattr(html_renderer.table_views_overview, info_key, [])
+        ]
 
-    for table_wrapper_id in table_wrapper_ids:
+    for size in ["small", "large"]:
+        outputs += [
+            Output(f"graph_{size}_{table_wrapper_id}", "figure")
+            for table_wrapper_id in GRAPHABLE
+        ]
+
+    @app.callback(
+        outputs,
+        Input("userFilter", "value"),
+    )
+    def filter_tables_and_graphs(filter_value):
+        results = []
+
+        for output in callback_context.outputs_list:
+            output_id = output["id"]
+
+            if "tinfo" in output_id:
+                # it is a table output, has tinfo_ as a prefix
+                info_key = "table_info" if "table_info" in output_id else "view_info"
+                table_name = output_id.replace(f"tinfo_{info_key}_", "")
+
+                results.append(
+                    html_renderer._get_main_info(info_key, table_name, filter_value)
+                )
+            else:
+                # it is a graph output
+                table_name = (
+                    output_id.replace("graph_", "")
+                    .replace("small_", "")
+                    .replace("large_", "")
+                )
+
+                results.append(
+                    html_renderer.get_figure(
+                        table_name, filter_value, "small" in output_id
+                    )
+                )
+
+        return results
+
+    for table_wrapper_id in GRAPHABLE:
 
         @app.callback(
-            Output(table_wrapper_id, "children"),  # pylint: disable=cell-var-from-loop
-            Input("userFilter", "value"),
+            # pylint: disable=cell-var-from-loop
+            Output(f"modal_{table_wrapper_id}", "is_open"),
+            [
+                # pylint: disable=cell-var-from-loop
+                Input(f"open_{table_wrapper_id}", "n_clicks"),
+                # pylint: disable=cell-var-from-loop
+                Input(f"close_{table_wrapper_id}", "n_clicks"),
+            ],
+            # pylint: disable=cell-var-from-loop
+            [State(f"modal_{table_wrapper_id}", "is_open")],
         )
-        def filter_tables(filter_value):
-            twid_alias = table_wrapper_id  # pylint: disable=cell-var-from-loop
-            info_key = twid_alias.split("_")[1] + "_info"
-            table_name = twid_alias[twid_alias.index(info_key) + len(info_key) + 1 :]
-            return html_renderer._get_main_info(info_key, table_name, filter_value)
+        def toggle_modal(n1, n2, is_open):
+            if n1 or n2:
+                return not is_open
+            return is_open
