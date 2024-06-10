@@ -57,9 +57,9 @@ class SimEngine:
         self.exchange = exchange_mgr.exchange(
             "mock" if mock else ppss.predictoor_ss.exchange_str,
         )
-        self.prev_portfolio_worth = 0
-        self.position_open = False
-
+        self.position_open = ""  # long, short, ""
+        self.position_size = 0  # amount of tokens in position
+        self.position_worth = 0  # amount of USD in position
         if multi_id:
             self.multi_id = multi_id
         else:
@@ -173,24 +173,35 @@ class SimEngine:
         acct_up_profit -= stake_up
         acct_down_profit -= stake_down
 
-        def portfolio_worth(price):
-            return st.holdings[self.usdcoin] + st.holdings[self.tokcoin] * price
-
-        portfolio_worth_now = portfolio_worth(curprice)
-
-        if pred_up and not self.position_open:
-            # position size determined by confidence
+        if pred_up and self.position_open == "":
+            # Open long position if pred up and no position open
             usdcoin_amt_send = trade_amt * conf_up
-            self._buy(curprice, usdcoin_amt_send)  # open position
-            self.position_open = True
-            self.prev_portfolio_worth = portfolio_worth_now
+            tok_received = self._buy(curprice, usdcoin_amt_send)
+            self.position_open = "long"
+            self.position_worth = usdcoin_amt_send
+            self.position_size = tok_received
             st.trader_profits_USD.append(0)
-        elif pred_down and self.position_open:
-            tokcoin_amt_send = st.holdings[self.tokcoin]
-            self._sell(curprice, tokcoin_amt_send)
-            self.position_open = False
-            profit = portfolio_worth_now - self.prev_portfolio_worth
-            # profit only recorded when exiting the position
+        elif pred_down and self.position_open == "":
+            # Open short position if pred down and no position open
+            tokcoin_amt_send = trade_amt * conf_down / curprice
+            usd_received = self._sell(curprice, tokcoin_amt_send)
+            self.position_open = "short"
+            self.position_worth = usd_received
+            self.position_size = tokcoin_amt_send
+            st.trader_profits_USD.append(0)
+        elif self.position_open == "long" and not pred_up:
+            # Close long position if not pred up and position open
+            tokcoin_amt_send = self.position_size
+            usd_received = self._sell(curprice, tokcoin_amt_send)
+            self.position_open = ""
+            profit = usd_received - self.position_worth
+            st.trader_profits_USD.append(profit)
+        elif self.position_open == "short" and not pred_down:
+            # Close short position, buyback tokens if not pred down and position open
+            usdcoin_amt_send = self.position_size * curprice
+            tok_received = self._buy(curprice, usdcoin_amt_send)
+            self.position_open = ""
+            profit = self.position_worth - usdcoin_amt_send
             st.trader_profits_USD.append(profit)
         else:
             st.trader_profits_USD.append(0)
