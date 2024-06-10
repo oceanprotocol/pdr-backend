@@ -89,7 +89,7 @@ class SimState:
         rm.update(
             {
                 "pdr_profit_OCEAN": self.pdr_profits_OCEAN[-1],
-                "trader_profit_USD": self.trader_profits_USD[-1] if self.trader_profits_USD else 0
+                "trader_profit_USD": self.trader_profits_USD[-1],
             }
         )
 

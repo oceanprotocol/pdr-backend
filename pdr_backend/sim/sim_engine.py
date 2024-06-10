@@ -180,6 +180,7 @@ class SimEngine:
             self.position_open = "long"
             self.position_worth = usdcoin_amt_send
             self.position_size = tok_received
+            st.trader_profits_USD.append(0)
         elif pred_down and self.position_open == "":
             # Open short position if pred down and no position open
             tokcoin_amt_send = trade_amt * conf_down / curprice
@@ -187,6 +188,7 @@ class SimEngine:
             self.position_open = "short"
             self.position_worth = usd_received
             self.position_size = tokcoin_amt_send
+            st.trader_profits_USD.append(0)
         elif self.position_open == "long" and not pred_up:
             # Close long position if not pred up and position open
             tokcoin_amt_send = self.position_size
@@ -201,6 +203,8 @@ class SimEngine:
             self.position_open = ""
             profit = self.position_worth - usdcoin_amt_send
             st.trader_profits_USD.append(profit)
+        else:
+            st.trader_profits_USD.append(0)
 
         # observe true price
         true_up = trueprice > curprice
