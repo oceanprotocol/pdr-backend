@@ -30,13 +30,17 @@ def get_waiting_template(err):
 
 def get_header_elements(run_id, st, ts):
     return [
-        html.H2(f"Simulation ID: {run_id}", id="sim_state_text"),
+        html.H2(
+            f"Simulation ID: {run_id}",
+            id="sim_state_text",
+            style={"fontSize": "18px", "marginTop": ".5rem"},
+        ),
         html.H3(
             f"Iter #{st.iter_number} ({ts})" if ts != "final" else "Final sim state",
             id="sim_current_ts",
             # stops refreshing if final state was reached. Do not remove this class!
             className="finalState" if ts == "final" else "runningState",
-            style={"marginTop": "0", "textAlign": "center"},
+            style={"marginTop": "0", "textAlign": "center", "fontSize": "18px"},
         ),
     ]
 
@@ -164,13 +168,13 @@ def get_tabs_component(elements, selectedTab):
                 label=e["name"],
                 value=e["name"],
                 children=e["components"],
-                style={"width": "250px"},
+                style={"width": "200px"},
                 selected_style={"borderLeft": "4px solid blue"},
             )
             for e in elements
         ],
         vertical=True,
-        style={"fontSize": "20px"},
+        style={"fontSize": "16px"},
         content_style={
             "width": "100%",
             "height": "100%",
@@ -192,13 +196,13 @@ def get_main_container():
                     "flexDirection": "column",
                     "alignItems": "center",
                     "justifyContent": "center",
-                    "height": "100px",
+                    "height": "60px",
                 },
             ),
             html.Div(
                 empty_graphs_template,
                 id="tabs-container",
-                style={"height": "calc(100% - 100px)"},
+                style={"height": "calc(100% - 60px)"},
             ),
         ],
         id="main-container",
