@@ -7,7 +7,8 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.lake.etl import ETL
+
+# from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.payout import Payout, mock_payout, mock_payouts
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import (
