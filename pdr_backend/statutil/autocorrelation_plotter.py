@@ -160,7 +160,7 @@ def get_transitions(selected_idx=None, y=[]):
             ),
         ]
     )
-    fig.update_yaxes(title_text="Transition")
+    fig.update_yaxes(title_text="Transformation")
     fig.update_xaxes(title_text="ADF")
     fig.update_layout(
         margin={"l": 5, "r": 5, "t": 20, "b": 0},
