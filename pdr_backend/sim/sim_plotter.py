@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.statutil.dist import add_pdf
 
 HEIGHT = 7.5
 WIDTH = int(HEIGHT * 3.2)
@@ -372,7 +373,7 @@ class SimPlotter:
         aim = self.st.aim
         s1 = "Residual vs time"
         s2 = "Residual distribution"
-        s3 = "Residuals normal quantile (NQ)"
+        s3 = "Residuals normal Q-Q"
         s4 = "Residuals correlogram"
 
         # make subplots
@@ -380,13 +381,12 @@ class SimPlotter:
             rows=2,
             cols=2,
             subplot_titles=(s1, s2, s3, s4),
-            vertical_spacing=0.12,
+            vertical_spacing=0.18,
         )
 
         # fill in subplots
         self._add_subplot_residual_vs_time(fig, row=1, col=1)
-        self._add_subplot_residual_distribution(fig, row=1, col=2)
-        #self._add_subplot_residual_nq(fig, row=2, col=1)
+        self._add_subplot_residual_pdf_nq(fig, row=2, col=1)
         #self._add_subplot_residual_correlogram(fig, row=2, col=2)
         
         return fig
@@ -423,21 +423,41 @@ class SimPlotter:
         return fig
 
     @enforce_types
-    def _add_subplot_residual_distribution(self, fig, row, col):
+    def _add_subplot_residual_pdf_nq(self, fig, row, col):
         x = self.st.aim.yerrs
+        add_pdf(fig, x, row, col, "residual")
+        #add_pdf_nq(fig, x, row, col, "residual")
+        
+        return fig
+
+    @enforce_types
+    def _add_subplot_residual_normal_qq(self, fig, row, col):
+        y = self.st.aim.yerrs
+        x = list(range(len(y)))
         fig.add_traces(
             [
-                # points: histogram
-                go.Histogram(
+                # points: residuals vs time
+                go.Scatter(
                     x=x,
+                    y=y,
+                    mode="markers",
+                    marker={"color": "black", "size": 2},
+                    showlegend=False,
+                ),
+                # line: horizontal error = 0
+                go.Scatter(
+                    x=[min(x), max(x)],
+                    y=[0.0, 0.0],
+                    mode="lines",
+                    line={"color": "grey", "dash": "dot"},
                     showlegend=False,
                 ),
             ],
-            rows=[row]*1,
-            cols=[col]*1,
+            rows=[row]*2,
+            cols=[col]*2,
         )
-        fig.update_xaxes(title="residual", row=row, col=col)
-        fig.update_yaxes(title="count", row=row, col=col)
+        fig.update_xaxes(title="time", row=row, col=col)
+        fig.update_yaxes(title="residual", row=row, col=col)
 
         return fig
 
