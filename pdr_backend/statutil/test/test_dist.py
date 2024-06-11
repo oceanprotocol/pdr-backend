@@ -11,7 +11,7 @@ from pdr_backend.statutil.dist import (
     plot_pdf_nq,
 )
 
-SHOW_PLOT = False # only turn on for manual testing
+SHOW_PLOT = True # only turn on for manual testing
 
 
 @enforce_types
