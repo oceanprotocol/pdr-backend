@@ -1,5 +1,6 @@
 from dash import dcc, html
 from plotly.graph_objs import Figure
+from enforce_typing import enforce_types
 
 figure_names = [
     "pdr_profit_vs_time",
@@ -20,6 +21,7 @@ empty_graphs_template = html.Div(
 )
 
 
+@enforce_types
 def get_waiting_template(err):
     return html.Div(
         [html.H2(f"Error/waiting: {err}", id="sim_state_text")]
@@ -28,6 +30,7 @@ def get_waiting_template(err):
     )
 
 
+@enforce_types
 def get_header_elements(run_id, st, ts):
     return [
         html.H2(
@@ -45,6 +48,7 @@ def get_header_elements(run_id, st, ts):
     ]
 
 
+@enforce_types
 def side_by_side_graphs(
     figures,
     name1: str,
@@ -67,71 +71,41 @@ def side_by_side_graphs(
     )
 
 
+@enforce_types
+def single_graph(figures, name: str, width: str):
+    return html.Div(
+        [
+            dcc.Graph(
+                figure=figures[name],
+                id=name,
+                style={"width": "100%", "height": "100%"},
+            ),
+        ],
+        style={"width": width, "height": "100%"},
+    )
+
+
+@enforce_types
 def get_tabs(figures):
     return [
         {
             "name": "Predictoor Profit",
             "components": [
-                html.Div(
-                    [
-                        dcc.Graph(
-                            figure=figures["pdr_profit_vs_time"],
-                            id="pdr_profit_vs_time",
-                            style={"width": "100%", "height": "100%"},
-                        ),
-                    ],
-                    style={"width": "100%", "height": "100%"},
-                ),
-                html.Div(
-                    [
-                        dcc.Graph(
-                            figure=figures["pdr_profit_vs_ptrue"],
-                            id="pdr_profit_vs_ptrue",
-                            style={"width": "100%", "height": "100%"},
-                        ),
-                    ],
-                    style={"width": "50%", "height": "100%"},
-                ),
+                single_graph(figures, "pdr_profit_vs_time", width="100%"),
+                single_graph(figures, "pdr_profit_vs_ptrue", width="50%"),
             ],
         },
         {
             "name": "Trader Profit",
             "components": [
-                html.Div(
-                    [
-                        dcc.Graph(
-                            figure=figures["trader_profit_vs_time"],
-                            id="trader_profit_vs_time",
-                            style={"width": "100%", "height": "100%"},
-                        ),
-                    ],
-                    style={"width": "100%", "height": "100%"},
-                ),
-                html.Div(
-                    [
-                        dcc.Graph(
-                            figure=figures["trader_profit_vs_ptrue"],
-                            id="trader_profit_vs_ptrue",
-                            style={"width": "100%", "height": "100%"},
-                        ),
-                    ],
-                    style={"width": "50%", "height": "100%"},
-                ),
+                single_graph(figures, "trader_profit_vs_time", width="100%"),
+                single_graph(figures, "trader_profit_vs_ptrue", width="50%"),
             ],
         },
         {
             "name": "Model performance",
             "components": [
-                html.Div(
-                    [
-                        dcc.Graph(
-                            figure=figures["model_performance_vs_time"],
-                            id="model_performance_vs_time",
-                            style={"width": "100%", "height": "100%"},
-                        ),
-                    ],
-                    style={"width": "100%", "height": "100%"},
-                ),
+                single_graph(figures, "model_performance_vs_time", "100%"),
             ],
         },
         {
@@ -150,6 +124,7 @@ def get_tabs(figures):
     ]
 
 
+@enforce_types
 def selected_var_checklist(state_options, selected_vars_old):
     return dcc.Checklist(
         options=[{"label": var, "value": var} for var in state_options],
@@ -159,6 +134,7 @@ def selected_var_checklist(state_options, selected_vars_old):
     )
 
 
+@enforce_types
 def get_tabs_component(elements, selectedTab):
     return dcc.Tabs(
         id="tabs",
@@ -185,6 +161,7 @@ def get_tabs_component(elements, selectedTab):
     )
 
 
+@enforce_types
 def get_main_container():
     return html.Div(
         [
