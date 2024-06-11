@@ -77,14 +77,19 @@ class ETL:
         for dataclass in _ETL_REGISTERED_LAKE_TABLES:
             table_name = dataclass.get_lake_table_name()
             logger.info("move table %s to live", table_name)
+            prod_table = NamedTable(table_name)
+            etl_table = ETLTable(table_name)
             temp_table = TempTable(table_name)
-            permanent_table = NamedTable(table_name)
-
+            update_table = UpdateTable(table_name)
+            temp_update_table = TempUpdateTable(table_name)
+            
             if db.table_exists(temp_table.fullname):
-                db.move_table_data(temp_table, permanent_table)
+                db.move_table_data(temp_table, prod_table)
 
-                db.drop_view(ETLTable(table_name).fullname)
+                db.drop_view(etl_table.fullname)
                 db.drop_table(temp_table.fullname)
+                db.drop_table(update_table.fullname)
+                db.drop_table(temp_update_table.fullname)
 
     def _do_bronze_swap_to_prod(self):
         """
@@ -98,6 +103,7 @@ class ETL:
         etl_tables = ["bronze_predictions"]
         for table_name in etl_tables:
             prod_table = NamedTable(table_name)
+            etl_table = ETLTable(table_name)
             temp_table = TempTable(table_name)
             update_table = UpdateTable(table_name)
             temp_update_table = TempUpdateTable(table_name)
@@ -116,6 +122,7 @@ class ETL:
                 db.move_table_data(temp_update_table, prod_table)
 
                 # Drop the update table 
+                db.drop_view(etl_table.fullname)
                 db.drop_table(temp_table.fullname)
                 db.drop_table(update_table.fullname)
                 db.drop_table(temp_update_table.fullname)
@@ -215,7 +222,7 @@ class ETL:
         final_query = " UNION ALL ".join(queries)
         result = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
 
-        logger.info("_get_max_timestamp_values_from - result: %s", result)
+        # logger.info("_get_max_timestamp_values_from - result: %s", result)
 
         if result is None:
             return none_values

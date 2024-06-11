@@ -135,7 +135,6 @@ def fetch_payouts(
     )
 
     try:
-        logger.info("Querying subgraph... %s", query)
         result = query_subgraph(
             get_subgraph_url(network),
             query,

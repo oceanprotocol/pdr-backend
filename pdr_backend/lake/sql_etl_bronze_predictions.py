@@ -1,6 +1,7 @@
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.table import NamedTable, TempTable, UpdateTable, TempUpdateTable
+from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 def _do_sql_bronze_predictions(
@@ -20,11 +21,11 @@ def _do_sql_bronze_predictions(
     # prod + updated records joined - to be swapped with prod tables
     temp_update_bronze_prediction_table = TempUpdateTable.from_dataclass(BronzePrediction)
 
-    df = db.query_data(f"SELECT * FROM {temp_bronze_prediction_table.fullname}")
-    df.write_csv("pre_query_temp_bronze_prediction_table.csv")
+    # df = db.query_data(f"SELECT * FROM {temp_bronze_prediction_table.fullname}")
+    # df.write_csv("pre_query_temp_bronze_prediction_table.csv")
 
-    df = db.query_data(f"SELECT * FROM {update_bronze_prediction_table.fullname}")
-    df.write_csv("pre_query_update_bronze_prediction_table.csv")
+    # df = db.query_data(f"SELECT * FROM {update_bronze_prediction_table.fullname}")
+    # df.write_csv("pre_query_update_bronze_prediction_table.csv")
 
     query = f"""
     -- Consider that trueval + payout events can happen within seconds from each other
@@ -108,8 +109,8 @@ def _do_sql_bronze_predictions(
     db.create_table_if_not_exists(temp_update_bronze_prediction_table.fullname, BronzePrediction.get_lake_schema())
     db.execute_sql(query)
 
-    df = db.query_data(f"SELECT * FROM {temp_bronze_prediction_table.fullname}")
-    df.write_csv("post_query_temp_bronze_prediction_table.csv")
+    # df = db.query_data(f"SELECT * FROM {temp_bronze_prediction_table.fullname}")
+    # df.write_csv("post_query_temp_bronze_prediction_table.csv")
 
-    df = db.query_data(f"SELECT * FROM {temp_update_bronze_prediction_table.fullname}")
-    df.write_csv("temp_update_bronze_predictions.csv")
+    # df = db.query_data(f"SELECT * FROM {Prediction.get_lake_table_name()}")
+    # df.write_csv("temp_update_predictions.csv")
