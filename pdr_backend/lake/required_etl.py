@@ -209,8 +209,6 @@ class ETL:
 
             queries.append(max_timestamp_query.format(table.fullname, table.fullname))
 
-        logger.info("_get_max_timestamp_values_from - queries: %s", queries)
-
         table_names = [table.fullname for table in tables]
         none_values: Dict[str, Optional[UnixTimeMs]] = {
             table_name: None for table_name in table_names
@@ -221,8 +219,6 @@ class ETL:
 
         final_query = " UNION ALL ".join(queries)
         result = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
-
-        # logger.info("_get_max_timestamp_values_from - result: %s", result)
 
         if result is None:
             return none_values
@@ -245,9 +241,6 @@ class ETL:
             [NamedTable(tb) for tb in table_names]
         )
 
-        logger.info(
-            ">>>> REQUIRED ETL - get_timestamp_values - max_timestamp_values: %s", max_timestamp_values
-        )
         # check if all values are None in max_timestamp_values
         # and return the default_timestr if so
         if all(value is None for value in max_timestamp_values.values()):
@@ -259,7 +252,6 @@ class ETL:
                 value for value in max_timestamp_values.values() if value is not None
             ]
 
-        logger.info("get_timestamp_values - values: %s", values)
         timestamp = (
             max(values) if len(values) > 0 else UnixTimeMs.from_timestr(default_timestr)
         )
