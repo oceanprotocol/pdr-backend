@@ -69,7 +69,7 @@ class MultisimEngine:
         multi_id = str(uuid.uuid4())
         sim_engine = SimEngine(ppss, feedset, multi_id)
         sim_engine.run()
-        run_metrics = list(sim_engine.st.recent_metrics().values())
+        run_metrics = list(sim_engine.st.sim_metrics().values())
 
         async with lock:
             self.update_csv(run_i, run_metrics, point_i)
@@ -138,7 +138,7 @@ class MultisimEngine:
 
         @arguments
           run_i - it's run #i
-          run_metrics -- output of SimState.recent_metrics() for run #i
+          run_metrics -- output of SimState.sim_metrics() for run #i
           point_i -- value of each sweep param, for run #i
         """
         assert os.path.exists(self.csv_file), self.csv_file
