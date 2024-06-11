@@ -15,7 +15,7 @@ def plot_pdf(x):
 def plot_pdf_cdf_nq(x):
     fig = make_subplots(rows=3, cols=1)
     add_pdf(fig, x, 1, 1)
-    #add_cdf(fig, x, 2, 1) # FIXME un-comment
+    add_cdf(fig, x, 2, 1)
     #add_nq(fig, x, 3, 1) # FIXME un-comment
     return fig
 
@@ -62,7 +62,7 @@ def add_pdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
                 y=counts/max(counts)*max_est,
                 width=[bar_width] * len(bins),
                 marker_color=["grey"] * len(bins),
-                name="histogram",
+                name="raw data counted",
             ),
 
             # gaussian estimate of pdf
@@ -94,6 +94,7 @@ def add_pdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
 
 @enforce_types
 def add_cdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
+    x = sorted(x)
     ycdf_raw = np.linspace(0.0, 1.0, len(x))
     
     mean, std = np.mean(x), np.std(x)
@@ -104,7 +105,7 @@ def add_cdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
     kde_model = stats.gaussian_kde(x)
     y_kde_mesh = kde_model.evaluate(x_mesh)
 
-    y_jitter = - _get_jitter(len(x)) * 0.25
+    y_jitter = - _get_jitter(len(x)) * 0.25 - 0.01
     
     fig.add_traces(
         [
@@ -114,33 +115,42 @@ def add_cdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
                 y=y_jitter,
                 mode="markers",
                 marker={"color": "black", "size": 2},
-                name="raw data"
+                #name="raw data"
+            ),
+            
+            # raw data cdf
+            go.Scatter(
+                x=x,
+                y=ycdf_raw,
+                mode="lines",
+                line={"color": "grey", "width": 2},
+                #name="raw data counted"
             ),
 
-            # gaussian estimate of pdf
+            # gaussian estimate of cdf
             go.Scatter(
                 x=x_mesh,
-                y=y_normal_mesh,
+                y=ycdf_normal_mesh,
                 mode="lines",
                 line={"color": "blue"},
-                name="gaussian est",
+                #name="gaussian est",
             ),
 
-            # kde estimate of pdf
-            go.Scatter(
-                x=x_mesh,
-                y=y_kde_mesh,
-                mode="lines",
-                line={"color": "orange"},
-                name="kde est",
-            ),
+            # # kde estimate of pdf
+            # go.Scatter(
+            #     x=x_mesh,
+            #     y=y_kde_mesh,
+            #     mode="lines",
+            #     line={"color": "orange"},
+            #     name="kde est",
+            # ),
 
             # to add: normal distribution
         ],
         rows=[row]*3,
         cols=[col]*3,
     )
-    fig.update_yaxes(title="density", row=row, col=col)
+    fig.update_yaxes(title="cumulative density", row=row, col=col)
 
 
 
