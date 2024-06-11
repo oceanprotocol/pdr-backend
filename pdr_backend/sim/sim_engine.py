@@ -170,7 +170,6 @@ class SimEngine:
         acct_up_profit -= stake_up
         acct_down_profit -= stake_down
 
-
         if self.position_open == "":
             if pred_up:
                 # Open long position if pred up and no position open
