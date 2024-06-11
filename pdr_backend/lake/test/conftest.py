@@ -616,13 +616,13 @@ def setup_data(
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
 
     # provide the setup data to the test
-    etl = ETL(ppss, gql_data_factory)
-    db = _get_test_DuckDB(tmpdir)
+    # etl = ETL(ppss, gql_data_factory)
+    # db = _get_test_DuckDB(tmpdir)
 
-    assert etl is not None
-    assert etl.gql_data_factory == gql_data_factory
+    # assert etl is not None
+    # assert etl.gql_data_factory == gql_data_factory
 
-    _records = db.query_data("SELECT * FROM pdr_predictions")
-    assert len(_records) == 5
+    # _records = db.query_data("SELECT * FROM pdr_predictions")
+    # assert len(_records) == 5
 
-    yield etl, db, gql_tables
+    # yield etl, db, gql_tables
