@@ -27,7 +27,7 @@ def test_get_column_graphs():
         {"fig": fig1, "graph_id": "fig1_graph"},
         {"fig": fig2, "graph_id": "fig2_graph"},
     ]
-    result = get_column_graphs(figure_data, "title1", "")
+    result = get_column_graphs("id", figure_data, "title1", "")
     assert len(result) == 1
     assert len(result[0].children) == len(figure_data) + 2
     assert figure_data[0]["graph_id"] + "-title" == result[0].children[0].id

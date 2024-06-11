@@ -1,5 +1,5 @@
 import dash_bootstrap_components as dbc
-from dash import dcc, html
+from dash import dcc, html, dash_table
 
 
 def display_plots_view(columns):
@@ -15,14 +15,31 @@ def display_plots_view(columns):
 
 
 # pylint: disable=line-too-long
-def get_column_graphs(figures: list[dict], title: str, tooltip: str):
+def get_column_graphs(id_parent: str, figures: list[dict], title: str, tooltip: str):
     height_percentage = 80 / (len(figures) if (title != "ADF") else 2)
+    figures = [
+        dcc.Graph(
+            figure=fig["fig"],
+            id=fig["graph_id"],
+            style={
+                "width": "100%",
+                "height": str(fig.get("height", height_percentage)) + "vh",
+                "padding": "0",
+            },
+        )
+        for fig in figures
+    ]
+    return get_column_display(id_parent, figures, title, tooltip)
+
+
+# pylint: disable=line-too-long
+def get_column_display(id_parent: str, figures: list[dict], title: str, tooltip: str):
     return (
         html.Div(
             [
                 html.Span(
                     children=title + " ⓘ",
-                    id=figures[0]["graph_id"] + "-title",
+                    id=id_parent + "-title",
                     style={
                         "textAlign": "center",
                         "fontSize": "18px",
@@ -32,28 +49,33 @@ def get_column_graphs(figures: list[dict], title: str, tooltip: str):
                 ),
                 dbc.Tooltip(
                     dcc.Markdown(tooltip),
-                    target=figures[0]["graph_id"] + "-title",
+                    target=id_parent + "-title",
                 ),
-                *[
-                    dcc.Graph(
-                        figure=fig["fig"],
-                        id=fig["graph_id"],
-                        style={
-                            "width": "100%",
-                            "height": str(fig.get("height", height_percentage)) + "vh",
-                            "padding": "0",
-                        },
-                    )
-                    for fig in figures
-                ],
-            ],
+            ]
+            + figures,
             style={
                 "display": "flex",
                 "flexDirection": "column",
                 "alignItems": "center",
                 "justifyContent": "center",
+                "width": "100%",
             },
         ),
+    )
+
+
+def get_table(columns, data):
+    return dash_table.DataTable(
+        id="transition_table",
+        columns=[{"name": col, "id": col} for col in columns],
+        data=data,
+        row_selectable="single",  # Can be 'multi' for multiple rows
+        selected_rows=[2],
+        style_cell={"textAlign": "left"},
+        style_table={
+            "marginTop": "20px",
+        },
+        fill_width=True,
     )
 
 
@@ -141,8 +163,8 @@ def get_input_elements():
 def get_graphs_container():
     return html.Div(
         [
-            display_on_column_graphs("transition_column", "22.5%"),
-            display_on_column_graphs("seasonal_column", "50%"),
+            display_on_column_graphs("transition_column", "17.5%"),
+            display_on_column_graphs("seasonal_column", "65%"),
             display_on_column_graphs("autocorelation_column", "22.5%"),
         ],
         id="arima-graphs",

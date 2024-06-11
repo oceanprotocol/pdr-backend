@@ -13,6 +13,7 @@ from pdr_backend.statutil.autocorrelation_plotter import (
     get_transitions,
     plot_acf,
     plot_pacf,
+    TRANSITION_OPTIONS,
 )
 from pdr_backend.statutil.dash_plots.tooltips_text import (
     AUTOCORRELATION_TOOLTIP,
@@ -23,7 +24,10 @@ from pdr_backend.statutil.dash_plots.util import (
     filter_file_data_by_date,
     read_files_from_directory,
 )
-from pdr_backend.statutil.dash_plots.view_elements import get_column_graphs
+from pdr_backend.statutil.dash_plots.view_elements import (
+    get_column_graphs,
+    get_column_display,
+)
 from pdr_backend.statutil.seasonal import SeasonalDecomposeFactory, SeasonalPlotdata
 from pdr_backend.statutil.seasonal_plotter import (
     create_seasonal_plot,
@@ -118,7 +122,8 @@ def get_callbacks(app):
         pacf = plot_pacf(data)
 
         autocorelation_charts = get_column_graphs(
-            [
+            id_parent="Autocorelation",
+            figures=[
                 {"fig": acf, "graph_id": "autocorelation"},
                 {"fig": pacf, "graph_id": "pautocorelation"},
             ],
@@ -168,7 +173,8 @@ def get_callbacks(app):
         seasonal_plots = create_seasonal_plot(plotdata)
 
         seasonal_charts = get_column_graphs(
-            [
+            id_parent="Seasonal",
+            figures=[
                 {
                     "fig": relativeEnergies,
                     "graph_id": "relativeEnergies",
@@ -208,37 +214,32 @@ def get_callbacks(app):
             datetime.strptime(date_picker_start_date, DATE_STRING_FORMAT),
             datetime.strptime(date_picker_end_date, DATE_STRING_FORMAT),
         )
-        figure = get_transitions(None, files_data[feed_data]["close_data"])
-        transitions = get_column_graphs(
-            [{"fig": figure, "graph_id": "transition_graph"}],
+        table = get_transitions(None, files_data[feed_data]["close_data"])
+        transition = get_column_display(
+            id_parent="Transition",
+            figures=[table],
             title="ADF",
             tooltip=TRANSITION_TOOLTIP,
         )
-        return html.Div(transitions)
+
+        return transition
 
     @app.callback(
-        Output("transition_graph", "figure"),
         Output("transition-data", "data"),
-        [Input("transition_graph", "clickData")],
-        [State("transition_graph", "figure")],
+        [Input("transition_table", "selected_rows")],
     )
-    def display_click_data(clickData, figure):
-        if clickData is None:
-            figure["data"][0]["marker"]["color"][1] = "grey"
-            return figure, {"BC": True, "D": 1}
+    def update_transition_data(selectedRows):
+        if len(selectedRows) <= 0:
+            return {"BC": True, "D": 1}
 
-        point = clickData["points"][0]
-        selected_idx = point["pointIndex"]
-        transition = point["y"]
+        selectedRow = selectedRows[0]
 
-        for i in range(len(figure["data"][0]["marker"]["color"])):
-            figure["data"][0]["marker"]["color"][i] = "white"
-        figure["data"][0]["marker"]["color"][selected_idx] = "grey"
+        transition = TRANSITION_OPTIONS[selectedRow]
         transition_data = {
             "BC": "T" in transition.split("=")[1],
             "D": int(transition.split("=")[2]),
         }
-        return figure, transition_data
+        return transition_data
 
     @app.callback(
         [
