@@ -112,5 +112,5 @@ def _do_sql_bronze_predictions(
     # df = db.query_data(f"SELECT * FROM {temp_bronze_prediction_table.fullname}")
     # df.write_csv("post_query_temp_bronze_prediction_table.csv")
 
-    # df = db.query_data(f"SELECT * FROM {Prediction.get_lake_table_name()}")
-    # df.write_csv("temp_update_predictions.csv")
+    # df = db.query_data(f"SELECT * FROM {temp_update_bronze_prediction_table.fullname}")
+    # df.write_csv("post_query_temp_update_bronze_prediction_table.csv")
