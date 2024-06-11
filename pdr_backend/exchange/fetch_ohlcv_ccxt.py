@@ -42,14 +42,12 @@ def fetch_ohlcv_ccxt(
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
     verify_exchange_str(exchange_str)
-    if exchange_str == "dydx":
-        raise ValueError(exchange_str)
     verify_pair_str(pair_str)
     if "-" in pair_str:
         raise ValueError(f"Got pair_str={pair_str}. It must have '/' not '-'")
     verify_timeframe_str(timeframe)
 
-    d = {"timeout": 30, "ccxt_params": {}, "dydx_params": {}}
+    d = {"timeout": 30, "ccxt_params": {}}
     ss = ExchangeMgrSS(d)
     exchange_mgr = ExchangeMgr(ss)
     exchange = exchange_mgr.exchange(exchange_str)

@@ -2,22 +2,23 @@ import logging
 import os
 import time
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from enforce_typing import enforce_types
 
+from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.token import NativeToken, Token
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.payout.payout import find_slots_and_payout_with_mgr
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.predictoor.predictoor_logger import PredictoorAgentLogLine
 from pdr_backend.predictoor.stakes_per_slot import StakesPerSlot, StakeTup
-from pdr_backend.predictoor.util import find_shared_slots
+from pdr_backend.predictoor.util import to_checksum
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, print_feeds
-from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.util.currency_types import Eth, Wei
 from pdr_backend.util.logutil import logging_has_stdout
 from pdr_backend.util.time_types import UnixTimeS
@@ -81,6 +82,9 @@ class PredictoorAgent:
         self.prev_block_number: UnixTimeS = UnixTimeS(0)
         self.prev_submit_epochs: List[int] = []
         self.prev_submit_payouts: List[int] = []
+
+        self.iter_number: int = 0
+        self.crt_trained_model: Optional[Aimodel] = None
 
     @enforce_types
     def run(self):
@@ -181,6 +185,8 @@ class PredictoorAgent:
         logger.info("Calculating predictions and stakes")
         stakes: StakesPerSlot = self.calc_stakes_across_feeds(feeds)
 
+        self.iter_number += 1
+
         if len(stakes.slots) == 0:
             logger.info("No predictions to submit, skipping")
 
@@ -226,8 +232,7 @@ class PredictoorAgent:
     @enforce_types
     def _to_checksum(self, addrs: List[str]) -> List[str]:
         w3 = self.ppss.web3_pp.w3
-        checksummed_addrs = [w3.to_checksum_address(addr) for addr in addrs]
-        return checksummed_addrs
+        return to_checksum(w3, addrs)
 
     @property
     def cur_block(self):
@@ -412,9 +417,14 @@ class PredictoorAgent:
         y_thr = curprice
         ybool = data_f.ycont_to_ytrue(ycont, y_thr)
 
-        # build model
-        model_f = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
-        model = model_f.build(X, ybool)
+        if (
+            self.iter_number % self.ppss.predictoor_ss.aimodel_ss.train_every_n_epochs
+        ) == 0:
+            model_f = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
+            model = model_f.build(X, ybool)
+        else:
+            assert self.crt_trained_model is not None
+            model = self.crt_trained_model
 
         # predict
         X_test = xrecent.reshape((1, len(xrecent)))
@@ -474,23 +484,7 @@ class PredictoorAgent:
 
         # Update previous payouts history to avoid claiming for this epoch again
         self.prev_submit_payouts.append(self.cur_unique_epoch)
-
-        # we only need to query in one direction, since both predict on the same slots
-        up_addr = self.pred_submitter_mgr.pred_submitter_up_address()
-        pending_slots = query_pending_payouts(self.ppss.web3_pp.subgraph_url, up_addr)
-        shared_slots = find_shared_slots(pending_slots)
-        if not shared_slots:
-            logger.info("No payouts available")
-            return
-
-        for slot_tuple in shared_slots:
-            contract_addrs, slots = slot_tuple
-            contract_addrs = self._to_checksum(contract_addrs)
-            tx = self.pred_submitter_mgr.get_payout(slots, contract_addrs)
-
-            cur_index = shared_slots.index(slot_tuple)
-            progress = f"{cur_index + 1}/{len(shared_slots)}"
-            logger.info("Payout tx %s: %s", progress, tx["transactionHash"].hex())
+        find_slots_and_payout_with_mgr(self.pred_submitter_mgr, self.ppss)
 
 
 @enforce_types

@@ -10,6 +10,7 @@ from enforce_typing import enforce_types
 from sklearn.metrics import log_loss, precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 
+from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
@@ -62,6 +63,8 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
 
+        self.crt_trained_model: Optional[Aimodel] = None
+
     @property
     def predict_feed(self) -> ArgFeed:
         return self.predict_train_feedset.predict
@@ -97,6 +100,7 @@ class SimEngine:
         # main loop!
         f = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = f.get_mergedohlcv_df()
+
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
 
@@ -134,8 +138,13 @@ class SimEngine:
         ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
-        model_f = AimodelFactory(pdr_ss.aimodel_ss)
-        model = model_f.build(X_train, ytrue_train)
+        if self.st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0:
+            model_f = AimodelFactory(pdr_ss.aimodel_ss)
+            model = model_f.build(X_train, ytrue_train, ycont_train, y_thr)
+            self.crt_trained_model = model
+        else:
+            assert self.crt_trained_model is not None
+            model = self.crt_trained_model
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
@@ -144,7 +153,12 @@ class SimEngine:
 
         # predict price direction
         prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
-        pred_up: bool = prob_up > 0.5
+        prob_down: float = 1.0 - prob_up
+        conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
+        conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
+        conf_threshold = self.ppss.trader_ss.sim_confidence_threshold
+        pred_up: bool = prob_up > 0.5 and conf_up > conf_threshold
+        pred_down: bool = prob_up < 0.5 and conf_down > conf_threshold
         st.probs_up.append(prob_up)
 
         # predictoor: (simulate) submit predictions with stake
@@ -157,12 +171,9 @@ class SimEngine:
         # trader: enter the trading position
         usdcoin_holdings_before = st.holdings[self.usdcoin]
         if pred_up:  # buy; exit later by selling
-            conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
             usdcoin_amt_send = trade_amt * conf_up
             tokcoin_amt_recd = self._buy(curprice, usdcoin_amt_send)
-        else:  # sell; exit later by buying
-            prob_down = 1.0 - prob_up
-            conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
+        elif pred_down:  # sell; exit later by buying
             target_usdcoin_amt_recd = trade_amt * conf_down
             p = self.ppss.trader_ss.fee_percent
             tokcoin_amt_send = target_usdcoin_amt_recd / curprice / (1 - p)
@@ -193,7 +204,7 @@ class SimEngine:
         if pred_up:
             # we'd bought; so now sell
             self._sell(trueprice, tokcoin_amt_recd)
-        else:
+        elif pred_down:
             # we'd sold, so buy back the same # tokcoins as we sold
             # (do *not* buy back the same # usdcoins! Not the same thing!)
             target_tokcoin_amt_recd = tokcoin_amt_send
@@ -232,6 +243,8 @@ class SimEngine:
                 model,
                 X_train,
                 ytrue_train,
+                ycont_train,
+                y_thr,
                 colnames,
                 slicing_x,
             )

@@ -24,27 +24,30 @@ predictoor_ss:
     pred_submitter_mgr: "DeployNewMgr" # DeployNewMgr | <address of deployed mgr>
     s_start_payouts: 220 # in s. Run payout if > this time left. 0 to disable
     s_until_epoch_end: 60 # in s. Start predicting if > this time left
+    payout_batch_size: 8 # no. epochs to payout in each batch
+    min_payout_slots: 0 # Run payout if payout is available for > this many slots
 
   aimodel_ss:
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n: 1 # no. epochs that model looks back, to predict next
-    approach: LinearLogistic # LinearLogistic | LinearLogistic_Balanced | LinearSVC | Constant
+    approach: ClassifLinearRidge # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVC | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrConstant
     weight_recent: 10x_5x # 10x_5x | None
     balance_classes: None # SMOTE | RandomOverSampler | None
     calibrate_probs: CalibratedClassifierCV_Sigmoid # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
+    train_every_n_epochs: 1
 
 exchange_mgr_ss: # used by trader and sim
   timeout: 30000
   ccxt_params:
     createMarketBuyOrderRequiresPrice: False
     defaultType: spot
-  dydx_params:
 
 trader_ss:
   feed: binance BTC/USDT c 5m
   sim_only:
     buy_amt: 1000 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee
+    confidence_threshold: 0.02 # skip trade if confidence < this
     init_holdings:
       - 100000 USDT
       - 2 BTC

@@ -41,7 +41,7 @@ def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
     assert ppss.trader_ss.timeframe_str in ["5m", "1h"]
     assert isinstance(ppss.lake_ss.st_timestr, str)
     assert ppss.dfbuyer_ss.weekly_spending_limit >= 0
-    assert ppss.predictoor_ss.aimodel_ss.approach == "LinearLogistic"
+    assert ppss.predictoor_ss.aimodel_ss.approach == "ClassifLinearRidge"
     assert ppss.payout_ss.batch_size >= 0
     assert 1 <= ppss.predictoor_ss.s_until_epoch_end <= 120
     assert 0.0 <= ppss.trader_ss.fee_percent <= 0.99
@@ -162,7 +162,7 @@ def test_verify_feed_dependencies():
     # - check for matching {exchange, pair, timeframe} but not {signal}
     good_feed = "binance BTC/USDT c 5m"
     for wrong_feed in [
-        "dydx BTC/USDT c 5m",  # bad exchange
+        "fooexch BTC/USDT c 5m",  # bad exchange
         "binance DOT/USDT c 5m",  # bad pair
         "binance BTC/USDT c 1h",  # bad timeframe
     ]:
