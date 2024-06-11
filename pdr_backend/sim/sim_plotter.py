@@ -130,81 +130,81 @@ class SimPlotter:
 
     @enforce_types
     def plot_pdr_profit_vs_time(self):
-        y00 = list(np.cumsum(self.st.pdr_profits_OCEAN))
-        s = f"Predictoor profit vs time. Current: {y00[-1]:.2f} OCEAN"
-
-        y = "predictoor profit (OCEAN)"
-        df = pd.DataFrame(y00, columns=[y])
-        df["time"] = range(len(y00))
-
+        y = list(np.cumsum(self.st.pdr_profits_OCEAN))
+        x = list(range(len(y)))
         fig = go.Figure(
-            go.Scatter(x=df["time"], y=df[y], mode="lines", name="predictoor profit")
+            go.Scatter(
+                x=x,
+                y=y,
+                mode="lines",
+                line={"color": "#636EFA"},
+            )
         )
-
-        fig.add_hline(y=0, line_dash="dot", line_color="grey")
-        fig.update_layout(title=s)
+        fig.add_hline(y=0.0, line_dash="dot", line_color="grey")
+        title = f"Predictoor profit vs time. Current: {y[-1]:.2f} OCEAN"
+        fig.update_layout(title=title)
         fig.update_xaxes(title="time")
-        fig.update_yaxes(title=y)
+        fig.update_yaxes(title="predictoor profit (OCEAN)")
 
         return fig
 
     @enforce_types
     def plot_pdr_profit_vs_ptrue(self):
-        avg = np.average(self.st.pdr_profits_OCEAN)
-        s = f"pdr profit dist. avg={avg:.2f} OCEAN"
-
-        y = "pdr profit (OCEAN)"
-        df = pd.DataFrame(self.st.pdr_profits_OCEAN, columns=[y])
-        df["prob(up)"] = self.st.probs_up
-
+        x = self.st.probs_up
+        y = self.st.pdr_profits_OCEAN
         fig = go.Figure(
-            go.Scatter(x=df["prob(up)"], y=df[y], mode="markers", name="pdr profit")
+            go.Scatter(
+                x=x,
+                y=y,
+                mode="markers",
+                marker={"color": "#636EFA", "size": 2},
+            )
         )
-
         fig.add_hline(y=0, line_dash="dot", line_color="grey")
-        fig.update_layout(title=s)
+        title = f"Predictoor profit dist. avg={np.average(y):.2f} OCEAN"
+        fig.update_layout(title=title)
         fig.update_xaxes(title="prob(up)")
-        fig.update_yaxes(title=y)
+        fig.update_yaxes(title="pdr profit (OCEAN)")
+
+        return fig     
+
+    @enforce_types
+    def plot_trader_profit_vs_time(self):
+        y = list(np.cumsum(self.st.trader_profits_USD))
+        x = list(range(len(y)))
+        fig = go.Figure(
+            go.Scatter(
+                x=x,
+                y=y,         
+                mode="lines", 
+                line={"color": "#636EFA"},
+            )
+        )
+        fig.add_hline(y=0, line_dash="dot", line_color="grey")
+        title = f"Trader profit vs time. Current: ${y[-1]:.2f}"
+        fig.update_layout(title=title)
+        fig.update_xaxes(title="time")
+        fig.update_yaxes(title="trader profit (USD)")
 
         return fig
 
     @enforce_types
     def plot_trader_profit_vs_ptrue(self):
-        avg = np.average(self.st.trader_profits_USD)
-        s = f"trader profit dist. avg={avg:.2f} USD"
-
-        y = "trader profit (USD)"
-        df = pd.DataFrame(self.st.trader_profits_USD, columns=[y])
-        df["prob(up)"] = self.st.probs_up
-
+        x = self.st.probs_up
+        y = self.st.trader_profits_USD
         fig = go.Figure(
-            go.Scatter(x=df["prob(up)"], y=df[y], mode="markers", name="trader profit")
+            go.Scatter(
+                x=x,
+                y=y,
+                mode="markers",
+                marker={"color": "#636EFA", "size": 2},
+            )
         )
-
         fig.add_hline(y=0, line_dash="dot", line_color="grey")
-        fig.update_layout(title=s)
+        title = f"trader profit dist. avg={np.average(y):.2f} USD"
+        fig.update_layout(title=title)
         fig.update_xaxes(title="prob(up)")
-        fig.update_yaxes(title=y)
-
-        return fig
-
-    @enforce_types
-    def plot_trader_profit_vs_time(self):
-        y10 = list(np.cumsum(self.st.trader_profits_USD))
-
-        s = f"Trader profit vs time. Current: ${y10[-1]:.2f}"
-        y = "trader profit (USD)"
-        df = pd.DataFrame(y10, columns=[y])
-        df["time"] = range(len(y10))
-
-        fig = go.Figure(
-            go.Scatter(x=df["time"], y=df[y], mode="lines", name="trader profit")
-        )
-
-        fig.add_hline(y=0, line_dash="dot", line_color="grey")
-        fig.update_layout(title=s)
-        fig.update_xaxes(title="time")
-        fig.update_yaxes(title=y)
+        fig.update_yaxes(title="trader profit (USD)")
 
         return fig
 
@@ -301,7 +301,7 @@ class SimPlotter:
                 ),
             ],
             rows=[row] * 4,
-            cols=[1, 1, 1, 1],
+            cols=[1] * 4,
         )
         fig.update_yaxes(title_text="accuracy (%)", row=1, col=1)
 
@@ -349,7 +349,7 @@ class SimPlotter:
                 ),
             ],
             rows=[row] * 4,
-            cols=[1, 1, 1, 1],
+            cols=[1] * 4,
         )
         fig.update_yaxes(title_text="f1, etc", row=2, col=1)
 
@@ -368,27 +368,73 @@ class SimPlotter:
 
     @enforce_types
     def plot_prediction_residuals(self):
-        yerrs = self.st.aim.yerrs
-        if min(yerrs) == max(yerrs) == 0.0:
-            label = "Ignore this because model is a classifier"
-        else:
-            label = "Regression model prediction residuals (actual - predicted)"
-        ylabel = "residual = error = actual - predicted"
-        xlabel = "time"
+        # set titles
+        aim = self.st.aim
+        s1 = "Residual vs time"
+        s2 = "Residual distribution"
+        s3 = "Residuals normal quantile (NQ)"
+        s4 = "Residuals correlogram"
 
-        fig = go.Figure(
-            go.Scatter(
-                x=list(range(len(yerrs))),
-                y=yerrs,
-                mode="markers",
-                marker={"color": "black", "size": 2},
-            )
+        # make subplots
+        fig = make_subplots(
+            rows=2,
+            cols=2,
+            subplot_titles=(s1, s2, s3, s4),
+            vertical_spacing=0.08,
         )
 
-        fig.add_hline(y=0, line_dash="dot", line_color="grey")
-        fig.update_layout(title=label)
-        fig.update_xaxes(title=xlabel)
-        fig.update_yaxes(title=ylabel)
+        # fill in subplots
+        #self._add_subplot_residual_vs_time(fig, row=1, col=1)
+        #self._add_subplot_residual_distribution(fig, row=1, col=2)
+        #self._add_subplot_residual_nq(fig, row=2, col=1)
+        #self._add_subplot_residual_correlogram(fig, row=2, col=2)
+        
+        return fig
+
+    @enforce_types
+    def _add_subplot_residual_vs_time(self, fig, row, col):
+        x = list(range(len(y)))
+        y = self.st.aim.yerrs
+        fig.add_traces(
+            [
+                # points: residuals vs time
+                go.Scatter(
+                    x=x,
+                    y=y,
+                    mode="markers",
+                    marker={"color": "black", "size": 2},
+                ),
+                # line: horizontal error = 0
+                go.Scatter(
+                    x=[min(x), max(x)],
+                    y=[0.0, 0.0],
+                    mode="lines",
+                    line={"color": "grey", "dash": "dot"},
+                ),
+            ],
+            rows=[row]*2,
+            cols=[col]*2,
+        )
+        fig.update_xaxes(title="time", row=row, col=col)
+        fig.update_yaxes(title="residual", row=row, col=col)
+
+        return fig
+
+    @enforce_types
+    def _add_subplot_residual_distribution(self, fig, row, col):
+        x = self.st.aim.yerrs
+        fig.add_traces(
+            [
+                # points: histogram
+                go.Histogram(
+                    x=x,
+                ),
+            ],
+            rows=[row]*1,
+            cols=[col]*1,
+        )
+        fig.update_xaxes(title="residual", row=row, col=col)
+        fig.update_yaxes(title="count", row=row, col=col)
 
         return fig
 
