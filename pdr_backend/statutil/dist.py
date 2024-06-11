@@ -29,37 +29,50 @@ def plot_pdf_nq(x):
 
 @enforce_types
 def add_pdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):    
-    std = np.std(x)
+    mean, std = np.mean(x), np.std(x)
     x_mesh = np.linspace(min(x) - std, max(x) + std, num=200)
+
+    y_gaussian_mesh = stats.norm.pdf(x_mesh, mean, std)
     
     kde_model = stats.gaussian_kde(x)
-    kde_mesh = kde_model.evaluate(x_mesh)
-    y_kde_mesh = kde_mesh / max(kde_mesh) # normalized to max=1.0
+    y_kde_mesh = kde_model.evaluate(x_mesh)
+
+    max_est = max(max(y_gaussian_mesh), max(y_kde_mesh))
+    y_jitter = - _get_jitter(len(x)) * max_est * 0.25
     
     fig.add_traces(
         [
             # 1d scatterplot of points
             go.Scatter(
                 x=x,
-                y=-0.1 * _get_jitter(len(x)),
+                y=y_jitter,
                 mode="markers",
                 marker={"color": "black", "size": 2},
-                name="raw"
+                name="raw data"
             ),
 
-            # kde estimate
+            # gaussian estimate of pdf
+            go.Scatter(
+                x=x_mesh,
+                y=y_gaussian_mesh,
+                mode="lines",
+                line={"color": "blue"},
+                name="gaussian est",
+            ),
+
+            # kde estimate of pdf
             go.Scatter(
                 x=x_mesh,
                 y=y_kde_mesh,
                 mode="lines",
-                line={"color": "blue"},
-                name="kde",
+                line={"color": "orange"},
+                name="kde est",
             ),
 
             # to add: normal distribution
         ],
-        rows=[row]*2,
-        cols=[col]*2,
+        rows=[row]*3,
+        cols=[col]*3,
     )
     fig.update_yaxes(title="density", row=row, col=col)
 
