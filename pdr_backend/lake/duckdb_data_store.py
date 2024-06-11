@@ -132,7 +132,6 @@ class _StoreCRUD:
         table_names = self.get_table_names()
 
         if table_name in table_names:
-            logger.info("insert_to_table %s, %s rows", table_name, len(df))
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
             return
 
