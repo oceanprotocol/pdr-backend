@@ -12,7 +12,7 @@ from pdr_backend.util.time_types import UnixTimeMs, _dt_now_UTC
 
 _D = {
     "feeds": ["kraken ETH/USDT 5m", "binanceus ETH/USDT,TRX/DAI 1h"],
-    "parquet_dir": "parquet_data",
+    "lake_dir": "lake_data",
     "st_timestr": "2023-06-18",
     "fin_timestr": "2023-06-21",
 }
@@ -23,7 +23,7 @@ def test_lake_ss_basic():
     ss = LakeSS(_D)
 
     # yaml properties
-    assert "parquet_data" in ss.parquet_dir
+    assert "lake_data" in ss.lake_dir
     assert ss.st_timestr == "2023-06-18"
     assert ss.fin_timestr == "2023-06-21"
 
@@ -67,7 +67,6 @@ def test_lake_ss_now():
     assert ss.fin_timestamp / 1000 == pytest.approx(ut2 / 1000, 1.0)
 
 
-@enforce_types
 def test_lake_ss_start_time():
     d = copy.deepcopy(_D)
     d["st_timestr"] = "3 days ago"
@@ -81,29 +80,29 @@ def test_lake_ss_start_time():
 
 
 @enforce_types
-def test_parquet_dir(tmpdir):
+def test_lake_dir(tmpdir):
     # rel path given; needs an abs path
     d = copy.deepcopy(_D)
-    d["parquet_dir"] = "parquet_data"
+    d["lake_dir"] = "lake_data"
     ss = LakeSS(d)
-    target_parquet_dir = os.path.abspath("parquet_data")
-    assert ss.parquet_dir == target_parquet_dir
+    target_lake_dir = os.path.abspath("lake_data")
+    assert ss.lake_dir == target_lake_dir
 
     # abs path given
     d = copy.deepcopy(_D)
-    d["parquet_dir"] = os.path.join(tmpdir, "parquet_data")
+    d["lake_dir"] = os.path.join(tmpdir, "lake_data")
     ss = LakeSS(d)
-    target_parquet_dir = os.path.join(tmpdir, "parquet_data")
-    assert ss.parquet_dir == target_parquet_dir
+    target_lake_dir = os.path.join(tmpdir, "lake_data")
+    assert ss.lake_dir == target_lake_dir
 
 
 @enforce_types
 def test_lake_ss_test_dict_1_default_feeds(tmpdir):
-    parquet_dir = os.path.join(tmpdir, "parquet_data")
+    lake_dir = os.path.join(tmpdir, "lake_data")
 
-    d = lake_ss_test_dict(parquet_dir)
+    d = lake_ss_test_dict(lake_dir)
 
-    assert d["parquet_dir"] == parquet_dir
+    assert d["lake_dir"] == lake_dir
 
     f = d["feeds"][0]
     assert "binance" in f or "kraken" in f
@@ -115,14 +114,14 @@ def test_lake_ss_test_dict_1_default_feeds(tmpdir):
     assert "timeframe" in d
 
     ss = LakeSS(d)
-    assert ss.parquet_dir == parquet_dir
+    assert ss.lake_dir == lake_dir
     assert ss.feeds
 
 
 @enforce_types
 def test_lake_ss_test_dict_2_specify_feeds(tmpdir):
-    parquet_dir = os.path.join(tmpdir, "parquet_data")
+    lake_dir = os.path.join(tmpdir, "lake_data")
     feeds = ["kraken DOT/USDT c 60m", "dydx DOT/USDT c 60m"]
-    d = lake_ss_test_dict(parquet_dir, feeds)
-    assert d["parquet_dir"] == parquet_dir
+    d = lake_ss_test_dict(lake_dir, feeds)
+    assert d["lake_dir"] == lake_dir
     assert d["feeds"] == feeds

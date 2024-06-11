@@ -161,7 +161,7 @@ class Table:
             parquet_filename -- name for parquet file.
         """
         basename = f"{self.table_name}.parquet"
-        filename = os.path.join(self.ppss.lake_ss.parquet_dir, basename)
+        filename = os.path.join(self.ppss.lake_ss.lake_dir, basename)
         return filename
 
     @enforce_types

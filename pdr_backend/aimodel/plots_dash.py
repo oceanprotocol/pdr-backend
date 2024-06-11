@@ -44,6 +44,6 @@ get_callbacks(app)
 def arima_dash(ppss: PPSS):
     port = 8050
     webbrowser.open(f"http://127.0.0.1:{port}/")
-    folder = ppss.lake_ss.parquet_dir
+    folder = ppss.lake_ss.lake_dir
     app.layout.children[0].data = folder
     app.run(debug=True, port=port)

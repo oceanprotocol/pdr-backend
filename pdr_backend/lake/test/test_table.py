@@ -52,7 +52,7 @@ def _get_lake_dir(ppss):
     if hasattr(ppss.lake_ss, "lake_dir"):
         return ppss.lake_ss.lake_dir
     # otherwise, return the default lake_dir
-    return ppss.lake_ss.parquet_dir
+    return ppss.lake_ss.lake_dir
 
 
 table_df_schema = {

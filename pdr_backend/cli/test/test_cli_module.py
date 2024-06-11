@@ -15,8 +15,7 @@ from pdr_backend.cli.cli_module import (
     do_claim_ROSE,
     # power tools
     do_multisim,
-    do_lake,
-    do_analytics,
+    do_ohlcv,
     # utilities
     do_get_predictoors_info,
     do_get_predictions_info,
@@ -33,7 +32,7 @@ from pdr_backend.cli.cli_module import (
     # (and, main)
     _do_main,
 )
-from pdr_backend.ppss.ppss import PPSS as PPSSClass
+from pdr_backend.ppss.ppss import PPSS
 
 
 class _APPROACH:
@@ -56,13 +55,6 @@ class _PPSS:
     PPSS_FILE = os.path.abspath("ppss.yaml")
 
 
-class _PPSS_OBJ:
-    PPSS = PPSSClass(
-        yaml_filename=os.path.abspath("ppss.yaml"),
-        network="development",
-    )
-
-
 class _NETWORK:
     NETWORK = "development"
 
@@ -80,7 +72,7 @@ class _END:
 
 
 class _PQDIR:
-    PQDIR = "my_parquet_data/"
+    PQDIR = "my_lake_data/"
 
 
 class _FEEDS:
@@ -118,7 +110,7 @@ class _Base:
 
 class MockArgParser_PPSS(_Base):
     def parse_args(self):
-        class MockArgs(Namespace, _PPSS, _PPSS_OBJ):
+        class MockArgs(Namespace, _PPSS):
             pass
 
         return MockArgs()
@@ -126,7 +118,7 @@ class MockArgParser_PPSS(_Base):
 
 class MockArgParser_PPSS_NETWORK(_Base):
     def parse_args(self):
-        class MockArgs(Namespace, _PPSS, _NETWORK, _PPSS_OBJ):
+        class MockArgs(Namespace, _PPSS, _NETWORK):
             pass
 
         return MockArgs()
@@ -138,7 +130,7 @@ class MockArgParser_APPROACH_PPSS_NETWORK(_Base):
         super().__init__()
 
     def parse_args(self):
-        class MockArgs(Namespace, self.approach, _PPSS, _NETWORK, _PPSS_OBJ):
+        class MockArgs(Namespace, self.approach, _PPSS, _NETWORK):
             pass
 
         return MockArgs()
@@ -146,7 +138,7 @@ class MockArgParser_APPROACH_PPSS_NETWORK(_Base):
 
 class MockArgParser_PPSS_NETWORK_LOOKBACK(_Base):
     def parse_args(self):
-        class MockArgs(Namespace, _PPSS, _NETWORK, _LOOKBACK, _PPSS_OBJ):
+        class MockArgs(Namespace, _PPSS, _NETWORK, _LOOKBACK):
             pass
 
         return MockArgs()
@@ -155,7 +147,7 @@ class MockArgParser_PPSS_NETWORK_LOOKBACK(_Base):
 class MockArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS(_Base):
     def parse_args(self):
         class MockArgs(  # pylint: disable=too-many-ancestors
-            Namespace, _ST, _END, _PQDIR, _NETWORK, _PPSS, _PDRS, _PPSS_OBJ
+            Namespace, _ST, _END, _PQDIR, _NETWORK, _PPSS, _PDRS
         ):
             pass
 
@@ -165,7 +157,7 @@ class MockArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS(_Base):
 class MockArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(_Base):
     def parse_args(self):
         class MockArgs(  # pylint: disable=too-many-ancestors
-            Namespace, _ST, _END, _PQDIR, _NETWORK, _PPSS, _FEEDS, _PPSS_OBJ
+            Namespace, _ST, _END, _PQDIR, _NETWORK, _PPSS, _FEEDS
         ):
             pass
 
@@ -182,7 +174,7 @@ class MockArgParser_NUM(_Base):
 
 class MockArgParser_ACCOUNT_PPSS_NETWORK(_Base):
     def parse_args(self):
-        class MockArgs(Namespace, _ACCOUNT, _PPSS, _NETWORK, _PPSS_OBJ):
+        class MockArgs(Namespace, _ACCOUNT, _PPSS, _NETWORK):
             pass
 
         return MockArgs()
@@ -190,15 +182,8 @@ class MockArgParser_ACCOUNT_PPSS_NETWORK(_Base):
 
 class MockArgParser_TOKEN_AMOUNT_ACCOUNTS_TOKEN_PPSS_NETWORK(_Base):
     def parse_args(self):
-        # pylint: disable=too-many-ancestors
         class MockArgs(
-            Namespace,
-            _TOKEN_AMOUNT,
-            _ACCOUNTS,
-            _PPSS,
-            _NETWORK,
-            _NATIVE_TOKEN,
-            _PPSS_OBJ,
+            Namespace, _TOKEN_AMOUNT, _ACCOUNTS, _PPSS, _NETWORK, _NATIVE_TOKEN
         ):
             pass
 
@@ -209,7 +194,7 @@ class MockArgParser_TOKEN_AMOUNT_ACCOUNTS_TOKEN_PPSS_NETWORK(_Base):
 class MockAgent:
     was_run = False
 
-    def __init__(self, ppss: PPSSClass, *args, **kwargs):
+    def __init__(self, ppss: PPSS, *args, **kwargs):
         pass
 
     def run(self, *args, **kwargs):  # pylint: disable=unused-argument
@@ -293,22 +278,11 @@ def test_do_multisim(monkeypatch):
 
 
 @enforce_types
-def test_do_lake(monkeypatch):
+def test_do_ohlcv(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.OhlcvDataFactory.get_mergedohlcv_df", mock_f)
 
-    do_lake(MockArgParser_PPSS_NETWORK().parse_args())
-    mock_f.assert_called()
-
-
-@enforce_types
-def test_do_analytics(monkeypatch):
-    mock_f = Mock()
-    monkeypatch.setattr(f"{_CLI_PATH}.GQLDataFactory", mock_f)
-    monkeypatch.setattr(f"{_CLI_PATH}.ETL", mock_f)
-    monkeypatch.setattr(f"{_CLI_PATH}.ETL.do_etl", mock_f)
-
-    do_analytics(MockArgParser_PPSS_NETWORK().parse_args())
+    do_ohlcv(MockArgParser_PPSS_NETWORK().parse_args())
     mock_f.assert_called()
 
 
