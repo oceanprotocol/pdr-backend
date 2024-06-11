@@ -380,12 +380,12 @@ class SimPlotter:
             rows=2,
             cols=2,
             subplot_titles=(s1, s2, s3, s4),
-            vertical_spacing=0.08,
+            vertical_spacing=0.12,
         )
 
         # fill in subplots
-        #self._add_subplot_residual_vs_time(fig, row=1, col=1)
-        #self._add_subplot_residual_distribution(fig, row=1, col=2)
+        self._add_subplot_residual_vs_time(fig, row=1, col=1)
+        self._add_subplot_residual_distribution(fig, row=1, col=2)
         #self._add_subplot_residual_nq(fig, row=2, col=1)
         #self._add_subplot_residual_correlogram(fig, row=2, col=2)
         
@@ -393,8 +393,8 @@ class SimPlotter:
 
     @enforce_types
     def _add_subplot_residual_vs_time(self, fig, row, col):
-        x = list(range(len(y)))
         y = self.st.aim.yerrs
+        x = list(range(len(y)))
         fig.add_traces(
             [
                 # points: residuals vs time
@@ -403,6 +403,7 @@ class SimPlotter:
                     y=y,
                     mode="markers",
                     marker={"color": "black", "size": 2},
+                    showlegend=False,
                 ),
                 # line: horizontal error = 0
                 go.Scatter(
@@ -410,6 +411,7 @@ class SimPlotter:
                     y=[0.0, 0.0],
                     mode="lines",
                     line={"color": "grey", "dash": "dot"},
+                    showlegend=False,
                 ),
             ],
             rows=[row]*2,
@@ -428,6 +430,7 @@ class SimPlotter:
                 # points: histogram
                 go.Histogram(
                     x=x,
+                    showlegend=False,
                 ),
             ],
             rows=[row]*1,
