@@ -3,6 +3,7 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from scipy import stats
+from scipy.special import ndtr
 
 
 @enforce_types
@@ -29,7 +30,7 @@ def plot_pdf_nq(x):
 
 @enforce_types
 def add_pdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
-    nbins = min(20, len(x))
+    nbins = max(3, min(100, len(x)//5))
     counts, bins = np.histogram(x, bins=nbins)
     bins = 0.5 * (bins[:-1] + bins[1:])
     bar_width = bins[1] - bins[0]
@@ -62,7 +63,8 @@ def add_pdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
                 y=counts/max(counts)*max_est,
                 width=[bar_width] * len(bins),
                 marker_color=["grey"] * len(bins),
-                name="raw data counted",
+                showlegend=False,
+                #name="raw data counted",
             ),
 
             # gaussian estimate of pdf
@@ -70,7 +72,7 @@ def add_pdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
                 x=x_mesh,
                 y=ypdf_normal_mesh,
                 mode="lines",
-                line={"color": "blue"},
+                line={"color": "blue", "width":2},
                 name="gaussian est",
             ),
 
@@ -79,11 +81,9 @@ def add_pdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
                 x=x_mesh,
                 y=ypdf_kde_mesh,
                 mode="lines",
-                line={"color": "orange"},
+                line={"color": "orange", "dash":"dot", "width":2},
                 name="kde est",
             ),
-
-            # to add: normal distribution
         ],
         rows=[row]*4,
         cols=[col]*4,
@@ -102,8 +102,11 @@ def add_cdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
 
     ycdf_normal_mesh = stats.norm.cdf(x_mesh, mean, std)
     
-    kde_model = stats.gaussian_kde(x)
-    y_kde_mesh = kde_model.evaluate(x_mesh)
+    kde_model = stats.gaussian_kde(x)    
+    ycdf_kde_mesh = [
+        ndtr(np.ravel(x_item - kde_model.dataset) / kde_model.factor).mean()
+        for x_item in x_mesh
+    ]
 
     y_jitter = - _get_jitter(len(x)) * 0.25 - 0.01
     
@@ -115,6 +118,7 @@ def add_cdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
                 y=y_jitter,
                 mode="markers",
                 marker={"color": "black", "size": 2},
+                showlegend=False,
                 #name="raw data"
             ),
             
@@ -124,7 +128,8 @@ def add_cdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
                 y=ycdf_raw,
                 mode="lines",
                 line={"color": "grey", "width": 2},
-                #name="raw data counted"
+                #showlegend=False,
+                name="raw data counted"
             ),
 
             # gaussian estimate of cdf
@@ -132,23 +137,23 @@ def add_cdf(fig, x, row: int, col: int, xaxis_title:str="x-value"):
                 x=x_mesh,
                 y=ycdf_normal_mesh,
                 mode="lines",
-                line={"color": "blue"},
+                line={"color": "blue", "width":2},
+                showlegend=False,
                 #name="gaussian est",
             ),
 
-            # # kde estimate of pdf
-            # go.Scatter(
-            #     x=x_mesh,
-            #     y=y_kde_mesh,
-            #     mode="lines",
-            #     line={"color": "orange"},
-            #     name="kde est",
-            # ),
-
-            # to add: normal distribution
+            # kde estimate of cdf
+            go.Scatter(
+                x=x_mesh,
+                y=ycdf_kde_mesh,
+                mode="lines",
+                line={"color": "orange", "dash":"dot", "width":2},
+                showlegend=False,
+                #name="kde est",
+            ),
         ],
-        rows=[row]*3,
-        cols=[col]*3,
+        rows=[row]*4,
+        cols=[col]*4,
     )
     fig.update_yaxes(title="cumulative density", row=row, col=col)
 
