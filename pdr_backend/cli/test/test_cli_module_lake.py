@@ -1,7 +1,7 @@
 from argparse import Namespace
 from unittest.mock import Mock, patch
 
-import pytest
+# import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.cli_module_lake import (

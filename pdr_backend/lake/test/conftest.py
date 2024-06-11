@@ -574,7 +574,7 @@ def setup_data(
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
     _gql_datafactory_etl_slots_df,
-    _get_test_DuckDB,
+#    _get_test_DuckDB,
     tmpdir,
     request,
 ):
@@ -594,7 +594,7 @@ def setup_data(
         _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
     )
 
-    ppss, gql_data_factory = _gql_data_factory(
+    ppss, _ = _gql_data_factory(
         tmpdir,
         "binanceus ETH/USDT h 5m",
         st_timestr,
