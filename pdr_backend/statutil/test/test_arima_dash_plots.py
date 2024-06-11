@@ -24,15 +24,15 @@ def test_get_column_graphs():
     fig1 = Figure([])
     fig2 = Figure([])
     figure_data = [
-        {"fig": fig1, "graph_id": "fig1_graph"},
-        {"fig": fig2, "graph_id": "fig2_graph"},
+        {"id_parent": "fig1_graph", "fig": fig1, "graph_id": "fig1_graph"},
+        {"id_parent": "fig2_graph", "fig": fig2, "graph_id": "fig2_graph"},
     ]
-    result = get_column_graphs("id", figure_data, "title1", "")
+    result = get_column_graphs("fig1_graph", figure_data, "title1", "")
     assert len(result) == 1
     assert len(result[0].children) == len(figure_data) + 2
-    assert figure_data[0]["graph_id"] + "-title" == result[0].children[0].id
-    assert figure_data[0]["graph_id"] == result[0].children[2].id
-    assert figure_data[1]["graph_id"] == result[0].children[3].id
+    assert figure_data[0]["id_parent"] + "-title" == result[0].children[0].id
+    assert figure_data[0]["id_parent"] == result[0].children[2].id
+    assert figure_data[1]["id_parent"] == result[0].children[3].id
 
 
 def test_display_on_column_graphs():
