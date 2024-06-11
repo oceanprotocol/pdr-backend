@@ -81,6 +81,23 @@ class SimState:
             "trader_profit_USD",
         ]
 
+    def sim_metrics(
+        self, extras: Optional[List[str]] = None
+    ) -> List[Union[int, float]]:
+        """Return overall classifier metrics + profit metrics"""
+        rm = self.clm.recent_metrics().copy()
+        rm.update(
+            {
+                "pdr_profit_OCEAN": sum(self.pdr_profits_OCEAN),
+                "trader_profit_USD": sum(self.trader_profits_USD),
+            }
+        )
+
+        if extras and "prob_up" in extras:
+            rm["prob_up"] = sum(self.probs_up) / len(self.probs_up)
+
+        return rm
+
     def recent_metrics(
         self, extras: Optional[List[str]] = None
     ) -> List[Union[int, float]]:
