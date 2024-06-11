@@ -170,21 +170,22 @@ class SimEngine:
         acct_up_profit -= stake_up
         acct_down_profit -= stake_down
 
-        if pred_up and self.position_open == "":
-            # Open long position if pred up and no position open
-            usdcoin_amt_send = trade_amt * conf_up
-            tok_received = self._buy(curprice, usdcoin_amt_send)
-            self.position_open = "long"
-            self.position_worth = usdcoin_amt_send
-            self.position_size = tok_received
-            st.trader_profits_USD.append(0)
-        elif pred_down and self.position_open == "":
-            # Open short position if pred down and no position open
-            tokcoin_amt_send = trade_amt * conf_down / curprice
-            usd_received = self._sell(curprice, tokcoin_amt_send)
-            self.position_open = "short"
-            self.position_worth = usd_received
-            self.position_size = tokcoin_amt_send
+
+        if self.position_open == "":
+            if pred_up:
+                # Open long position if pred up and no position open
+                usdcoin_amt_send = trade_amt * conf_up
+                tok_received = self._buy(curprice, usdcoin_amt_send)
+                self.position_open = "long"
+                self.position_worth = usdcoin_amt_send
+                self.position_size = tok_received
+            elif pred_down:
+                # Open short position if pred down and no position open
+                tokcoin_amt_send = trade_amt * conf_down / curprice
+                usd_received = self._sell(curprice, tokcoin_amt_send)
+                self.position_open = "short"
+                self.position_worth = usd_received
+                self.position_size = tokcoin_amt_send
             st.trader_profits_USD.append(0)
         elif self.position_open == "long" and not pred_up:
             # Close long position if not pred up and position open
