@@ -140,7 +140,6 @@ class NamedTable:
             data - The Polars DataFrame to save.
         """
         csvds = CSVDataStore.from_table(self, ppss)
-        logger.info(" csvds = %s", csvds)
         csvds.write(
             data,
             schema=self.dataclass.get_lake_schema(),
