@@ -6,7 +6,7 @@ from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.test.resources import _gql_data_factory
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.legacy.table import Table
-from pdr_backend.lake.table_pdr_predictions import (
+from pdr_backend.lake.legacy.table_pdr_predictions import (
     predictions_schema,
     predictions_table_name,
 )

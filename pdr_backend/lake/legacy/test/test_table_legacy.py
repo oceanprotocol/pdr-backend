@@ -6,7 +6,7 @@ import polars as pl
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.legacy.table import Table
 from pdr_backend.subgraph.subgraph_predictions import fetch_filtered_predictions
-from pdr_backend.lake.table_pdr_predictions import predictions_schema
+from pdr_backend.lake.legacy.table_pdr_predictions import predictions_schema
 from pdr_backend.util.time_types import UnixTimeMs
 
 

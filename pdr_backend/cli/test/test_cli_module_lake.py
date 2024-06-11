@@ -8,7 +8,7 @@ from pdr_backend.cli.cli_module_lake import (
     DuckDBDataStore,
     do_lake_describe,
     do_lake_etl_drop,
-    do_lake_etl_update,
+#    do_lake_etl_update,
     do_lake_query,
     do_lake_raw_drop,
     do_lake_raw_update,
@@ -217,14 +217,15 @@ def test_do_lake_raw_update(capsys):
 
     assert capsys.readouterr().out == ""
 
-# 
+
+#
 # @enforce_types
 # def test_do_lake_etl_update(capsys):
 #     args = Namespace()
 #     ppss = Mock(spec=PPSS)
-# 
+#
 #     with patch("pdr_backend.cli.cli_module_lake.GQLDataFactory"):
 #         with patch("pdr_backend.cli.cli_module_lake.ETL"):
 #             do_lake_etl_update(args, ppss)
-# 
+#
 #     assert capsys.readouterr().out == ""
