@@ -59,6 +59,7 @@ class UnixTimeMs(int):
             raise ValueError(f"Could not parse {nat_lang}.") from e
 
     @staticmethod
+    @enforce_types
     def from_timestr(timestr: str) -> "UnixTimeMs":
         ncolon = timestr.count(":")
         if ncolon == 0:
