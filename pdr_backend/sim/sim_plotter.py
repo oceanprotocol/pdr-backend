@@ -211,15 +211,15 @@ class SimPlotter:
     @enforce_types
     def plot_model_performance_vs_time(self):
         # set titles
-        clm = self.st.clm
-        s1 = f"accuracy = {clm.acc_ests[-1]*100:.2f}% "
-        s1 += f"[{clm.acc_ls[-1]*100:.2f}%, {clm.acc_us[-1]*100:.2f}%]"
+        aim = self.st.aim
+        s1 = f"accuracy = {aim.acc_ests[-1]*100:.2f}% "
+        s1 += f"[{aim.acc_ls[-1]*100:.2f}%, {aim.acc_us[-1]*100:.2f}%]"
 
-        s2 = f"f1={clm.f1s[-1]:.4f}"
-        s2 += f" [recall={clm.recalls[-1]:.4f}"
-        s2 += f", precision={clm.precisions[-1]:.4f}]"
+        s2 = f"f1={aim.f1s[-1]:.4f}"
+        s2 += f" [recall={aim.recalls[-1]:.4f}"
+        s2 += f", precision={aim.precisions[-1]:.4f}]"
 
-        s3 = f"log loss = {clm.losses[-1]:.4f}"
+        s3 = f"log loss = {aim.losses[-1]:.4f}"
 
         # make subplots
         fig = make_subplots(
@@ -257,12 +257,12 @@ class SimPlotter:
 
     @enforce_types
     def _add_subplot_accuracy_vs_time(self, fig, row):
-        clm = self.st.clm
-        acc_ests = [100 * a for a in clm.acc_ests]
+        aim = self.st.aim
+        acc_ests = [100 * a for a in aim.acc_ests]
         df = pd.DataFrame(acc_ests, columns=["accuracy"])
-        df["acc_ls"] = [100 * a for a in clm.acc_ls]
-        df["acc_us"] = [100 * a for a in clm.acc_us]
-        df["time"] = range(len(clm.acc_ests))
+        df["acc_ls"] = [100 * a for a in aim.acc_ls]
+        df["acc_us"] = [100 * a for a in aim.acc_us]
+        df["time"] = range(len(aim.acc_ests))
 
         fig.add_traces(
             [
@@ -307,11 +307,11 @@ class SimPlotter:
 
     @enforce_types
     def _add_subplot_f1_precision_recall_vs_time(self, fig, row):
-        clm = self.st.clm
-        df = pd.DataFrame(clm.f1s, columns=["f1"])
-        df["precisions"] = clm.precisions
-        df["recalls"] = clm.recalls
-        df["time"] = range(len(clm.f1s))
+        aim = self.st.aim
+        df = pd.DataFrame(aim.f1s, columns=["f1"])
+        df["precisions"] = aim.precisions
+        df["recalls"] = aim.recalls
+        df["time"] = range(len(aim.f1s))
 
         fig.add_traces(
             [
@@ -355,9 +355,9 @@ class SimPlotter:
 
     @enforce_types
     def _add_subplot_log_loss_vs_time(self, fig, row):
-        clm = self.st.clm
-        df = pd.DataFrame(clm.losses, columns=["log loss"])
-        df["time"] = range(len(clm.losses))
+        aim = self.st.aim
+        df = pd.DataFrame(aim.losses, columns=["log loss"])
+        df["time"] = range(len(aim.losses))
 
         fig.add_trace(
             go.Scatter(x=df["time"], y=df["log loss"], mode="lines", name="log loss"),
@@ -365,6 +365,32 @@ class SimPlotter:
             col=1,
         )
         fig.update_yaxes(title_text="log loss", row=3, col=1)
+
+    @enforce_types
+    def plot_prediction_residuals(self):
+        yerrs = self.st.aim.yerrs
+        if min(yerrs) == max(yerrs) == 0.0:
+            label = "Ignore this because model is a classifier"
+        else:
+            label = "Regression model prediction residuals (actual - predicted)"
+        ylabel = "residual = error = actual - predicted"
+        xlabel = "time"
+
+        fig = go.Figure(
+            go.Scatter(
+                x=list(range(len(yerrs))),
+                y=yerrs,
+                mode="markers",
+                marker={"color": "black", "size": 2},
+            )
+        )
+
+        fig.add_hline(y=0, line_dash="dot", line_color="grey")
+        fig.update_layout(title=label)
+        fig.update_xaxes(title=xlabel)
+        fig.update_yaxes(title=ylabel)
+
+        return fig
 
 
 def file_age_in_seconds(pathname):

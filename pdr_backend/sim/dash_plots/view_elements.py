@@ -10,6 +10,7 @@ figure_names = [
     "model_performance_vs_time",
     "aimodel_varimps",
     "aimodel_response",
+    "prediction_residuals",
 ]
 
 empty_selected_vars = dcc.Checklist([], [], id="selected_vars")
@@ -119,6 +120,12 @@ def get_tabs(figures):
                     width1="30%",
                     width2="70%",
                 )
+            ],
+        },
+        {
+            "name": "Model residuals",
+            "components": [
+                single_graph(figures, "prediction_residuals", width="100%"),
             ],
         },
     ]
