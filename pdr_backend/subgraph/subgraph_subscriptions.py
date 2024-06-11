@@ -86,7 +86,6 @@ def fetch_filtered_subscriptions(
             }}
         }}"""
 
-    logger.info("Querying subgraph... %s", query)
     result = query_subgraph(
         get_subgraph_url(network),
         query,

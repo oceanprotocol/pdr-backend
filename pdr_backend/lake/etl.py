@@ -169,7 +169,7 @@ class ETL:
         final_query = " UNION ALL ".join(queries)
         result = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
 
-        logger.info("_get_max_timestamp_values_from - result: %s", result)
+        # logger.info("_get_max_timestamp_values_from - result: %s", result)
 
         if result is None:
             return none_values
