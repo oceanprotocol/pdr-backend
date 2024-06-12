@@ -567,6 +567,36 @@ def clean_up_test_folder():
     return _clean_up
 
 
+@enforce_types
+def get_table_dfs(
+    st_timestr: str,
+    fin_timestr: str,
+    _gql_datafactory_etl_payouts_df,
+    _gql_datafactory_etl_predictions_df,
+    _gql_datafactory_etl_truevals_df,
+    _gql_datafactory_etl_slots_df 
+):
+    preds = get_filtered_timestamps_df(
+        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
+    )
+    truevals = get_filtered_timestamps_df(
+        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
+    )
+    payouts = get_filtered_timestamps_df(
+        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
+    )
+    slots = get_filtered_timestamps_df(
+        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    )
+
+    return {
+        "pdr_predictions": preds,
+        "pdr_truevals": truevals,
+        "pdr_payouts": payouts,
+        "pdr_slots": slots
+    }
+            
+
 @pytest.fixture
 def setup_data(
     _gql_datafactory_etl_payouts_df,
@@ -580,18 +610,14 @@ def setup_data(
     st_timestr = request.param[0]
     fin_timestr = request.param[1]
 
-    preds = get_filtered_timestamps_df(
-        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
-    )
-    truevals = get_filtered_timestamps_df(
-        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
-    )
-    payouts = get_filtered_timestamps_df(
-        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
-    )
-    slots = get_filtered_timestamps_df(
-        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
-    )
+    table_dfs = get_table_dfs(
+        st_timestr,
+        fin_timestr,
+        _gql_datafactory_etl_payouts_df,
+        _gql_datafactory_etl_predictions_df,
+        _gql_datafactory_etl_truevals_df,
+        _gql_datafactory_etl_slots_df
+    )    
 
     ppss, gql_data_factory = _gql_data_factory(
         tmpdir,
@@ -607,10 +633,10 @@ def setup_data(
         "pdr_slots": NamedTable.from_dataclass(Slot),
     }
 
-    gql_tables["pdr_predictions"].append_to_storage(preds, ppss)
-    gql_tables["pdr_truevals"].append_to_storage(truevals, ppss)
-    gql_tables["pdr_payouts"].append_to_storage(payouts, ppss)
-    gql_tables["pdr_slots"].append_to_storage(slots, ppss)
+    gql_tables["pdr_predictions"].append_to_storage(table_dfs["preds"], ppss)
+    gql_tables["pdr_truevals"].append_to_storage(table_dfs["truevals"], ppss)
+    gql_tables["pdr_payouts"].append_to_storage(table_dfs["payouts"], ppss)
+    gql_tables["pdr_slots"].append_to_storage(table_dfs["payouts"], ppss)
 
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
