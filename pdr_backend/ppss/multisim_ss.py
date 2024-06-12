@@ -36,6 +36,9 @@ class MultisimSS(StrMixin):
     def sweep_params(self) -> list:
         return self.d["sweep_params"]
 
+    @property
+    def max_workers(self) -> int:
+        return self.d.get("max_workers", 1)
     # --------------------------------
     # derivative properties
     @property
