@@ -1,8 +1,9 @@
-import asyncio
 import copy
+import concurrent.futures
 import csv
 import logging
 import os
+import threading
 import uuid
 from typing import List, Union
 
@@ -19,7 +20,7 @@ from pdr_backend.util.point import Point
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("multisim_engine")
-lock = asyncio.Lock()
+lock = threading.Lock()
 
 
 class MultisimEngine:
@@ -52,13 +53,14 @@ class MultisimEngine:
         asyncio.run(self.run_async(ss.n_runs))
 
     @enforce_types
-    async def run_async(self, n_runs):
-        tasks = []
-
-        for run_i in range(n_runs):
-            tasks.append(self.run_one(run_i))
-
-        await asyncio.gather(*tasks)
+    def run_multithreaded(self, n_runs):
+        with concurrent.futures.ProcessPoolExecutor(max_workers=self.ss.max_workers) as executor:
+            futures = [executor.submit(self.run_one, run_i) for run_i in range(n_runs)]
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    future.result()
+                except Exception as e:
+                    logger.error(f"Run {future} generated an exception: {e}")
 
     @enforce_types
     async def run_one(self, run_i: int):
@@ -71,7 +73,7 @@ class MultisimEngine:
         sim_engine.run()
         run_metrics = list(sim_engine.st.recent_metrics().values())
 
-        async with lock:
+        with lock:
             self.update_csv(run_i, run_metrics, point_i)
             logger.info("Multisim run_i=%s: done", run_i)
 
