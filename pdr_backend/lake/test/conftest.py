@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 import os
+import shutil
 from typing import List
 
 import polars as pl
@@ -12,6 +13,7 @@ from enforce_typing import enforce_types
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.required_etl import ETL as RequiredETL
 from pdr_backend.lake.payout import Payout, mock_payout, mock_payouts
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import (
@@ -580,7 +582,7 @@ def get_table_dfs(
     _gql_datafactory_etl_truevals_df,
     _gql_datafactory_etl_slots_df 
 ):
-    preds = get_filtered_timestamps_df(
+    predictions = get_filtered_timestamps_df(
         _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
     )
     truevals = get_filtered_timestamps_df(
@@ -594,7 +596,7 @@ def get_table_dfs(
     )
 
     return {
-        "pdr_predictions": preds,
+        "pdr_predictions": predictions,
         "pdr_truevals": truevals,
         "pdr_payouts": payouts,
         "pdr_slots": slots
@@ -637,10 +639,10 @@ def setup_data(
         "pdr_slots": NamedTable.from_dataclass(Slot),
     }
 
-    gql_tables["pdr_predictions"].append_to_storage(table_dfs["preds"], ppss)
-    gql_tables["pdr_truevals"].append_to_storage(table_dfs["truevals"], ppss)
-    gql_tables["pdr_payouts"].append_to_storage(table_dfs["payouts"], ppss)
-    gql_tables["pdr_slots"].append_to_storage(table_dfs["payouts"], ppss)
+    gql_tables["pdr_predictions"].append_to_storage(table_dfs["pdr_predictions"], ppss)
+    gql_tables["pdr_truevals"].append_to_storage(table_dfs["pdr_truevals"], ppss)
+    gql_tables["pdr_payouts"].append_to_storage(table_dfs["pdr_payouts"], ppss)
+    gql_tables["pdr_slots"].append_to_storage(table_dfs["pdr_payouts"], ppss)
 
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
@@ -654,5 +656,57 @@ def setup_data(
 
     _records = db.query_data("SELECT * FROM pdr_predictions")
     assert len(_records) == 5
+
+    yield etl, db, gql_tables
+
+
+
+@pytest.fixture()
+def _sample_raw_data(tmpdir, request):
+    """
+    Load sample raw data for testing the ETL pipeline
+    """
+    
+    test_dir = os.path.dirname(str(request.node.fspath))
+    predictions_df = pl.read_csv(os.path.join(test_dir, 'pdr_predictions.csv'))
+    payouts_df = pl.read_csv(os.path.join(test_dir, 'pdr_payouts.csv'))
+
+    return {
+        "pdr_predictions": predictions_df,
+        "pdr_payouts": payouts_df
+    }
+
+@pytest.fixture
+def _sample_etl(
+    _sample_raw_data,
+    _get_test_DuckDB,
+    tmpdir,
+    request,
+):
+    # sample raw data
+    st_timestr = request.param[0]
+    fin_timestr = request.param[1]
+
+    ppss, gql_data_factory = _gql_data_factory(
+        tmpdir,
+        "binanceus ETH/USDT h 5m",
+        st_timestr,
+        fin_timestr,
+    )
+
+    gql_tables = {
+        "pdr_predictions": NamedTable.from_dataclass(Prediction),
+        "pdr_payouts": NamedTable.from_dataclass(Payout)
+    }
+
+    gql_tables["pdr_predictions"].append_to_storage(_sample_raw_data["pdr_predictions"], ppss)
+    gql_tables["pdr_payouts"].append_to_storage(_sample_raw_data["pdr_payouts"], ppss)
+    
+    assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
+    assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
+
+    # provide the setup data to the test
+    etl = RequiredETL(ppss, gql_data_factory)
+    db = _get_test_DuckDB(tmpdir)
 
     yield etl, db, gql_tables
