@@ -58,8 +58,8 @@ table_df_schema = {
     "user": Utf8,
 }
 table_name = "pdr_test_df"
-file_path = f"./parquet_data/{table_name}.parquet"
-file_path2 = "./parquet_data/test_prediction_table_multiple.parquet"
+file_path = f"./lake_data/{table_name}.parquet"
+file_path2 = "./lake_data/test_prediction_table_multiple.parquet"
 
 # delete test file if already exists
 if os.path.exists(file_path):
@@ -125,6 +125,10 @@ def test_save_table():
         fin_timestr=fin_timestr,
     )
 
+    ###
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
     table = Table(table_name, table_df_schema, ppss)
 
     captured_output = StringIO()
@@ -132,6 +136,7 @@ def test_save_table():
 
     assert len(table.df) == 0
     table.df = pl.DataFrame([mocked_object], table_df_schema)
+
     table.save()
 
     assert os.path.exists(file_path)
