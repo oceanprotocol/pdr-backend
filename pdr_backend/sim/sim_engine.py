@@ -231,8 +231,8 @@ class SimEngine:
     def sim_trader(
         self,
         curprice: float,
-        pred_up: bool,
-        pred_down: bool,
+        pred_up,
+        pred_down,
         conf_up: float,
         conf_down: float,
     ) -> float:
