@@ -36,7 +36,16 @@ class AimodelMetrics:
 
     @staticmethod
     def recent_metrics_names() -> List[str]:
-        return ["acc_est", "acc_l", "acc_u", "f1", "precision", "recall", "loss", "yerr"]
+        return [
+            "acc_est",
+            "acc_l",
+            "acc_u",
+            "f1",
+            "precision",
+            "recall",
+            "loss",
+            "yerr",
+        ]
 
     def recent_metrics(self) -> Dict[str, Union[int, float, None]]:
         """Return most recent aimodel metrics"""

@@ -12,7 +12,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
-from pdr_backend.statutil.dist import add_pdf
+from pdr_backend.statutil.dist_plotdata import DistPlotdata, DistPlotdataFactory
+from pdr_backend.statutil.dist_plotter import add_pdf, add_nq
 
 HEIGHT = 7.5
 WIDTH = int(HEIGHT * 3.2)
@@ -167,7 +168,7 @@ class SimPlotter:
         fig.update_xaxes(title="prob(up)")
         fig.update_yaxes(title="pdr profit (OCEAN)")
 
-        return fig     
+        return fig
 
     @enforce_types
     def plot_trader_profit_vs_time(self):
@@ -176,8 +177,8 @@ class SimPlotter:
         fig = go.Figure(
             go.Scatter(
                 x=x,
-                y=y,         
-                mode="lines", 
+                y=y,
+                mode="lines",
                 line={"color": "#636EFA"},
             )
         )
@@ -371,10 +372,12 @@ class SimPlotter:
     def plot_prediction_residuals(self):
         # set titles
         aim = self.st.aim
-        s1 = "Residual vs time"
-        s2 = "Residual distribution"
-        s3 = "Residuals normal Q-Q"
+        s1 = "Residuals pdf"
+        s2 = "Residuals vs time"
+        s3 = "Residuals nq"
         s4 = "Residuals correlogram"
+        
+        d: DistplotData = DistPlotdataFactory.build(self.st.aim.yerrs)
 
         # make subplots
         fig = make_subplots(
@@ -385,10 +388,11 @@ class SimPlotter:
         )
 
         # fill in subplots
-        self._add_subplot_residual_vs_time(fig, row=1, col=1)
-        self._add_subplot_residual_pdf_nq(fig, row=2, col=1)
-        #self._add_subplot_residual_correlogram(fig, row=2, col=2)
-        
+        add_pdf(fig, d, row=1, col=1, xaxis_title="residual")
+        add_nq(fig, d, row=2, col=1, xaxis_title="residual")
+        self._add_subplot_residual_vs_time(fig, row=1, col=2)
+        # self._add_subplot_residual_correlogram(fig, row=2, col=2)
+
         return fig
 
     @enforce_types
@@ -414,47 +418,8 @@ class SimPlotter:
                     showlegend=False,
                 ),
             ],
-            rows=[row]*2,
-            cols=[col]*2,
-        )
-        fig.update_xaxes(title="time", row=row, col=col)
-        fig.update_yaxes(title="residual", row=row, col=col)
-
-        return fig
-
-    @enforce_types
-    def _add_subplot_residual_pdf_nq(self, fig, row, col):
-        x = self.st.aim.yerrs
-        add_pdf(fig, x, row, col, "residual")
-        #add_pdf_nq(fig, x, row, col, "residual")
-        
-        return fig
-
-    @enforce_types
-    def _add_subplot_residual_normal_qq(self, fig, row, col):
-        y = self.st.aim.yerrs
-        x = list(range(len(y)))
-        fig.add_traces(
-            [
-                # points: residuals vs time
-                go.Scatter(
-                    x=x,
-                    y=y,
-                    mode="markers",
-                    marker={"color": "black", "size": 2},
-                    showlegend=False,
-                ),
-                # line: horizontal error = 0
-                go.Scatter(
-                    x=[min(x), max(x)],
-                    y=[0.0, 0.0],
-                    mode="lines",
-                    line={"color": "grey", "dash": "dot"},
-                    showlegend=False,
-                ),
-            ],
-            rows=[row]*2,
-            cols=[col]*2,
+            rows=[row] * 2,
+            cols=[col] * 2,
         )
         fig.update_xaxes(title="time", row=row, col=col)
         fig.update_yaxes(title="residual", row=row, col=col)
