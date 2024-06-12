@@ -25,11 +25,12 @@ def _do_sql_predictions(
         {prediction_table.fullname}.pair,
         {prediction_table.fullname}.timeframe,
         {prediction_table.fullname}.source,
-        {prediction_table.fullname}.predvalue,
-        {prediction_table.fullname}.truevalue,
-        {prediction_table.fullname}.stake,
+        -- don't cheat, verify we can recreate subgraph
+        null as predvalue,
+        null as truevalue,
+        null as stake,
         null as revenue,
-        {prediction_table.fullname}.payout,
+        null as payout,
         {prediction_table.fullname}.timestamp,
         {prediction_table.fullname}.timestamp as last_event_timestamp,
     from
