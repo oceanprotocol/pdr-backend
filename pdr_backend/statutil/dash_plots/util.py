@@ -15,10 +15,11 @@ def read_files_from_directory(directory):
                 if filename.endswith(".csv")
                 else pd.read_parquet(filepath)
             )
-            file_data[filename.split(".")[0]] = {
-                "close_data": df["close"],
-                "timestamps": pd.to_datetime(df["timestamp"], unit="ms"),
-            }
+            if hasattr(df, "close") and hasattr(df, "timestamp"):
+                file_data[filename.split(".")[0]] = {
+                    "close_data": df["close"],
+                    "timestamps": pd.to_datetime(df["timestamp"], unit="ms"),
+                }
     return file_data
 
 
