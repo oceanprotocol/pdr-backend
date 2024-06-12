@@ -85,8 +85,9 @@ class MultisimEngine:
             "pdr_profit_OCEAN": np.sum(st.pdr_profits_OCEAN),
             "trader_profit_USD": np.sum(st.trader_profits_USD),
         }
+        run_metrics_list = list(run_metrics.values())
         async with lock:
-            self.update_csv(run_i, run_metrics, point_i)
+            self.update_csv(run_i, run_metrics_list, point_i)
             logger.info("Multisim run_i=%s: done", run_i)
 
         logger.info("Multisim engine: done. Output file: %s", self.csv_file)
