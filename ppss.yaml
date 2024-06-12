@@ -50,7 +50,7 @@ trader_ss:
     confidence_threshold: 0.02 # skip trade if confidence < this
     init_holdings:
       - 100000 USDT
-      - 100000 BTC
+      - 2 BTC
   bot_only:
     min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
