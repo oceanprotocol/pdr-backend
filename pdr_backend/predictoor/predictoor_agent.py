@@ -421,7 +421,7 @@ class PredictoorAgent:
             self.iter_number % self.ppss.predictoor_ss.aimodel_ss.train_every_n_epochs
         ) == 0:
             model_f = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
-            model = model_f.build(X, ybool)
+            model = model_f.build(X, ybool, ycont, y_thr)
         else:
             assert self.crt_trained_model is not None
             model = self.crt_trained_model
