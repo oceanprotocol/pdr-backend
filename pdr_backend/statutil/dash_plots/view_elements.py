@@ -15,7 +15,7 @@ def display_plots_view(columns):
 
 
 # pylint: disable=line-too-long
-def get_column_graphs(id_parent: str, figures: list[dict], title: str, tooltip: str):
+def get_column_graphs(parent_id: str, figures: list[dict], title: str, tooltip: str):
     height_percentage = 80 / (len(figures) if (title != "ADF") else 2)
     figures = [
         dcc.Graph(
@@ -29,17 +29,17 @@ def get_column_graphs(id_parent: str, figures: list[dict], title: str, tooltip: 
         )
         for fig in figures
     ]
-    return get_column_display(id_parent, figures, title, tooltip)
+    return get_column_display(parent_id, figures, title, tooltip)
 
 
 # pylint: disable=line-too-long
-def get_column_display(id_parent: str, figures: list[dict], title: str, tooltip: str):
+def get_column_display(parent_id: str, figures: list[dict], title: str, tooltip: str):
     return (
         html.Div(
             [
                 html.Span(
                     children=title + " ⓘ",
-                    id=id_parent + "-title",
+                    id=parent_id + "-title",
                     style={
                         "textAlign": "center",
                         "fontSize": "18px",
@@ -49,7 +49,7 @@ def get_column_display(id_parent: str, figures: list[dict], title: str, tooltip:
                 ),
                 dbc.Tooltip(
                     dcc.Markdown(tooltip),
-                    target=id_parent + "-title",
+                    target=parent_id + "-title",
                 ),
             ]
             + figures,
@@ -74,12 +74,13 @@ def get_table(columns, data):
         style_cell={"textAlign": "left"},
         style_table={
             "marginTop": "20px",
+            "paddingRight": "20px",
         },
         fill_width=True,
     )
 
 
-def display_on_column_graphs(div_id: str, width: str = "30%"):
+def display_on_column(div_id: str, width: str = "30%"):
     return html.Div(
         id=div_id,
         style={
@@ -163,9 +164,9 @@ def get_input_elements():
 def get_graphs_container():
     return html.Div(
         [
-            display_on_column_graphs("transition_column", "17.5%"),
-            display_on_column_graphs("seasonal_column", "65%"),
-            display_on_column_graphs("autocorelation_column", "22.5%"),
+            display_on_column("transition_column", "17.5%"),
+            display_on_column("seasonal_column", "65%"),
+            display_on_column("autocorelation_column", "22.5%"),
         ],
         id="arima-graphs",
         style={

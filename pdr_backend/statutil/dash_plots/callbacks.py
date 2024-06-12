@@ -122,7 +122,7 @@ def get_callbacks(app):
         pacf = plot_pacf(data)
 
         autocorelation_charts = get_column_graphs(
-            id_parent="Autocorelation",
+            parent_id="Autocorelation",
             figures=[
                 {"fig": acf, "graph_id": "autocorelation"},
                 {"fig": pacf, "graph_id": "pautocorelation"},
@@ -173,7 +173,7 @@ def get_callbacks(app):
         seasonal_plots = create_seasonal_plot(plotdata)
 
         seasonal_charts = get_column_graphs(
-            id_parent="Seasonal",
+            parent_id="Seasonal",
             figures=[
                 {
                     "fig": relativeEnergies,
@@ -216,7 +216,7 @@ def get_callbacks(app):
         )
         table = get_transitions(None, files_data[feed_data]["close_data"])
         transition = get_column_display(
-            id_parent="Transition",
+            parent_id="Transition",
             figures=[table],
             title="ADF",
             tooltip=TRANSITION_TOOLTIP,
