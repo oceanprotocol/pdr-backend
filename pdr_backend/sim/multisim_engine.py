@@ -76,11 +76,13 @@ class MultisimEngine:
             "acc_l": recent_metrics["acc_l"],
             "acc_u": recent_metrics["acc_u"],
             "f1": np.mean(st.aim.f1s),
-            "precision": np.mean(st.aim.precisions[1:]), # avoid 1st sample, it may be off
-            "recall": np.mean(st.aim.recalls[1:]), # ""
-            "loss": np.mean(st.aim.losses[1:]), # ""
-            "yerr": np.mean(st.aim.yerrs[1:]),# ""
-            "pdr_profit_OCEAN" : np.sum(st.pdr_profits_OCEAN),
+            "precision": np.mean(
+                st.aim.precisions[1:]
+            ),  # avoid 1st sample, it may be off
+            "recall": np.mean(st.aim.recalls[1:]),  # ""
+            "loss": np.mean(st.aim.losses[1:]),  # ""
+            "yerr": np.mean(st.aim.yerrs[1:]),  # ""
+            "pdr_profit_OCEAN": np.sum(st.pdr_profits_OCEAN),
             "trader_profit_USD": np.sum(st.trader_profits_USD),
         }
         async with lock:
