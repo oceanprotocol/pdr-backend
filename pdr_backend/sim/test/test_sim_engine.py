@@ -38,7 +38,7 @@ def test_sim_engine(tmpdir):
     assert "approach" in d["aimodel_ss"]
     assert "max_n_train" in d["aimodel_ss"]
     assert "autoregressive_n" in d["aimodel_ss"]
-    d["aimodel_ss"]["approach"] = "LinearLogistic"
+    d["aimodel_ss"]["approach"] = "ClassifLinearRidge"
     d["aimodel_ss"]["max_n_train"] = 20
     d["aimodel_ss"]["autoregressive_n"] = 1
     d["aimodel_ss"]["train_every_n_epochs"] = 2

@@ -5,19 +5,20 @@ import pandas as pd
 
 def read_files_from_directory(directory):
     file_data = {}
-    for filename in os.listdir(directory):
-        if not filename.endswith(".csv") and not filename.endswith(".parquet"):
-            continue
-        filepath = os.path.join(directory, filename)
-        df = (
-            pd.read_csv(filepath)
-            if filename.endswith(".csv")
-            else pd.read_parquet(filepath)
-        )
-        file_data[filename.split(".")[0]] = {
-            "close_data": df["close"],
-            "timestamps": pd.to_datetime(df["timestamp"], unit="ms"),
-        }
+    if os.path.isdir(directory):
+        for filename in os.listdir(directory):
+            if not filename.endswith(".csv") and not filename.endswith(".parquet"):
+                continue
+            filepath = os.path.join(directory, filename)
+            df = (
+                pd.read_csv(filepath)
+                if filename.endswith(".csv")
+                else pd.read_parquet(filepath)
+            )
+            file_data[filename.split(".")[0]] = {
+                "close_data": df["close"],
+                "timestamps": pd.to_datetime(df["timestamp"], unit="ms"),
+            }
     return file_data
 
 

@@ -100,14 +100,6 @@ def fill_nans(
 
 
 @enforce_types
-def classif_acc(ytrue_hat, ytrue) -> float:
-    ytrue_hat, ytrue = np.array(ytrue_hat), np.array(ytrue)
-    n_correct = sum(ytrue_hat == ytrue)
-    acc = n_correct / len(ytrue)
-    return acc
-
-
-@enforce_types
 def string_to_bytes32(data) -> bytes:
     if len(data) > 32:
         myBytes32 = data[:32]

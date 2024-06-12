@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 install_requirements = [
     "black==24.2.0",
     "bumpversion",
-    "ccxt==4.3.21",
+    "ccxt==4.3.42",
     "coverage",
     "dateparser==1.2.0",
     "duckdb==0.10.1",
@@ -32,8 +32,8 @@ install_requirements = [
     "plotly==5.22.0",
     "polars==0.20.23",
     "polars[timezone]",
-    "pyarrow==16.0.0",
-    "pylint==3.1.0",
+    "pyarrow==16.1.0",
+    "pylint==3.2.3",
     "pytest",
     # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
     "pytest-asyncio==0.21.1",
@@ -44,8 +44,9 @@ install_requirements = [
     "scikit-learn==1.4.2",
     "statsmodels==0.14.2",
     "types-pyYAML==6.0.12.20240311",
-    "types-requests==2.31.0.20240406",
-    "web3==6.17.2",
+    "types-requests==2.32.0.20240602",
+    "dash_bootstrap_components==1.6.0",
+    "web3==6.19.0",
     "sapphire.py==0.2.3",
     "typeguard==4.2.1",
     "ocean-contracts==2.0.4",  # install this last

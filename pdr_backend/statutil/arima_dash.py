@@ -5,8 +5,8 @@ import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html
 from enforce_typing import enforce_types
 
-from pdr_backend.aimodel.dash_plots.callbacks import get_callbacks
-from pdr_backend.aimodel.dash_plots.view_elements import (
+from pdr_backend.statutil.dash_plots.callbacks import get_callbacks
+from pdr_backend.statutil.dash_plots.view_elements import (
     get_graphs_container,
     get_input_elements,
 )

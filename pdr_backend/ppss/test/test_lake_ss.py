@@ -121,7 +121,7 @@ def test_lake_ss_test_dict_1_default_feeds(tmpdir):
 @enforce_types
 def test_lake_ss_test_dict_2_specify_feeds(tmpdir):
     lake_dir = os.path.join(tmpdir, "lake_data")
-    feeds = ["kraken DOT/USDT c 60m", "dydx DOT/USDT c 60m"]
+    feeds = ["kraken DOT/USDT c 60m"]
     d = lake_ss_test_dict(lake_dir, feeds)
     assert d["lake_dir"] == lake_dir
     assert d["feeds"] == feeds

@@ -10,8 +10,8 @@ class StrMixin:
         class_name = self.__class__.__name__
 
         newline = False
-        if hasattr(self, "__STR_GIVES_NEWLinearLogisticE__"):
-            newline = self.__STR_GIVES_NEWLinearLogisticE__  # type: ignore
+        if hasattr(self, "__STR_GIVES_NEWClassifLinearRidgeE__"):
+            newline = self.__STR_GIVES_NEWClassifLinearRidgeE__  # type: ignore
 
         s = []
         s += [f"{class_name}={{"]
@@ -129,7 +129,7 @@ def compactSmallNum(x: Union[float, int]) -> str:
     if x == 0:
         return "0"
 
-    if x >= 0.01:
+    if abs(x) >= 0.01:
         return f"{x:6.2f}".strip()
 
     s = f"{x:6.2e}"

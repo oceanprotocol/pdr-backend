@@ -71,6 +71,7 @@ class AimodelFactory:
     ) -> Aimodel:
         ss = self.ss
         assert ss.do_regr
+        assert ycont is not None
         do_constant = min(ycont) == max(ycont) or ss.approach == "RegrConstant"
 
         # weight newest sample 10x, and 2nd-newest sample 5x
@@ -117,8 +118,7 @@ class AimodelFactory:
         model = Aimodel(scaler, sk_regrs, y_thr, None)
 
         # variable importances
-        ytrue = ycont > y_thr
-        model.set_importance_per_var(X, ytrue)
+        model.set_importance_per_var(X, ycont)
 
         # return
         return model
@@ -254,11 +254,31 @@ def _approach_to_skm(approach: str):
         return ElasticNet()
 
     # classifier approaches
-    if approach == "LinearLogistic":
-        return LogisticRegression(max_iter=1000)
-    if approach == "LinearLogistic_Balanced":
-        return LogisticRegression(max_iter=1000, class_weight="balanced")
-    if approach == "LinearSVC":
+    if approach == "ClassifLinearLasso":
+        return LogisticRegression(penalty="l1", solver="liblinear", max_iter=1000)
+    if approach == "ClassifLinearLasso_Balanced":
+        return LogisticRegression(
+            penalty="l1", solver="liblinear", max_iter=1000, class_weight="balanced"
+        )
+    if approach == "ClassifLinearRidge":
+        return LogisticRegression(penalty="l2", solver="lbfgs", max_iter=1000)
+    if approach == "ClassifLinearRidge_Balanced":
+        return LogisticRegression(
+            penalty="l2", solver="lbfgs", max_iter=1000, class_weight="balanced"
+        )
+    if approach == "ClassifLinearElasticNet":
+        return LogisticRegression(
+            penalty="elasticnet", l1_ratio=0.5, solver="saga", max_iter=1000
+        )
+    if approach == "ClassifLinearElasticNet_Balanced":
+        return LogisticRegression(
+            penalty="elasticnet",
+            l1_ratio=0.5,
+            solver="saga",
+            max_iter=1000,
+            class_weight="balanced",
+        )
+    if approach == "ClassifLinearSVM":
         return SVC(kernel="linear", probability=True, C=0.025)
 
     # unidentified

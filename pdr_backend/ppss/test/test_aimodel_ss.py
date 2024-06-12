@@ -20,7 +20,7 @@ def test_aimodel_ss__default_values():
     assert ss.max_n_train == d["max_n_train"] == 7
     assert ss.autoregressive_n == d["autoregressive_n"] == 3
 
-    assert ss.approach == d["approach"] == "LinearLogistic"
+    assert ss.approach == d["approach"] == "ClassifLinearRidge"
     assert ss.weight_recent == d["weight_recent"] == "10x_5x"
     assert ss.balance_classes == d["balance_classes"] == "SMOTE"
     assert (
