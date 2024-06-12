@@ -6,6 +6,7 @@ import os
 import uuid
 from typing import List, Union
 
+import numpy as np
 import pandas as pd
 from enforce_typing import enforce_types
 
@@ -69,10 +70,24 @@ class MultisimEngine:
         multi_id = str(uuid.uuid4())
         sim_engine = SimEngine(ppss, feedset, multi_id)
         sim_engine.run()
-        run_metrics = list(sim_engine.st.recent_metrics().values())
-
+        st = sim_engine.st
+        recent_metrics = st.recent_metrics()
+        run_metrics = {
+            "acc_est": recent_metrics["acc_est"],
+            "acc_l": recent_metrics["acc_l"],
+            "acc_u": recent_metrics["acc_u"],
+            "f1": np.mean(st.clm.f1s),
+            "precision": np.mean(
+                st.clm.precisions[1:]
+            ),  # avoid 1st sample, it may be off
+            "recall": np.mean(st.clm.recalls[1:]),  # ""
+            "loss": np.mean(st.clm.losses[1:]),  # ""
+            "pdr_profit_OCEAN": np.sum(st.pdr_profits_OCEAN),
+            "trader_profit_USD": np.sum(st.trader_profits_USD),
+        }
+        run_metrics_list = list(run_metrics.values())
         async with lock:
-            self.update_csv(run_i, run_metrics, point_i)
+            self.update_csv(run_i, run_metrics_list, point_i)
             logger.info("Multisim run_i=%s: done", run_i)
 
         logger.info("Multisim engine: done. Output file: %s", self.csv_file)
