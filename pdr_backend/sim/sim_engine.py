@@ -115,7 +115,6 @@ class SimEngine:
         stake_amt = pdr_ss.stake_amount.amt_eth
         others_stake = pdr_ss.others_stake.amt_eth
         revenue = pdr_ss.revenue.amt_eth
-        trade_amt = ppss.trader_ss.buy_amt_usd.amt_eth
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
@@ -170,38 +169,8 @@ class SimEngine:
         acct_up_profit -= stake_up
         acct_down_profit -= stake_down
 
-        if self.position_open == "":
-            if pred_up:
-                # Open long position if pred up and no position open
-                usdcoin_amt_send = trade_amt * conf_up
-                tok_received = self._buy(curprice, usdcoin_amt_send)
-                self.position_open = "long"
-                self.position_worth = usdcoin_amt_send
-                self.position_size = tok_received
-            elif pred_down:
-                # Open short position if pred down and no position open
-                tokcoin_amt_send = trade_amt * conf_down / curprice
-                usd_received = self._sell(curprice, tokcoin_amt_send)
-                self.position_open = "short"
-                self.position_worth = usd_received
-                self.position_size = tokcoin_amt_send
-            st.trader_profits_USD.append(0)
-        elif self.position_open == "long" and not pred_up:
-            # Close long position if not pred up and position open
-            tokcoin_amt_send = self.position_size
-            usd_received = self._sell(curprice, tokcoin_amt_send)
-            self.position_open = ""
-            profit = usd_received - self.position_worth
-            st.trader_profits_USD.append(profit)
-        elif self.position_open == "short" and not pred_down:
-            # Close short position, buyback tokens if not pred down and position open
-            usdcoin_amt_send = self.position_size * curprice
-            tok_received = self._buy(curprice, usdcoin_amt_send)
-            self.position_open = ""
-            profit = self.position_worth - usdcoin_amt_send
-            st.trader_profits_USD.append(profit)
-        else:
-            st.trader_profits_USD.append(0)
+        profit = self.sim_trader(curprice, pred_up, pred_down, conf_up, conf_down)
+        st.trader_profits_USD.append(profit)
 
         # observe true price
         true_up = trueprice > curprice
@@ -257,6 +226,62 @@ class SimEngine:
             )
             self.st.iter_number = test_i
             self.sim_plotter.save_state(self.st, d, is_final_state)
+
+    @enforce_types
+    def sim_trader(self, curprice, pred_up, pred_down, conf_up, conf_down) -> float:
+        """
+        @description
+            Simulate trader's actions based on predictions and confidence levels.
+            If trader has an open position, it will close it if the prediction
+            changes. If trader has no open position, it will open a position if
+            the prediction is strong enough.
+
+        @arguments
+            curprice -- current price of the token
+            pred_up -- prediction that the price will go up
+            pred_down -- prediction that the price will go down
+            conf_up -- confidence in the prediction that the price will go up
+            conf_down -- confidence in the prediction that the price will go down
+
+        @return
+            profit -- profit made by the trader in this iteration
+        """
+
+        trade_amt = self.ppss.trader_ss.buy_amt_usd.amt_eth
+        if self.position_open == "":
+            if pred_up:
+                # Open long position if pred up and no position open
+                usdcoin_amt_send = trade_amt * conf_up
+                tok_received = self._buy(curprice, usdcoin_amt_send)
+                self.position_open = "long"
+                self.position_worth = usdcoin_amt_send
+                self.position_size = tok_received
+            elif pred_down:
+                # Open short position if pred down and no position open
+                tokcoin_amt_send = trade_amt * conf_down / curprice
+                usd_received = self._sell(curprice, tokcoin_amt_send)
+                self.position_open = "short"
+                self.position_worth = usd_received
+                self.position_size = tokcoin_amt_send
+            return 0
+
+        if self.position_open == "long" and not pred_up:
+            # Close long position if not pred up and position open
+            tokcoin_amt_send = self.position_size
+            usd_received = self._sell(curprice, tokcoin_amt_send)
+            self.position_open = ""
+            profit = usd_received - self.position_worth
+            return profit
+
+        if self.position_open == "short" and not pred_down:
+            # Close short position, buyback tokens if not pred down and position open
+            usdcoin_amt_send = self.position_size * curprice
+            tok_received = self._buy(curprice, usdcoin_amt_send)
+            self.position_open = ""
+            profit = self.position_worth - usdcoin_amt_send
+            return profit
+
+        return 0
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:
