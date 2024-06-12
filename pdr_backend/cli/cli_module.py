@@ -29,7 +29,6 @@ from pdr_backend.publisher.publish_assets import publish_assets
 from pdr_backend.sim.multisim_engine import MultisimEngine
 from pdr_backend.sim.sim_dash import sim_dash
 from pdr_backend.sim.sim_engine import SimEngine
-from pdr_backend.statutil.arima_dash import arima_dash
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent

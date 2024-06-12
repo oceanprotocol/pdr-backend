@@ -574,7 +574,7 @@ def setup_data(
     _gql_datafactory_etl_predictions_df,
     _gql_datafactory_etl_truevals_df,
     _gql_datafactory_etl_slots_df,
-#    _get_test_DuckDB,
+    #    _get_test_DuckDB,
     tmpdir,
     request,
 ):

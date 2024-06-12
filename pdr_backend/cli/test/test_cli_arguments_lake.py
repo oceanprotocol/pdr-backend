@@ -15,7 +15,7 @@ def test_str_as_abspath():
 
 
 @enforce_types
-def test_timestr_args(capsys):
+def test_timestr_args():
     args = ["raw", "update", "ppss.yaml", "sapphire-mainnet"]
 
     with patch("pdr_backend.cli.cli_module_lake.do_lake_raw_update") as raw_update:

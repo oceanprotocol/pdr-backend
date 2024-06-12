@@ -36,7 +36,7 @@ class LakeInfo:
         self.validations = {
             "validate_tables_in_lake": self.validate_expected_table_names,
             "validate_no_views_in_lake": self.validate_expected_view_names,
-            #            "validate_no_gaps_in_bronze_predictions": self.validate_lake_bronze_predictions_gaps,
+            # "validate_no_gaps_in_bronze_predictions": self.validate_lake_bronze_predictions_gaps,
             "validate_no_duplicate_rows_in_lake": self.validate_lake_tables_no_duplicates,
         }
         self.validation_results: Dict[str, List[str]] = {}
@@ -94,6 +94,7 @@ class LakeInfo:
 
         return violations
 
+    # TODO: leaving this as a TODO for linter fixes, will this be uncommented?
     # @enforce_types
     # def validate_lake_bronze_predictions_gaps(self) -> List[str]:
     #     """
