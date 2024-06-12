@@ -102,6 +102,7 @@ class Aimodel:
         """
         assert self.do_regr
         N = X.shape[0]
+        X = self._scaler.transform(X)
         n_regrs = len(self._sk_regrs)
         Ycont = np.zeros((N, n_regrs), dtype=float)
         for i in range(n_regrs):
@@ -124,24 +125,25 @@ class Aimodel:
         return self._imps_tup[0]
 
     @enforce_types
-    def set_importance_per_var(self, X: np.ndarray, ytrue: np.ndarray):
+    def set_importance_per_var(self, X: np.ndarray, y: np.ndarray):
         """
         @arguments
           X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
-          ytrue -- 1d array of [sample_i]:bool_value -- classifier model outputs
+          y -- 1d array of [sample_i]:value -- model outputs,
+            where value is bool for classif (ytrue), or float for regr (ycont)
 
         @return
           <<sets self._imps_tup>>
         """
         assert not self._imps_tup, "have already set importances"
-        self._imps_tup = self._calc_importance_per_var(X, ytrue)
+        self._imps_tup = self._calc_importance_per_var(X, y)
 
     @enforce_types
-    def _calc_importance_per_var(self, X, ytrue) -> tuple:
+    def _calc_importance_per_var(self, X, y) -> tuple:
         """
         @arguments
           X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
-          ytrue -- 1d array of [sample_i]:bool_value -- classifier model outputs
+          y -- 1d array of [sample_i]:value -- model outputs
 
         @return
           imps_avg -- 1d array of [var_i]: rel_importance_float
@@ -151,7 +153,7 @@ class Aimodel:
         flat_imps_avg = np.ones(n, dtype=float) / n
         flat_imps_stddev = np.ones(n, dtype=float) / n
 
-        is_constant = min(ytrue) == max(ytrue)
+        is_constant = min(y) == max(y)
         if is_constant:
             return flat_imps_avg, flat_imps_stddev
 
@@ -164,7 +166,7 @@ class Aimodel:
         imps_bunch = permutation_importance(
             skm,
             X,
-            ytrue,
+            y,
             scoring=scoring,
             n_repeats=30,  # magic number
         )
@@ -200,4 +202,4 @@ class Aimodel:
         return
 
     def predict(self, X):
-        return self.predict_ptrue(X)
+        return self.predict_ycont(X)

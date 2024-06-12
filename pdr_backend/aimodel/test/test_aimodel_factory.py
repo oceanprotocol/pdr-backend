@@ -4,6 +4,7 @@ import numpy as np
 from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
 from plotly.graph_objs._figure import Figure
+import pytest
 from pytest import approx
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
@@ -13,8 +14,12 @@ from pdr_backend.aimodel.aimodel_plotter import (
     plot_aimodel_response,
     plot_aimodel_varimps,
 )
-from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
-from pdr_backend.util.mathutil import classif_acc
+from pdr_backend.ppss.aimodel_ss import (
+    AimodelSS,
+    aimodel_ss_test_dict,
+    APPROACH_OPTIONS,
+)
+from pdr_backend.statutil.scoring import classif_acc
 
 SHOW_PLOT = False  # only turn on for manual testing
 
@@ -25,38 +30,17 @@ def test_aimodel_factory_SHOW_PLOT():
     assert not SHOW_PLOT
 
 
-# Do *not* parameterize the following tests. We keep them separate to
-# facilitate rapid-turnaround manual testing and debugging
-def test_aimodel_LinearLogistic():
-    _test_aimodel_2vars(approach="LinearLogistic")
+def test_aimodel_typical_classif():
+    _test_aimodel_2vars("ClassifLinearRidge")
 
 
-def test_aimodel_LinearSVC():
-    _test_aimodel_2vars(approach="LinearSVC")
+def test_aimodel_typical_regr():
+    _test_aimodel_2vars("RegrLinearRidge")
 
 
-def test_aimodel_ClassifConstant():
-    _test_aimodel_2vars(approach="ClassifConstant")
-
-
-def test_aimodel_RegrLinearLS():
-    _test_aimodel_2vars(approach="RegrLinearLS")
-
-
-def test_aimodel_RegrLinearLasso():
-    _test_aimodel_2vars(approach="RegrLinearLasso")
-
-
-def test_aimodel_RegrLinearRidge():
-    _test_aimodel_2vars(approach="RegrLinearRidge")
-
-
-def test_aimodel_RegrLinearElasticNet():
-    _test_aimodel_2vars(approach="RegrLinearElasticNet")
-
-
-def test_aimodel_RegrConstant():
-    _test_aimodel_2vars(approach="RegrConstant")
+@pytest.mark.parametrize("approach", APPROACH_OPTIONS)
+def test_aimodel_parameterized(approach):
+    _test_aimodel_2vars(approach)
 
 
 @enforce_types
@@ -106,8 +90,17 @@ def _test_aimodel_2vars(approach: str):
     colnames = ["x0", "x1"]
     slicing_x = np.array([0.0, 1.0])  # arbitrary
     sweep_vars = [0, 1]
-    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x, sweep_vars)
-    classif_figure = plot_aimodel_response(d, regr_response=False)
+    d = AimodelPlotdata(
+        model,
+        X,
+        ytrue,
+        ycont,
+        y_thr,
+        colnames,
+        slicing_x,
+        sweep_vars,
+    )
+    classif_figure = plot_aimodel_response(d)
     assert isinstance(classif_figure, Figure)
     if SHOW_PLOT:
         classif_figure.show()
@@ -119,17 +112,10 @@ def _test_aimodel_2vars(approach: str):
     assert ycont_hat.shape == (N,)
     assert ycont_hat.dtype == float
 
-    # plot regressor response
-    d = AimodelPlotdata(model, X, ytrue, colnames, slicing_x, sweep_vars)
-    regr_figure = plot_aimodel_response(d, regr_response=True)
-    assert isinstance(regr_figure, Figure)
-    if SHOW_PLOT:
-        regr_figure.show()
-
 
 @enforce_types
 def test_aimodel_can_ClassifConstant_emerge():
-    d = aimodel_ss_test_dict(approach="LinearLogistic", weight_recent="None")
+    d = aimodel_ss_test_dict(approach="ClassifLinearRidge", weight_recent="None")
     ss = AimodelSS(d)
     assert not ss.do_regr
     factory = AimodelFactory(ss)
@@ -207,8 +193,8 @@ def test_aimodel_accuracy_from_create_xy():
     assert_array_equal(yptrue_trn_hat > 0.5, ytrue_trn_hat)
 
 
-def test_aimodel_1var_LinearLogistic():
-    _test_aimodel_1var("LinearLogistic")
+def test_aimodel_1var_ClassifLinearRidge():
+    _test_aimodel_1var("ClassifLinearRidge")
 
 
 def test_aimodel_1var_RegrLinearLS():
@@ -245,6 +231,8 @@ def _test_aimodel_1var(approach: str):
         model,
         X,
         ytrue,
+        ycont,
+        y_thr,
         colnames,
         slicing_x,
         sweep_vars,
@@ -255,11 +243,19 @@ def _test_aimodel_1var(approach: str):
         figure.show()
 
 
+def test_aimodel_5varmodel_lineplot_ClassifLinearRidge():
+    _test_aimodel_5varmodel_lineplot("ClassifLinearRidge")
+
+
+def test_aimodel_5varmodel_lineplot_RegrLinearLS():
+    _test_aimodel_5varmodel_lineplot("RegrLinearLS")
+
+
 @enforce_types
-def test_aimodel_factory_5varmodel_lineplot():
+def _test_aimodel_5varmodel_lineplot(approach):
     """5 input vars; sweep 1 var."""
     # settings, factory
-    ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
+    ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
 
     # data
@@ -278,7 +274,7 @@ def test_aimodel_factory_5varmodel_lineplot():
     ytrue = ycont > y_thr
 
     # build model
-    model = factory.build(X, ytrue, show_warnings=False)
+    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
 
     # test variable importances
     imps = model.importance_per_var()
@@ -293,6 +289,8 @@ def test_aimodel_factory_5varmodel_lineplot():
         model,
         X,
         ytrue,
+        ycont,
+        y_thr,
         colnames,
         slicing_x,
         sweep_vars,
@@ -305,10 +303,34 @@ def test_aimodel_factory_5varmodel_lineplot():
 
 
 @enforce_types
-def test_aimodel_factory_4vars_response():
-    """4 input vars. It will plot the 2 most important vars"""
+def test_aimodel_4vars_response_ClassifLinearRidge_1_class_in_data():
+    # if just 1 class in the data, it should have flat var impacts
+    _test_aimodel_4vars_response("ClassifLinearRidge", 1)
+
+
+@enforce_types
+def test_aimodel_4vars_response_ClassifLinearRidge_2_classes_in_data():
+    _test_aimodel_4vars_response("ClassifLinearRidge", 2)
+
+
+@enforce_types
+def test_aimodel_4vars_response_RegrLinearRidge_1_class_in_data():
+    # even if just 1 class in the data, it should still have sane var impacts
+    _test_aimodel_4vars_response("RegrLinearRidge", 1)
+
+
+@enforce_types
+def test_aimodel_4vars_response_RegrLinearRidge_2_classes_in_data():
+    _test_aimodel_4vars_response("RegrLinearRidge", 2)
+
+
+@enforce_types
+def _test_aimodel_4vars_response(approach: str, target_n_classes: int):
+    """4 input vars. It will plot the 2 most important vars."""
+    assert target_n_classes in [1, 2]
+
     # settings, factory
-    ss = AimodelSS(aimodel_ss_test_dict(approach="LinearLogistic"))
+    ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
 
     # data
@@ -316,21 +338,27 @@ def test_aimodel_factory_4vars_response():
     mn, mx = -10.0, +10.0
     X = np.random.uniform(mn, mx, (N, 4))
     ycont = 3.0 + 4.0 * X[:, 0] + 3.0 * X[:, 1] + 2.0 * X[:, 2] + 1.0 * X[:, 3]
-    y_thr = np.average(ycont)  # avg gives good class balance
+    if target_n_classes == 2:
+        y_thr = np.average(ycont)  # avg gives good class balance
+    else:
+        y_thr = 1000.0
     ytrue = ycont > y_thr
     colnames = ["x0", "x1", "x3", "x4"]
 
     # build model
-    model = factory.build(X, ytrue, show_warnings=False)
+    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
 
     # test variable importances
     imps = model.importance_per_var()
-    assert imps[0] > imps[1] > imps[2] > imps[3] > 0.0
-    assert sum(imps) == approx(1.0, 0.01)
-    assert imps[0] == approx(4.0 / 10.0, abs=0.2)
-    assert imps[1] == approx(3.0 / 10.0, abs=0.2)
-    assert imps[2] == approx(2.0 / 10.0, abs=0.2)
-    assert imps[3] == approx(1.0 / 10.0, abs=0.2)
+    if model.do_regr or target_n_classes == 2:  # expect sane var impacts
+        assert imps[0] > imps[1] > imps[2] > imps[3] > 0.0
+        assert sum(imps) == approx(1.0, 0.01)
+        assert imps[0] == approx(4.0 / 10.0, abs=0.2)
+        assert imps[1] == approx(3.0 / 10.0, abs=0.2)
+        assert imps[2] == approx(2.0 / 10.0, abs=0.2)
+        assert imps[3] == approx(1.0 / 10.0, abs=0.2)
+    else:
+        assert min(imps) == max(imps) == 0.25
 
     # plot model response
     slicing_x = np.array([0.1, 1.0, 2.0, 3.0])  # arbitrary
@@ -339,6 +367,8 @@ def test_aimodel_factory_4vars_response():
         model,
         X,
         ytrue,
+        ycont,
+        y_thr,
         colnames,
         slicing_x,
         sweep_vars,
@@ -352,47 +382,8 @@ def test_aimodel_factory_4vars_response():
 
 
 @enforce_types
-def test_aimodel_factory_1var_varimps():
-    _test_aimodel_factory_nvars_varimps(n=1)
-
-
-@enforce_types
-def test_aimodel_factory_2vars_varimps():
-    _test_aimodel_factory_nvars_varimps(n=2)
-
-
-@enforce_types
-def test_aimodel_factory_3vars_varimps():
-    _test_aimodel_factory_nvars_varimps(n=3)
-
-
-@enforce_types
-def test_aimodel_factory_4vars_varimps():
-    _test_aimodel_factory_nvars_varimps(n=4)
-
-
-@enforce_types
-def test_aimodel_factory_5vars_varimps():
-    _test_aimodel_factory_nvars_varimps(n=5)
-
-
-@enforce_types
-def test_aimodel_factory_10vars_varimps():
-    _test_aimodel_factory_nvars_varimps(n=5)
-
-
-@enforce_types
-def test_aimodel_factory_25vars_varimps():
-    _test_aimodel_factory_nvars_varimps(25)
-
-
-@enforce_types
-def test_aimodel_factory_100vars_varimps():
-    _test_aimodel_factory_nvars_varimps(100)
-
-
-@enforce_types
-def _test_aimodel_factory_nvars_varimps(n: int):
+@pytest.mark.parametrize("n", [1, 2, 3, 4, 5, 10, 25, 100])
+def test_aimodel_nvars_varimps(n: int):
     varnames = [f"x{i}" for i in range(n)]
     imps_avg = np.array([n - i + 1 for i in range(n)])
     assert imps_avg.shape[0] == n

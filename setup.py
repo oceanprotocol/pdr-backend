@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 # or pip install -e .
 install_requirements = [
     "bumpversion",
-    "ccxt==4.3.38",
+    "ccxt==4.3.42",
     "coverage",
     "dash==2.17.0",
     "dash_bootstrap_components==1.6.0",
@@ -32,7 +32,7 @@ install_requirements = [
     "polars==0.20.31",
     "polars[timezone]",
     "pyarrow==16.1.0",
-    "pylint==3.2.2",
+    "pylint==3.2.3",
     "pytest",
     # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
     "pytest-asyncio==0.21.1",
@@ -43,7 +43,7 @@ install_requirements = [
     "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
     "types-pyYAML==6.0.12.20240311",
-    "types-requests==2.32.0.20240523",
+    "types-requests==2.32.0.20240602",
     "dash_bootstrap_components==1.6.0",
     "web3==6.19.0",
     "sapphire.py==0.2.3",

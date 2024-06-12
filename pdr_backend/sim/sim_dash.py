@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import webbrowser
 import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html
 from pdr_backend.sim.dash_plots.callbacks import get_callbacks
@@ -30,4 +31,5 @@ get_callbacks(app)
 
 def sim_dash(args):
     app.run_id = args.run_id
+    webbrowser.open(f"http://127.0.0.1:{args.port}/")
     app.run(debug=True, port=args.port)

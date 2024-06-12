@@ -8,7 +8,6 @@ from pdr_backend.util.mathutil import (
     all_nan,
     fill_nans,
     has_nan,
-    classif_acc,
     round_sig,
     string_to_bytes32,
 )
@@ -165,20 +164,6 @@ def _test_fill_nans(pdl):
     df1 = pdl.DataFrame({"A": [np.nan, 1.0, 2.0, np.nan, 3.0, 4.0, np.nan]})
     df2 = fill_nans(df1)
     assert not has_nan(df2)
-
-
-@enforce_types
-def test_classif_acc():
-    ybool = np.array([True, True, False, True])
-
-    ybool_hat = np.array([True, True, False, True])
-    assert classif_acc(ybool_hat, ybool) == 1.0
-
-    ybool_hat = np.array([False, False, True, False])
-    assert classif_acc(ybool_hat, ybool) == 0.0
-
-    ybool_hat = np.array([True, False, False, True])
-    assert classif_acc(ybool_hat, ybool) == 0.75
 
 
 @enforce_types

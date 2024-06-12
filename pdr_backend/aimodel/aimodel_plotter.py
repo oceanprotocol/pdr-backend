@@ -7,9 +7,7 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
 
 @enforce_types
-def plot_aimodel_response(
-    aimodel_plotdata: AimodelPlotdata, regr_response: bool = False
-):
+def plot_aimodel_response(aimodel_plotdata: AimodelPlotdata):
     """
     @description
       Plot the model response in a line plot (1 var) or contour plot (2 vars).
@@ -17,22 +15,16 @@ def plot_aimodel_response(
 
     @arguments
       aimodel_plotdata --
-      regr_response -- if doing contour plot, do we want a
-        classifier response or regressor response?
-        (Can only do regressor response if model.do_regr == True)
 
     @return
       figure --
     """
     d = aimodel_plotdata
 
-    if d.n_sweep == 1 and d.n == 1 or d.n == 1:
+    if d.n_sweep == 1:
         return _plot_lineplot_1var(aimodel_plotdata)
 
-    if d.n_sweep == 1 and d.n > 1:
-        return _plot_lineplot_nvars(aimodel_plotdata)
-
-    return _plot_contour(aimodel_plotdata, regr_response)
+    return _plot_contour(aimodel_plotdata)
 
 
 J = np.array([], dtype=float)  # jitter
@@ -48,26 +40,42 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     """
     # aimodel data
     d = aimodel_plotdata
-    assert d.n == 1
     assert d.n_sweep == 1
-    X, ytrue = d.X_train, d.ytrue_train
+    X, ytrue, ycont, y_thr = d.X_train, d.ytrue_train, d.ycont_train, d.y_thr
 
-    x = X[:, 0]
+    # take 1 var
+    nvars = X.shape[1]
+    sweep_vars = aimodel_plotdata.sweep_vars
+    assert nvars > 0
+    if nvars == 1:
+        chosen_i = 0
+    elif sweep_vars is not None and len(sweep_vars) >= 1:
+        chosen_i = sweep_vars[0]
+    else:
+        imps = d.model.importance_per_var()
+        chosen_i = np.argsort(imps)[::-1][0]  # type:ignore[assignment]
+
+    # base data
+    x = X[:, chosen_i]
+    colname = d.colnames[chosen_i]
     N = len(x)
 
-    # calc mesh_X = uniform grid
-    mesh_x = np.linspace(min(x), max(x), 200)
-    mesh_N = len(mesh_x)
-    mesh_X = np.reshape(mesh_x, (mesh_N, 1))
+    # calc mesh_X = uniform grid on chosen_i,
+    #  and every other dimension i has value slicing_x[i]
+    mesh_chosen_x = np.linspace(min(x), max(x), 200)
+    slicing_X = np.reshape(d.slicing_x, (1, nvars))  # [0][var_i]
+    mesh_N = len(mesh_chosen_x)
+    mesh_X = np.repeat(slicing_X, mesh_N, axis=0)  # [sample_i][var_i]
+    mesh_X[:, chosen_i] = mesh_chosen_x
 
     # calc model classifier response
-    yptrue_hat = d.model.predict_ptrue(mesh_X)
+    mesh_yptrue_hat = d.model.predict_ptrue(mesh_X)
     ytrue_hat = d.model.predict_true(X)
 
     # calc model regressor response
-    ycont_hat = None
+    mesh_ycont_hat = None
     if d.model.do_regr:
-        ycont_hat = d.model.predict_ycont(mesh_X)
+        mesh_ycont_hat = d.model.predict_ycont(mesh_X)
 
     # build up "fig"...
     fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -76,7 +84,7 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     correct = ytrue_hat == ytrue
     wrong = np.invert(correct)
     for i, xi in enumerate(x[wrong]):
-        label = "wrong" if i == 0 else None
+        label = "classif: wrong" if i == 0 else None
         fig.add_trace(
             go.Scatter(
                 x=[xi, xi],
@@ -91,21 +99,21 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     # blue line curve: classifier probability response
     fig.add_trace(
         go.Scatter(
-            x=mesh_x,
-            y=yptrue_hat,
+            x=mesh_chosen_x,
+            y=mesh_yptrue_hat,
             mode="lines",
             line={"color": "blue"},
-            name="model prob(true)",
+            name="classif: model prob(true)",
         )
     )
 
     # scatterplots blue=training_T, brown=training_F
     global J
     while J.shape[0] < N:
-        J = np.append(J, np.random.rand() * 0.05)
+        J = np.append(J, np.random.rand() * 0.03)
     yfalse = np.invert(ytrue)
-    y1 = ytrue[ytrue] - J[ytrue] + 0.025
-    y2 = ytrue[yfalse] + J[yfalse] - 0.025
+    y1 = ytrue[ytrue] - J[ytrue] + 0.015
+    y2 = ytrue[yfalse] + J[yfalse] - 0.015
 
     fig.add_trace(
         go.Scatter(
@@ -113,7 +121,7 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
             y=y1,
             mode="markers",
             marker={"color": "blue", "size": 5},
-            name="trn data true",
+            name="classif: trn data class=true",
         )
     )
 
@@ -123,80 +131,53 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
             y=y2,
             mode="markers",
             marker={"color": "brown", "size": 5},
-            name="trn data false",
+            name="classif: trn data class=false",
         )
     )
-    fig.update_yaxes(title_text="prob(True)", secondary_y=False)
+    fig.update_yaxes(title_text="classif: prob(True)", secondary_y=False)
 
-    # line plot: regressor response
+    # line plot: regressor response, training data
     if d.model.do_regr:
-        assert ycont_hat is not None
+        assert mesh_ycont_hat is not None
         fig.add_trace(
             go.Scatter(
-                x=mesh_x,
-                y=ycont_hat,
+                x=mesh_chosen_x,
+                y=mesh_ycont_hat,
                 mode="lines",
                 line={"color": "black"},
-                name="model regr response",
+                name="regr: model yhat",
             ),
             secondary_y=True,
         )
-        fig.update_yaxes(title_text="model regr response", secondary_y=True)
-
-    return fig
-
-
-@enforce_types
-def _plot_lineplot_nvars(aimodel_plotdata: AimodelPlotdata):
-    """
-    @description
-      Do a 1d lineplot, when >1 input x-var, and we have chosen the var.
-      Because >1 var total, we can show more info of true-vs-actual
-
-    @return
-      figure -- go.Figure object
-    """
-    # input data
-    d = aimodel_plotdata
-    assert d.n >= 1
-    assert d.n_sweep == 1
-
-    # construct sweep_x
-    sweepvar_i = d.sweep_vars[0]  #  type: ignore[index]
-    mn_x, mx_x = min(d.X_train[:, sweepvar_i]), max(d.X_train[:, sweepvar_i])
-    N = 200
-    sweep_x = np.linspace(mn_x, mx_x, N)
-
-    # construct X
-    X = np.empty((N, d.n), dtype=float)
-    X[:, sweepvar_i] = sweep_x
-    for var_i in range(d.n):
-        if var_i == sweepvar_i:
-            continue
-        X[:, var_i] = d.slicing_x[var_i]
-
-    # calc classifier model response
-    yptrue = d.model.predict_ptrue(X)  # [sample_i]: prob_of_being_true
-
-    # build up "fig"...
-    fig = go.Figure()
-
-    # line plot: classifier model response
-    fig.add_trace(
-        go.Scatter(
-            x=sweep_x,
-            y=yptrue,
-            mode="lines",
-            line={"color": "blue"},
-            name="model prob(true)",
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=ycont,
+                mode="markers",
+                marker={"color": "black", "size": 5},
+                name="regr: trn data y",
+            ),
+            secondary_y=True,
         )
-    )
+        fig.add_trace(
+            go.Scatter(
+                x=[min(mesh_chosen_x), max(mesh_chosen_x)],
+                y=[y_thr, y_thr],
+                mode="lines",
+                line={"color": "black", "dash": "dot"},
+                name="regr: threshold up/down",
+            ),
+            secondary_y=True,
+        )
+        fig.update_yaxes(title_text="regr: y-value", secondary_y=True)
+
+    fig.update_xaxes(title_text=colname)
 
     return fig
 
 
 @enforce_types
-def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
+def _plot_contour(aimodel_plotdata: AimodelPlotdata):
     """
     @description
       Plot the model, when there's >=2 input x-vars. Use a contour plot.
@@ -205,17 +186,15 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
 
     @arguments
       aimodel_plotdata --
-      regr_response -- want classifier response or regressor response?
-        (Can only do regressor response if model.do_regr == True)
     """
     # pylint: disable=too-many-statements
     # aimodel data
     d = aimodel_plotdata
-    X, ytrue = d.X_train, d.ytrue_train
+    X = d.X_train
     nvars = d.n
     assert nvars >= 2
 
-    # take 2 most impt vars
+    # take 2 vars
     nvars = X.shape[1]
     sweep_vars = aimodel_plotdata.sweep_vars
     assert nvars > 1
@@ -247,25 +226,54 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
     mesh_X = np.repeat(slicing_X, mesh_N, axis=0)  # [sample_i][var_i]
     mesh_X[:, chosen_I] = mesh_chosen_X
 
-    # calc Z = model response
-    if regr_response:
+    # make subplots
+    s1 = "classif: contours = model prob(true)"
+    s2 = "regr: contours = model y-value"
+    if d.model.do_regr:
+        fig = make_subplots(
+            rows=2, cols=1, subplot_titles=(s1, s2), vertical_spacing=0.07
+        )
+    else:
+        fig = make_subplots(rows=1, cols=1, subplot_titles=s1)
+
+    # subplot at row 1: classifier response
+    Z = d.model.predict_ptrue(mesh_X)
+    colorscale = "RdBu"  # red=False, blue=True, white=between
+    _add_contour_subplot(d, chosen_I, dim0, dim1, Z, colorscale, fig, row=1)
+
+    # subplot at row 2: regressor response
+    if d.model.do_regr:
         Z = d.model.predict_ycont(mesh_X)
         colorscale = "Greys"
-        title = "Contours = model regressor response"
-    else:
-        Z = d.model.predict_ptrue(mesh_X)
-        colorscale = "RdBu"  # red=False, blue=True, white=between
-        title = "Contours = model prob(true) response"
+        _add_contour_subplot(d, chosen_I, dim0, dim1, Z, colorscale, fig, row=2)
+
+    # global: axes ranges
+    fig.update_xaxes(range=[x0_min, x0_max])
+    fig.update_yaxes(range=[x1_min, x1_max])
+
+    # global: axes labels
+    xlabel_row = 2 if d.model.do_regr else 1
+    fig.update_xaxes(title=chosen_colnames[0], row=xlabel_row, col=1)
+    fig.update_yaxes(title=chosen_colnames[1])
+
+    return fig
+
+
+@enforce_types
+def _add_contour_subplot(d, chosen_I, dim0, dim1, Z, colorscale, fig, row):
+    """In-place update 'fig' at specified subplot row"""
     Z = Z.reshape(dim1.shape)
+
+    # base data
+    X = d.X_train
+    ytrue = d.ytrue_train
+    chosen_X = X[:, chosen_I]
 
     # calc other data for plots
     ytrue_hat = d.model.predict_true(X)
     correct = ytrue_hat == ytrue
     wrong = np.invert(correct)
     yfalse = np.invert(ytrue)
-
-    # build up "fig"...
-    fig = go.Figure()
 
     # contour plot: model response
     fig.add_trace(
@@ -277,7 +285,9 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
             line_width=0,
             ncontours=25,
             colorscale=colorscale,
-        )
+        ),
+        row=row,
+        col=1,
     )
 
     # scatterplots: orang_outline=misclassified
@@ -287,8 +297,11 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
             y=chosen_X[:, 1][wrong],
             mode="markers",
             marker={"color": "orange", "size": 10},
-            name="wrong",
-        )
+            name="classif: wrong",
+            showlegend=(row == 1),
+        ),
+        row=row,
+        col=1,
     )
 
     # scatterplots: blue=training_T
@@ -299,7 +312,10 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
             mode="markers",
             marker={"color": "blue", "size": 5},
             name="true",
-        )
+            showlegend=(row == 1),
+        ),
+        row=row,
+        col=1,
     )
 
     # scatterplots: brown=training_F
@@ -310,16 +326,11 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata, regr_response: bool):
             mode="markers",
             marker={"color": "brown", "size": 5},
             name="false",
-        )
+            showlegend=(row == 1),
+        ),
+        row=row,
+        col=1,
     )
-
-    fig.update_layout(yaxis={"range": [x1_min, x1_max]})
-    fig.update_layout(xaxis={"range": [x0_min, x0_max]})
-    fig.update_xaxes(title_text=chosen_colnames[0])
-    fig.update_yaxes(title_text=chosen_colnames[1])
-    fig.update_layout(title=title)
-
-    return fig
 
 
 @enforce_types
@@ -358,6 +369,10 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
     # put in percent scales
     imps_avg = imps_avg * 100.0
     imps_stddev = imps_stddev * 100.0
+    imps_lower = np.clip(imps_avg - imps_stddev * 2.0, 0.0, np.inf)
+    imps_upper = imps_avg + imps_stddev * 2.0
+    error_x_lower = imps_avg - imps_lower
+    error_x_upper = imps_upper - imps_avg
 
     labelalias = {}
     colors = []
@@ -379,7 +394,11 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
         go.Bar(
             x=imps_avg,
             y=varnames,
-            error_x={"type": "data", "array": imps_stddev * 2},
+            error_x={
+                "type": "data",
+                "array": error_x_upper,
+                "arrayminus": error_x_lower,
+            },
             orientation="h",
             marker_color=colors,
         )
