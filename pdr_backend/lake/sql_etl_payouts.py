@@ -58,4 +58,4 @@ def _do_sql_payouts(
     db.execute_sql(query)
 
     # df = db.query_data(f"SELECT * FROM {payout_table.fullname}")
-    # df.write_csv("payout_table.csv")
+    # df.write_csv(f"{payout_table.fullname}.csv")

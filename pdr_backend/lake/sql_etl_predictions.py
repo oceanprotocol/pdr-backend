@@ -48,3 +48,6 @@ def _do_sql_predictions(
 
     db.create_table_if_not_exists(temp_bronze_prediction_table.fullname, BronzePrediction.get_lake_schema())
     db.execute_sql(query)
+
+    # df = db.query_data(f"SELECT * FROM {temp_bronze_prediction_table.fullname}")
+    # df.write_csv(f"{temp_bronze_prediction_table.fullname}.csv")
