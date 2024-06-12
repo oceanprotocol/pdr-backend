@@ -228,7 +228,14 @@ class SimEngine:
             self.sim_plotter.save_state(self.st, d, is_final_state)
 
     @enforce_types
-    def sim_trader(self, curprice, pred_up, pred_down, conf_up, conf_down) -> float:
+    def sim_trader(
+        self,
+        curprice: float,
+        pred_up: bool,
+        pred_down: bool,
+        conf_up: float,
+        conf_down: float,
+    ) -> float:
         """
         @description
             Simulate trader's actions based on predictions and confidence levels.
