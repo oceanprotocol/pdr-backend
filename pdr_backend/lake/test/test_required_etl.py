@@ -13,6 +13,7 @@ from pdr_backend.lake.etl import (
 from pdr_backend.lake.gql_data_factory import _GQLDF_REGISTERED_LAKE_TABLES
 from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
 from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.lake.table_bronze_pdr_slots import BronzeSlot
 from pdr_backend.lake.test.resources import _gql_data_factory
@@ -43,23 +44,38 @@ def test_etl_tables(_sample_etl):
 def test_etl_do_bronze_step(_sample_etl):
     etl, db, gql_tables = _sample_etl
 
-    # assert the number of records we expect to see in final table
+    # assert the number of predictions we expect to see in prod table
+    # assert all predictions have null payouts
     table_name = NamedTable.from_dataclass(Prediction).fullname
     pdr_predictions = db.query_data(
         "SELECT * FROM {}".format(table_name)
     )
     assert len(pdr_predictions) == 2057
     assert pdr_predictions['payout'].is_null().sum() == 2057
+
+    # assert we have valid payouts to join with predictions
+    table_name = NamedTable.from_dataclass(Payout).fullname
+    pdr_payouts = db.query_data(
+        "SELECT * FROM {}".format(table_name)
+    )
+    assert len(pdr_payouts) == 1870
+    assert pdr_payouts['payout'].is_null().sum() == 0
     
     # Work 1: Do bronze
     etl.do_bronze_step()
     
-    # assert bronze_pdr_predictios and related tables are created
+    # assert bronze_pdr_predictios and related tables are created correctly
     temp_table_name = TempTable.from_dataclass(BronzePrediction).fullname
     temp_bronze_pdr_predictions_records = db.query_data(
         "SELECT * FROM {}".format(temp_table_name)
     )
-    assert temp_bronze_pdr_predictions_records['payout'].is_null().sum() == 377
+    null_payouts = temp_bronze_pdr_predictions_records['payout'].is_null().sum()
+    valid_payouts = temp_bronze_pdr_predictions_records['payout'].is_not_null().sum()
+    
+    # assert temp_bronze_pdr_predictions table that will be moved to production
+    assert null_payouts == 377
+    assert valid_payouts == 1678
+    assert null_payouts + valid_payouts == 2055
     
     # move tables to production
     etl._move_from_temp_tables_to_live()
@@ -71,5 +87,10 @@ def test_etl_do_bronze_step(_sample_etl):
     )
     assert bronze_pdr_predictions_records is not None
     
-    assert len(bronze_pdr_predictions_records) == 2055
-    assert bronze_pdr_predictions_records['payout'].is_null().sum() == 377
+    # verify final production table
+    prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
+    prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
+
+    assert prod_null_payouts == 377
+    assert prod_valid_payouts == 1678
+    assert prod_null_payouts + prod_valid_payouts == 2055
