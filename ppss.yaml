@@ -63,6 +63,7 @@ sim_ss: # sim only
 
 multisim_ss:
   approach: SimpleSweep # SimpleSweep | FastSweep (future) | ..
+  max_workers: 1
   sweep_params:
   - trader_ss.buy_amt: 1000 USD, 2000 USD
   - predictoor_ss.aimodel_ss.max_n_train: 500, 1000, 1500
