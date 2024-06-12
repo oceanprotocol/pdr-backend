@@ -255,8 +255,8 @@ class LakeInfo:
                 query_duplicate_rows = """
                     SELECT
                         'target_table' as table_name,
-                        target_table.ID,
-                        target_table.timestamp
+                        known_duplicates.ID,
+                        known_duplicates.timestamp
                     FROM (
                         SELECT
                             ID as ID,
@@ -265,8 +265,7 @@ class LakeInfo:
                         GROUP BY ID, timestamp
                         HAVING COUNT(*) > 1
                     ) as known_duplicates
-                    LEFT JOIN target_table
-                    ON known_duplicates.ID = target_table.ID
+                    GROUP BY table_name, ID, timestamp
                 """
 
                 query = query_duplicate_rows.replace("target_table", table_name)
