@@ -353,6 +353,9 @@ class SimPlotter:
 
     @enforce_types
     def plot_prediction_residuals_dist(self):
+        if _model_is_classif(self.st):
+            return _empty_fig("(Nothing to show because model is a classifier.)")
+
         # calc data
         d = DistPlotdataFactory.build(self.st.aim.yerrs)
 
@@ -382,6 +385,9 @@ class SimPlotter:
 
     @enforce_types
     def plot_prediction_residuals_other(self):
+        if _model_is_classif(self.st):
+            return _empty_fig()
+
         # calc data
         nlags = 10  # magic number alert # FIX ME: have spinner, like ARIMA feeds
         d = AutocorrelationPlotdataFactory.build(self.st.aim.yerrs, nlags=nlags)
@@ -453,6 +459,23 @@ class SimPlotter:
         return fig
 
 
+@enforce_types
 def file_age_in_seconds(pathname):
     stat_result = os.stat(pathname)
     return time.time() - stat_result.st_mtime
+
+
+@enforce_types
+def _model_is_classif(sim_state) -> bool:
+    yerrs = sim_state.aim.yerrs
+    return min(yerrs) == max(yerrs) == 0.0
+
+
+@enforce_types
+def _empty_fig(title=""):
+    fig = go.Figure()
+    w = "white"
+    fig.update_layout(title=title, paper_bgcolor=w, plot_bgcolor=w)
+    fig.update_xaxes(visible=False, showgrid=False, gridcolor=w, zerolinecolor=w)
+    fig.update_yaxes(visible=False, showgrid=False, gridcolor=w, zerolinecolor=w)
+    return fig
