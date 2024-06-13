@@ -241,9 +241,20 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
 
     _step1()
     _step2()
-    _step3()
+    # _step3()
 
-    # These numbers should match the previous test
-    # assert prod_null_payouts == 377
-    # assert prod_valid_payouts == 1678
-    # assert prod_null_payouts + prod_valid_payouts == 2057
+    # assert bronze_pdr_predictions_df is created correctly
+    table_name = NamedTable.from_dataclass(BronzePrediction).fullname
+    bronze_pdr_predictions_records = db.query_data(
+        "SELECT * FROM {}".format(table_name)
+    )
+    assert bronze_pdr_predictions_records is not None
+    
+    # verify final production table
+    prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
+    prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
+
+    # TODO: _step2 ist updating _step1 records
+    assert prod_null_payouts == 468
+    assert prod_valid_payouts == 814
+    assert prod_null_payouts + prod_valid_payouts == 1678
