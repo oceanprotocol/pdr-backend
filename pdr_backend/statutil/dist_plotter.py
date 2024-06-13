@@ -32,7 +32,7 @@ def add_pdf(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
             # 1d scatterplot of points
             go.Scatter(
                 x=d.x,
-                y=-d.y_jitter * d.max_density_est * 0.25 - 0.01,
+                y=-d.y_jitter * 0.25 - 0.01,
                 mode="markers",
                 marker={"color": "black", "size": 2},
                 name="raw data",
@@ -40,7 +40,7 @@ def add_pdf(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
             # histogram
             go.Bar(
                 x=d.bins,
-                y=d.counts / max(d.counts) * d.max_density_est,
+                y=d.counts,
                 width=[d.bar_width] * len(d.bins),
                 marker_color=["grey"] * len(d.bins),
                 showlegend=False,
@@ -124,30 +124,30 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
             # 1d scatterplot of points
             go.Scatter(
                 x=d.x,
-                y=d.y_jitter,
+                y=-d.y_jitter - 3,
                 mode="markers",
                 marker={"color": "black", "size": 2},
                 showlegend=False,
                 # name="raw data"
             ),
-            # # raw data nq
-            # go.Scatter(
-            #     x=d.x,
-            #     y=d.ynq_raw,
-            #     mode="lines",
-            #     line={"color": "grey", "width": 2},
-            #     #showlegend=False,
-            #     name="raw data counted"
-            # ),
-            # # gaussian estimate of nq
-            # go.Scatter(
-            #     x=d.x_mesh,
-            #     y=d.ynq_normal_mesh,
-            #     mode="lines",
-            #     line={"color": "blue", "width":2},
-            #     showlegend=False,
-            #     #name="gaussian est",
-            # ),
+            # raw data nq
+            go.Scatter(
+                x=d.x,
+                y=d.ynq_raw,
+                mode="lines",
+                line={"color": "grey", "width": 2},
+                #showlegend=False,
+                name="raw data counted"
+            ),
+            # gaussian estimate of nq
+            go.Scatter(
+                x=d.x_mesh,
+                y=d.ynq_normal_mesh,
+                mode="lines",
+                line={"color": "blue", "width":2},
+                showlegend=False,
+                #name="gaussian est",
+            ),
             # kde estimate of nq
             go.Scatter(
                 x=d.x_mesh,
@@ -158,7 +158,8 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
                 # name="kde est",
             ),
         ],
-        rows=[row] * 2,
-        cols=[col] * 2,
+        rows=[row] * 4,
+        cols=[col] * 4,
     )
     fig.update_yaxes(title="normal quantile (nq)", row=row, col=col)
+    fig.update_yaxes(minallowed=-4.0, maxallowed=+4.0)

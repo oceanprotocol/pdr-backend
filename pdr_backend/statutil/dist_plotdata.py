@@ -26,9 +26,10 @@ class DistPlotdata:
         # base data: x, x_mesh, y_jitter
         self.x = sorted(x)
         mean, std = np.mean(x), np.std(x)
-        self.x_mesh = np.linspace(min(x) - std, max(x) + std, num=200)
+        self.x_mesh = np.linspace(min(x) - 0.5*std, max(x) + 0.5*std, num=200)
         self.y_jitter = _get_jitter(len(x))
 
+        # -------------------------------------------------------------------
         # pdf: raw data counted (=histogram)
         nbins = max(3, min(100, len(x) // 5))
         self.counts, bins = np.histogram(x, bins=nbins)
@@ -42,6 +43,13 @@ class DistPlotdata:
         kde_model = stats.gaussian_kde(x)
         self.ypdf_kde_mesh = kde_model.evaluate(self.x_mesh)
 
+        # pdf: normalize y-values to approx [0,1]
+        max_density = max(max(self.ypdf_normal_mesh), max(self.ypdf_kde_mesh))
+        self.ypdf_normal_mesh /= max_density
+        self.ypdf_kde_mesh /= max_density
+        self.counts = np.array(self.counts, dtype=float) / max(self.counts)
+
+        # -------------------------------------------------------------------
         # cdf: raw data counted
         self.ycdf_raw = np.linspace(0.0, 1.0, len(x))
 
@@ -55,29 +63,18 @@ class DistPlotdata:
             for x_item in self.x_mesh
         ]
 
+        # -------------------------------------------------------------------
         # nq: raw data counted
-        # self.ynq_raw = FIXME
+        self.ynq_raw = stats.norm.ppf(self.ycdf_raw)
 
         # nq: normal est
-        # self.ynq_normal_mesh = FIXME
+        self.ynq_normal_mesh = stats.norm.ppf(self.ycdf_normal_mesh)
 
         # nq: kde est
-        # https://stackoverflow.com/a/71993662
-        x2, y2 = [], []
-        for xi, yi in zip(self.x_mesh, self.ycdf_kde_mesh):
-            if xi not in x2 and yi not in y2:
-                x2.append(xi)
-                y2.append(yi)
-        assert _all_unique(x2)
-        assert _all_unique(y2)
-        inversefunction = interpolate.interp1d(y2, x2, kind="cubic", bounds_error=False)
-        self.ynq_kde_mesh = inversefunction(self.x_mesh)
+        self.ynq_kde_mesh = stats.norm.ppf(self.ycdf_kde_mesh)
+        
 
-        y_jitter = -_get_jitter(len(x)) * 0.25 - 0.01
 
-    @property
-    def max_density_est(self) -> float:
-        return max(max(self.ypdf_normal_mesh), max(self.ypdf_kde_mesh))
 
 
 J = np.array([], dtype=float)  # jitter
