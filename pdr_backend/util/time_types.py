@@ -1,13 +1,15 @@
 from datetime import datetime, timezone
+from typing import Union
 
 import dateparser
 from enforce_typing import enforce_types
+from numpy import int64
 
 
 class UnixTimeS(int):
     @enforce_types
-    def __new__(cls, time_s):
-        if time_s < 0 or time_s > 9999999999:
+    def __new__(cls, time_s: Union[int, int64]) -> "UnixTimeS":
+        if time_s < 0 or time_s > 9_999_999_999:
             raise ValueError("Invalid Unix timestamp in seconds")
 
         return super(UnixTimeS, cls).__new__(cls, time_s)
@@ -17,19 +19,21 @@ class UnixTimeS(int):
         return UnixTimeMs(int(self) * 1000)
 
     @staticmethod
+    @enforce_types
     def now() -> "UnixTimeS":
         dt = _dt_now_UTC()
         return UnixTimeS(int(dt.timestamp()))
 
     @staticmethod
+    @enforce_types
     def from_dt(from_dt: datetime) -> "UnixTimeS":
         return UnixTimeS(int(from_dt.timestamp()))
 
 
 class UnixTimeMs(int):
     @enforce_types
-    def __new__(cls, time_ms):
-        if time_ms < 0 or time_ms > 9999999999999:
+    def __new__(cls, time_ms: Union[int, int64]) -> "UnixTimeMs":
+        if time_ms < 0 or time_ms > 9_999_999_999_999:
             raise ValueError("Invalid Unix timestamp in miliseconds")
 
         return super(UnixTimeMs, cls).__new__(cls, time_ms)
@@ -39,20 +43,24 @@ class UnixTimeMs(int):
         return UnixTimeS(int(self) // 1000)
 
     @staticmethod
+    @enforce_types
     def now() -> "UnixTimeMs":
         dt = _dt_now_UTC()
-        return UnixTimeMs(dt.timestamp() * 1000)
+        return UnixTimeMs(int(dt.timestamp() * 1000))
 
     @staticmethod
+    @enforce_types
     def from_dt(dt: datetime) -> "UnixTimeMs":
         return UnixTimeMs(int(dt.timestamp() * 1000))
 
     @staticmethod
+    @enforce_types
     def from_natural_language(nat_lang: str) -> "UnixTimeMs":
         dt = dateparser.parse(nat_lang).replace(tzinfo=timezone.utc)
-        return UnixTimeMs(dt.timestamp() * 1000)
+        return UnixTimeMs(int(dt.timestamp() * 1000))
 
     @staticmethod
+    @enforce_types
     def from_timestr(timestr: str) -> "UnixTimeMs":
         ncolon = timestr.count(":")
         if ncolon == 0:
@@ -74,12 +82,14 @@ class UnixTimeMs(int):
         return UnixTimeMs.from_dt(dt)
 
     @staticmethod
+    @enforce_types
     def from_iso_timestr(iso_timestr: str) -> "UnixTimeMs":
         """Example iso_timestr: '2024-04-16T03:35:00.000Z'"""
         dt = datetime.strptime(iso_timestr, "%Y-%m-%dT%H:%M:%S.%fZ")
         dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
         return UnixTimeMs.from_dt(dt)
 
+    @enforce_types
     @enforce_types
     def to_dt(self) -> datetime:
         # precondition
