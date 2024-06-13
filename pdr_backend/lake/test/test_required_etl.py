@@ -99,7 +99,7 @@ def test_etl_do_bronze_step(_sample_etl):
 # pylint: disable=too-many-statements
 @enforce_types
 @pytest.mark.parametrize(
-    "_sample_etl", [("2024-05-05_00:00", "2024-05-05_00:30")], indirect=True
+    "_sample_etl", [("2024-05-05_00:00", "2024-05-05_00:40")], indirect=True
 )
 def test_etl_do_incremental_bronze_step(_sample_etl):
     etl, db, gql_tables = _sample_etl
@@ -117,7 +117,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         and {prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
     """
     expcted_rows = db.query_data(query)
-    assert len(expcted_rows) == 325
+    assert len(expcted_rows) == 485
 
     # execute the ETL
     etl.do_bronze_step()
@@ -134,8 +134,8 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
     prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
 
     # assert those numbers so we can track progress
-    assert prod_null_payouts == 158
-    assert prod_valid_payouts == 167
+    assert prod_null_payouts == 178
+    assert prod_valid_payouts == 307
 
     # validate that rows are equal to what we expected
     assert prod_null_payouts + prod_valid_payouts == len(expcted_rows)
