@@ -43,7 +43,7 @@ class DistPlotdata:
         self.ypdf_kde_mesh = kde_model.evaluate(self.x_mesh)
 
         # pdf: normalize y-values to approx [0,1]
-        max_density = max(self.ypdf_normal_mesh, self.ypdf_kde_mesh)
+        max_density = max(list(self.ypdf_normal_mesh) + list(self.ypdf_kde_mesh))
         self.ypdf_normal_mesh /= max_density
         self.ypdf_kde_mesh /= max_density
         self.counts = np.array(self.counts, dtype=float) / max(self.counts)

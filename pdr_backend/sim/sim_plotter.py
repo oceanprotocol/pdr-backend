@@ -138,21 +138,19 @@ class SimPlotter:
     @enforce_types
     def plot_pdr_profit_vs_time(self):
         y = list(np.cumsum(self.st.pdr_profits_OCEAN))
-        x = list(range(len(y)))
-        fig = go.Figure(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="lines",
-                line={"color": "#636EFA"},
-            )
-        )
-        fig.add_hline(y=0.0, line_dash="dot", line_color="grey")
+        ylabel = "predictoor profit (OCEAN)"
         title = f"Predictoor profit vs time. Current: {y[-1]:.2f} OCEAN"
-        fig.update_layout(title=title)
-        fig.update_xaxes(title="time")
-        fig.update_yaxes(title="predictoor profit (OCEAN)")
+        fig = make_subplots(rows=1, cols=1, subplot_titles=(title,))
+        self._add_subplot_y_vs_time(fig, y, ylabel, "lines", row=1, col=1)
+        return fig
 
+    @enforce_types
+    def plot_trader_profit_vs_time(self):
+        y = list(np.cumsum(self.st.trader_profits_USD))
+        ylabel = "trader profit (USD)"
+        title = f"Trader profit vs time. Current: ${y[-1]:.2f}"
+        fig = make_subplots(rows=1, cols=1, subplot_titles=(title,))
+        self._add_subplot_y_vs_time(fig, y, ylabel, "lines", row=1, col=1)
         return fig
 
     @enforce_types
@@ -172,26 +170,6 @@ class SimPlotter:
         fig.update_layout(title=title)
         fig.update_xaxes(title="prob(up)")
         fig.update_yaxes(title="pdr profit (OCEAN)")
-
-        return fig
-
-    @enforce_types
-    def plot_trader_profit_vs_time(self):
-        y = list(np.cumsum(self.st.trader_profits_USD))
-        x = list(range(len(y)))
-        fig = go.Figure(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="lines",
-                line={"color": "#636EFA"},
-            )
-        )
-        fig.add_hline(y=0, line_dash="dot", line_color="grey")
-        title = f"Trader profit vs time. Current: ${y[-1]:.2f}"
-        fig.update_layout(title=title)
-        fig.update_xaxes(title="time")
-        fig.update_yaxes(title="trader profit (USD)")
 
         return fig
 
@@ -433,15 +411,28 @@ class SimPlotter:
     @enforce_types
     def _add_subplot_residual_vs_time(self, fig, row, col):
         y = self.st.aim.yerrs
+        self._add_subplot_y_vs_time(fig, y, "residual", "markers", row, col)
+
+    @enforce_types
+    def _add_subplot_y_vs_time(self, fig, y, ylabel, mode, row, col):
+        assert mode in ["markers", "lines"], mode
+        line, marker = None, None
+        if mode == "markers":
+            marker = {"color": "black", "size": 2}
+        elif mode == "lines":
+            line = {"color": "#636EFA"}
+
         x = list(range(len(y)))
+
         fig.add_traces(
             [
-                # points: residuals vs time
+                # points: y vs time
                 go.Scatter(
                     x=x,
                     y=y,
-                    mode="markers",
-                    marker={"color": "black", "size": 2},
+                    mode=mode,
+                    marker=marker,
+                    line=line,
                     showlegend=False,
                 ),
                 # line: horizontal error = 0
@@ -457,7 +448,7 @@ class SimPlotter:
             cols=[col] * 2,
         )
         fig.update_xaxes(title="time", row=row, col=col)
-        fig.update_yaxes(title="residual", row=row, col=col)
+        fig.update_yaxes(title=ylabel, row=row, col=col)
 
         return fig
 

@@ -76,12 +76,12 @@ class MultisimEngine:
             "acc_est": recent_metrics["acc_est"],
             "acc_l": recent_metrics["acc_l"],
             "acc_u": recent_metrics["acc_u"],
-            "f1": np.mean(st.clm.f1s),
+            "f1": np.mean(st.aim.f1s),
             "precision": np.mean(
-                st.clm.precisions[1:]
+                st.aim.precisions[1:]
             ),  # avoid 1st sample, it may be off
-            "recall": np.mean(st.clm.recalls[1:]),  # ""
-            "loss": np.mean(st.clm.losses[1:]),  # ""
+            "recall": np.mean(st.aim.recalls[1:]),  # ""
+            "loss": np.mean(st.aim.losses[1:]),  # ""
             "pdr_profit_OCEAN": np.sum(st.pdr_profits_OCEAN),
             "trader_profit_USD": np.sum(st.trader_profits_USD),
         }

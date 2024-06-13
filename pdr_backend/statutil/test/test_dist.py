@@ -13,7 +13,7 @@ from pdr_backend.statutil.dist_plotter import (
 )
 from pdr_backend.statutil.test.resources import data_x
 
-SHOW_PLOT = True  # only turn on for manual testing
+SHOW_PLOT = False  # only turn on for manual testing
 
 
 @enforce_types

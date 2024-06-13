@@ -64,6 +64,7 @@ def add_pdf(fig, d: DistPlotdata, row: int, col: int):
         cols=[col] * 4,
     )
     fig.update_yaxes(title="probability density (pdf)", row=row, col=col)
+    fig.update_yaxes(showticklabels=False, row=row, col=col)  # don't show tick vals
 
 
 @enforce_types
