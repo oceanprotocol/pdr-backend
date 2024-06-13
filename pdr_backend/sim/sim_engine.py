@@ -44,7 +44,7 @@ class SimEngine:
 
         self.ppss = ppss
 
-        # can be disabled by calling disable_realtime_state() 
+        # can be disabled by calling disable_realtime_state()
         self.state_updates = True
 
         self.st = SimState(
