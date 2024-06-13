@@ -22,7 +22,7 @@ from pdr_backend.ppss.aimodel_ss import (
 from pdr_backend.statutil.scoring import classif_acc
 
 # set env variable as true to show plots
-SHOW_PLOT = os.getenv("SHOW_PLOTS", "false").lower() == "true"
+SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 def test_aimodel_typical_classif():

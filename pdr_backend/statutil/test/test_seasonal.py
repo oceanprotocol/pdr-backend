@@ -18,7 +18,7 @@ DATA_FILE = (
 BTC_COL = "binance:BTC/USDT:close"
 
 # set env variable as true to show plots
-SHOW_PLOT = os.getenv("SHOW_PLOTS", "false").lower() == "true"
+SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 @enforce_types

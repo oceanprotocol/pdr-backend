@@ -14,7 +14,7 @@ from pdr_backend.statutil.dist_plotter import (
 from pdr_backend.statutil.test.resources import data_x
 
 # set env variable as true to show plots
-SHOW_PLOT = os.getenv("SHOW_PLOTS", "false").lower() == "true"
+SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 @enforce_types
