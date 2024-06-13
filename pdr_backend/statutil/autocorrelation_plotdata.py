@@ -6,16 +6,18 @@ from statsmodels.tsa.stattools import acf, adfuller, pacf
 class AutocorrelationPlotdataFactory:
 
     @classmethod
-    def build(cls, y_values, nlags: int) -> "AutocorrelationPlotdata":
-        assert len(y_values.shape) == 1, "y_values must be 1d array"
+    def build(cls, x, nlags: int) -> "AutocorrelationPlotdata":
+        if isinstance(x, list):
+            x = np.array(x)
+        assert len(x.shape) == 1, "x must be 1d array"
 
-        N_samples = len(y_values)
-        adf_pvalue = adfuller(y_values)[1]
+        N_samples = len(x)
+        adf_pvalue = adfuller(x)[1]
 
         target_CI = 0.95  # target 95% confidence interval
         alpha = 1.0 - target_CI
-        acf_results = CorrResults(acf(y_values, nlags=nlags, alpha=alpha))
-        pacf_results = CorrResults(pacf(y_values, nlags=nlags, alpha=alpha))
+        acf_results = CorrResults(acf(x, nlags=nlags, alpha=alpha))
+        pacf_results = CorrResults(pacf(x, nlags=nlags, alpha=alpha))
 
         plotdata = AutocorrelationPlotdata(
             N_samples,
