@@ -5,7 +5,7 @@ from typing import List, TypedDict
 
 from enforce_typing import enforce_types
 
-from pdr_backend.subgraph.prediction import Prediction
+from pdr_backend.subgraph.legacy.prediction import Prediction
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.util.networkutil import get_subgraph_url

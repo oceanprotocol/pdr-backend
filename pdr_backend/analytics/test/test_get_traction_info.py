@@ -4,7 +4,7 @@ import pytest
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.table import Table
+from pdr_backend.lake.legacy.table import Table
 from pdr_backend.analytics.get_predictions_info import get_traction_info_main
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.table_pdr_predictions import predictions_schema

@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import polars as pl
 from enforce_typing import enforce_types
-from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.legacy.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import (
     predictions_schema,
     predictoor_summary_df_schema,
