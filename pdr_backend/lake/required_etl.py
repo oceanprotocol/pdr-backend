@@ -51,6 +51,10 @@ class ETL:
     def __init__(self, ppss: PPSS, gql_data_factory: GQLDataFactory):
         self.ppss = ppss
         self.gql_data_factory = gql_data_factory
+        
+        # ETL uses ppss and it's own internal fns for checkpoints
+        # Use this to clamp checkpoints to ppss
+        self._clamp_checkpoints_to_ppss = False
 
     def _drop_temp_sql_tables(self):
         """
@@ -266,7 +270,13 @@ class ETL:
             max(etl_tables_max_timestamp).
             ETL updates should use to_timestamp by calculating
             min(max(source_tables_max_timestamp)).
+
+        @flags
+            use self._clamp_checkpoints_to_ppss to skip calc
         """
+        if self._clamp_checkpoints_to_ppss:
+            return self.ppss.lake_ss.st_timestamp, self.ppss.lake_ss.fin_timestamp
+
         from_timestamp = self.get_timestamp_values(
             _ETL_REGISTERED_TABLE_NAMES, self.ppss.lake_ss.st_timestr
         )
