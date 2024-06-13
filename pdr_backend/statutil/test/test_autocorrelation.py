@@ -1,3 +1,4 @@
+import os
 from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
@@ -15,13 +16,8 @@ DATA_FILE = (
 )
 BTC_COL = "binance:BTC/USDT:close"
 
-SHOW_PLOT = False  # only turn on for manual testing
-
-
-@enforce_types
-def test_autocorrelation_SHOW_PLOT():
-    """SHOW_PLOT should only be set to True temporarily in local testing."""
-    assert not SHOW_PLOT
+# set env variable as true to show plots
+SHOW_PLOT = os.getenv("SHOW_PLOTS", "false").lower() == "true"
 
 
 @enforce_types

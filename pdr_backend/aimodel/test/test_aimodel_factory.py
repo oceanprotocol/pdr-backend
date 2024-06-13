@@ -1,5 +1,5 @@
 from unittest.mock import Mock
-
+import os
 import numpy as np
 from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
@@ -21,13 +21,8 @@ from pdr_backend.ppss.aimodel_ss import (
 )
 from pdr_backend.statutil.scoring import classif_acc
 
-SHOW_PLOT = False  # only turn on for manual testing
-
-
-@enforce_types
-def test_aimodel_factory_SHOW_PLOT():
-    """SHOW_PLOT should only be set to True temporarily in local testing."""
-    assert not SHOW_PLOT
+# set env variable as true to show plots
+SHOW_PLOT = os.getenv("SHOW_PLOTS", "false").lower() == "true"
 
 
 def test_aimodel_typical_classif():

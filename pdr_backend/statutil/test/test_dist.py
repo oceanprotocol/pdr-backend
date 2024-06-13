@@ -1,5 +1,5 @@
+import os
 from typing import List
-
 from enforce_typing import enforce_types
 import numpy as np
 from plotly.subplots import make_subplots
@@ -13,13 +13,8 @@ from pdr_backend.statutil.dist_plotter import (
 )
 from pdr_backend.statutil.test.resources import data_x
 
-SHOW_PLOT = False  # only turn on for manual testing
-
-
-@enforce_types
-def test_dist_SHOW_PLOT():
-    """SHOW_PLOT should only be set to True temporarily in local testing."""
-    assert not SHOW_PLOT
+# set env variable as true to show plots
+SHOW_PLOT = os.getenv("SHOW_PLOTS", "false").lower() == "true"
 
 
 @enforce_types
