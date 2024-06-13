@@ -50,7 +50,7 @@ class MultisimEngine:
         ss = self.ss
         logger.info("Multisim engine: start. # runs = %s", ss.n_runs)
         self.initialize_csv_with_header()
-        asyncio.run(self.run_async(ss.n_runs))
+        self.run_multithreaded(ss.n_runs)
 
     @enforce_types
     def run_multithreaded(self, n_runs):
@@ -63,7 +63,7 @@ class MultisimEngine:
                     logger.error(f"Run {future} generated an exception: {e}")
 
     @enforce_types
-    async def run_one(self, run_i: int):
+    def run_one(self, run_i: int):
         point_i = self.ss.point_i(run_i)
         logger.info("Multisim run_i=%s: start. Vals=%s", run_i, point_i)
         ppss = self.ppss_from_point(point_i)
