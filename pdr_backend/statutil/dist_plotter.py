@@ -116,9 +116,13 @@ def add_cdf(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
     )
     fig.update_yaxes(title="cumulative density (cdf)", row=row, col=col)
 
-
+    
 @enforce_types
 def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
+    xnq_raw, ynq_raw = _remove_extremey(d.x, d.ynq_raw, -4, 4)
+    xnq_normal, ynq_normal = _remove_extremey(d.x_mesh, d.ynq_normal_mesh, -4, 4)
+    xnq_kde, ynq_kde = _remove_extremey(d.x_mesh, d.ynq_kde_mesh, -4, 4)
+                
     fig.add_traces(
         [
             # 1d scatterplot of points
@@ -132,8 +136,8 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
             ),
             # raw data nq
             go.Scatter(
-                x=d.x,
-                y=d.ynq_raw,
+                x=xnq_raw,
+                y=ynq_raw,
                 mode="lines",
                 line={"color": "grey", "width": 2},
                 showlegend=False,
@@ -141,8 +145,8 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
             ),
             # gaussian estimate of nq
             go.Scatter(
-                x=d.x_mesh,
-                y=d.ynq_normal_mesh,
+                x=xnq_normal,
+                y=ynq_normal,
                 mode="lines",
                 line={"color": "blue", "width":2},
                 showlegend=False,
@@ -150,8 +154,8 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
             ),
             # kde estimate of nq
             go.Scatter(
-                x=d.x_mesh,
-                y=d.ynq_kde_mesh,
+                x=xnq_kde,
+                y=ynq_kde,
                 mode="lines",
                 line={"color": "orange", "dash": "dot", "width": 2},
                 showlegend=False,
@@ -163,4 +167,14 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
     )
     fig.update_xaxes(title="residual (error)", row=row, col=col)
     fig.update_yaxes(title="normal quantile (nq)", row=row, col=col)
-    fig.update_yaxes(minallowed=-6.0, maxallowed=+4.0, row=row, col=col)
+    fig.update_yaxes(minallowed=-6, maxallowed=+4, row=row, col=col)
+
+@enforce_types
+def _remove_extremey(x, y, min_y, max_y):
+    x2, y2 = [], []
+    for xi, yi in zip(x, y):
+        if min_y <= yi <= max_y:
+            x2.append(xi)
+            y2.append(yi)
+    return x2, y2
+    
