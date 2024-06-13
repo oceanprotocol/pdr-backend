@@ -43,6 +43,7 @@ def clean_up_persistent_data_store(tmpdir):
 
     db.duckdb_conn.close()
 
+
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.prediction import (
     mock_first_predictions,
