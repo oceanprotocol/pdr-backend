@@ -3,12 +3,15 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from enforce_typing import enforce_types
 from statsmodels.tsa.stattools import adfuller
+from pdr_backend.statutil.dash_plots.view_elements import get_table
 
 from pdr_backend.statutil.autocorrelation_plotdata import (
     AutocorrelationPlotdata,
     CorrResults,
 )
 from pdr_backend.statutil.boxcox import safe_boxcox
+
+TRANSITION_OPTIONS = ["BC=F,D=0", "BC=T,D=0", "BC=T,D=1", "BC=T,D=2"]
 
 
 @enforce_types
@@ -115,55 +118,35 @@ def get_transitions(selected_idx=None, y=[]):
     if selected_idx is not None:
         bar_colors[selected_idx] = "grey"  # Change color of the selected bar
 
-    labels = ["BC=T,D=2", "BC=T,D=1", "BC=T,D=0", "BC=F,D=0"]
-
-    adf_results = {}
+    adf_results = []
 
     # No transformation
     adf_result = adfuller(y)
-    adf_results["BC=F,D=0"] = adf_result
+    adf_results.append(
+        {"Transform": TRANSITION_OPTIONS[0], "ADF": round(adf_result[1], 3)}
+    )
 
     # Box-Cox transformation without differencing
     y_bc = safe_boxcox(y)
     adf_result = adfuller(y_bc)
-    adf_results["BC=T,D=0"] = adf_result
+    adf_results.append(
+        {"Transform": TRANSITION_OPTIONS[1], "ADF": round(adf_result[1], 3)}
+    )
 
     # Box-Cox transformation with differencing
     y_bc_diff = np.diff(y_bc)
     adf_result = adfuller(y_bc_diff)
-    adf_results["BC=T,D=1"] = adf_result
+    adf_results.append(
+        {"Transform": TRANSITION_OPTIONS[2], "ADF": round(adf_result[1], 3)}
+    )
 
     # Box-Cox transformation with second differencing
     y_bc_diff2 = np.diff(y_bc_diff)
     adf_result = adfuller(y_bc_diff2)
-    adf_results["BC=T,D=2"] = adf_result
-
-    adf_values = [adf_results[label][1] for label in labels]
-
-    fig = go.Figure(
-        data=[
-            go.Bar(
-                x=[1, 1, 1, 1],
-                y=labels,
-                orientation="h",
-                width=0.3,
-                marker_color=bar_colors,
-                showlegend=False,
-            ),
-            go.Bar(
-                x=adf_values,
-                y=labels,
-                orientation="h",
-                marker_color=["blue"] * 4,
-                width=0.3,
-                showlegend=False,
-            ),
-        ]
+    adf_results.append(
+        {"Transform": TRANSITION_OPTIONS[3], "ADF": round(adf_result[1], 3)}
     )
-    fig.update_yaxes(title_text="Transformation")
-    fig.update_xaxes(title_text="ADF")
-    fig.update_layout(
-        margin={"l": 5, "r": 5, "t": 20, "b": 0},
-        xaxis={"range": [0.05, 0.1]},
-    )
-    return fig
+
+    table = get_table(["Transform", "ADF"], adf_results)
+
+    return table
