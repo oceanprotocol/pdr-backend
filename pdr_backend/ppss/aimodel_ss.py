@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 from enforce_typing import enforce_types
@@ -20,7 +20,7 @@ APPROACH_OPTIONS = [
     "RegrLinearElasticNet",
     "RegrConstant",
 ]
-WEIGHT_RECENT_OPTIONS = ["10x_5x", "None"]
+WEIGHT_RECENT_OPTIONS = ["10x_5x", "1000x", "None"]
 BALANCE_CLASSES_OPTIONS = ["SMOTE", "RandomOverSampler", "None"]
 CALIBRATE_PROBS_OPTIONS = [
     "CalibratedClassifierCV_Sigmoid",
@@ -114,6 +114,17 @@ class AimodelSS(StrMixin):
     @property
     def do_regr(self) -> bool:
         return self.approach[:4] == "Regr"
+
+    @property
+    def weight_recent_n(self) -> Tuple[int, int]:
+        """@return -- (n_repeat1, n_repeat2)"""
+        if self.weight_recent == "None":
+            return 0, 0
+        if self.weight_recent == "10x_5x":
+            return 10, 5
+        if self.weight_recent == "1000x":
+            return 1000, 0
+        raise ValueError(self.weight_recent)
 
 
 # =========================================================================

@@ -22,6 +22,7 @@ def test_aimodel_ss__default_values():
 
     assert ss.approach == d["approach"] == "ClassifLinearRidge"
     assert ss.weight_recent == d["weight_recent"] == "10x_5x"
+    assert ss.weight_recent_n == (10, 5)
     assert ss.balance_classes == d["balance_classes"] == "SMOTE"
     assert (
         ss.calibrate_probs == d["calibrate_probs"] == "CalibratedClassifierCV_Sigmoid"
@@ -60,6 +61,10 @@ def test_aimodel_ss__nondefault_values():
     for weight_recent in WEIGHT_RECENT_OPTIONS:
         ss = AimodelSS(aimodel_ss_test_dict(weight_recent=weight_recent))
         assert ss.weight_recent == weight_recent and weight_recent in str(ss)
+        if ss.weight_recent == "10x_5x":
+            assert ss.weight_recent_n == (10, 5)
+        if ss.weight_recent == "1000x":
+            assert ss.weight_recent_n == (1000, 0)
 
     for balance_classes in BALANCE_CLASSES_OPTIONS:
         ss = AimodelSS(aimodel_ss_test_dict(balance_classes=balance_classes))

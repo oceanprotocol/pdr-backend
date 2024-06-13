@@ -76,15 +76,13 @@ class AimodelFactory:
 
         # weight newest sample 10x, and 2nd-newest sample 5x
         # - assumes that newest sample is at index -1, and 2nd-newest at -2
-        if do_constant or ss.weight_recent == "None":
+        n_repeat1, n_repeat2 = ss.weight_recent_n
+        if do_constant or n_repeat1 == 0:
             pass
-        elif ss.weight_recent == "10x_5x":
-            n_repeat1, n_repeat2 = 10, 5
-
+        else:
             xrecent1, xrecent2 = X[-1, :], X[-2, :]
             X = np.append(X, np.repeat(xrecent1[None], n_repeat1, axis=0), axis=0)
             X = np.append(X, np.repeat(xrecent2[None], n_repeat2, axis=0), axis=0)
-
             yrecent1, yrecent2 = ycont[-1], ycont[-2]
             ycont = np.append(ycont, [yrecent1] * n_repeat1)
             ycont = np.append(ycont, [yrecent2] * n_repeat2)
@@ -149,19 +147,16 @@ class AimodelFactory:
 
         # weight newest sample 10x, and 2nd-newest sample 5x
         # - assumes that newest sample is at index -1, and 2nd-newest at -2
-        if do_constant or ss.weight_recent == "None":
+        n_repeat1, n_repeat2 = ss.weight_recent_n
+        if do_constant or n_repeat1 == 0:
             pass
-        elif ss.weight_recent == "10x_5x":
-            n_repeat1, n_repeat2 = 10, 5
-
+        else:
             xrecent1, xrecent2 = X[-1, :], X[-2, :]
             X = np.append(X, np.repeat(xrecent1[None], n_repeat1, axis=0), axis=0)
             X = np.append(X, np.repeat(xrecent2[None], n_repeat2, axis=0), axis=0)
             yrecent1, yrecent2 = ytrue[-1], ytrue[-2]
             ytrue = np.append(ytrue, [yrecent1] * n_repeat1)
             ytrue = np.append(ytrue, [yrecent2] * n_repeat2)
-        else:
-            raise ValueError(ss.weight_recent)
 
         # scale inputs
         scaler = StandardScaler()
@@ -235,7 +230,7 @@ def _fit(skm, X, y, show_warnings: bool):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         skm.fit(X, y)
-
+    
 
 @enforce_types
 def _approach_to_skm(approach: str):

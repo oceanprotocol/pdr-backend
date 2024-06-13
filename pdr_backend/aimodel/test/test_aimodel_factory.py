@@ -21,7 +21,7 @@ from pdr_backend.ppss.aimodel_ss import (
 )
 from pdr_backend.statutil.scoring import classif_acc
 
-SHOW_PLOT = False  # only turn on for manual testing
+SHOW_PLOT = True  # only turn on for manual testing
 
 
 @enforce_types
