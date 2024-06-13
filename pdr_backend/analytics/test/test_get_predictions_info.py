@@ -3,7 +3,6 @@ from unittest.mock import patch
 import polars as pl
 import pytest
 from enforce_typing import enforce_types
-
 from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table import NamedTable

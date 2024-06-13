@@ -5,3 +5,7 @@
     background-color: #2b2a26;
     text-align: start;
 }
+
+[class*="table-container"]{
+    width: 100%;
+}

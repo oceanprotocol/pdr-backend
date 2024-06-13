@@ -136,7 +136,6 @@ def test_save_table():
 
     assert len(table.df) == 0
     table.df = pl.DataFrame([mocked_object], table_df_schema)
-
     table.save()
 
     assert os.path.exists(file_path)

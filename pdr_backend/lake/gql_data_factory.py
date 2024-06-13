@@ -2,6 +2,7 @@ import logging
 from typing import Dict, Type
 
 import polars as pl
+<<<<<<< HEAD
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.csv_data_store import CSVDataStore
@@ -13,6 +14,9 @@ from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table import NamedTable, TempTable
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.trueval import Trueval
+=======
+from pdr_backend.lake.legacy.table import Table
+>>>>>>> main
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
