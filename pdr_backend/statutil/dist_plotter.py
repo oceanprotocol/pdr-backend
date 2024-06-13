@@ -136,8 +136,8 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
                 y=d.ynq_raw,
                 mode="lines",
                 line={"color": "grey", "width": 2},
-                #showlegend=False,
-                name="raw data counted"
+                showlegend=False,
+                #name="raw data counted"
             ),
             # gaussian estimate of nq
             go.Scatter(
@@ -161,5 +161,6 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
         rows=[row] * 4,
         cols=[col] * 4,
     )
+    fig.update_xaxes(title="residual (error)", row=row, col=col)
     fig.update_yaxes(title="normal quantile (nq)", row=row, col=col)
-    fig.update_yaxes(minallowed=-6.0, maxallowed=+4.0)
+    fig.update_yaxes(minallowed=-6.0, maxallowed=+4.0, row=row, col=col)
