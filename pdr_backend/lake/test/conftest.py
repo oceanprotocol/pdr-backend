@@ -43,6 +43,7 @@ def clean_up_persistent_data_store(tmpdir):
 
     db.duckdb_conn.close()
 
+
 @pytest.fixture()
 def sample_payouts():
     return mock_payouts()
