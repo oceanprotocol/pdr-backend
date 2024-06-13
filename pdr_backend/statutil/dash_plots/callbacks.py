@@ -107,7 +107,7 @@ def get_callbacks(app):
 
         y = files_data[feed_data]["close_data"]
 
-        # get data for autocorelation
+        # get data for autocorrelation
         y = np.array(y)
         if do_boxcox:
             y = safe_boxcox(y)
