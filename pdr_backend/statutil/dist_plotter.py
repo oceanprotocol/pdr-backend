@@ -1,9 +1,6 @@
 from enforce_typing import enforce_types
-import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from scipy import stats
-from scipy.special import ndtr
 
 from pdr_backend.statutil.dist_plotdata import DistPlotdata, DistPlotdataFactory
 
@@ -25,7 +22,7 @@ def plot_dist(x, show_pdf: bool, show_cdf: bool, show_nq: bool):
 
 
 @enforce_types
-def add_pdf(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
+def add_pdf(fig, d: DistPlotdata, row: int, col: int):
 
     fig.add_traces(
         [
@@ -70,7 +67,7 @@ def add_pdf(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
 
 
 @enforce_types
-def add_cdf(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
+def add_cdf(fig, d: DistPlotdata, row: int, col: int):
 
     fig.add_traces(
         [
@@ -116,19 +113,19 @@ def add_cdf(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
     )
     fig.update_yaxes(title="cumulative density (cdf)", row=row, col=col)
 
-    
+
 @enforce_types
-def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
+def add_nq(fig, d: DistPlotdata, row: int, col: int):
     xnq_raw, ynq_raw = _remove_extremey(d.x, d.ynq_raw, -4, 4)
     xnq_normal, ynq_normal = _remove_extremey(d.x_mesh, d.ynq_normal_mesh, -4, 4)
     xnq_kde, ynq_kde = _remove_extremey(d.x_mesh, d.ynq_kde_mesh, -4, 4)
-                
+
     fig.add_traces(
         [
             # 1d scatterplot of points
             go.Scatter(
                 x=d.x,
-                y= -4 - 2 * d.y_jitter,
+                y=-4 - 2 * d.y_jitter,
                 mode="markers",
                 marker={"color": "black", "size": 2},
                 showlegend=False,
@@ -141,16 +138,16 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
                 mode="lines",
                 line={"color": "grey", "width": 2},
                 showlegend=False,
-                #name="raw data counted"
+                # name="raw data counted"
             ),
             # gaussian estimate of nq
             go.Scatter(
                 x=xnq_normal,
                 y=ynq_normal,
                 mode="lines",
-                line={"color": "blue", "width":2},
+                line={"color": "blue", "width": 2},
                 showlegend=False,
-                #name="gaussian est",
+                # name="gaussian est",
             ),
             # kde estimate of nq
             go.Scatter(
@@ -169,6 +166,7 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
     fig.update_yaxes(title="normal quantile (nq)", row=row, col=col)
     fig.update_yaxes(minallowed=-6, maxallowed=+4, row=row, col=col)
 
+
 @enforce_types
 def _remove_extremey(x, y, min_y, max_y):
     x2, y2 = [], []
@@ -177,4 +175,3 @@ def _remove_extremey(x, y, min_y, max_y):
             x2.append(xi)
             y2.append(yi)
     return x2, y2
-    

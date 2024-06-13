@@ -7,6 +7,8 @@ from pdr_backend.util.currency_types import Eth
 
 @enforce_types
 class AimodelMetrics:
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self):
         # 'i' is iteration number i
         self.acc_ests: List[float] = []  # [i] : %-correct

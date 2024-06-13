@@ -33,7 +33,7 @@ def plot_pacf(autocorrelation_plotdata: AutocorrelationPlotdata):
 
 
 @enforce_types
-def add_corr_traces(fig, corr_results: CorrResults, row:int, col:int, ylabel):
+def add_corr_traces(fig, corr_results: CorrResults, row: int, col: int, ylabel):
     """Worker function for plotting acf or pacf"""
 
     # exclusion region
@@ -106,6 +106,7 @@ def add_corr_traces(fig, corr_results: CorrResults, row:int, col:int, ylabel):
     max_lag = corr_results.max_lag
     delta = 0.05 * max_lag
     fig.update_xaxes(range=[0 - delta, max_lag - delta], row=row, col=col)
+
 
 @enforce_types
 def _rail(val: int, mn_val: int, mx_val: int) -> int:

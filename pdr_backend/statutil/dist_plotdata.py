@@ -2,9 +2,7 @@ from typing import Union
 
 from enforce_typing import enforce_types
 import numpy as np
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from scipy import interpolate, stats
+from scipy import stats
 from scipy.special import ndtr
 
 
@@ -17,6 +15,7 @@ class DistPlotdataFactory:
 
 
 class DistPlotdata:
+    # pylint: disable=too-many-instance-attributes
 
     @enforce_types
     def __init__(self, x: Union[list, np.ndarray]):
@@ -26,7 +25,7 @@ class DistPlotdata:
         # base data: x, x_mesh, y_jitter
         self.x = sorted(x)
         mean, std = np.mean(x), np.std(x)
-        self.x_mesh = np.linspace(min(x) - 0.5*std, max(x) + 0.5*std, num=200)
+        self.x_mesh = np.linspace(min(x) - 0.5 * std, max(x) + 0.5 * std, num=200)
         self.y_jitter = _get_jitter(len(x))
 
         # -------------------------------------------------------------------
@@ -44,7 +43,7 @@ class DistPlotdata:
         self.ypdf_kde_mesh = kde_model.evaluate(self.x_mesh)
 
         # pdf: normalize y-values to approx [0,1]
-        max_density = max(max(self.ypdf_normal_mesh), max(self.ypdf_kde_mesh))
+        max_density = max(self.ypdf_normal_mesh, self.ypdf_kde_mesh)
         self.ypdf_normal_mesh /= max_density
         self.ypdf_kde_mesh /= max_density
         self.counts = np.array(self.counts, dtype=float) / max(self.counts)
@@ -72,9 +71,6 @@ class DistPlotdata:
 
         # nq: kde est
         self.ynq_kde_mesh = stats.norm.ppf(self.ycdf_kde_mesh)
-        
-
-
 
 
 J = np.array([], dtype=float)  # jitter

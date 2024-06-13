@@ -5,6 +5,7 @@ def data_x() -> list:
 
     Used for test_dist.py
     """
+    # pylint: disable=too-many-lines
     return [
         -4.395632514409954,
         -51.746287226866116,

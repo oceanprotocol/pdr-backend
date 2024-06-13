@@ -15,7 +15,7 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
 from pdr_backend.statutil.autocorrelation_plotdata import (
     AutocorrelationPlotdataFactory,
-)    
+)
 from pdr_backend.statutil.autocorrelation_plotter import add_corr_traces
 from pdr_backend.statutil.dist_plotdata import DistPlotdataFactory
 from pdr_backend.statutil.dist_plotter import add_pdf, add_cdf, add_nq
@@ -377,7 +377,7 @@ class SimPlotter:
     def plot_prediction_residuals_dist(self):
         # calc data
         d = DistPlotdataFactory.build(self.st.aim.yerrs)
-        
+
         # initialize subplots
         s1, s2, s3 = "Residuals distribution", "", ""
         fig = make_subplots(
@@ -389,9 +389,9 @@ class SimPlotter:
         )
 
         # fill in subplots
-        add_pdf(fig, d, row=1, col=1, xaxis_title="")
-        add_cdf(fig, d, row=2, col=1, xaxis_title="")
-        add_nq(fig, d, row=3, col=1, xaxis_title="residual")
+        add_pdf(fig, d, row=1, col=1)
+        add_cdf(fig, d, row=2, col=1)
+        add_nq(fig, d, row=3, col=1)
 
         # global: set minor ticks
         minor = {"ticks": "inside", "showgrid": True}
@@ -405,7 +405,7 @@ class SimPlotter:
     @enforce_types
     def plot_prediction_residuals_other(self):
         # calc data
-        nlags = 10 # magic number alert # FIX ME: have spinner, like ARIMA feeds
+        nlags = 10  # magic number alert # FIX ME: have spinner, like ARIMA feeds
         d = AutocorrelationPlotdataFactory.build(self.st.aim.yerrs, nlags=nlags)
 
         # initialize subplots
@@ -421,7 +421,11 @@ class SimPlotter:
         # fill in subplots
         self._add_subplot_residual_vs_time(fig, row=1, col=1)
         add_corr_traces(
-            fig, d.acf_results, row=2, col=1, ylabel="autocorrelation (ACF)",
+            fig,
+            d.acf_results,
+            row=2,
+            col=1,
+            ylabel="autocorrelation (ACF)",
         )
 
         return fig
