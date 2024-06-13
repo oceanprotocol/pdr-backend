@@ -213,7 +213,7 @@ class SimEngine:
             # (do *not* buy back the same # usdcoins! Not the same thing!)
             target_tokcoin_amt_recd = tokcoin_amt_send
             p = self.ppss.trader_ss.fee_percent
-            usdcoin_amt_send = target_tokcoin_amt_recd * (1 - p) * trueprice
+            usdcoin_amt_send = target_tokcoin_amt_recd * trueprice / (1 - p)
             tokcoin_amt_recd = self._buy(trueprice, usdcoin_amt_send)
         usdcoin_holdings_after = st.holdings[self.usdcoin]
 
