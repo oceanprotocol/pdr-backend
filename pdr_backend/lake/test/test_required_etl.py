@@ -105,147 +105,143 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
     etl, db, gql_tables = _sample_etl
     etl._clamp_checkpoints_to_ppss = True
     
-    # Step 1: 00:00 - 00:40
-    # get all predictions we expect to end up in bronze table
-    prediction_table = NamedTable.from_dataclass(Prediction).fullname
-    query = f"""
-    SELECT 
-        * 
-    FROM {prediction_table}
-    where
-        {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-        and {prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
-    """
-    expcted_rows = db.query_data(query)
-    assert len(expcted_rows) == 485
+    def _step1():
+        # Step 1: 00:00 - 00:40
+        # get all predictions we expect to end up in bronze table
+        prediction_table = NamedTable.from_dataclass(Prediction).fullname
+        query = f"""
+        SELECT 
+            * 
+        FROM {prediction_table}
+        where
+            {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+        """
+        expcted_rows = db.query_data(query)
+        assert len(expcted_rows) == 485
 
-    # execute the ETL
-    etl.do_bronze_step()
-    etl._move_from_temp_tables_to_live()
-    
-    # get all bronze_pdr_predictions for this period
-    bronze_prediction_table = NamedTable.from_dataclass(BronzePrediction).fullname
-    query = f"""
-    SELECT 
-        * 
-    FROM {bronze_prediction_table}
-    where
-        {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-        and {bronze_prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
-    """
-    bronze_pdr_predictions_records = db.query_data(query)
-    
-    # get count of null and valid prediction.payouts
-    prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
-    prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
+        # execute the ETL
+        etl.do_bronze_step()
+        etl._move_from_temp_tables_to_live()
+        
+        # get all bronze_pdr_predictions for this period
+        bronze_prediction_table = NamedTable.from_dataclass(BronzePrediction).fullname
+        query = f"""
+        SELECT 
+            * 
+        FROM {bronze_prediction_table}
+        where
+            {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {bronze_prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+        """
+        bronze_pdr_predictions_records = db.query_data(query)
+        
+        # get count of null and valid prediction.payouts
+        prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
+        prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
 
-    # assert those numbers so we can track progress
-    assert prod_null_payouts == 178
-    assert prod_valid_payouts == 307
+        # assert those numbers so we can track progress
+        assert prod_null_payouts == 178
+        assert prod_valid_payouts == 307
 
-    # validate that rows are equal to what we expected
-    assert prod_null_payouts + prod_valid_payouts == len(expcted_rows)
+        # validate that rows are equal to what we expected
+        assert prod_null_payouts + prod_valid_payouts == len(expcted_rows)
 
+    def _step2():
+        # Step 2: 00:40 - 01:20
+        # override ppss timestamps
+        etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_00:40"
+        etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_01:20"
 
-    # Step 2: 00:40 - 01:20
-    # override ppss timestamps
-    etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_00:40"
-    etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_01:20"
+        # get all predictions we expect to end up in bronze table
+        prediction_table = NamedTable.from_dataclass(Prediction).fullname
+        query = f"""
+        SELECT 
+            * 
+        FROM {prediction_table}
+        where
+            {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+        """
+        expcted_rows = db.query_data(query)
+        assert len(expcted_rows) == 797
 
-    # get all predictions we expect to end up in bronze table
-    prediction_table = NamedTable.from_dataclass(Prediction).fullname
-    query = f"""
-    SELECT 
-        * 
-    FROM {prediction_table}
-    where
-        {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-        and {prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
-    """
-    expcted_rows = db.query_data(query)
-    assert len(expcted_rows) == 797
+        # execute the ETL
+        etl.do_bronze_step()
+        etl._move_from_temp_tables_to_live()
+        
+        # get all bronze_pdr_predictions for this period
+        bronze_prediction_table = NamedTable.from_dataclass(BronzePrediction).fullname
+        query = f"""
+        SELECT 
+            * 
+        FROM {bronze_prediction_table}
+        where
+            {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {bronze_prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+        """
+        bronze_pdr_predictions_records = db.query_data(query)
+        
+        # get count of null and valid prediction.payouts
+        prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
+        prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
 
-    # execute the ETL
-    etl.do_bronze_step()
-    etl._move_from_temp_tables_to_live()
-    
-    # get all bronze_pdr_predictions for this period
-    query = f"""
-    SELECT 
-        * 
-    FROM {bronze_prediction_table}
-    where
-        {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-        and {bronze_prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
-    """
-    bronze_pdr_predictions_records = db.query_data(query)
-    
-    # get count of null and valid prediction.payouts
-    prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
-    prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
+        # assert those numbers so we can track progress
+        assert prod_null_payouts == 290
+        assert prod_valid_payouts == 507
 
-    # assert those numbers so we can track progress
-    assert prod_null_payouts == 290
-    assert prod_valid_payouts == 507
+        # validate that rows are equal to what we expected
+        assert prod_null_payouts + prod_valid_payouts == len(expcted_rows)
 
-    # validate that rows are equal to what we expected
-    assert prod_null_payouts + prod_valid_payouts == len(expcted_rows)
+    def _step3():
+        # Step 3: 01:20 - 02:00
+        # override ppss timestamps
+        etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_01:20"
+        etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_02:00"
 
-    # Step 3: 01:20 - 02:00
-    # override ppss timestamps
-    etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_01:20"
-    etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_02:00"
+        # get all predictions we expect to end up in bronze table
+        prediction_table = NamedTable.from_dataclass(Prediction).fullname
+        query = f"""
+        SELECT 
+            * 
+        FROM {prediction_table}
+        where
+            {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+        """
+        expcted_rows = db.query_data(query)
+        assert len(expcted_rows) == 775
 
-    # get all predictions we expect to end up in bronze table
-    prediction_table = NamedTable.from_dataclass(Prediction).fullname
-    query = f"""
-    SELECT 
-        * 
-    FROM {prediction_table}
-    where
-        {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-        and {prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
-    """
-    expcted_rows = db.query_data(query)
-    assert len(expcted_rows) == 775
+        # execute the ETL
+        etl.do_bronze_step()
+        etl._move_from_temp_tables_to_live()
+        
+        # get all bronze_pdr_predictions for this period
+        bronze_prediction_table = NamedTable.from_dataclass(BronzePrediction).fullname
+        query = f"""
+        SELECT 
+            * 
+        FROM {bronze_prediction_table}
+        where
+            {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {bronze_prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+        """
+        bronze_pdr_predictions_records = db.query_data(query)
+        
+        # get count of null and valid prediction.payouts
+        prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
+        prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
 
-    # execute the ETL
-    etl.do_bronze_step()
-    etl._move_from_temp_tables_to_live()
-    
-    # get all bronze_pdr_predictions for this period
-    query = f"""
-    SELECT 
-        * 
-    FROM {bronze_prediction_table}
-    where
-        {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-        and {bronze_prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
-    """
-    bronze_pdr_predictions_records = db.query_data(query)
-    
-    # get count of null and valid prediction.payouts
-    prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
-    prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
+        # assert those numbers so we can track progress
+        assert prod_null_payouts == 247
+        assert prod_valid_payouts == 528
 
-    # assert those numbers so we can track progress
-    assert prod_null_payouts == 247
-    assert prod_valid_payouts == 528
+        # validate that rows are equal to what we expected
+        assert prod_null_payouts + prod_valid_payouts == len(expcted_rows)
 
-    # validate that rows are equal to what we expected
-    assert prod_null_payouts + prod_valid_payouts == len(expcted_rows)
-
-    # Validation 1: Verify final records in bronze_pdr_predictions
-    # Match these results against the previous test that completes all ETL in 1 step
-    table_name = NamedTable.from_dataclass(BronzePrediction).fullname
-    bronze_pdr_predictions_records = db.query_data(
-        "SELECT * FROM {}".format(table_name)
-    )
-    assert bronze_pdr_predictions_records is not None
-    
-    # verify final production table
-    prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
-    prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
+    _step1()
+    _step2()
+    _step3()
 
     # These numbers should match the previous test
     # assert prod_null_payouts == 377
