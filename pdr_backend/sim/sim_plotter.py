@@ -12,6 +12,12 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+
+from pdr_backend.statutil.autocorrelation_plotdata import (
+    AutocorrelationPlotdata,
+    AutocorrelationPlotdataFactory,
+)    
+from pdr_backend.statutil.autocorrelation_plotter import add_corr_traces
 from pdr_backend.statutil.dist_plotdata import DistPlotdata, DistPlotdataFactory
 from pdr_backend.statutil.dist_plotter import add_pdf, add_cdf, add_nq
 
@@ -375,11 +381,16 @@ class SimPlotter:
         s1 = "Residuals pdf"
         s2 = "Residuals vs time"
         s3 = "Residuals cdf"
-        s4 = "Residuals correlogram"
+        s4 = ""
         s5 = "Residuals nq"
-        s6 = ""
-        
-        d: DistplotData = DistPlotdataFactory.build(self.st.aim.yerrs)
+        s6 = "Residuals correlogram"
+
+        # data
+        x = self.st.aim.yerrs
+        d_dist: DistplotData = DistPlotdataFactory.build(x)
+        nlags = 10 # magic number alert # FIX ME: have spinner, like ARIMA feeds
+        d_corr: AutocorrelationPlotdata = \
+            AutocorrelationPlotdataFactory.build(x, nlags=nlags)
 
         # make subplots
         fig = make_subplots(
@@ -390,11 +401,11 @@ class SimPlotter:
         )
 
         # fill in subplots
-        add_pdf(fig, d, row=1, col=1, xaxis_title="residual")
-        add_cdf(fig, d, row=2, col=1, xaxis_title="residual")
-        add_nq(fig, d, row=3, col=1, xaxis_title="residual")
+        add_pdf(fig, d_dist, row=1, col=1, xaxis_title="residual")
+        add_cdf(fig, d_dist, row=2, col=1, xaxis_title="residual")
+        add_nq(fig, d_dist, row=3, col=1, xaxis_title="residual")
         self._add_subplot_residual_vs_time(fig, row=1, col=2)
-        # self._add_subplot_residual_correlogram(fig, row=2, col=2)
+        add_corr_traces(fig, d_corr.acf_results, row=3, col=2, ylabel="ACF")
 
         return fig
 
