@@ -331,7 +331,7 @@ class SimEngine:
 
         return usdcoin_amt_recd
 
-    def disable_realtime_state():
+    def disable_realtime_state(self):
         self.state_updates = False
 
     @enforce_types
