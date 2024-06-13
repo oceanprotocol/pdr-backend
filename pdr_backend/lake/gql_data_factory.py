@@ -2,7 +2,7 @@ import logging
 from typing import Callable, Dict
 from enforce_typing import enforce_types
 import polars as pl
-from pdr_backend.lake.table import Table
+from pdr_backend.lake.legacy.table import Table
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
