@@ -60,6 +60,14 @@ class SimEngine:
         self.position_open = ""  # long, short, ""
         self.position_size = 0  # amount of tokens in position
         self.position_worth = 0  # amount of USD in position
+        self.tp = 0.0  # take profit
+        self.sl = 0.0  # stop loss
+        self.tp_percent = (
+            0.005  # take profit percent TODO make this a parameter in yaml config
+        )
+        self.sl_percent = (
+            0.005  # take profit percent TODO make this a parameter in yaml config
+        )
         if multi_id:
             self.multi_id = multi_id
         else:
@@ -102,7 +110,6 @@ class SimEngine:
         # main loop!
         f = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = f.get_mergedohlcv_df()
-
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
 
@@ -126,6 +133,15 @@ class SimEngine:
             predict_feed,
             train_feeds,
         )
+
+        shifted_mergedohlcv_df = mergedohlcv_df[
+            pdr_ss.aimodel_ss.autoregressive_n + len(x_df) - 2
+        ]  # t-2
+        high_col = f"{predict_feed.exchange}:{predict_feed.pair}:high"
+        low_col = f"{predict_feed.exchange}:{predict_feed.pair}:low"
+        high_value = shifted_mergedohlcv_df[high_col].to_numpy()[0]
+        low_value = shifted_mergedohlcv_df[low_col].to_numpy()[0]
+
         colnames = list(x_df.columns)
 
         st_, fin = 0, X.shape[0] - 1
@@ -169,7 +185,15 @@ class SimEngine:
         acct_up_profit -= stake_up
         acct_down_profit -= stake_down
 
-        profit = self.sim_trader(curprice, pred_up, pred_down, conf_up, conf_down)
+        profit = self.sim_trader(
+            curprice,
+            pred_up,
+            pred_down,
+            conf_up,
+            conf_down,
+            high=high_value,
+            low=low_value,
+        )
         st.trader_profits_USD.append(profit)
 
         # observe true price
@@ -235,13 +259,16 @@ class SimEngine:
         pred_down,
         conf_up: float,
         conf_down: float,
+        high: float,
+        low: float,
     ) -> float:
         """
         @description
             Simulate trader's actions based on predictions and confidence levels.
             If trader has an open position, it will close it if the prediction
             changes. If trader has no open position, it will open a position if
-            the prediction is strong enough.
+            the prediction is strong enough. Also, close the position if the price
+            hits the stop loss or take profit levels.
 
         @arguments
             curprice -- current price of the token
@@ -249,10 +276,26 @@ class SimEngine:
             pred_down -- prediction that the price will go down
             conf_up -- confidence in the prediction that the price will go up
             conf_down -- confidence in the prediction that the price will go down
+            high -- highest price reached during the period
+            low -- lowest price reached during the period
 
         @return
             profit -- profit made by the trader in this iteration
         """
+
+        def close_long_position(sell_price: float) -> float:
+            tokcoin_amt_send = self.position_size
+            usd_received = self._sell(sell_price, tokcoin_amt_send)
+            self.position_open = ""
+            profit = usd_received - self.position_worth
+            return profit
+
+        def close_short_position(buy_price: float) -> float:
+            usdcoin_amt_send = self.position_size * buy_price
+            self._buy(buy_price, usdcoin_amt_send)
+            self.position_open = ""
+            profit = self.position_worth - usdcoin_amt_send
+            return profit
 
         trade_amt = self.ppss.trader_ss.buy_amt_usd.amt_eth
         if self.position_open == "":
@@ -263,6 +306,9 @@ class SimEngine:
                 self.position_open = "long"
                 self.position_worth = usdcoin_amt_send
                 self.position_size = tok_received
+                self.tp = curprice + (curprice * self.tp_percent)
+                self.sl = curprice - (curprice * self.sl_percent)
+
             elif pred_down:
                 # Open short position if pred down and no position open
                 tokcoin_amt_send = trade_amt * conf_down / curprice
@@ -270,23 +316,31 @@ class SimEngine:
                 self.position_open = "short"
                 self.position_worth = usd_received
                 self.position_size = tokcoin_amt_send
+                self.tp = curprice - (curprice * self.tp_percent)
+                self.sl = curprice + (curprice * self.sl_percent)
+
             return 0
 
-        if self.position_open == "long" and not pred_up:
-            # Close long position if not pred up and position open
-            tokcoin_amt_send = self.position_size
-            usd_received = self._sell(curprice, tokcoin_amt_send)
-            self.position_open = ""
-            profit = usd_received - self.position_worth
-            return profit
+        # Check for take profit or stop loss
+        if self.position_open == "long":
+            if high >= self.tp:
+                return close_long_position(self.tp)
 
-        if self.position_open == "short" and not pred_down:
-            # Close short position, buyback tokens if not pred down and position open
-            usdcoin_amt_send = self.position_size * curprice
-            tok_received = self._buy(curprice, usdcoin_amt_send)
-            self.position_open = ""
-            profit = self.position_worth - usdcoin_amt_send
-            return profit
+            if low <= self.sl:
+                return close_long_position(self.sl)
+
+            if not pred_up:
+                return close_long_position(curprice)
+
+        if self.position_open == "short":
+            if low <= self.tp:
+                return close_short_position(self.tp)
+
+            if high >= self.sl:
+                return close_short_position(self.sl)
+
+            if not pred_down:
+                return close_short_position(curprice)
 
         return 0
 
