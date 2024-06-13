@@ -124,7 +124,7 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
             # 1d scatterplot of points
             go.Scatter(
                 x=d.x,
-                y=-d.y_jitter - 3,
+                y= -4 - 2 * d.y_jitter,
                 mode="markers",
                 marker={"color": "black", "size": 2},
                 showlegend=False,
@@ -162,4 +162,4 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
         cols=[col] * 4,
     )
     fig.update_yaxes(title="normal quantile (nq)", row=row, col=col)
-    fig.update_yaxes(minallowed=-4.0, maxallowed=+4.0)
+    fig.update_yaxes(minallowed=-6.0, maxallowed=+4.0)

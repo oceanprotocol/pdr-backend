@@ -13,7 +13,7 @@ from plotly.subplots import make_subplots
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.statutil.dist_plotdata import DistPlotdata, DistPlotdataFactory
-from pdr_backend.statutil.dist_plotter import add_pdf, add_nq
+from pdr_backend.statutil.dist_plotter import add_pdf, add_cdf, add_nq
 
 HEIGHT = 7.5
 WIDTH = int(HEIGHT * 3.2)
@@ -374,22 +374,25 @@ class SimPlotter:
         aim = self.st.aim
         s1 = "Residuals pdf"
         s2 = "Residuals vs time"
-        s3 = "Residuals nq"
+        s3 = "Residuals cdf"
         s4 = "Residuals correlogram"
+        s5 = "Residuals nq"
+        s6 = ""
         
         d: DistplotData = DistPlotdataFactory.build(self.st.aim.yerrs)
 
         # make subplots
         fig = make_subplots(
-            rows=2,
+            rows=3,
             cols=2,
-            subplot_titles=(s1, s2, s3, s4),
-            vertical_spacing=0.18,
+            subplot_titles=(s1, s2, s3, s4, s5, s6),
+            vertical_spacing=0.07,
         )
 
         # fill in subplots
         add_pdf(fig, d, row=1, col=1, xaxis_title="residual")
-        add_nq(fig, d, row=2, col=1, xaxis_title="residual")
+        add_cdf(fig, d, row=2, col=1, xaxis_title="residual")
+        add_nq(fig, d, row=3, col=1, xaxis_title="residual")
         self._add_subplot_residual_vs_time(fig, row=1, col=2)
         # self._add_subplot_residual_correlogram(fig, row=2, col=2)
 
