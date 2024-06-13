@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.subgraph.subscription import Subscription, mock_subscriptions
+from pdr_backend.subgraph.legacy.subscription import Subscription, mock_subscriptions
 
 
 @enforce_types

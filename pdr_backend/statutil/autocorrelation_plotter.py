@@ -1,7 +1,9 @@
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from enforce_typing import enforce_types
 from statsmodels.tsa.stattools import adfuller
+from pdr_backend.statutil.dash_plots.view_elements import get_table
 
 from pdr_backend.statutil.autocorrelation_plotdata import (
     AutocorrelationPlotdata,
@@ -9,27 +11,29 @@ from pdr_backend.statutil.autocorrelation_plotdata import (
 )
 from pdr_backend.statutil.boxcox import safe_boxcox
 
+TRANSITION_OPTIONS = ["BC=F,D=0", "BC=T,D=0", "BC=T,D=1", "BC=T,D=2"]
+
 
 @enforce_types
 def plot_acf(autocorrelation_plotdata: AutocorrelationPlotdata):
     corr_results = autocorrelation_plotdata.acf_results
-    title = "Autocorrelation (ACF)"
-    fig = go.Figure()
-    _add_corr_traces(corr_results, title, fig)
+    ylabel = "Autocorrelation (ACF)"
+    fig = make_subplots(rows=1, cols=1, subplot_titles=(ylabel,))
+    add_corr_traces(fig, corr_results, row=1, col=1, ylabel=ylabel)
     return fig
 
 
 @enforce_types
 def plot_pacf(autocorrelation_plotdata: AutocorrelationPlotdata):
     corr_results = autocorrelation_plotdata.pacf_results
-    title = "Partial Autocorrelation (PACF)"
-    fig = go.Figure()
-    _add_corr_traces(corr_results, title, fig)
+    ylabel = "Partial Autocorrelation (PACF)"
+    fig = make_subplots(rows=1, cols=1, subplot_titles=(ylabel,))
+    add_corr_traces(fig, corr_results, row=1, col=1, ylabel=ylabel)
     return fig
 
 
 @enforce_types
-def _add_corr_traces(corr_results: CorrResults, title_s: str, fig):
+def add_corr_traces(fig, corr_results: CorrResults, row: int, col: int, ylabel):
     """Worker function for plotting acf or pacf"""
 
     # exclusion region
@@ -40,7 +44,10 @@ def _add_corr_traces(corr_results: CorrResults, title_s: str, fig):
             y=corr_results.lower_exclusion,
             mode="lines",
             line={"color": "cornflowerblue", "width": 0},
+            showlegend=False,
         ),
+        row=row,
+        col=col,
     )
     fig.add_trace(
         go.Scatter(
@@ -49,7 +56,10 @@ def _add_corr_traces(corr_results: CorrResults, title_s: str, fig):
             fill="tonexty",  # fill area between this trace and previous one
             mode="lines",
             line={"color": "cornflowerblue", "width": 0},
+            showlegend=False,
         ),
+        row=row,
+        col=col,
     )
 
     # main values
@@ -60,7 +70,10 @@ def _add_corr_traces(corr_results: CorrResults, title_s: str, fig):
             y=corr_results.values,
             mode="markers",
             marker={"color": "blue", "size": size},
+            showlegend=False,
         ),
+        row=row,
+        col=col,
     )
 
     # vertical bars
@@ -72,36 +85,27 @@ def _add_corr_traces(corr_results: CorrResults, title_s: str, fig):
                 y=[0, y],
                 mode="lines",
                 line={"color": "black", "width": width},
+                showlegend=False,
             ),
+            row=row,
+            col=col,
         )
 
     # x-axis label
-    fig.update_xaxes(title="lag")
+    fig.update_xaxes(title="lag", row=row, col=col)
 
     # y-axis
-    fig.update_yaxes(title=title_s, minor={"ticks": "inside", "showgrid": True})
+    minor_d = {"ticks": "inside", "showgrid": True}
+    fig.update_yaxes(title=ylabel, minor=minor_d, row=row, col=col)
 
     # ticks
-    fig.update_yaxes(nticks=8)
-    fig.update_xaxes(nticks=16)
+    fig.update_yaxes(nticks=8, row=row, col=col)
+    fig.update_xaxes(nticks=16, row=row, col=col)
 
     # x-axis range
     max_lag = corr_results.max_lag
     delta = 0.05 * max_lag
-    fig.update_xaxes(range=[0 - delta, max_lag - delta])
-
-    # layout
-    fig.update_layout(
-        title={
-            "text": title_s,
-            "y": 0.96,
-            "x": 0.5,
-            "xanchor": "center",
-            "yanchor": "top",
-        },
-        margin={"l": 5, "r": 5, "t": 50, "b": 0},
-        showlegend=False,
-    )
+    fig.update_xaxes(range=[0 - delta, max_lag - delta], row=row, col=col)
 
 
 @enforce_types
@@ -115,55 +119,35 @@ def get_transitions(selected_idx=None, y=[]):
     if selected_idx is not None:
         bar_colors[selected_idx] = "grey"  # Change color of the selected bar
 
-    labels = ["BC=T,D=2", "BC=T,D=1", "BC=T,D=0", "BC=F,D=0"]
-
-    adf_results = {}
+    adf_results = []
 
     # No transformation
     adf_result = adfuller(y)
-    adf_results["BC=F,D=0"] = adf_result
+    adf_results.append(
+        {"Transform": TRANSITION_OPTIONS[0], "ADF": round(adf_result[1], 3)}
+    )
 
     # Box-Cox transformation without differencing
     y_bc = safe_boxcox(y)
     adf_result = adfuller(y_bc)
-    adf_results["BC=T,D=0"] = adf_result
+    adf_results.append(
+        {"Transform": TRANSITION_OPTIONS[1], "ADF": round(adf_result[1], 3)}
+    )
 
     # Box-Cox transformation with differencing
     y_bc_diff = np.diff(y_bc)
     adf_result = adfuller(y_bc_diff)
-    adf_results["BC=T,D=1"] = adf_result
+    adf_results.append(
+        {"Transform": TRANSITION_OPTIONS[2], "ADF": round(adf_result[1], 3)}
+    )
 
     # Box-Cox transformation with second differencing
     y_bc_diff2 = np.diff(y_bc_diff)
     adf_result = adfuller(y_bc_diff2)
-    adf_results["BC=T,D=2"] = adf_result
-
-    adf_values = [adf_results[label][1] for label in labels]
-
-    fig = go.Figure(
-        data=[
-            go.Bar(
-                x=[1, 1, 1, 1],
-                y=labels,
-                orientation="h",
-                width=0.3,
-                marker_color=bar_colors,
-                showlegend=False,
-            ),
-            go.Bar(
-                x=adf_values,
-                y=labels,
-                orientation="h",
-                marker_color=["blue"] * 4,
-                width=0.3,
-                showlegend=False,
-            ),
-        ]
+    adf_results.append(
+        {"Transform": TRANSITION_OPTIONS[3], "ADF": round(adf_result[1], 3)}
     )
-    fig.update_yaxes(title_text="Transformation")
-    fig.update_xaxes(title_text="ADF")
-    fig.update_layout(
-        margin={"l": 5, "r": 5, "t": 20, "b": 0},
-        xaxis={"range": [0.05, 0.1]},
-    )
-    return fig
+
+    table = get_table(["Transform", "ADF"], adf_results)
+
+    return table

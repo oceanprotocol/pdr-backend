@@ -1,13 +1,13 @@
 import pytest
 import polars as pl
 
-from pdr_backend.subgraph.prediction import (
+from pdr_backend.subgraph.legacy.prediction import (
     mock_daily_predictions,
     mock_first_predictions,
     mock_second_predictions,
 )
 
-from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.legacy.plutil import _object_list_to_df
 from pdr_backend.lake.table_pdr_predictions import predictions_schema
 
 
