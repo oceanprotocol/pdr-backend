@@ -198,7 +198,11 @@ class SimEngine:
             loss = 3.0
         else:
             loss = log_loss(st.ytrues, st.probs_up)
-        st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall, loss)
+        yerr = 0.0
+        if model.do_regr:
+            predprice = model.predict_ycont(X_test)[0]
+            yerr = trueprice - predprice
+        st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
         # trader: exit the trading position
         if pred_up:

@@ -3,7 +3,7 @@ import time
 
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.table import Table
+from pdr_backend.lake.legacy.table import Table
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     bronze_pdr_predictions_table_name,
     bronze_pdr_predictions_schema,

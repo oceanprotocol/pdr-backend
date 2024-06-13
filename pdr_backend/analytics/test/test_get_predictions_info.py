@@ -2,7 +2,7 @@ from unittest.mock import patch
 import pytest
 from enforce_typing import enforce_types
 import polars as pl
-from pdr_backend.lake.table import Table
+from pdr_backend.lake.legacy.table import Table
 from pdr_backend.analytics.get_predictions_info import get_predictions_info_main
 from pdr_backend.ppss.ppss import mock_ppss
 

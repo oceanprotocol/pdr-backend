@@ -1,13 +1,13 @@
-from io import StringIO
 import os
-import sys
-from polars import Boolean, Float64, Int64, Utf8
+
 import polars as pl
+from polars import Boolean, Float64, Int64, Utf8
+
+from pdr_backend.lake.csv_data_store import CSVDataStore
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.table import NamedTable
 from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.lake.table import Table
-from pdr_backend.subgraph.subgraph_predictions import fetch_filtered_predictions
-from pdr_backend.lake.table_pdr_predictions import predictions_schema
-from pdr_backend.util.time_types import UnixTimeMs
 
 
 # pylint: disable=too-many-instance-attributes
@@ -47,6 +47,14 @@ def get_table_df(network, st_ut, fin_ut, config):
     return pl.DataFrame([mocked_object], table_df_schema)
 
 
+def _get_lake_dir(ppss):
+    # if ppss.lake_ss has an attribute lake_dir, return it
+    if hasattr(ppss.lake_ss, "lake_dir"):
+        return ppss.lake_ss.lake_dir
+    # otherwise, return the default lake_dir
+    return ppss.lake_ss.parquet_dir
+
+
 table_df_schema = {
     "ID": Utf8,
     "pair": Utf8,
@@ -68,50 +76,118 @@ if os.path.exists(file_path2):
     os.remove(file_path2)
 
 
-def test_table_initialization():
+def _table_exists(db, searched_table_name):
+    table_names = db.get_table_names()
+    return [searched_table_name in table_names, table_name]
+
+
+def test_csv_data_store(
+    _gql_datafactory_first_predictions_df,
+    _gql_datafactory_1k_predictions_df,
+    tmpdir,
+):
     """
-    Test that table is initialized correctly
+    Test that create table and append existing mock prediction data
     """
-    st_timestr = "2023-12-03"
-    fin_timestr = "2024-12-05"
+    st_timestr = "2023-11-01"
+    fin_timestr = "2024-11-03"
     ppss = mock_ppss(
         [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
-        ".",
+        str(tmpdir),
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
 
-    table = Table(table_name, table_df_schema, ppss)
-    assert len(table.df) == 0
-    assert table.df.columns == table.df.columns
-    assert table.df.dtypes == table.df.dtypes
-    assert table.table_name == table_name
-    assert table.ppss.lake_ss.st_timestr == st_timestr
-    assert table.ppss.lake_ss.fin_timestr == fin_timestr
+    # Initialize Table, fill with data, validate
+    table = NamedTable.from_dataclass(Prediction)
+
+    ppss.lake_ss.lake_dir = _get_lake_dir(ppss)
+    table._append_to_csv(_gql_datafactory_first_predictions_df, ppss)
+
+    assert CSVDataStore.from_table(table, ppss).has_data()
+
+    csv_file_path = os.path.join(
+        _get_lake_dir(ppss),
+        table.table_name,
+        f"{table.table_name}_from_1701503000000_to_.csv",
+    )
+
+    assert os.path.exists(csv_file_path)
+
+    with open(csv_file_path, "r") as file:
+        lines = file.readlines()
+        assert len(lines) == 3
+        file.close()
+
+    # Add second batch of predictions, validate
+    table._append_to_csv(_gql_datafactory_1k_predictions_df, ppss)
+
+    files = os.listdir(os.path.join(_get_lake_dir(ppss), table.table_name))
+    files.sort(reverse=True)
+
+    assert len(files) == 2
+
+    new_file_path = os.path.join(
+        _get_lake_dir(ppss),
+        table.table_name,
+        files[0],
+    )
+    with open(new_file_path, "r") as file:
+        lines = file.readlines()
+        assert len(lines) == 3
 
 
-def test_load_table():
+def test_persistent_store(
+    _gql_datafactory_first_predictions_df,
+    _gql_datafactory_second_predictions_df,
+    tmpdir,
+):
     """
-    Test that table is loading the data from file
+    Test that create table and append existing mock prediction data
     """
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
     ppss = mock_ppss(
-        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
+        [{"train_on": "binance BTC/USDT c 5m", "predict": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
-        ".",
+        str(tmpdir),
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
 
-    table = Table(table_name, table_df_schema, ppss)
-    table.load()
+    predictions_table_name = Prediction.get_lake_table_name()
+    # Initialize Table, fill with data, validate
+    db = DuckDBDataStore(_get_lake_dir(ppss))
+    db._create_and_fill_table(
+        _gql_datafactory_first_predictions_df, predictions_table_name
+    )
 
-    assert len(table.df) == 0
+    assert _table_exists(db, predictions_table_name)
+
+    result = db.query_data(f"SELECT * FROM {predictions_table_name}")
+    assert len(result) == 2, "Length of the table is not as expected"
+
+    # Add second batch of predictions, validate
+    db.insert_to_table(
+        _gql_datafactory_second_predictions_df, Prediction.get_lake_table_name()
+    )
+
+    result = db.query_data(f"SELECT * FROM {predictions_table_name}")
+
+    assert len(result) == 8, "Length of the table is not as expected"
+
+    assert (
+        result["ID"][0]
+        == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1701503100-0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"  # pylint: disable=line-too-long
+    )
+    assert result["pair"][0] == "ADA/USDT"
+    assert result["timeframe"][0] == "5m"
+    assert result["predvalue"][0] is True
+    assert len(result) == 8
 
 
-def test_save_table():
+def test_append_to_db(caplog):
     """
     Test that table is saving to local file
     """
@@ -125,117 +201,10 @@ def test_save_table():
         fin_timestr=fin_timestr,
     )
 
-    table = Table(table_name, table_df_schema, ppss)
+    table = NamedTable.from_dataclass(Prediction)
+    data = pl.DataFrame([mocked_object], Prediction.get_lake_schema())
 
-    captured_output = StringIO()
-    sys.stdout = captured_output
+    ppss.lake_ss.lake_dir = _get_lake_dir(ppss)
+    table._append_to_db(data, ppss)
 
-    assert len(table.df) == 0
-    table.df = pl.DataFrame([mocked_object], table_df_schema)
-    table.save()
-
-    assert os.path.exists(file_path)
-    printed_text = captured_output.getvalue().strip()
-
-    assert "Just saved df with" in printed_text
-
-
-def test_all():
-    """
-    Test multiple table actions in one go
-    """
-    st_timestr = "2023-12-03"
-    fin_timestr = "2023-12-05"
-    ppss = mock_ppss(
-        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
-        "sapphire-mainnet",
-        ".",
-        st_timestr=st_timestr,
-        fin_timestr=fin_timestr,
-    )
-
-    table = Table(table_name, table_df_schema, ppss)
-    table.df = pl.DataFrame([], table_df_schema)
-    assert len(table.df) == 0
-    table.df = pl.DataFrame([mocked_object], table_df_schema)
-    table.load()
-
-    assert len(table.df) == 1
-
-
-def test_get_pdr_df():
-    """
-    Test multiple table actions in one go
-    """
-
-    st_timestr = "2023-12-03"
-    fin_timestr = "2023-12-05"
-    ppss = mock_ppss(
-        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
-        "sapphire-mainnet",
-        ".",
-        st_timestr=st_timestr,
-        fin_timestr=fin_timestr,
-    )
-
-    table = Table(table_name, table_df_schema, ppss)
-
-    save_backoff_limit = 5000
-    pagination_limit = 1000
-    st_timest = UnixTimeMs(1701634400000)
-    fin_timest = UnixTimeMs(1701634400000)
-    table.get_pdr_df(
-        mock_fetch_function,
-        "sapphire-mainnet",
-        st_timest,
-        fin_timest,
-        save_backoff_limit,
-        pagination_limit,
-        {"contract_list": ["0x123"]},
-    )
-    assert len(table.df) == 1
-
-
-def test_get_pdr_df_multiple_fetches():
-    """
-    Test multiple table actions in one go
-    """
-
-    st_timestr = "2023-12-03_00:00"
-    fin_timestr = "2023-12-03_16:00"
-    ppss = mock_ppss(
-        [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
-        "sapphire-mainnet",
-        ".",
-        st_timestr=st_timestr,
-        fin_timestr=fin_timestr,
-    )
-
-    table = Table("test_prediction_table_multiple", predictions_schema, ppss)
-    captured_output = StringIO()
-    sys.stdout = captured_output
-
-    save_backoff_limit = 40
-    pagination_limit = 20
-    st_timest = UnixTimeMs(1704110400000)
-    fin_timest = UnixTimeMs(1704111600000)
-    table.get_pdr_df(
-        fetch_function=fetch_filtered_predictions,
-        network="sapphire-mainnet",
-        st_ut=st_timest,
-        fin_ut=fin_timest,
-        save_backoff_limit=save_backoff_limit,
-        pagination_limit=pagination_limit,
-        config={"contract_list": ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"]},
-    )
-    printed_text = captured_output.getvalue().strip()
-
-    # test fetches multiple times
-    count_fetches = printed_text.count("Fetched")
-    assert count_fetches == 3
-
-    # test saves multiple times
-    count_saves = printed_text.count("Saved")
-    assert count_saves == 2
-
-    assert len(table.df) == 50
+    assert "Appended 1 rows to db table: pdr_predictions" in caplog.text
