@@ -14,11 +14,10 @@ from plotly.subplots import make_subplots
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
 from pdr_backend.statutil.autocorrelation_plotdata import (
-    AutocorrelationPlotdata,
     AutocorrelationPlotdataFactory,
 )    
 from pdr_backend.statutil.autocorrelation_plotter import add_corr_traces
-from pdr_backend.statutil.dist_plotdata import DistPlotdata, DistPlotdataFactory
+from pdr_backend.statutil.dist_plotdata import DistPlotdataFactory
 from pdr_backend.statutil.dist_plotter import add_pdf, add_cdf, add_nq
 
 HEIGHT = 7.5
@@ -375,37 +374,55 @@ class SimPlotter:
         fig.update_yaxes(title_text="log loss", row=3, col=1)
 
     @enforce_types
-    def plot_prediction_residuals(self):
-        # set titles
-        aim = self.st.aim
-        s1 = "Residuals pdf"
-        s2 = "Residuals vs time"
-        s3 = "Residuals cdf"
-        s4 = ""
-        s5 = "Residuals nq"
-        s6 = "Residuals correlogram"
-
-        # data
-        x = self.st.aim.yerrs
-        d_dist: DistplotData = DistPlotdataFactory.build(x)
-        nlags = 10 # magic number alert # FIX ME: have spinner, like ARIMA feeds
-        d_corr: AutocorrelationPlotdata = \
-            AutocorrelationPlotdataFactory.build(x, nlags=nlags)
-
-        # make subplots
+    def plot_prediction_residuals_dist(self):
+        # calc data
+        d = DistPlotdataFactory.build(self.st.aim.yerrs)
+        
+        # initialize subplots
+        s1, s2, s3 = "Residuals distribution", "", ""
         fig = make_subplots(
             rows=3,
-            cols=2,
-            subplot_titles=(s1, s2, s3, s4, s5, s6),
-            vertical_spacing=0.07,
+            cols=1,
+            subplot_titles=(s1, s2, s3),
+            vertical_spacing=0.02,
+            shared_xaxes=True,
         )
 
         # fill in subplots
-        add_pdf(fig, d_dist, row=1, col=1, xaxis_title="residual")
-        add_cdf(fig, d_dist, row=2, col=1, xaxis_title="residual")
-        add_nq(fig, d_dist, row=3, col=1, xaxis_title="residual")
-        self._add_subplot_residual_vs_time(fig, row=1, col=2)
-        add_corr_traces(fig, d_corr.acf_results, row=3, col=2, ylabel="ACF")
+        add_pdf(fig, d, row=1, col=1, xaxis_title="")
+        add_cdf(fig, d, row=2, col=1, xaxis_title="")
+        add_nq(fig, d, row=3, col=1, xaxis_title="residual")
+
+        # global: set minor ticks
+        minor = {"ticks": "inside", "showgrid": True}
+        fig.update_yaxes(minor=minor, row=1, col=1)
+        for row in [2, 3, 4, 5]:
+            fig.update_yaxes(minor=minor, row=row, col=1)
+            fig.update_xaxes(minor=minor, row=row, col=1)
+
+        return fig
+
+    @enforce_types
+    def plot_prediction_residuals_other(self):
+        # calc data
+        nlags = 10 # magic number alert # FIX ME: have spinner, like ARIMA feeds
+        d = AutocorrelationPlotdataFactory.build(self.st.aim.yerrs, nlags=nlags)
+
+        # initialize subplots
+        s1 = "Residuals vs time"
+        s2 = "Residuals correlogram"
+        fig = make_subplots(
+            rows=2,
+            cols=1,
+            subplot_titles=(s1, s2),
+            vertical_spacing=0.12,
+        )
+
+        # fill in subplots
+        self._add_subplot_residual_vs_time(fig, row=1, col=1)
+        add_corr_traces(
+            fig, d.acf_results, row=2, col=1, ylabel="autocorrelation (ACF)",
+        )
 
         return fig
 

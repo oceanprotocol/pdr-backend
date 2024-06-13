@@ -165,7 +165,7 @@ def add_nq(fig, d: DistPlotdata, row: int, col: int, xaxis_title: str = "x"):
         rows=[row] * 4,
         cols=[col] * 4,
     )
-    fig.update_xaxes(title="residual (error)", row=row, col=col)
+    fig.update_xaxes(title="residual (= actual - predicted)", row=row, col=col)
     fig.update_yaxes(title="normal quantile (nq)", row=row, col=col)
     fig.update_yaxes(minallowed=-6, maxallowed=+4, row=row, col=col)
 
