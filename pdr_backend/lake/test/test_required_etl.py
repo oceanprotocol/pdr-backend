@@ -103,6 +103,8 @@ def test_etl_do_bronze_step(_sample_etl):
 )
 def test_etl_do_incremental_bronze_step(_sample_etl):
     etl, db, gql_tables = _sample_etl
+
+    # We are gonna operate the ETL manually in 3 steps
     etl._clamp_checkpoints_to_ppss = True
     
     def _step1():
