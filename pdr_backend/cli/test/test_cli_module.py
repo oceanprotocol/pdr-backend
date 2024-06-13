@@ -32,7 +32,7 @@ from pdr_backend.cli.cli_module import (
     # (and, main)
     _do_main,
 )
-from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.ppss.ppss import PPSS as PPSSClass
 
 
 class _APPROACH:
@@ -53,6 +53,13 @@ class _APPROACH_BAD:
 
 class _PPSS:
     PPSS_FILE = os.path.abspath("ppss.yaml")
+
+
+class _PPSS_OBJ:
+    PPSS = PPSSClass(
+        yaml_filename=os.path.abspath("ppss.yaml"),
+        network="development",
+    )
 
 
 class _NETWORK:
@@ -110,7 +117,7 @@ class _Base:
 
 class MockArgParser_PPSS(_Base):
     def parse_args(self):
-        class MockArgs(Namespace, _PPSS):
+        class MockArgs(Namespace, _PPSS, _PPSS_OBJ):
             pass
 
         return MockArgs()
@@ -118,7 +125,7 @@ class MockArgParser_PPSS(_Base):
 
 class MockArgParser_PPSS_NETWORK(_Base):
     def parse_args(self):
-        class MockArgs(Namespace, _PPSS, _NETWORK):
+        class MockArgs(Namespace, _PPSS, _NETWORK, _PPSS_OBJ):
             pass
 
         return MockArgs()
@@ -130,7 +137,7 @@ class MockArgParser_APPROACH_PPSS_NETWORK(_Base):
         super().__init__()
 
     def parse_args(self):
-        class MockArgs(Namespace, self.approach, _PPSS, _NETWORK):
+        class MockArgs(Namespace, self.approach, _PPSS, _NETWORK, _PPSS_OBJ):
             pass
 
         return MockArgs()
@@ -138,7 +145,7 @@ class MockArgParser_APPROACH_PPSS_NETWORK(_Base):
 
 class MockArgParser_PPSS_NETWORK_LOOKBACK(_Base):
     def parse_args(self):
-        class MockArgs(Namespace, _PPSS, _NETWORK, _LOOKBACK):
+        class MockArgs(Namespace, _PPSS, _NETWORK, _LOOKBACK, _PPSS_OBJ):
             pass
 
         return MockArgs()
@@ -147,7 +154,7 @@ class MockArgParser_PPSS_NETWORK_LOOKBACK(_Base):
 class MockArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS(_Base):
     def parse_args(self):
         class MockArgs(  # pylint: disable=too-many-ancestors
-            Namespace, _ST, _END, _PQDIR, _NETWORK, _PPSS, _PDRS
+            Namespace, _ST, _END, _PQDIR, _NETWORK, _PPSS, _PDRS, _PPSS_OBJ
         ):
             pass
 
@@ -157,7 +164,7 @@ class MockArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS(_Base):
 class MockArgParser_ST_END_PQDIR_NETWORK_PPSS_FEEDS(_Base):
     def parse_args(self):
         class MockArgs(  # pylint: disable=too-many-ancestors
-            Namespace, _ST, _END, _PQDIR, _NETWORK, _PPSS, _FEEDS
+            Namespace, _ST, _END, _PQDIR, _NETWORK, _PPSS, _FEEDS, _PPSS_OBJ
         ):
             pass
 
@@ -174,7 +181,7 @@ class MockArgParser_NUM(_Base):
 
 class MockArgParser_ACCOUNT_PPSS_NETWORK(_Base):
     def parse_args(self):
-        class MockArgs(Namespace, _ACCOUNT, _PPSS, _NETWORK):
+        class MockArgs(Namespace, _ACCOUNT, _PPSS, _NETWORK, _PPSS_OBJ):
             pass
 
         return MockArgs()
@@ -182,8 +189,15 @@ class MockArgParser_ACCOUNT_PPSS_NETWORK(_Base):
 
 class MockArgParser_TOKEN_AMOUNT_ACCOUNTS_TOKEN_PPSS_NETWORK(_Base):
     def parse_args(self):
+        # pylint: disable=too-many-ancestors
         class MockArgs(
-            Namespace, _TOKEN_AMOUNT, _ACCOUNTS, _PPSS, _NETWORK, _NATIVE_TOKEN
+            Namespace,
+            _TOKEN_AMOUNT,
+            _ACCOUNTS,
+            _PPSS,
+            _NETWORK,
+            _NATIVE_TOKEN,
+            _PPSS_OBJ,
         ):
             pass
 
@@ -194,7 +208,7 @@ class MockArgParser_TOKEN_AMOUNT_ACCOUNTS_TOKEN_PPSS_NETWORK(_Base):
 class MockAgent:
     was_run = False
 
-    def __init__(self, ppss: PPSS, *args, **kwargs):
+    def __init__(self, ppss: PPSSClass, *args, **kwargs):
         pass
 
     def run(self, *args, **kwargs):  # pylint: disable=unused-argument

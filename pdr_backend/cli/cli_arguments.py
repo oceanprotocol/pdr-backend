@@ -45,6 +45,7 @@ Example: pdr lake ppss.yaml sapphire-mainnet --lake_ss.st_timestr=2023-01-01 --l
 HELP_OTHER_TOOLS = """
 Power tools:
   pdr multisim PPSS_FILE
+  pdr arima_plots PPSS_FILE
   pdr deployer (for >1 predictoor bots)
   pdr lake PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
@@ -58,14 +59,6 @@ Utilities:
   pdr print_balances ACCOUNT PPSS_FILE NETWORK
   pdr fund_accounts TOKEN_AMOUNT ACCOUNTS PPSS_FILE NETWORK --NATIVE_TOKEN
   pdr deploy_pred_submitter_mgr PPSS_FILE NETWORK
-
-Inspect and manage lake:
-  pdr lake describe PPSS_FILE NETWORK --HTML
-  pdr lake query PPSS_FILE NETWORK "SQL QUERY ..."
-  pdr lake raw drop PPSS_FILE NETWORK ST
-  pdr lake raw update PPSS_FILE NETWORK
-  pdr lake etl drop PPSS_FILE NETWORK ST
-  pdr lake etl update PPSS_FILE NETWORK
 
 Tools for core team:
   pdr trueval PPSS_FILE NETWORK
@@ -544,6 +537,7 @@ def print_args(arguments: Namespace, nested_args: dict):
 
 # main tools
 SimArgParser = _ArgParser_PPSS
+ArimaArgParser = _ArgParser_PPSS
 PredictoorArgParser = _ArgParser_PPSS_NETWORK
 TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
 ClaimOceanArgParser = _ArgParser_PPSS
@@ -600,6 +594,13 @@ class SimPlotsArgParser(CustomArgParser):
         )
 
 
+class ArimaPlotsArgParser(CustomArgParser):
+    # pylint: disable=unused-argument
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_arguments_bulk(command_name, ["PPSS"])
+
+
 # below, list each entry in defined_parsers in same order as HELP_LONG
 defined_parsers = {
     # main tools
@@ -645,6 +646,7 @@ defined_parsers = {
     "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
     "do_sim_plots": SimPlotsArgParser("Visualize simulation data", "sim_plots"),
+    "do_arima_plots": ArimaArgParser("Visualize ARIMA data", "arima_plots"),
 }
 
 
