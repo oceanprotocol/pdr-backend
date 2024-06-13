@@ -31,5 +31,6 @@ get_callbacks(app)
 
 def sim_dash(args):
     app.run_id = args.run_id
-    webbrowser.open(f"http://127.0.0.1:{args.port}/")
-    app.run(debug=True, port=args.port)
+    if not args.debug_mode:
+        webbrowser.open(f"http://127.0.0.1:{args.port}/")
+    app.run(debug=args.debug_mode, port=args.port)
