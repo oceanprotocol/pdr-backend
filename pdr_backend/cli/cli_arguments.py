@@ -39,7 +39,8 @@ Transactions are signed with envvar 'PRIVATE_KEY`.
 
 HELP_DOT = """
 To pass args down to ppss, use dot notation.
-Example: pdr lake ppss.yaml sapphire-mainnet --lake_ss.st_timestr=2023-01-01 --lake_ss.fin_timestr=2023-12-31
+Example: pdr lake raw update ppss.yaml sapphire-mainnet
+pdr lake raw drop ppss.yaml sapphire-mainnet 01-06-2023
 """
 
 HELP_OTHER_TOOLS = """
@@ -47,12 +48,12 @@ Power tools:
   pdr multisim PPSS_FILE
   pdr arima_plots PPSS_FILE
   pdr deployer (for >1 predictoor bots)
-  pdr lake PPSS_FILE NETWORK
+  pdr lake LAKE_TYPE(raw, etl) ACTION(drop, update) PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
 
 Utilities:
   pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
-  pdr get_predictions_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
+  pdr    ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr get_traction_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr check_network PPSS_FILE NETWORK --LOOKBACK_HOURS
   pdr create_accounts NUM PPSS_FILE NETWORK
