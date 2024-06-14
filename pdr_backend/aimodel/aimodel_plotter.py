@@ -27,9 +27,6 @@ def plot_aimodel_response(aimodel_plotdata: AimodelPlotdata):
     return _plot_contour(aimodel_plotdata)
 
 
-J = np.array([], dtype=float)  # jitter
-
-
 @enforce_types
 def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     """
@@ -108,12 +105,10 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     )
 
     # scatterplots blue=training_T, brown=training_F
-    global J
-    while J.shape[0] < N:
-        J = np.append(J, np.random.rand() * 0.03)
+    jj = _get_jitter(N)
     yfalse = np.invert(ytrue)
-    y1 = ytrue[ytrue] - J[ytrue] + 0.015
-    y2 = ytrue[yfalse] + J[yfalse] - 0.015
+    y1 = ytrue[ytrue] - jj[ytrue] + 0.015
+    y2 = ytrue[yfalse] + jj[yfalse] - 0.015
 
     fig.add_trace(
         go.Scatter(
@@ -421,3 +416,14 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
     fig.update_layout(title="Variable importances")
 
     return fig
+
+
+J = np.array([], dtype=float)  # jitter
+
+
+@enforce_types
+def _get_jitter(N: int) -> np.ndarray:
+    global J
+    while J.shape[0] < N:
+        J = np.append(J, np.random.rand())
+    return J[:N]

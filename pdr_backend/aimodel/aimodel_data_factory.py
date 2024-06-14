@@ -97,7 +97,7 @@ class AimodelDataFactory:
         assert "datetime" not in mergedohlcv_df.columns
 
         # log
-        logger.info("Create model X/y data: begin.")
+        logger.debug("Create model X/y data: begin.")
 
         # condition mergedohlcv_df
         # - every column should be ordered with oldest first, youngest last.
@@ -176,7 +176,7 @@ class AimodelDataFactory:
         assert "datetime" not in x_df.columns
 
         # log
-        logger.info("Create model X/y data: done.")
+        logger.debug("Create model X/y data: done.")
 
         # return
         ycont = y
