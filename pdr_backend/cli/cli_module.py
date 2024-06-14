@@ -296,4 +296,4 @@ def do_arima_plots(args, nested_args=None):
         network="development",
         nested_override_args=nested_args,
     )
-    arima_dash(ppss)
+    arima_dash(ppss, args.debug_mode)

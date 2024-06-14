@@ -20,6 +20,7 @@ class Aimodel:
         self._y_thr = y_thr  # threshold value for True vs False
         self._sk_classif = sk_classif  # sklearn classifier model
         self._imps_tup = None  # tuple of (imps_avg, imps_stddev)
+        self._ycont_offset = 0.0  # offset to the output of regression
 
     @property
     def do_regr(self) -> bool:
@@ -102,12 +103,16 @@ class Aimodel:
         """
         assert self.do_regr
         N = X.shape[0]
-        X = self._scaler.transform(X)
+        X_tr = self._scaler.transform(X)
         n_regrs = len(self._sk_regrs)
         Ycont = np.zeros((N, n_regrs), dtype=float)
         for i in range(n_regrs):
-            Ycont[:, i] = self._sk_regrs[i].predict(X)
+            Ycont[:, i] = self._sk_regrs[i].predict(X_tr) + self._ycont_offset
         return Ycont
+
+    @enforce_types
+    def set_ycont_offset(self, ycont_offset: float):
+        self._ycont_offset = ycont_offset
 
     @enforce_types
     def importance_per_var(self, include_stddev: bool = False):

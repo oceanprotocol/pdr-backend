@@ -31,9 +31,10 @@ predictoor_ss:
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n: 1 # no. epochs that model looks back, to predict next
     approach: ClassifLinearRidge # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVC | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrConstant
-    weight_recent: 10x_5x # 10x_5x | None
+    weight_recent: 10x_5x # 10x_5x | 10000x | None
     balance_classes: None # SMOTE | RandomOverSampler | None
     calibrate_probs: CalibratedClassifierCV_Sigmoid # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
+    calibrate_regr: CurrentYval # CurrentYval | None
     train_every_n_epochs: 1
 
 exchange_mgr_ss: # used by trader and sim
