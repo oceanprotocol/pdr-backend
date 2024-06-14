@@ -40,7 +40,7 @@ Transactions are signed with envvar 'PRIVATE_KEY`.
 HELP_DOT = """
 To pass args down to ppss, use dot notation.
 Example: pdr lake raw update ppss.yaml sapphire-mainnet
-pdr lake raw drop ppss.yaml sapphire-mainnet 01-06-2023
+pdr lake raw drop ppss.yaml sapphire-mainnet 2023-06-01
 """
 
 HELP_OTHER_TOOLS = """
