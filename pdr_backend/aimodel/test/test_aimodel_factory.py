@@ -1,5 +1,5 @@
 from unittest.mock import Mock
-
+import os
 import numpy as np
 from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
@@ -18,16 +18,12 @@ from pdr_backend.ppss.aimodel_ss import (
     AimodelSS,
     aimodel_ss_test_dict,
     APPROACH_OPTIONS,
+    REGR_APPROACH_OPTIONS,
 )
 from pdr_backend.statutil.scoring import classif_acc
 
-SHOW_PLOT = False  # only turn on for manual testing
-
-
-@enforce_types
-def test_aimodel_factory_SHOW_PLOT():
-    """SHOW_PLOT should only be set to True temporarily in local testing."""
-    assert not SHOW_PLOT
+# set env variable as true to show plots
+SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 def test_aimodel_typical_classif():
@@ -400,5 +396,78 @@ def test_aimodel_nvars_varimps(n: int):
     figure = plot_aimodel_varimps(plot_data)
     assert isinstance(figure, Figure)
 
+    if SHOW_PLOT:
+        figure.show()
+
+
+@enforce_types
+@pytest.mark.parametrize("approach", REGR_APPROACH_OPTIONS)
+def test_aimodel__regr_0error__via_10000x(approach):
+    d = aimodel_ss_test_dict(
+        approach=approach,
+        weight_recent="10000x",  # main setting
+        balance_classes="None",
+        calibrate_probs="None",
+        calibrate_regr="None",  # explicitly None here
+    )
+    for curprice_xval in [-8, -5, -2, 2, 5, 8]:
+        _test_aimodel__regr_0error(d, curprice_xval)
+
+
+@enforce_types
+@pytest.mark.parametrize("approach", REGR_APPROACH_OPTIONS)
+def test_aimodel__regr_0error__via_calibrate_regr(approach):
+    d = aimodel_ss_test_dict(
+        approach=approach,
+        weight_recent="None",  # explicitly None here
+        balance_classes="None",
+        calibrate_probs="None",
+        calibrate_regr="CurrentYval",  # main setting
+    )
+    for curprice_xval in [-8, -5, -2, 2, 5, 8]:
+        _test_aimodel__regr_0error(d, curprice_xval)
+
+
+@enforce_types
+def _test_aimodel__regr_0error(d: dict, curprice_xval):
+    """Want regressor to have near-zero error at current price. See #1213"""
+    ss = AimodelSS(d)
+    if "constant" in ss.approach.lower():
+        return
+    factory = AimodelFactory(ss)
+
+    # X/y data
+    N = 50
+    x = np.random.uniform(-10, +10, (N,))
+    x[-1] = curprice_xval
+    ycont = 3.0 + 4.0 * x + 1.0 * x**2
+    X = np.reshape(x, (N, 1))
+    y_thr = 1.0  # arbitrary
+    ytrue = ycont > y_thr
+
+    # build model
+    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
+
+    # is error at current near-zero?
+    yhat = model.predict_ycont(X)
+    err = abs(ycont[-1] - yhat[-1]) / np.std(ycont)
+    assert abs(err) < 0.1, err
+
+    # plot response
+    colnames = ["x0"]
+    slicing_x = np.array([0.1])  # arbitrary
+    sweep_vars = [0]
+    aimodel_plotdata = AimodelPlotdata(
+        model,
+        X,
+        ytrue,
+        ycont,
+        y_thr,
+        colnames,
+        slicing_x,
+        sweep_vars,
+    )
+    figure = plot_aimodel_response(aimodel_plotdata)
+    assert isinstance(figure, Figure)
     if SHOW_PLOT:
         figure.show()
