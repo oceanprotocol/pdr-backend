@@ -48,12 +48,13 @@ Power tools:
   pdr multisim PPSS_FILE
   pdr arima_plots PPSS_FILE [--debug_mode False]
   pdr deployer (for >1 predictoor bots)
-  pdr lake LAKE_TYPE(raw, etl) ACTION(drop, update) PPSS_FILE NETWORK
+  pdr lake raw update PPSS_FILE NETWORK
+  pdt lake raw drop PPSS_FILE NETWORK ST
   pdr analytics PPSS_FILE NETWORK
 
 Utilities:
   pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
-  pdr    ST END PQDIR PPSS_FILE NETWORK --FEEDS
+  pdr get_predictions_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr get_traction_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr check_network PPSS_FILE NETWORK --LOOKBACK_HOURS
   pdr create_accounts NUM PPSS_FILE NETWORK
@@ -561,7 +562,6 @@ ClaimRoseArgParser = _ArgParser_PPSS
 # power tools
 MultisimArgParser = _ArgParser_PPSS
 DeployerArgPaser = _ArgParser_DEPLOYER
-OHLCVArgParser = _ArgParser_PPSS_NETWORK
 LakeArgParser = _ArgParser_PPSS_NETWORK
 AnalyticsArgParser = _ArgParser_PPSS_NETWORK
 
@@ -642,7 +642,7 @@ defined_parsers = {
     "do_multisim": MultisimArgParser("Run >1 simulations", "multisim"),
     "do_deployer": DeployerArgPaser(),
     "do_lake": LakeArgParser("Run the lake tool", "lake"),
-    "do_ohlcv": OHLCVArgParser("Run the ohlcv tool", "ohlcv"),
+    "do_analytics": AnalyticsArgParser("Run the analytics tool", "analytics"),
     "do_deploy_pred_submitter_mgr": _ArgParser_PPSS_NETWORK(
         "Deploy prediction submitter manager contract", "deploy_pred_submitter_mgr"
     ),
