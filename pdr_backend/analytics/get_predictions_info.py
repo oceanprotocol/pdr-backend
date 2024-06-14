@@ -32,18 +32,6 @@ def _checks_for_empty_df(df, table_name: str):
 
 
 @enforce_types
-def _checks_for_empty_df_with_logging(df, table_name: str):
-    if df is None:
-        logger.error("No table found: %s", table_name)
-        return False
-    if len(df) == 0:
-        logger.error("No records to summarize. Please adjust params.")
-        return False
-
-    return True
-
-
-@enforce_types
 def get_predictions_info_main(
     ppss: PPSS, start_timestr: str, end_timestr: str, feed_addrs: List[str]
 ):
@@ -69,10 +57,7 @@ def get_predictions_info_main(
 
     predictions_df = DuckDBDataStore(ppss.lake_ss.lake_dir).query_data(query)
 
-    status = _checks_for_empty_df_with_logging(predictions_df, table_name)
-
-    if not status:
-        return
+    _checks_for_empty_df(predictions_df, table_name)
 
     feed_summary_df = get_feed_summary_stats(predictions_df)
     logger.info(feed_summary_df)
@@ -101,10 +86,7 @@ def get_predictoors_info_main(
 
     predictions_df = DuckDBDataStore(ppss.lake_ss.lake_dir).query_data(query)
 
-    status = _checks_for_empty_df_with_logging(predictions_df, table_name)
-
-    if not status:
-        return
+    _checks_for_empty_df(predictions_df, table_name)
 
     predictoor_summary_df = get_predictoor_summary_stats(predictions_df)
     logger.info(predictoor_summary_df)
@@ -124,10 +106,7 @@ def get_traction_info_main(ppss: PPSS, start_timestr: str, end_timestr: str):
 
     predictions_df = DuckDBDataStore(ppss.lake_ss.lake_dir).query_data(query)
 
-    status = _checks_for_empty_df_with_logging(predictions_df, table_name)
-
-    if not status:
-        return
+    _checks_for_empty_df(predictions_df, table_name)
 
     # calculate predictoor traction statistics and draw plots
     stats_df = get_traction_statistics(predictions_df)
