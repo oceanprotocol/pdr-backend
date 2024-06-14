@@ -21,7 +21,6 @@ from sklearn.svm import SVC
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.ppss.aimodel_ss import AimodelSS
 
-
 logger = logging.getLogger("aimodel_factory")
 
 
@@ -76,15 +75,13 @@ class AimodelFactory:
 
         # weight newest sample 10x, and 2nd-newest sample 5x
         # - assumes that newest sample is at index -1, and 2nd-newest at -2
-        if do_constant or ss.weight_recent == "None":
+        n_repeat1, n_repeat2 = ss.weight_recent_n
+        if do_constant or n_repeat1 == 0:
             pass
-        elif ss.weight_recent == "10x_5x":
-            n_repeat1, n_repeat2 = 10, 5
-
+        else:
             xrecent1, xrecent2 = X[-1, :], X[-2, :]
             X = np.append(X, np.repeat(xrecent1[None], n_repeat1, axis=0), axis=0)
             X = np.append(X, np.repeat(xrecent2[None], n_repeat2, axis=0), axis=0)
-
             yrecent1, yrecent2 = ycont[-1], ycont[-2]
             ycont = np.append(ycont, [yrecent1] * n_repeat1)
             ycont = np.append(ycont, [yrecent2] * n_repeat2)
@@ -96,12 +93,12 @@ class AimodelFactory:
         # scale inputs
         scaler = StandardScaler()
         scaler.fit(X)
-        X = scaler.transform(X)
+        X_tr = scaler.transform(X)
 
         # in-place fit model
         if do_constant:
             sk_regr = DummyRegressor(strategy="constant", constant=ycont[0])
-            _fit(sk_regr, X, ycont, show_warnings)
+            _fit(sk_regr, X_tr, ycont, show_warnings)
             sk_regrs = [sk_regr]
         else:
             sk_regrs = []
@@ -109,13 +106,19 @@ class AimodelFactory:
             for _ in range(n_regrs):
                 N = len(ycont)
                 I = np.random.choice(a=N, size=N, replace=True)
-                X_I, ycont_I = X[I, :], ycont[I]
+                X_tr_I, ycont_I = X_tr[I, :], ycont[I]
                 sk_regr = _approach_to_skm(ss.approach)
-                _fit(sk_regr, X_I, ycont_I, show_warnings)
+                _fit(sk_regr, X_tr_I, ycont_I, show_warnings)
                 sk_regrs.append(sk_regr)
 
         # model
         model = Aimodel(scaler, sk_regrs, y_thr, None)
+
+        if ss.calibrate_regr == "CurrentYval":
+            current_yval = ycont[-1]
+            current_yvalhat = model.predict_ycont(X)[-1]
+            ycont_offset = current_yval - current_yvalhat
+            model.set_ycont_offset(ycont_offset)
 
         # variable importances
         model.set_importance_per_var(X, ycont)
@@ -149,19 +152,16 @@ class AimodelFactory:
 
         # weight newest sample 10x, and 2nd-newest sample 5x
         # - assumes that newest sample is at index -1, and 2nd-newest at -2
-        if do_constant or ss.weight_recent == "None":
+        n_repeat1, n_repeat2 = ss.weight_recent_n
+        if do_constant or n_repeat1 == 0:
             pass
-        elif ss.weight_recent == "10x_5x":
-            n_repeat1, n_repeat2 = 10, 5
-
+        else:
             xrecent1, xrecent2 = X[-1, :], X[-2, :]
             X = np.append(X, np.repeat(xrecent1[None], n_repeat1, axis=0), axis=0)
             X = np.append(X, np.repeat(xrecent2[None], n_repeat2, axis=0), axis=0)
             yrecent1, yrecent2 = ytrue[-1], ytrue[-2]
             ytrue = np.append(ytrue, [yrecent1] * n_repeat1)
             ytrue = np.append(ytrue, [yrecent2] * n_repeat2)
-        else:
-            raise ValueError(ss.weight_recent)
 
         # scale inputs
         scaler = StandardScaler()
