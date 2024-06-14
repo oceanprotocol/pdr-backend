@@ -53,6 +53,7 @@ def test_aimodel_ss__nondefault_values():
             "RegrLinearLasso",
             "RegrLinearRidge",
             "RegrLinearElasticNet",
+            "RegrSarimax",
             "RegrConstant",
         ]
         assert ss.do_regr == do_regr
