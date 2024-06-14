@@ -103,11 +103,11 @@ class Aimodel:
         """
         assert self.do_regr
         N = X.shape[0]
-        X = self._scaler.transform(X)
+        X_tr = self._scaler.transform(X)
         n_regrs = len(self._sk_regrs)
         Ycont = np.zeros((N, n_regrs), dtype=float)
         for i in range(n_regrs):
-            Ycont[:, i] = self._sk_regrs[i].predict(X) + self._ycont_offset
+            Ycont[:, i] = self._sk_regrs[i].predict(X_tr) + self._ycont_offset
         return Ycont
 
     @enforce_types
