@@ -44,6 +44,9 @@ class SimEngine:
 
         self.ppss = ppss
 
+        # can be disabled by calling disable_realtime_state()
+        self.do_state_updates = True
+
         self.st = SimState(
             copy.copy(self.ppss.trader_ss.init_holdings),
         )
@@ -328,11 +331,18 @@ class SimEngine:
 
         return usdcoin_amt_recd
 
+    def disable_realtime_state(self):
+        self.do_state_updates = False
+
     @enforce_types
     def save_state(self, i: int, N: int):
         "Save state on this iteration Y/N?"
         if self.ppss.sim_ss.is_final_iter(i):
             return True, True
+
+        # don't save if disabled
+        if not self.do_state_updates:
+            return False, False
 
         # don't save first 5 iters -> not interesting
         # then save the next 5 -> "stuff's happening!"
