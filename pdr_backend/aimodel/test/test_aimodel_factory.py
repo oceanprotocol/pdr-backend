@@ -419,8 +419,8 @@ def test_aimodel__regr_0error_on_cur_price(approach):
 
     # data
     N = 50
-    x = np.random.uniform(-10, +10, (N,))
     for curprice_xval in [-8, -5, -2, 2, 5, 8]:
+        x = np.random.uniform(-10, +10, (N,))
         x[-1] = curprice_xval
         ycont = 3.0 + 4.0 * x + 1.0 * x**2
         X = np.reshape(x, (N, 1))
