@@ -30,19 +30,18 @@ def _checks_for_empty_df(df, table_name: str):
     assert df is not None, f"No table found: {table_name}"
     assert len(df) > 0, "No records to summarize. Please adjust params."
 
+
 @enforce_types
 def _checks_for_empty_df_with_logging(df, table_name: str):
     if df is None:
-        logger.error(f"No table found: {table_name}")
+        logger.error("No table found: %s", table_name)
         return False
     if len(df) == 0:
         logger.error("No records to summarize. Please adjust params.")
         return False
-    
+
     return True
 
-
-    
 
 @enforce_types
 def get_predictions_info_main(
