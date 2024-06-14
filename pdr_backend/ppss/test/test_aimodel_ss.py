@@ -9,6 +9,7 @@ from pdr_backend.ppss.aimodel_ss import (
     CALIBRATE_PROBS_OPTIONS,
     CALIBRATE_REGR_OPTIONS,
     BALANCE_CLASSES_OPTIONS,
+    REGR_APPROACH_OPTIONS,
     WEIGHT_RECENT_OPTIONS,
 )
 
@@ -51,14 +52,7 @@ def test_aimodel_ss__nondefault_values():
         ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
         assert ss.approach == approach and approach in str(ss)
 
-        do_regr = approach in [
-            "RegrLinearLS",
-            "RegrLinearLasso",
-            "RegrLinearRidge",
-            "RegrLinearElasticNet",
-            "RegrSarimax",
-            "RegrConstant",
-        ]
+        do_regr = approach in REGR_APPROACH_OPTIONS
         assert ss.do_regr == do_regr
 
     for weight_recent in WEIGHT_RECENT_OPTIONS:
