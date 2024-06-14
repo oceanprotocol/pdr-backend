@@ -404,7 +404,7 @@ def test_aimodel_nvars_varimps(n: int):
 @pytest.mark.parametrize("approach", REGR_APPROACH_OPTIONS)
 def test_aimodel__regr_0error__via_10000x(approach):
     d = aimodel_ss_test_dict(
-        approach="RegrLinearLS",
+        approach=approach,
         weight_recent="10000x",  # main setting
         balance_classes="None",
         calibrate_probs="None",
@@ -418,7 +418,7 @@ def test_aimodel__regr_0error__via_10000x(approach):
 @pytest.mark.parametrize("approach", REGR_APPROACH_OPTIONS)
 def test_aimodel__regr_0error__via_calibrate_regr(approach):
     d = aimodel_ss_test_dict(
-        approach="RegrLinearLS",
+        approach=approach,
         weight_recent="None",  # explicitly None here
         balance_classes="None",
         calibrate_probs="None",
