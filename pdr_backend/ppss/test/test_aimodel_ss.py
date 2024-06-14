@@ -7,6 +7,7 @@ from pdr_backend.ppss.aimodel_ss import (
     aimodel_ss_test_dict,
     APPROACH_OPTIONS,
     CALIBRATE_PROBS_OPTIONS,
+    CALIBRATE_REGR_OPTIONS,
     BALANCE_CLASSES_OPTIONS,
     WEIGHT_RECENT_OPTIONS,
 )
@@ -27,6 +28,7 @@ def test_aimodel_ss__default_values():
     assert (
         ss.calibrate_probs == d["calibrate_probs"] == "CalibratedClassifierCV_Sigmoid"
     )
+    assert ss.calibrate_regr == d["calibrate_regr"] == "None"
 
     # str
     assert "AimodelSS" in str(ss)
@@ -74,6 +76,10 @@ def test_aimodel_ss__nondefault_values():
         ss = AimodelSS(aimodel_ss_test_dict(calibrate_probs=calibrate_probs))
         assert ss.calibrate_probs == calibrate_probs and calibrate_probs in str(ss)
 
+    for calibrate_regr in CALIBRATE_REGR_OPTIONS:
+        ss = AimodelSS(aimodel_ss_test_dict(calibrate_regr=calibrate_regr))
+        assert ss.calibrate_regr == calibrate_regr and calibrate_regr in str(ss)
+
 
 @enforce_types
 def test_aimodel_ss__bad_inputs():
@@ -103,6 +109,9 @@ def test_aimodel_ss__bad_inputs():
 
     with pytest.raises(ValueError):
         AimodelSS(aimodel_ss_test_dict(calibrate_probs="foo"))
+
+    with pytest.raises(ValueError):
+        AimodelSS(aimodel_ss_test_dict(calibrate_regr="foo"))
 
 
 @enforce_types

@@ -21,7 +21,6 @@ from sklearn.svm import SVC
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.ppss.aimodel_ss import AimodelSS
 
-
 logger = logging.getLogger("aimodel_factory")
 
 
@@ -94,12 +93,12 @@ class AimodelFactory:
         # scale inputs
         scaler = StandardScaler()
         scaler.fit(X)
-        X = scaler.transform(X)
+        X_tr = scaler.transform(X)
 
         # in-place fit model
         if do_constant:
             sk_regr = DummyRegressor(strategy="constant", constant=ycont[0])
-            _fit(sk_regr, X, ycont, show_warnings)
+            _fit(sk_regr, X_tr, ycont, show_warnings)
             sk_regrs = [sk_regr]
         else:
             sk_regrs = []
@@ -107,13 +106,19 @@ class AimodelFactory:
             for _ in range(n_regrs):
                 N = len(ycont)
                 I = np.random.choice(a=N, size=N, replace=True)
-                X_I, ycont_I = X[I, :], ycont[I]
+                X_tr_I, ycont_I = X_tr[I, :], ycont[I]
                 sk_regr = _approach_to_skm(ss.approach)
-                _fit(sk_regr, X_I, ycont_I, show_warnings)
+                _fit(sk_regr, X_tr_I, ycont_I, show_warnings)
                 sk_regrs.append(sk_regr)
 
         # model
         model = Aimodel(scaler, sk_regrs, y_thr, None)
+
+        if ss.calibrate_regr == "CurrentYval":
+            current_yval = ycont[-1]
+            current_yvalhat = model.predict_ycont(X)[-1]
+            ycont_offset = current_yval - current_yvalhat
+            model.set_ycont_offset(ycont_offset)
 
         # variable importances
         model.set_importance_per_var(X, ycont)
