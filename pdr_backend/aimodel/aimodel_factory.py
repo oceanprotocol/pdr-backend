@@ -230,7 +230,7 @@ def _fit(skm, X, y, show_warnings: bool):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         skm.fit(X, y)
-    
+
 
 @enforce_types
 def _approach_to_skm(approach: str):

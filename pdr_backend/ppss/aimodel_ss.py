@@ -21,7 +21,7 @@ REGR_APPROACH_OPTIONS = [
     "RegrLinearRidge",
     "RegrLinearElasticNet",
     "RegrConstant",
-]   
+]
 APPROACH_OPTIONS = CLASSIF_APPROACH_OPTIONS + REGR_APPROACH_OPTIONS
 
 WEIGHT_RECENT_OPTIONS = ["10x_5x", "10000x", "None"]

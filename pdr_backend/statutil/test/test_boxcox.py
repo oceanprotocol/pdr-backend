@@ -1,3 +1,4 @@
+import os
 from enforce_typing import enforce_types
 from scipy import stats
 
@@ -5,13 +6,8 @@ from pdr_backend.lake.test.resources2_btc import BTC_history
 from pdr_backend.statutil.dist_plotter import plot_dist
 from pdr_backend.statutil.boxcox import safe_boxcox
 
-SHOW_PLOT = False  # only turn on for manual testing
-
-
-@enforce_types
-def test_boxcox_SHOW_PLOT():
-    """SHOW_PLOT should only be set to True temporarily in local testing."""
-    assert not SHOW_PLOT
+# set env variable as true to show plots
+SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 @enforce_types

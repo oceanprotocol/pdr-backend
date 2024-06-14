@@ -1,5 +1,5 @@
 from unittest.mock import Mock
-
+import os
 import numpy as np
 from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
@@ -22,13 +22,8 @@ from pdr_backend.ppss.aimodel_ss import (
 )
 from pdr_backend.statutil.scoring import classif_acc
 
-SHOW_PLOT = True  # only turn on for manual testing
-
-
-@enforce_types
-def test_aimodel_factory_SHOW_PLOT():
-    """SHOW_PLOT should only be set to True temporarily in local testing."""
-    assert not SHOW_PLOT
+# set env variable as true to show plots
+SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 def test_aimodel_typical_classif():
@@ -411,13 +406,13 @@ def test_aimodel__regr_0error_on_cur_price(approach):
     """Want regressor to have near-zero error at current price. See #1213"""
     if "constant" in approach.lower():
         return
-    
+
     # settings, factory
     d = aimodel_ss_test_dict(
-        approach = "RegrLinearLS",
-        weight_recent = "10000x",
-        balance_classes = "None",
-        calibrate_probs = "None",
+        approach="RegrLinearLS",
+        weight_recent="10000x",
+        balance_classes="None",
+        calibrate_probs="None",
     )
     ss = AimodelSS(d)
     factory = AimodelFactory(ss)
@@ -425,11 +420,11 @@ def test_aimodel__regr_0error_on_cur_price(approach):
     # data
     N = 50
     x = np.random.uniform(-10, +10, (N,))
-    for curprice_xval in [-8, -5, -2, 2, 5, 8]: 
+    for curprice_xval in [-8, -5, -2, 2, 5, 8]:
         x[-1] = curprice_xval
-        ycont = 3.0 + 4.0 * x + 1.0 * x ** 2
-        X = np.reshape(x, (N,1))
-        y_thr = 1.0 # arbitrary
+        ycont = 3.0 + 4.0 * x + 1.0 * x**2
+        X = np.reshape(x, (N, 1))
+        y_thr = 1.0  # arbitrary
         ytrue = ycont > y_thr
 
         # build model
