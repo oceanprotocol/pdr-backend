@@ -63,8 +63,8 @@ def test_aimodel_ss__nondefault_values():
         assert ss.weight_recent == weight_recent and weight_recent in str(ss)
         if ss.weight_recent == "10x_5x":
             assert ss.weight_recent_n == (10, 5)
-        if ss.weight_recent == "1000x":
-            assert ss.weight_recent_n == (1000, 0)
+        if ss.weight_recent == "10000x":
+            assert ss.weight_recent_n == (10000, 0)
 
     for balance_classes in BALANCE_CLASSES_OPTIONS:
         ss = AimodelSS(aimodel_ss_test_dict(balance_classes=balance_classes))

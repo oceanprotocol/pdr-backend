@@ -18,6 +18,7 @@ from pdr_backend.ppss.aimodel_ss import (
     AimodelSS,
     aimodel_ss_test_dict,
     APPROACH_OPTIONS,
+    REGR_APPROACH_OPTIONS,
 )
 from pdr_backend.statutil.scoring import classif_acc
 
@@ -402,3 +403,58 @@ def test_aimodel_nvars_varimps(n: int):
 
     if SHOW_PLOT:
         figure.show()
+
+
+@enforce_types
+@pytest.mark.parametrize("approach", REGR_APPROACH_OPTIONS)
+def test_aimodel__regr_0error_on_cur_price(approach):
+    """Want regressor to have near-zero error at current price. See #1213"""
+    if "constant" in approach.lower():
+        return
+    
+    # settings, factory
+    d = aimodel_ss_test_dict(
+        approach = "RegrLinearLS",
+        weight_recent = "10000x",
+        balance_classes = "None",
+        calibrate_probs = "None",
+    )
+    ss = AimodelSS(d)
+    factory = AimodelFactory(ss)
+
+    # data
+    N = 50
+    x = np.random.uniform(-10, +10, (N,))
+    for curprice_xval in [-8, -5, -2, 2, 5, 8]: 
+        x[-1] = curprice_xval
+        ycont = 3.0 + 4.0 * x + 1.0 * x ** 2
+        X = np.reshape(x, (N,1))
+        y_thr = 1.0 # arbitrary
+        ytrue = ycont > y_thr
+
+        # build model
+        model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
+
+        # is error at current near-zero?
+        yhat = model.predict_ycont(X)
+        err = abs(ycont[-1] - yhat[-1]) / np.std(ycont)
+        assert abs(err) < 0.1, err
+
+        # plot response
+        colnames = ["x0"]
+        slicing_x = np.array([0.1])  # arbitrary
+        sweep_vars = [0]
+        aimodel_plotdata = AimodelPlotdata(
+            model,
+            X,
+            ytrue,
+            ycont,
+            y_thr,
+            colnames,
+            slicing_x,
+            sweep_vars,
+        )
+        figure = plot_aimodel_response(aimodel_plotdata)
+        assert isinstance(figure, Figure)
+        if SHOW_PLOT:
+            figure.show()

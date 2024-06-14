@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.strutil import StrMixin
 
-APPROACH_OPTIONS = [
+CLASSIF_APPROACH_OPTIONS = [
     "ClassifLinearLasso",
     "ClassifLinearLasso_Balanced",
     "ClassifLinearRidge",
@@ -14,13 +14,17 @@ APPROACH_OPTIONS = [
     "ClassifLinearElasticNet_Balanced",
     "ClassifLinearSVM",
     "ClassifConstant",
+]
+REGR_APPROACH_OPTIONS = [
     "RegrLinearLS",
     "RegrLinearLasso",
     "RegrLinearRidge",
     "RegrLinearElasticNet",
     "RegrConstant",
-]
-WEIGHT_RECENT_OPTIONS = ["10x_5x", "1000x", "None"]
+]   
+APPROACH_OPTIONS = CLASSIF_APPROACH_OPTIONS + REGR_APPROACH_OPTIONS
+
+WEIGHT_RECENT_OPTIONS = ["10x_5x", "10000x", "None"]
 BALANCE_CLASSES_OPTIONS = ["SMOTE", "RandomOverSampler", "None"]
 CALIBRATE_PROBS_OPTIONS = [
     "CalibratedClassifierCV_Sigmoid",
@@ -122,8 +126,8 @@ class AimodelSS(StrMixin):
             return 0, 0
         if self.weight_recent == "10x_5x":
             return 10, 5
-        if self.weight_recent == "1000x":
-            return 1000, 0
+        if self.weight_recent == "10000x":
+            return 10000, 0
         raise ValueError(self.weight_recent)
 
 
