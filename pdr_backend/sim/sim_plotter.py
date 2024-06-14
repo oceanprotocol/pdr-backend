@@ -36,6 +36,10 @@ class SimPlotter:
 
     @staticmethod
     def get_latest_run_id():
+        if not os.path.exists("sim_state"):
+            raise Exception(
+                "sim_state folder does not exist. Please run the simulation first."
+            )
         path = sorted(Path("sim_state").iterdir(), key=os.path.getmtime)[-1]
         return str(path).replace("sim_state/", "")
 

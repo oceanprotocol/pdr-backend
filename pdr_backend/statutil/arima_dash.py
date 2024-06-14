@@ -41,9 +41,10 @@ get_callbacks(app)
 
 
 @enforce_types
-def arima_dash(ppss: PPSS):
+def arima_dash(ppss: PPSS, debug_mode: bool):
     port = 8050
-    webbrowser.open(f"http://127.0.0.1:{port}/")
+    if not debug_mode:
+        webbrowser.open(f"http://127.0.0.1:{port}/")
     folder = ppss.lake_ss.parquet_dir
     app.layout.children[0].data = folder
-    app.run(debug=True, port=port)
+    app.run(debug=debug_mode, port=port)
