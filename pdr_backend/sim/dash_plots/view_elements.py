@@ -192,7 +192,6 @@ def get_main_container():
                 },
             ),
             html.Div(
-                empty_graphs_template,
                 id="tabs-container",
                 style={"height": "calc(100% - 60px)"},
             ),
