@@ -1,5 +1,4 @@
 from enforce_typing import enforce_types
-import numpy as np
 import pytest
 
 from pdr_backend.ppss.aimodel_ss import (

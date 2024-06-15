@@ -1,6 +1,5 @@
 from typing import Optional, Tuple
 
-import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.util.strutil import StrMixin
