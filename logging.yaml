@@ -23,7 +23,7 @@ loggers:
         level: INFO
 
     aimodel_data_factory:
-        level: INFO
+        level: DEBUG
 
     sim_engine:
         level: INFO

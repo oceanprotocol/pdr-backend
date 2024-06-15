@@ -30,8 +30,18 @@ class AimodelDataSS(StrMixin):
 
     @property
     def autoregressive_n(self) -> int:
-        """eg 10. model inputs ar_n past pts z[t-1], .., z[t-ar_n]"""
+        """
+        eg 10.
+        For diff=0, model inputs are past points z[t-1], z[t-2], .., z[t-ar_n]
+        For diff=1, add to model_inputs z[t-1]-z[t-2], ..
+        For diff=2, add to model_inputs (z[t-1]-z[t-2]) - (z[t-2]-z[t-3]), ..
+        """
         return self.d["autoregressive_n"]
+
+    @property
+    def max_diff(self) -> int:
+        """can be 0, 1 or 2"""
+        return self.d["max_diff"]
 
 
 # =========================================================================
@@ -42,10 +52,12 @@ class AimodelDataSS(StrMixin):
 def aimodel_data_ss_test_dict(
     max_n_train: Optional[int] = None,
     autoregressive_n: Optional[int] = None,
+    max_diff: Optional[int] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct AimodelDataSS(d)"""
     d = {
         "max_n_train": 7 if max_n_train is None else max_n_train,
         "autoregressive_n": 3 if autoregressive_n is None else autoregressive_n,
+        "max_diff": 0 if max_diff is None else max_diff,
     }
     return d
