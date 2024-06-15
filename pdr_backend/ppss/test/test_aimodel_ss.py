@@ -69,7 +69,7 @@ def test_aimodel_ss__nondefault_values():
 
 @enforce_types
 def test_aimodel_ss__bad_inputs():
-    
+
     with pytest.raises(ValueError):
         AimodelSS(aimodel_ss_test_dict(approach="foo"))
 
