@@ -113,7 +113,7 @@ class AimodelDataFactory:
             train_feeds_list = train_feeds
         else:
             train_feeds_list = [predict_feed]
-        ss = self.ss.aimodel_ss
+        ss = self.ss.aimodel_data_ss
         x_dim_len = len(train_feeds_list) * ss.autoregressive_n
 
         # main work

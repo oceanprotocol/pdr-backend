@@ -175,7 +175,7 @@ class MockModel:
     """scikit-learn style model"""
 
     def __init__(self):
-        self.aimodel_ss = None  # fill this in later, after patch applied
+        self.aimodel_data_ss = None  # fill this in later, after patch applied
         self.last_X = None  # for tracking test results
         self.last_yptrue = None  # ""
 
@@ -219,10 +219,9 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch, pred_submitter
         _, ppss, _ = mock_ppss_1feed(
             2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address
         )
-        aimodel_ss = ppss.predictoor_ss.aimodel_ss
 
         # do prediction
-        mock_model.aimodel_ss = aimodel_ss
+        mock_model.aimodel_data_ss = ppss.predictoor_ss.aimodel_data_ss
 
         feed_contracts = ppss.web3_pp.query_feed_contracts()
         ppss.web3_pp = Mock(spec=Web3PP)
@@ -232,7 +231,7 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch, pred_submitter
         feed = ppss.predictoor_ss.predict_train_feedsets[0]
         agent.calc_stakes2(feed)
 
-        ar_n = aimodel_ss.autoregressive_n
+        ar_n = ppss.predictoor_ss.aimodel_data_ss.autoregressive_n
         assert ar_n == 3
 
         assert mock_model.last_X.shape == (1, 3) == (1, ar_n * 1)
@@ -270,15 +269,14 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch, pred_submitte
         ppss.web3_pp.query_feed_contracts.return_value = feed_contracts
 
         assert len(feeds) == 2
-        aimodel_ss = ppss.predictoor_ss.aimodel_ss
 
         # do prediction
-        mock_model.aimodel_ss = aimodel_ss
+        mock_model.aimodel_data_ss = ppss.predictoor_ss.aimodel_data_ss
         agent = PredictoorAgent(ppss)
         feed = ppss.predictoor_ss.predict_train_feedsets[0]
         agent.calc_stakes2(feed)
 
-        ar_n = aimodel_ss.autoregressive_n
+        ar_n = ppss.predictoor_ss.aimodel_data_ss.autoregressive_n
         assert ar_n == 3
 
         assert mock_model.last_X.shape == (1, 6) == (1, ar_n * 2)
@@ -324,9 +322,8 @@ def test_balance_check(tmpdir, monkeypatch, OCEAN, ROSE, expected, pred_submitte
     _, ppss = mock_ppss_2feeds(
         2, str(tmpdir), monkeypatch, pred_submitter_mgr.contract_address
     )
-    aimodel_ss = ppss.predictoor_ss.aimodel_ss
 
-    mock_model.aimodel_ss = aimodel_ss
+    mock_model.aimodel_data_ss = ppss.predictoor_ss.aimodel_data_ss
 
     feed_contracts = ppss.web3_pp.query_feed_contracts()
     mock_OCEAN = Mock()

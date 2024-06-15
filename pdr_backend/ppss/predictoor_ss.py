@@ -6,7 +6,14 @@ from pdr_backend.cli.predict_train_feedsets import (
     PredictTrainFeedset,
     PredictTrainFeedsets,
 )
-from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
+from pdr_backend.ppss.aimodel_data_ss import (
+    AimodelDataSS,
+    aimodel_data_ss_test_dict,
+)
+from pdr_backend.ppss.aimodel_ss import (
+    AimodelSS,
+    aimodel_ss_test_dict,
+)
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.strutil import StrMixin
@@ -24,6 +31,7 @@ class PredictoorSS(StrMixin):
     @enforce_types
     def __init__(self, d: dict):
         self.d = d
+        self.aimodel_data_ss = AimodelDataSS(d["aimodel_data_ss"])
         self.aimodel_ss = AimodelSS(d["aimodel_ss"])
 
         if self.approach not in CAND_APPROACHES:
@@ -198,6 +206,7 @@ def predictoor_ss_test_dict(
             "s_until_epoch_end": 60,
             "s_start_payouts": 0,
         },
+        "aimodel_data_ss": aimodel_data_ss_test_dict(),
         "aimodel_ss": aimodel_ss_test_dict(),
     }
     return d

@@ -26,10 +26,13 @@ predictoor_ss:
     s_until_epoch_end: 60 # in s. Start predicting if > this time left
     payout_batch_size: 8 # no. epochs to payout in each batch
     min_payout_slots: 0 # Run payout if payout is available for > this many slots
-
-  aimodel_ss:
+    
+  aimodel_data_ss: # used by AimodelDataFactory
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n: 1 # no. epochs that model looks back, to predict next
+    pretransform: None # boxcox | None 
+
+  aimodel_ss: # used by AimodelFactory
     approach: ClassifLinearRidge # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVC | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrConstant
     weight_recent: 10x_5x # 10x_5x | 10000x | None
     balance_classes: None # SMOTE | RandomOverSampler | None

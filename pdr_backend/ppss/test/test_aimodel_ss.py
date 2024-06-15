@@ -19,9 +19,6 @@ def test_aimodel_ss__default_values():
     d = aimodel_ss_test_dict()
     ss = AimodelSS(d)
 
-    assert ss.max_n_train == d["max_n_train"] == 7
-    assert ss.autoregressive_n == d["autoregressive_n"] == 3
-
     assert ss.approach == d["approach"] == "ClassifLinearRidge"
     assert ss.weight_recent == d["weight_recent"] == "10x_5x"
     assert ss.weight_recent_n == (10, 5)
@@ -41,12 +38,6 @@ def test_aimodel_ss__default_values():
 def test_aimodel_ss__nondefault_values():
     d = aimodel_ss_test_dict()
     ss = AimodelSS(d)
-
-    ss = AimodelSS(aimodel_ss_test_dict(max_n_train=39))
-    assert ss.max_n_train == 39
-
-    ss = AimodelSS(aimodel_ss_test_dict(autoregressive_n=13))
-    assert ss.autoregressive_n == 13
 
     for approach in APPROACH_OPTIONS:
         ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
@@ -78,21 +69,7 @@ def test_aimodel_ss__nondefault_values():
 
 @enforce_types
 def test_aimodel_ss__bad_inputs():
-    with pytest.raises(ValueError):
-        AimodelSS(aimodel_ss_test_dict(max_n_train=0))
-
-    with pytest.raises(TypeError):
-        AimodelSS(aimodel_ss_test_dict(max_n_train=3.1))
-
-    with pytest.raises(ValueError):
-        AimodelSS(aimodel_ss_test_dict(autoregressive_n=0))
-
-    with pytest.raises(TypeError):
-        AimodelSS(aimodel_ss_test_dict(autoregressive_n=3.1))
-
-    with pytest.raises(TypeError):
-        AimodelSS(aimodel_ss_test_dict(autoregressive_n=np.inf))
-
+    
     with pytest.raises(ValueError):
         AimodelSS(aimodel_ss_test_dict(approach="foo"))
 

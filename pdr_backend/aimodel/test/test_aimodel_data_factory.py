@@ -16,7 +16,7 @@ from pdr_backend.lake.test.resources import (
     _df_from_raw_data,
     _mergedohlcv_df_ETHUSDT,
 )
-from pdr_backend.ppss.aimodel_ss import AimodelSS
+from pdr_backend.ppss.aimodel_data_ss import AimodelDataSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
@@ -41,12 +41,12 @@ def test_create_xy__0():
         }
     ]
     d = predictoor_ss_test_dict(feedset_list=feedset_list)
-    assert "aimodel_ss" in d
-    assert "max_n_train" in d["aimodel_ss"]
-    d["aimodel_ss"]["max_n_train"] = 4
+    assert "aimodel_data_ss" in d
+    assert "max_n_train" in d["aimodel_data_ss"]
+    d["aimodel_data_ss"]["max_n_train"] = 4
 
-    assert "autoregressive_n" in d["aimodel_ss"]
-    d["aimodel_ss"]["autoregressive_n"] = 2
+    assert "autoregressive_n" in d["aimodel_data_ss"]
+    d["aimodel_data_ss"]["autoregressive_n"] = 2
 
     predictoor_ss = PredictoorSS(d)
 
@@ -96,7 +96,7 @@ def test_create_xy__0():
     )
 
     # test result
-    _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
+    _assert_pd_df_shape(predictoor_ss.aimodel_data_ss, X, y, x_df)
     assert_array_equal(X, target_X)
     assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
@@ -161,7 +161,7 @@ def test_create_xy_reg__1exchange_1coin_1signal():
         train_feeds,
     )
 
-    _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
+    _assert_pd_df_shape(predictoor_ss.aimodel_data_ss, X, y, x_df)
     assert_array_equal(X, target_X)
     assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
@@ -209,7 +209,7 @@ def test_create_xy_reg__1exchange_1coin_1signal():
         train_feeds,
     )
 
-    _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
+    _assert_pd_df_shape(predictoor_ss.aimodel_data_ss, X, y, x_df)
     assert_array_equal(X, target_X)
     assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
@@ -235,8 +235,8 @@ def test_create_xy_reg__1exchange_1coin_1signal():
         }
     )
 
-    assert "max_n_train" in predictoor_ss.aimodel_ss.d
-    predictoor_ss.aimodel_ss.d["max_n_train"] = 5
+    assert "max_n_train" in predictoor_ss.aimodel_data_ss.d
+    predictoor_ss.aimodel_data_ss.d["max_n_train"] = 5
 
     testshift = 0
     X, y, x_df, _ = aimodel_data_factory.create_xy(
@@ -246,7 +246,7 @@ def test_create_xy_reg__1exchange_1coin_1signal():
         train_feeds,
     )
 
-    _assert_pd_df_shape(predictoor_ss.aimodel_ss, X, y, x_df)
+    _assert_pd_df_shape(predictoor_ss.aimodel_data_ss, X, y, x_df)
     assert_array_equal(X, target_X)
     assert_array_equal(y, target_y)
     assert x_df.equals(target_x_df)
@@ -265,8 +265,8 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
         }
     ]
     d = predictoor_ss_test_dict(feedset_list=feedset_list)
-    ss = PredictoorSS(d)
-    assert ss.aimodel_ss.autoregressive_n == 3
+    predictoor_ss = PredictoorSS(d)
+    assert predictoor_ss.aimodel_data_ss.autoregressive_n == 3
 
     # create mergedohlcv_df
     rawohlcv_dfs = {
@@ -282,10 +282,10 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
     mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
     # create X, y, x_df
-    aimodel_data_factory = AimodelDataFactory(ss)
+    aimodel_data_factory = AimodelDataFactory(predictoor_ss)
     testshift = 0
-    predict_feed = ss.predict_train_feedsets[0].predict
-    train_feeds = ss.predict_train_feedsets[0].train_on
+    predict_feed = predictoor_ss.predict_train_feedsets[0].predict
+    train_feeds = predictoor_ss.predict_train_feedsets[0].train_on
     assert len(train_feeds) == 8
     X, y, x_df, _ = aimodel_data_factory.create_xy(
         mergedohlcv_df,
@@ -295,7 +295,7 @@ def test_create_xy_reg__2exchanges_2coins_2signals():
     )
 
     # test X, y, x_df
-    _assert_pd_df_shape(ss.aimodel_ss, X, y, x_df)
+    _assert_pd_df_shape(predictoor_ss.aimodel_data_ss, X, y, x_df)
     found_cols = x_df.columns.tolist()
     target_cols = [
         "binanceus:BTC/USDT:high:t-4",
@@ -452,7 +452,7 @@ def test_create_xy_reg__handle_nan():
 
 @enforce_types
 def _assert_pd_df_shape(
-    ss: AimodelSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame
+    ss: AimodelDataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame
 ):
     assert X.shape[0] == y.shape[0]
     assert X.shape[0] == (ss.max_n_train + 1)  # 1 for test, rest for train
