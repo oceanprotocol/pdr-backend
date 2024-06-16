@@ -19,6 +19,8 @@ class AimodelDataSS(StrMixin):
             raise ValueError(self.max_n_train)
         if not 0 < self.autoregressive_n < np.inf:
             raise ValueError(self.autoregressive_n)
+        if not 0 <= self.max_diff <= 2:
+            raise ValueError(self.max_diff)
 
     # --------------------------------
     # yaml properties

@@ -1,6 +1,6 @@
 from enforce_typing import enforce_types
 import numpy as np
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_allclose
 import pandas as pd
 import polars as pl
 import pytest
@@ -39,48 +39,68 @@ def test_create_xy__0__diff_0_1_2():
     d = predictoor_ss_test_dict(
         feedset_list=feedset_list,
         aimodel_data_ss_dict=aimodel_data_ss_test_dict(
-            max_n_train=6,
+            max_n_train=4,
             autoregressive_n=3,
-            max_diff=0, # FIXME to 2 # main setting: 2 not 0
+            max_diff=2,  # main setting: 2 not 0
         ),
     )
-    
+
     predictoor_ss = PredictoorSS(d)
 
     # create df
+    timestamps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    #       12   11   10   9    8    7    6    5    4    3    2
+    vals = [8.3, 0.9, 4.2, 2.5, 6.4, 3.6, 8.6, 9.7, 0.5, 0.1, 1.1]
     mergedohlcv_df = pl.DataFrame(
         {
             # every column is ordered from youngest to oldest
-            "timestamp": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],  # not used by AimodelDataFactory
-            "binanceus:ETH/USDT:close":
-            [0.3, 0.9, 4.2, 2.5, 6.4, 3.6, 8.6, 9.7, 0.5, 0.1, 1.1],
+            "timestamp": timestamps,  # not used by AimodelDataFactory
+            "binanceus:ETH/USDT:close": vals,
         }
     )
 
     # set target X,y
     target_X = np.array(
         [
-            [0.9, 4.2, 2.5],  # oldest
-            [4.2, 2.5, 6.4],
-            [2.5, 6.4, 3.6],
-            [6.4, 3.6, 8.6],
-            [3.6, 8.6, 9.7],  
-            [8.6, 9.7, 0.5],
-            [9.7, 0.5, 0.1],  # newest
+            [2.5, 6.4, 3.6, -1.7, 3.9, -2.8, -5.0, 5.6, -6.7],
+            [6.4, 3.6, 8.6, 3.9, -2.8, 5.0, 5.6, -6.7, 7.8],
+            [3.6, 8.6, 9.7, -2.8, 5.0, 1.1, -6.7, 7.8, -3.9],
+            [8.6, 9.7, 0.5, 5.0, 1.1, -9.2, 7.8, -3.9, -10.3],
+            [9.7, 0.5, 0.1, 1.1, -9.2, -0.4, -3.9, -10.3, 8.8],
         ]
     )
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH/USDT:close:z(t-4)": [0.9, 4.2, 2.5, 6.4, 3.6, 8.6, 9.7],
-            "binanceus:ETH/USDT:close:z(t-3)": [4.2, 2.5, 6.4, 3.6, 8.6, 9.7, 0.5],
-            "binanceus:ETH/USDT:close:z(t-2)": [2.5, 6.4, 3.6, 8.6, 9.7, 0.5, 0.1],
-            #"binanceus:ETH/USDT:close:z(t-4)-z(t-3)": 
-            #"binanceus:ETH/USDT:close:z(t-3)-z(t-2)": 
+            "binanceus:ETH/USDT:close:z(t-4)": target_X[:, 0],
+            "binanceus:ETH/USDT:close:z(t-3)": target_X[:, 1],
+            "binanceus:ETH/USDT:close:z(t-2)": target_X[:, 2],
+            "binanceus:ETH/USDT:close:z(t-4)-z(t-5)": target_X[:, 3],
+            "binanceus:ETH/USDT:close:z(t-3)-z(t-4)": target_X[:, 4],
+            "binanceus:ETH/USDT:close:z(t-2)-z(t-3)": target_X[:, 5],
+            "binanceus:ETH/USDT:close:(z(t-4)-z(t-5))-(z(t-5)-z(t-6))": target_X[:, 6],
+            "binanceus:ETH/USDT:close:(z(t-3)-z(t-4))-(z(t-4)-z(t-5))": target_X[:, 7],
+            "binanceus:ETH/USDT:close:(z(t-2)-z(t-3))-(z(t-3)-z(t-4))": target_X[:, 8],
         }
     )
-    target_xrecent = np.array([0.5, 0.1, 1.1])
 
-    target_y = np.array([6.4, 3.6, 8.6, 9.7, 0.5, 0.1, 1.1])  # oldest to newest
+    target_xrecent_d0 = [
+        0.5,
+        0.1,
+        1.1,
+    ]
+    target_xrecent_d1 = [
+        0.5 - 9.7,
+        0.1 - 0.5,
+        1.1 - 0.1,
+    ]
+    target_xrecent_d2 = [
+        (0.5 - 9.7) - (9.7 - 8.6),
+        (0.1 - 0.5) - (0.5 - 9.7),
+        (1.1 - 0.1) - (0.1 - 0.5),
+    ]
+    target_xrecent = np.array(target_xrecent_d0 + target_xrecent_d1 + target_xrecent_d2)
+
+    target_y = np.array([8.6, 9.7, 0.5, 0.1, 1.1])  # oldest to newest
 
     # do work
     testshift = 0
@@ -95,23 +115,14 @@ def test_create_xy__0__diff_0_1_2():
     )
 
     # test result
-    _assert_pd_df_shape(predictoor_ss.aimodel_data_ss, X, y, x_df)
-    assert_array_equal(X, target_X)
-    assert_array_equal(y, target_y)
-    assert x_df.equals(target_x_df)
-    assert_array_equal(xrecent, target_xrecent)
-
-
-    
-# ====================================================================
-# utilities
-
-
-@enforce_types
-def _assert_pd_df_shape(
-    ss: AimodelDataSS, X: np.ndarray, y: np.ndarray, x_df: pd.DataFrame
-):
     assert X.shape[0] == y.shape[0]
+    ss = predictoor_ss.aimodel_data_ss
     assert X.shape[0] == (ss.max_n_train + 1)  # 1 for test, rest for train
-
     assert len(x_df) == X.shape[0]
+
+    assert_allclose(X, target_X)
+    assert_array_equal(y, target_y)
+    assert all(x_df.columns == target_x_df.columns)
+    assert_allclose(x_df.to_numpy(), target_x_df.to_numpy())
+    assert str(x_df) == str(target_x_df)
+    assert_allclose(xrecent, target_xrecent)

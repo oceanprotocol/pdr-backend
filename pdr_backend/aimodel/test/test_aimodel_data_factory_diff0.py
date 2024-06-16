@@ -47,9 +47,11 @@ def test_create_xy__0():
     ]
     d = predictoor_ss_test_dict(
         feedset_list=feedset_list,
-        aimodel_data_ss_dict=aimodel_data_ss_test_dict(max_n_train=4, autoregressive_n=2),
+        aimodel_data_ss_dict=aimodel_data_ss_test_dict(
+            max_n_train=4, autoregressive_n=2
+        ),
     )
-    
+
     predictoor_ss = PredictoorSS(d)
 
     # create df
@@ -148,7 +150,16 @@ def test_create_xy_reg__1exchange_1coin_1signal():
     )
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH/USDT:high:z(t-4)": [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH/USDT:high:z(t-4)": [
+                11.0,
+                10.0,
+                9.0,
+                8.0,
+                7.0,
+                6.0,
+                5.0,
+                4.0,
+            ],
             "binanceus:ETH/USDT:high:z(t-3)": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
             "binanceus:ETH/USDT:high:z(t-2)": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
         }
@@ -196,8 +207,26 @@ def test_create_xy_reg__1exchange_1coin_1signal():
     )
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH/USDT:high:z(t-4)": [12.0, 11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0],
-            "binanceus:ETH/USDT:high:z(t-3)": [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH/USDT:high:z(t-4)": [
+                12.0,
+                11.0,
+                10.0,
+                9.0,
+                8.0,
+                7.0,
+                6.0,
+                5.0,
+            ],
+            "binanceus:ETH/USDT:high:z(t-3)": [
+                11.0,
+                10.0,
+                9.0,
+                8.0,
+                7.0,
+                6.0,
+                5.0,
+                4.0,
+            ],
             "binanceus:ETH/USDT:high:z(t-2)": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
         }
     )
