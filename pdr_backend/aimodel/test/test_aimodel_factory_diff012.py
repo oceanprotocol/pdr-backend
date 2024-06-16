@@ -1,5 +1,6 @@
-from enforce_typing import enforce_types
 import os
+
+from enforce_typing import enforce_types
 import numpy as np
 from pytest import approx
 
@@ -13,11 +14,8 @@ from pdr_backend.aimodel.aimodel_plotter import (
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import _df_from_raw_data
 from pdr_backend.lake.test.resources2_btc import get_large_BINANCE_BTC_DATA
-from pdr_backend.ppss.aimodel_data_ss import (
-    AimodelDataSS,
-    aimodel_data_ss_test_dict,
-)
-from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
+from pdr_backend.ppss.aimodel_data_ss import aimodel_data_ss_test_dict
+from pdr_backend.ppss.aimodel_ss import aimodel_ss_test_dict
 from pdr_backend.ppss.predictoor_ss import (
     PredictoorSS,
     predictoor_ss_test_dict,
@@ -32,14 +30,16 @@ SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 def test_aimodel_diff012_classif():
     _test_aimodel_diff012("ClassifLinearRidge")
 
+
 @enforce_types
 def test_aimodel_diff012_regr():
     _test_aimodel_diff012("RegrLinearRidge")
-    
+
+
 @enforce_types
 def _test_aimodel_diff012(approach: str):
     N, N_train = 5000, 4900
-    
+
     # create predictoor_ss
     feedset_list = [
         {
@@ -60,7 +60,7 @@ def _test_aimodel_diff012(approach: str):
             balance_classes="None",
             calibrate_probs="None",
             calibrate_regr="None",
-        )
+        ),
     )
     predictoor_ss = PredictoorSS(d)
 
@@ -97,8 +97,8 @@ def _test_aimodel_diff012(approach: str):
 
     # create train/test data
     X_train, X_test = X[:N_train, :], X[N_train:, :]
-    ycont_train, ycont_test = ycont[:N_train], ycont[N_train:]
-    y_thr = np.mean(ycont) # arbitrary
+    ycont_train, _ = ycont[:N_train], ycont[N_train:]
+    y_thr = np.mean(ycont)  # arbitrary
     ytrue = aimodel_data_factory.ycont_to_ytrue(ycont, y_thr)
     ytrue_train, ytrue_test = ytrue[:N_train], ytrue[N_train:]
 
@@ -111,11 +111,11 @@ def _test_aimodel_diff012(approach: str):
     ytrue_test_hat = model.predict_true(X_test)
     assert classif_acc(ytrue_train_hat, ytrue_train) > 0.8
     assert classif_acc(ytrue_test_hat, ytrue_test) > 0.7
-        
-    _ = model.predict_ptrue(X)        
+
+    _ = model.predict_ptrue(X)
     if model.do_regr:
         _ = model.predict_ycont(X)
-        
+
     # plot model response
     plot_data = AimodelPlotdata(
         model,
@@ -124,8 +124,8 @@ def _test_aimodel_diff012(approach: str):
         ycont,
         y_thr,
         colnames=list(x_df.columns),
-        slicing_x=X[-1,:], # arbitrary
-        sweep_vars=[0,1], #arbitrary
+        slicing_x=X[-1, :],  # arbitrary
+        sweep_vars=[0, 1],  # arbitrary
     )
     fig = plot_aimodel_response(plot_data)
     if SHOW_PLOT:

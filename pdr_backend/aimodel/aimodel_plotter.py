@@ -339,7 +339,7 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
       d -- AimodelPlotdata
     """
     imps_avg, imps_stddev = d.model.importance_per_var(include_stddev=True)
-    imps_avg = imps_avg + 1e-15 # give imp > 0, so before dummy vars in plot
+    imps_avg = imps_avg + 1e-15  # give imp > 0, so before dummy vars in plot
     varnames = d.colnames
     n = len(varnames)
 

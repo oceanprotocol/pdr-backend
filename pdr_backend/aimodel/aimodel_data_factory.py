@@ -132,7 +132,7 @@ class AimodelDataFactory:
             z_d0 = mergedohlcv_df[hist_col].to_numpy()  # [..., z(t-2), z(t-1)]
             z_d1 = z_d0[1:] - z_d0[:-1]  # [..., z(t-2) - z(t-3),    z(t-1) - z(t-2)]
             z_d2 = z_d1[1:] - z_d1[:-1]  # [...,     (z(t-1)-z(t-2)) - z(t-2)-z(t-3)]
-            z_d0, z_d1, z_d2 = list(z_d0), list(z_d1), list(z_d2)
+            z_d0, z_d1, z_d2 = list(z_d0), list(z_d1), list(z_d2)  # type: ignore[assignment]
             maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z_d0) - maxshift - 1 - ss.max_diff)
             s = "\n"

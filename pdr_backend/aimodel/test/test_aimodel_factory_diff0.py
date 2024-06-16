@@ -1,7 +1,8 @@
-from enforce_typing import enforce_types
 from unittest.mock import Mock
 import os
 import numpy as np
+
+from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
 from plotly.graph_objs._figure import Figure
 import pytest

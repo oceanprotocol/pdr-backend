@@ -15,7 +15,7 @@ def test_aimodel_data_ss__default_values():
 
     assert ss.max_n_train == d["max_n_train"] == 7
     assert ss.autoregressive_n == d["autoregressive_n"] == 3
-    assert ss.autoregressive_n == d["max_diff"] == 0
+    assert ss.max_diff == d["max_diff"] == 0
 
     # str
     assert "AimodelDataSS" in str(ss)
