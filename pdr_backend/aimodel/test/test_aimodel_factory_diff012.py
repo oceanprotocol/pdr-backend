@@ -38,7 +38,7 @@ def test_aimodel_diff012_regr():
     
 @enforce_types
 def _test_aimodel_diff012(approach: str):
-    N, N_train = 1000, 900
+    N, N_train = 5000, 4900
     
     # create predictoor_ss
     feedset_list = [
