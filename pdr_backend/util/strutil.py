@@ -1,5 +1,6 @@
 import inspect
-from typing import Union
+from itertools import groupby
+from typing import List, Union
 
 from enforce_typing import enforce_types
 
@@ -136,3 +137,23 @@ def compactSmallNum(x: Union[float, int]) -> str:
     s = s.replace("e-0", "e-")
 
     return s
+
+
+@enforce_types
+def shift_one_earlier(s: str) -> str:
+    """eg 'binance:BTC/USDT:close:z(t-3)' -> 'binance:BTC/USDT:close:z(t-2)'"""
+    new_s = ""
+    for word in separate_string_number(s):
+        if word.isnumeric():
+            word = str(int(word) - 1)
+        new_s += word
+    return new_s
+
+
+@enforce_types
+def separate_string_number(s: str) -> List[str]:
+    """
+    eg '10in!20ft10400:bg' -> ['10', 'in!', '20', 'ft', '10400', ':bg']
+    Ref: https://stackoverflow.com/a/68346827
+    """
+    return ["".join(g) for _, g in groupby(s, key=str.isdigit)]
