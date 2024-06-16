@@ -30,6 +30,7 @@ predictoor_ss:
   aimodel_data_ss: # used by AimodelDataFactory
     max_n_train: 5000 # no. epochs to train model on
     autoregressive_n: 1 # no. epochs that model looks back, to predict next
+    max_diff: 0 # diff=0: z(t-1); diff=1: z(t-2)-z(t-3); diff=2: (z(t-1)-z(t-2))-(z(t-2)-z(t-3))
 
   aimodel_ss: # used by AimodelFactory
     approach: ClassifLinearRidge # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVC | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrConstant

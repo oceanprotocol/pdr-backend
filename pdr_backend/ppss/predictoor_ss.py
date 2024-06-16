@@ -189,6 +189,8 @@ def feedset_test_list() -> list:
 def predictoor_ss_test_dict(
     feedset_list: Optional[List] = None,
     pred_submitter_mgr="",
+    aimodel_data_ss_dict: Optional[dict] = None,
+    aimodel_ss_dict: Optional[dict] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
     feedset_list = feedset_list or feedset_test_list()
@@ -206,7 +208,7 @@ def predictoor_ss_test_dict(
             "s_until_epoch_end": 60,
             "s_start_payouts": 0,
         },
-        "aimodel_data_ss": aimodel_data_ss_test_dict(),
-        "aimodel_ss": aimodel_ss_test_dict(),
+        "aimodel_data_ss": aimodel_data_ss_dict or aimodel_data_ss_test_dict(),
+        "aimodel_ss": aimodel_ss_dict or aimodel_ss_test_dict(),
     }
     return d

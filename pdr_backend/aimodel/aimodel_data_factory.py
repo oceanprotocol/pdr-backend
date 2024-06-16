@@ -91,6 +91,8 @@ class AimodelDataFactory:
           x_df -- *pandas* DataFrame. See class docstring.
           xrecent -- [var_i]:value -- most recent X value. Bots use to predict
         """
+        # pylint: disable=too-many-statements
+
         # preconditions
         assert isinstance(mergedohlcv_df, pl.DataFrame), pl.__class__
         assert "timestamp" in mergedohlcv_df.columns
@@ -114,12 +116,12 @@ class AimodelDataFactory:
         else:
             train_feeds_list = [predict_feed]
         ss = self.ss.aimodel_data_ss
-        x_dim_len = len(train_feeds_list) * ss.autoregressive_n
+        x_dim_len = len(train_feeds_list) * ss.autoregressive_n * (1 + ss.max_diff)
 
         # main work
+        xcol_list = []  # [col_i] : name_str
         x_list = []  # [col_i] : Series. Build this up. Not df here (slow)
         xrecent_list = []  ## ""
-        xcol_list = []  # [col_i] : name_str
 
         target_hist_cols = [
             f"{train_feed.exchange}:{train_feed.pair}:{train_feed.signal}"
@@ -127,29 +129,65 @@ class AimodelDataFactory:
         ]
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
-            z = mergedohlcv_df[hist_col].to_list()  # [..., z(t-2), z(t-1)]
+            z_d0 = mergedohlcv_df[hist_col].to_numpy()  # [..., z(t-2), z(t-1)]
+            z_d1 = z_d0[1:] - z_d0[:-1]  # [..., z(t-2) - z(t-3),    z(t-1) - z(t-2)]
+            z_d2 = z_d1[1:] - z_d1[:-1]  # [...,     (z(t-1)-z(t-2)) - z(t-2)-z(t-3)]
+            z_d0, z_d1, z_d2 = list(z_d0), list(z_d1), list(z_d2)  # type: ignore[assignment]
             maxshift = testshift + ss.autoregressive_n
-            N_train = min(ss.max_n_train, len(z) - maxshift - 1)
+            N_train = min(ss.max_n_train, len(z_d0) - maxshift - 1 - ss.max_diff)
+            s = "\n"
+            s += f"  ss.autoregressive_n={ss.autoregressive_n}\n"
+            s += f"  ss.max_n_train={ss.max_n_train}; ss.max_diff={ss.max_diff}\n"
+            s += f"  testshift={testshift}\n"
+            s += f"  maxshift=autoregressive_n+testshift={maxshift}\n"
+            s += f"  len(z_d0)={len(z_d0)}, len(z_d1)={len(z_d1)}, len(z_d2)={len(z_d2)}\n"
+            s += f"  N_train={N_train}\n"
+            logger.debug(s)
             if N_train <= 0:
-                logger.error(
-                    "Too little data. len(z)=%d, maxshift=%d "
-                    "(= testshift + autoregressive_n = %s + %s)\n"
-                    "To fix: broaden time, shrink testshift, "
-                    "or shrink autoregressive_n",
-                    len(z),
-                    maxshift,
-                    testshift,
-                    ss.autoregressive_n,
+                s = "Too little data."
+                s += (
+                    "To fix: broaden time, or shrink testshift, max_diff, or autoregr_n"
                 )
+                logger.error(s)
                 sys.exit(1)
-            for delayshift in range(ss.autoregressive_n, 0, -1):  # eg [2, 1, 0]
-                shift = testshift + delayshift
-                x_col = hist_col + f":t-{delayshift+1}"
-                assert (shift + N_train + 1) <= len(z)
-                # 1 point for test, the rest for train data
-                x_list += [pd.Series(_slice(z, -shift - N_train - 1, -shift))]
-                xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
-                xcol_list += [x_col]
+
+            for diff in range(ss.max_diff + 1):
+                for delayshift in range(
+                    ss.autoregressive_n, 0, -1
+                ):  # eg [4, 3, 2, 1, 0]
+                    shift = testshift + delayshift
+                    # 1 point for test, the rest for train data. For each of diff=0, 1, 2
+                    if diff == 0:
+                        assert (shift + N_train + 1) <= len(z_d0)
+                        x_col_d0 = hist_col + f":z(t-{delayshift+1})"
+                        xcol_list += [x_col_d0]
+                        x_list += [
+                            pd.Series(_slice(z_d0, -shift - N_train - 1, -shift))
+                        ]
+                        xrecent_list += [pd.Series(_slice(z_d0, -shift, -shift + 1))]
+
+                    if diff == 1:
+                        assert (shift + N_train + 1) <= len(z_d1)
+                        x_col_d1 = (
+                            hist_col + f":z(t-{delayshift+1})-z(t-{delayshift+1+1})"
+                        )
+                        xcol_list += [x_col_d1]
+                        x_list += [
+                            pd.Series(_slice(z_d1, -shift - N_train - 1, -shift))
+                        ]
+                        xrecent_list += [pd.Series(_slice(z_d1, -shift, -shift + 1))]
+
+                    if diff == 2:
+                        assert (shift + N_train + 1) <= len(z_d2)
+                        x_col_d2 = (
+                            hist_col + f":(z(t-{delayshift+1})-z(t-{delayshift+1+1}))-"
+                            f"(z(t-{delayshift+1+1})-z(t-{delayshift+1+1+1}))"
+                        )
+                        xcol_list += [x_col_d2]
+                        x_list += [
+                            pd.Series(_slice(z_d2, -shift - N_train - 1, -shift))
+                        ]
+                        xrecent_list += [pd.Series(_slice(z_d2, -shift, -shift + 1))]
 
         # convert x lists to dfs, all at once. Faster than building up df.
         assert len(x_list) == len(xrecent_list) == len(xcol_list)
