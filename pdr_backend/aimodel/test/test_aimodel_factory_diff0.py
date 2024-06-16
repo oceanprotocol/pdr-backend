@@ -1,7 +1,7 @@
+from enforce_typing import enforce_types
 from unittest.mock import Mock
 import os
 import numpy as np
-from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
 from plotly.graph_objs._figure import Figure
 import pytest
@@ -82,7 +82,7 @@ def _test_aimodel_2vars(approach: str):
     assert imps[0] == approx(0.333, abs=0.3)
     assert imps[1] == approx(0.667, abs=0.3)
 
-    # plot classifier response
+    # plot model response
     colnames = ["x0", "x1"]
     slicing_x = np.array([0.0, 1.0])  # arbitrary
     sweep_vars = [0, 1]
@@ -96,10 +96,10 @@ def _test_aimodel_2vars(approach: str):
         slicing_x,
         sweep_vars,
     )
-    classif_figure = plot_aimodel_response(d)
-    assert isinstance(classif_figure, Figure)
+    fig = plot_aimodel_response(d)
+    assert isinstance(fig, Figure)
     if SHOW_PLOT:
-        classif_figure.show()
+        fig.show()
 
     # test predict_ycont()
     if not model.do_regr:
@@ -161,7 +161,7 @@ def test_aimodel_can_RegrConstant_emerge():
 
 
 @enforce_types
-def test_aimodel_accuracy_from_create_xy():
+def test_aimodel_classif_accuracy():
     ss = AimodelSS(aimodel_ss_test_dict(weight_recent="None"))
     aimodel_factory = AimodelFactory(ss)
 

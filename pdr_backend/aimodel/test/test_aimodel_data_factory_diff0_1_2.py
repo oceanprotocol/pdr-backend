@@ -29,12 +29,11 @@ def test_create_xy__0__diff_0_1_2():
             max_diff=2,  # main setting: 2 not 0
         ),
     )
-
     predictoor_ss = PredictoorSS(d)
 
     # create df
     timestamps = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-    #       12   11   10   9    8    7    6    5    4    3    2
+    #       t-12 11   10   9    8    7    6    5    4    t-3  t-2
     vals = [8.3, 0.9, 4.2, 2.5, 6.4, 3.6, 8.6, 9.7, 0.5, 0.1, 1.1]
     mergedohlcv_df = pl.DataFrame(
         {

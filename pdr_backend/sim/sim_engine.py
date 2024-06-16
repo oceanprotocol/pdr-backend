@@ -131,7 +131,7 @@ class SimEngine:
         colnames = list(x_df.columns)
 
         st_, fin = 0, X.shape[0] - 1
-        X_train, X_test = X[st_:fin, :], X[fin : fin + 1]
+        X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         ycont_train, ycont_test = ycont[st_:fin], ycont[fin : fin + 1]
 
         curprice = ycont_train[-1]
