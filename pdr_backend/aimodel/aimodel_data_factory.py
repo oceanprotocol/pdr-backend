@@ -91,6 +91,8 @@ class AimodelDataFactory:
           x_df -- *pandas* DataFrame. See class docstring.
           xrecent -- [var_i]:value -- most recent X value. Bots use to predict
         """
+        # pylint: disable=too-many-statements
+
         # preconditions
         assert isinstance(mergedohlcv_df, pl.DataFrame), pl.__class__
         assert "timestamp" in mergedohlcv_df.columns
@@ -140,7 +142,7 @@ class AimodelDataFactory:
             s += f"  maxshift=autoregressive_n+testshift={maxshift}\n"
             s += f"  len(z_d0)={len(z_d0)}, len(z_d1)={len(z_d1)}, len(z_d2)={len(z_d2)}\n"
             s += f"  N_train={N_train}\n"
-            logger.debug("\n" + s)
+            logger.debug(s)
             if N_train <= 0:
                 s = "Too little data."
                 s += (
@@ -150,7 +152,6 @@ class AimodelDataFactory:
                 sys.exit(1)
 
             for diff in range(ss.max_diff + 1):
-                logger.info("diff=%s" % diff)
                 for delayshift in range(
                     ss.autoregressive_n, 0, -1
                 ):  # eg [4, 3, 2, 1, 0]
