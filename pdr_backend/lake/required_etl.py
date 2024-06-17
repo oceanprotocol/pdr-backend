@@ -104,22 +104,34 @@ class ETL:
         """
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         
-        etl_tables = ["bronze_predictions"]
-        for table_name in etl_tables:
-            prod_table = NamedTable(table_name)
-            etl_table = ETLTable(table_name)
-            temp_table = TempTable(table_name)
-            update_table = UpdateTable(table_name)
-            temp_update_table = TempUpdateTable(table_name)
+        bronze_tables = [BronzePrediction]
+        for table in bronze_tables:
+            prod_table = NamedTable.from_dataclass(table)
+            etl_table = ETLTable.from_dataclass(table)
+            temp_table = TempTable.from_dataclass(table)
+            update_table = UpdateTable.from_dataclass(table)
+            temp_update_table = TempUpdateTable.from_dataclass(table)
+
+            prod_table_exists = db.table_exists(prod_table.fullname)
+            etl_table_exists = db.view_exists(etl_table.fullname)
+            temp_table_exists = db.table_exists(temp_table.fullname)
+            update_table_exists = db.table_exists(update_table.fullname)
+            temp_update_table_exists = db.table_exists(temp_update_table.fullname)
+
+            print("prod_table_exists", prod_table_exists)
+            print("etl_table_exists", etl_table_exists)
+            print("temp_table_exists", temp_table_exists)
+            print("update_table_exists", update_table_exists)
+            print("temp_update_table_exists", temp_update_table_exists)
 
             if db.table_exists(update_table.fullname):
                 # Insert new records into live tables
                 db.move_table_data(temp_table, prod_table)
                 
                 # drop all records that were updated
-                db.drop_records_from_table_by_ids(
-                    drop_tabe=prod_table,
-                    ids=update_table.ids
+                db.drop_records_from_table_by_id(
+                    drop_table_name=prod_table.fullname,
+                    ref_table_name=temp_update_table.fullname
                 )
 
                 # Finally, insert the updated records into live table
@@ -155,7 +167,7 @@ class ETL:
             logger.info("do_etl - Completed bronze_step in %s sec.", end_ts - st_ts)
 
             # Move data to live at end of ETL
-            self._move_from_temp_tables_to_live()
+            self._do_bronze_swap_to_prod()
 
             logger.info(
                 "do_etl - Moved build tables to permanent tables. ETL Complete."

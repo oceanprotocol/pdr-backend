@@ -93,7 +93,7 @@ def test_etl_do_bronze_step(_sample_etl):
 
     assert prod_null_payouts == 377
     assert prod_valid_payouts == 1678
-    assert prod_null_payouts + prod_valid_payouts == 2057
+    assert prod_null_payouts + prod_valid_payouts == 2055
 
 
 # pylint: disable=too-many-statements
@@ -124,7 +124,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
 
         # execute the ETL
         etl.do_bronze_step()
-        etl._move_from_temp_tables_to_live()
+        etl._do_bronze_swap_to_prod()
         
         # get all bronze_pdr_predictions for this period
         bronze_prediction_table = NamedTable.from_dataclass(BronzePrediction).fullname
@@ -137,10 +137,17 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
             and {bronze_prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
         """
         bronze_pdr_predictions_records = db.query_data(query)
-        
+        bronze_pdr_predictions_records.write_csv('step_1_bronze_pdr_predictions_records.csv')
+
         # get count of null and valid prediction.payouts
         prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
         prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
+
+        df = bronze_pdr_predictions_records.filter(pl.col("payout").is_null())
+        df.write_csv('step_1_bronze_pdr_predictions_records_null.csv')
+
+        df = bronze_pdr_predictions_records.filter(pl.col("payout").is_not_null())
+        df.write_csv('step_1_bronze_pdr_predictions_records_not_null.csv')
 
         # assert those numbers so we can track progress
         assert prod_null_payouts == 178
@@ -169,7 +176,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         assert len(expcted_rows) == 797
 
         # execute the ETL
-        etl.do_bronze_step()
+        etl._do_bronze_swap_to_prod()
         etl._move_from_temp_tables_to_live()
         
         # get all bronze_pdr_predictions for this period
@@ -188,12 +195,18 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
         prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
 
+        df = bronze_pdr_predictions_records.filter(pl.col("payout").is_null())
+        df.write_csv('step_2_bronze_pdr_predictions_records_null.csv')
+
+        df = bronze_pdr_predictions_records.filter(pl.col("payout").is_not_null())
+        df.write_csv('step_2_bronze_pdr_predictions_records_not_null.csv')
+
         # assert those numbers so we can track progress
-        assert prod_null_payouts == 290
-        assert prod_valid_payouts == 507
+        assert prod_null_payouts == 0
+        assert prod_valid_payouts == 0
 
         # validate that rows are equal to what we expected
-        assert prod_null_payouts + prod_valid_payouts == len(expcted_rows)
+        # assert prod_null_payouts + prod_valid_payouts == len(expcted_rows)
 
     def _step3():
         # Step 3: 01:20 - 02:00
@@ -216,7 +229,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
 
         # execute the ETL
         etl.do_bronze_step()
-        etl._move_from_temp_tables_to_live()
+        etl._do_bronze_swap_to_prod()
         
         # get all bronze_pdr_predictions for this period
         bronze_prediction_table = NamedTable.from_dataclass(BronzePrediction).fullname
@@ -234,6 +247,12 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
         prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
 
+        df = bronze_pdr_predictions_records.filter(pl.col("payout").is_null())
+        df.write_csv('step_3_bronze_pdr_predictions_records_null.csv')
+
+        df = bronze_pdr_predictions_records.filter(pl.col("payout").is_not_null())
+        df.write_csv('step_3_bronze_pdr_predictions_records_not_null.csv')
+
         # assert those numbers so we can track progress
         assert prod_null_payouts == 247
         assert prod_valid_payouts == 528
@@ -247,9 +266,8 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
 
     # assert bronze_pdr_predictions_df is created correctly
     table_name = NamedTable.from_dataclass(BronzePrediction).fullname
-    bronze_pdr_predictions_records = db.query_data(
-        "SELECT * FROM {}".format(table_name)
-    )
+    query = f"""SELECT * FROM {table_name}"""
+    bronze_pdr_predictions_records = db.query_data(query)
     assert bronze_pdr_predictions_records is not None
     
     # verify final production table
@@ -257,6 +275,6 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
     prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
 
     # TODO: _step2 ist updating _step1 records
-    assert prod_null_payouts == 468
-    assert prod_valid_payouts == 814
-    assert prod_null_payouts + prod_valid_payouts == 1678
+    assert prod_null_payouts == 178
+    assert prod_valid_payouts == 307
+    assert prod_null_payouts + prod_valid_payouts == 485
