@@ -116,7 +116,7 @@ class AimodelDataFactory:
         else:
             train_feeds_list = [predict_feed]
         ss = self.ss.aimodel_data_ss
-        x_dim_len = len(train_feeds_list) * ss.autoregressive_n * (1 + ss.max_diff)
+        x_dim_len = len(train_feeds_list) * ss.autoregressive_n * ss.num_diffs
 
         # main work
         xcol_list = []  # [col_i] : name_str
@@ -135,29 +135,28 @@ class AimodelDataFactory:
             z_d0, z_d1, z_d2 = list(z_d0), list(z_d1), list(z_d2)  # type: ignore[assignment]
             maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z_d0) - maxshift - 1 - ss.max_diff)
+            
             s = "\n"
             s += f"  ss.autoregressive_n={ss.autoregressive_n}\n"
-            s += f"  ss.max_n_train={ss.max_n_train}; ss.max_diff={ss.max_diff}\n"
+            s += f"  ss.max_n_train={ss.max_n_train}\n"
+            s += f"  ss.do_diff0={ss.do_diff0}, 1={ss.do_diff1}, 2={ss.do_diff2}\n"
+            s += f"  ss.max_diff={ss.max_diff}\n"
             s += f"  testshift={testshift}\n"
             s += f"  maxshift=autoregressive_n+testshift={maxshift}\n"
             s += f"  len(z_d0)={len(z_d0)}, len(z_d1)={len(z_d1)}, len(z_d2)={len(z_d2)}\n"
             s += f"  N_train={N_train}\n"
             logger.debug(s)
             if N_train <= 0:
-                s = "Too little data."
-                s += (
-                    "To fix: broaden time, or shrink testshift, max_diff, or autoregr_n"
-                )
+                s = "Too little data. To fix:"
+                s += "broaden time, or shrink testshift, max_diff, or autoregr_n"
                 logger.error(s)
                 sys.exit(1)
 
             for diff in range(ss.max_diff + 1):
-                for delayshift in range(
-                    ss.autoregressive_n, 0, -1
-                ):  # eg [4, 3, 2, 1, 0]
+                for delayshift in range(ss.autoregressive_n, 0, -1): # [.., 3, 2, 1, 0]
                     shift = testshift + delayshift
                     # 1 point for test, the rest for train data. For each of diff=0, 1, 2
-                    if diff == 0:
+                    if ss.do_diff0:
                         assert (shift + N_train + 1) <= len(z_d0)
                         x_col_d0 = hist_col + f":z(t-{delayshift+1})"
                         xcol_list += [x_col_d0]
@@ -166,7 +165,7 @@ class AimodelDataFactory:
                         ]
                         xrecent_list += [pd.Series(_slice(z_d0, -shift, -shift + 1))]
 
-                    if diff == 1:
+                    if ss.do_diff1:
                         assert (shift + N_train + 1) <= len(z_d1)
                         x_col_d1 = (
                             hist_col + f":z(t-{delayshift+1})-z(t-{delayshift+1+1})"
@@ -177,7 +176,7 @@ class AimodelDataFactory:
                         ]
                         xrecent_list += [pd.Series(_slice(z_d1, -shift, -shift + 1))]
 
-                    if diff == 2:
+                    if ss.do_diff2:
                         assert (shift + N_train + 1) <= len(z_d2)
                         x_col_d2 = (
                             hist_col + f":(z(t-{delayshift+1})-z(t-{delayshift+1+1}))-"
