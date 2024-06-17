@@ -44,6 +44,7 @@ install_requirements = [
     "requests-mock==1.12.1",
     "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
+    "types-pytz==2024.1.0.20240417",
     "types-pyYAML==6.0.12.20240311",
     "types-requests==2.32.0.20240602",
     "dash_bootstrap_components==1.6.0",
