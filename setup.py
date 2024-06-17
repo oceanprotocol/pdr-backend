@@ -12,7 +12,7 @@ install_requirements = [
     "bumpversion",
     "ccxt==4.3.42",
     "coverage",
-    "dash==2.17.0",
+    "dash==2.17.1",
     "dash_bootstrap_components==1.6.0",
     "dateparser==1.2.0",
     "duckdb==1.0.0",
