@@ -2,6 +2,7 @@ import os
 
 from enforce_typing import enforce_types
 import numpy as np
+import pytest
 from pytest import approx
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
@@ -26,18 +27,18 @@ from pdr_backend.statutil.scoring import classif_acc
 SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
-@enforce_types
-def test_aimodel_diff1_classif():
-    _test_aimodel_diff1("ClassifLinearRidge")
-
+# run a single test below with e.g.
+# pytest pdr_backend/aimodel/test/test_aimodel_factory_btc.py::test_aimodel_btc[ClassifLinearRidge-1]
 
 @enforce_types
-def test_aimodel_diff1_regr():
-    _test_aimodel_diff1("RegrLinearRidge")
-
-
-@enforce_types
-def _test_aimodel_diff1(approach: str):
+@pytest.mark.parametrize("approach,autoregressive_n", [
+    ("ClassifLinearRidge", 1),
+    ("RegrLinearRidge", 1),
+    ("ClassifLinearRidge", 2),
+    ("RegrLinearRidge", 2),
+])
+def test_aimodel_btc(approach: str, autoregressive_n: int):
+    n = autoregressive_n
     N, N_train = 5000, 4900
 
     # create predictoor_ss
@@ -51,7 +52,7 @@ def _test_aimodel_diff1(approach: str):
         feedset_list=feedset_list,
         aimodel_data_ss_dict=aimodel_data_ss_test_dict(
             max_n_train=N,
-            autoregressive_n=2,
+            autoregressive_n=n,
         ),
         aimodel_ss_dict=aimodel_ss_test_dict(
             approach=approach,
@@ -84,11 +85,13 @@ def _test_aimodel_diff1(approach: str):
     )
 
     # check columns
-    target_x_df_columns = [
-        "binanceus:BTC/USDT:close:(z(t-3)-z(t-4))/z(t-4)",
-        "binanceus:BTC/USDT:close:(z(t-2)-z(t-3))/z(t-3)",
-    ]
-    assert list(x_df.columns) == target_x_df_columns
+    assert len(x_df.columns) == n
+    if n == 2:
+        target_x_df_columns = [
+            "binanceus:BTC/USDT:close:(z(t-3)-z(t-4))/z(t-4)",
+            "binanceus:BTC/USDT:close:(z(t-2)-z(t-3))/z(t-3)",
+        ]
+        assert list(x_df.columns) == target_x_df_columns
 
     # create train/test data
     X_train, X_test = X[:N_train, :], X[N_train:, :]
@@ -113,6 +116,9 @@ def _test_aimodel_diff1(approach: str):
         _ = model.predict_ycont(X)
 
     # plot model response
+    sweep_vars=[0,1]
+    if n==1:
+        sweep_vars = [0]
     plot_data = AimodelPlotdata(
         model,
         X,
@@ -121,7 +127,7 @@ def _test_aimodel_diff1(approach: str):
         y_thr,
         colnames=list(x_df.columns),
         slicing_x=X[-1, :],  # arbitrary
-        sweep_vars=[0, 1],  # arbitrary
+        sweep_vars=sweep_vars,  
     )
     fig = plot_aimodel_response(plot_data)
     if SHOW_PLOT:
