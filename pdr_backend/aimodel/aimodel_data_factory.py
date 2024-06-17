@@ -29,12 +29,10 @@ class AimodelDataFactory:
       y -- 1d array of [sample_i]:value -- target outputs for model
 
       x_df -- *pandas* DataFrame with cols like:
-        "binanceus:ETH-USDT:open:t-3",
-        "binanceus:ETH-USDT:open:t-2",
-        "binanceus:ETH-USDT:open:t-1",
-        "binanceus:ETH-USDT:high:t-3",
-        "binanceus:ETH-USDT:high:t-2",
-        "binanceus:ETH-USDT:high:t-1",
+        "binanceus:ETH-USDT:open:(z(t-2)-z(t-3))/z(t-3)",
+        "binanceus:ETH-USDT:open:(z(t-1)-z(t-2))/z(t-2)",
+        "binanceus:ETH-USDT:high:(z(t-2)-z(t-3))/z(t-3)",
+        "binanceus:ETH-USDT:high:(z(t-1)-z(t-2))/z(t-2)",
         ...
         (no "timestamp" or "datetime" column)
         (and index = 0, 1, .. -- nothing special)
@@ -116,34 +114,28 @@ class AimodelDataFactory:
         else:
             train_feeds_list = [predict_feed]
         ss = self.ss.aimodel_data_ss
-        x_dim_len = len(train_feeds_list) * ss.autoregressive_n * ss.num_diffs
+        x_dim_len = len(train_feeds_list) * ss.autoregressive_n
 
         # main work
         xcol_list = []  # [col_i] : name_str
         x_list = []  # [col_i] : Series. Build this up. Not df here (slow)
         xrecent_list = []  ## ""
 
-        target_hist_cols = [
-            f"{train_feed.exchange}:{train_feed.pair}:{train_feed.signal}"
-            for train_feed in train_feeds_list
-        ]
+        target_hist_cols = [hist_col_name(train_feed) for train_feed in train_feeds_list]
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
-            z_d0 = mergedohlcv_df[hist_col].to_numpy()  # [..., z(t-2), z(t-1)]
-            z_d1 = z_d0[1:] - z_d0[:-1]  # [..., z(t-2) - z(t-3),    z(t-1) - z(t-2)]
-            z_d2 = z_d1[1:] - z_d1[:-1]  # [...,     (z(t-1)-z(t-2)) - z(t-2)-z(t-3)]
-            z_d0, z_d1, z_d2 = list(z_d0), list(z_d1), list(z_d2)  # type: ignore[assignment]
+            z_d0 = mergedohlcv_df[hist_col].to_numpy()  # [.. z(t-2), z(t-1)]
+            z_d1_abs = z_d0[1:] - z_d0[:-1]  #[.. z(t-2)-z(t-3), z(t-1)-(t-2)]
+            z_d1_rel = z_d1_abs / z_d0[:-1] #[.. (z(t-2)-z(t-3))/z(t-2), (z(t-1)-z(t-2))/z(t-2)]
+            z = list(z_d1_rel)
             maxshift = testshift + ss.autoregressive_n
-            N_train = min(ss.max_n_train, len(z_d0) - maxshift - 1 - ss.max_diff)
-            
+            N_train = min(ss.max_n_train, len(z_d0) - maxshift - 1 - 1)
             s = "\n"
-            s += f"  ss.autoregressive_n={ss.autoregressive_n}\n"
             s += f"  ss.max_n_train={ss.max_n_train}\n"
-            s += f"  ss.do_diff0={ss.do_diff0}, 1={ss.do_diff1}, 2={ss.do_diff2}\n"
-            s += f"  ss.max_diff={ss.max_diff}\n"
+            s += f"  ss.autoregressive_n={ss.autoregressive_n}\n"
             s += f"  testshift={testshift}\n"
             s += f"  maxshift=autoregressive_n+testshift={maxshift}\n"
-            s += f"  len(z_d0)={len(z_d0)}, len(z_d1)={len(z_d1)}, len(z_d2)={len(z_d2)}\n"
+            s += f"  len(z)={len(z)}\n"
             s += f"  N_train={N_train}\n"
             logger.debug(s)
             if N_train <= 0:
@@ -152,41 +144,16 @@ class AimodelDataFactory:
                 logger.error(s)
                 sys.exit(1)
 
-            for diff in range(ss.max_diff + 1):
-                for delayshift in range(ss.autoregressive_n, 0, -1): # [.., 3, 2, 1, 0]
-                    shift = testshift + delayshift
-                    # 1 point for test, the rest for train data. For each of diff=0, 1, 2
-                    if ss.do_diff0:
-                        assert (shift + N_train + 1) <= len(z_d0)
-                        x_col_d0 = hist_col + f":z(t-{delayshift+1})"
-                        xcol_list += [x_col_d0]
-                        x_list += [
-                            pd.Series(_slice(z_d0, -shift - N_train - 1, -shift))
-                        ]
-                        xrecent_list += [pd.Series(_slice(z_d0, -shift, -shift + 1))]
-
-                    if ss.do_diff1:
-                        assert (shift + N_train + 1) <= len(z_d1)
-                        x_col_d1 = (
-                            hist_col + f":z(t-{delayshift+1})-z(t-{delayshift+1+1})"
-                        )
-                        xcol_list += [x_col_d1]
-                        x_list += [
-                            pd.Series(_slice(z_d1, -shift - N_train - 1, -shift))
-                        ]
-                        xrecent_list += [pd.Series(_slice(z_d1, -shift, -shift + 1))]
-
-                    if ss.do_diff2:
-                        assert (shift + N_train + 1) <= len(z_d2)
-                        x_col_d2 = (
-                            hist_col + f":(z(t-{delayshift+1})-z(t-{delayshift+1+1}))-"
-                            f"(z(t-{delayshift+1+1})-z(t-{delayshift+1+1+1}))"
-                        )
-                        xcol_list += [x_col_d2]
-                        x_list += [
-                            pd.Series(_slice(z_d2, -shift - N_train - 1, -shift))
-                        ]
-                        xrecent_list += [pd.Series(_slice(z_d2, -shift, -shift + 1))]
+            for delayshift in range(ss.autoregressive_n, 0, -1): # [.., 3, 2, 1, 0]
+                shift = testshift + delayshift
+                # 1 point for test, the rest for train data
+                assert (shift + N_train + 1) <= len(z)
+                x_col = hist_col + ":" + \
+                    f"(z(t-{delayshift+1})-z(t-{delayshift+1+1}))" + \
+                    f"/z(t-{delayshift+1+1})"
+                xcol_list += [x_col]
+                x_list += [pd.Series(_slice(z, -shift - N_train - 1, -shift))]
+                xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
 
         # convert x lists to dfs, all at once. Faster than building up df.
         assert len(x_list) == len(xrecent_list) == len(xcol_list)
@@ -198,9 +165,11 @@ class AimodelDataFactory:
         xrecent = xrecent_df.to_numpy()[0, :]
 
         # y is set from yval_{exch_str, signal_str, pair_str}
-        # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
-        hist_col = f"{predict_feed.exchange}:{predict_feed.pair}:{predict_feed.signal}"
-        z = mergedohlcv_df[hist_col].to_list()
+        hist_col = hist_col_name(predict_feed) 
+        z_d0 = mergedohlcv_df[hist_col].to_numpy()  # [.. z(t-2), z(t-1)]
+        z_d1_abs = z_d0[1:] - z_d0[:-1]  #[.. z(t-2)-z(t-3), z(t-1)-(t-2)]
+        z_d1_rel = z_d1_abs / z_d0[:-1] #[.. (z(t-2)-z(t-3))/z(t-2), (z(t-1)-z(t-2))/z(t-2)]
+        z = list(z_d1_rel)
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 
         # postconditions
@@ -218,6 +187,11 @@ class AimodelDataFactory:
         # return
         ycont = y
         return X, ycont, x_df, xrecent
+
+
+@enforce_types
+def hist_col_name(feed: ArgFeed) -> str:
+    return f"{feed.exchange}:{feed.pair}:{feed.signal}"
 
 
 @enforce_types

@@ -11,7 +11,10 @@ from sklearn.metrics import log_loss, precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel import Aimodel
-from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
+from pdr_backend.aimodel.aimodel_data_factory import (
+    AimodelDataFactory,
+    hist_col_name,
+)
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.cli.arg_feed import ArgFeed
@@ -123,6 +126,8 @@ class SimEngine:
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
         predict_feed = self.predict_train_feedset.predict
         train_feeds = self.predict_train_feedset.train_on
+
+        # X, ycont, and x_df are all expressed in % change wrt prev candle
         X, ycont, x_df, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
@@ -135,10 +140,11 @@ class SimEngine:
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         ycont_train, ycont_test = ycont[st_:fin], ycont[fin : fin + 1]
 
-        curprice = ycont_train[-1]
-        trueprice = ycont_test[-1]
+        prices = mergedohlcv_df[hist_col_name(predict_feed)]
+        curprice = prices[-2]
+        trueprice = prices[-1]
 
-        y_thr = curprice
+        y_thr = 0.0 # always 0.0 when modeling % change
         ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
@@ -204,7 +210,8 @@ class SimEngine:
             loss = log_loss(st.ytrues, st.probs_up)
         yerr = 0.0
         if model.do_regr:
-            predprice = model.predict_ycont(X_test)[0]
+            relchange = model.predict_ycont(X_test)[0]
+            predprice = curprice + relchange * prevprice
             yerr = trueprice - predprice
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 

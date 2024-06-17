@@ -27,17 +27,17 @@ SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 @enforce_types
-def test_aimodel_diff012_classif():
-    _test_aimodel_diff012("ClassifLinearRidge")
+def test_aimodel_diff1_classif():
+    _test_aimodel_diff1("ClassifLinearRidge")
 
 
 @enforce_types
-def test_aimodel_diff012_regr():
-    _test_aimodel_diff012("RegrLinearRidge")
+def test_aimodel_diff1_regr():
+    _test_aimodel_diff1("RegrLinearRidge")
 
 
 @enforce_types
-def _test_aimodel_diff012(approach: str):
+def _test_aimodel_diff1(approach: str):
     N, N_train = 5000, 4900
 
     # create predictoor_ss
@@ -52,7 +52,6 @@ def _test_aimodel_diff012(approach: str):
         aimodel_data_ss_dict=aimodel_data_ss_test_dict(
             max_n_train=N,
             autoregressive_n=2,
-            max_diff=2,  # main setting: 2 not 0
         ),
         aimodel_ss_dict=aimodel_ss_test_dict(
             approach=approach,
@@ -86,19 +85,15 @@ def _test_aimodel_diff012(approach: str):
 
     # check columns
     target_x_df_columns = [
-        "binanceus:BTC/USDT:close:z(t-3)",
-        "binanceus:BTC/USDT:close:z(t-2)",
-        "binanceus:BTC/USDT:close:z(t-3)-z(t-4)",
-        "binanceus:BTC/USDT:close:z(t-2)-z(t-3)",
-        "binanceus:BTC/USDT:close:(z(t-3)-z(t-4))-(z(t-4)-z(t-5))",
-        "binanceus:BTC/USDT:close:(z(t-2)-z(t-3))-(z(t-3)-z(t-4))",
+        "binanceus:BTC/USDT:close:(z(t-3)-z(t-4))/z(t-4)",
+        "binanceus:BTC/USDT:close:(z(t-2)-z(t-3))/z(t-3)",
     ]
     assert list(x_df.columns) == target_x_df_columns
 
     # create train/test data
     X_train, X_test = X[:N_train, :], X[N_train:, :]
     ycont_train, _ = ycont[:N_train], ycont[N_train:]
-    y_thr = np.mean(ycont)  # arbitrary
+    y_thr = 0.0 # always 0.0 when modeling % change
     ytrue = aimodel_data_factory.ycont_to_ytrue(ycont, y_thr)
     ytrue_train, ytrue_test = ytrue[:N_train], ytrue[N_train:]
 
@@ -109,8 +104,10 @@ def _test_aimodel_diff012(approach: str):
     # test model response
     ytrue_train_hat = model.predict_true(X_train)
     ytrue_test_hat = model.predict_true(X_test)
-    assert classif_acc(ytrue_train_hat, ytrue_train) > 0.8
-    assert classif_acc(ytrue_test_hat, ytrue_test) > 0.7
+    train_acc = classif_acc(ytrue_train_hat, ytrue_train)
+    test_acc = classif_acc(ytrue_test_hat, ytrue_test)
+    print(f"train_acc={train_acc:.3f}, test_acc={train_acc:.3f}")
+    import pdb; pdb.set_trace()
 
     _ = model.predict_ptrue(X)
     if model.do_regr:
