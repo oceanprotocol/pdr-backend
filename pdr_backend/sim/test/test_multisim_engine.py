@@ -55,8 +55,8 @@ def _constructor_d_with_fast_runtime(tmpdir):
     # predictoor ss
     pdr_d = predictoor_ss_test_dict(feedset_list)
     assert "aimodel_ss" in pdr_d
-    assert "max_n_train" in pdr_d["aimodel_ss"]
-    pdr_d["aimodel_ss"]["max_n_train"] = 100
+    assert "max_n_train" in pdr_d["aimodel_data_ss"]
+    pdr_d["aimodel_data_ss"]["max_n_train"] = 100
     assert "predictoor_ss" in main_d
     main_d["predictoor_ss"] = pdr_d
 

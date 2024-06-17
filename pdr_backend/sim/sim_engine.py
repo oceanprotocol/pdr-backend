@@ -23,6 +23,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_logger import SimLogLine
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_state import SimState
+from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
@@ -131,7 +132,7 @@ class SimEngine:
         colnames = list(x_df.columns)
 
         st_, fin = 0, X.shape[0] - 1
-        X_train, X_test = X[st_:fin, :], X[fin : fin + 1]
+        X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         ycont_train, ycont_test = ycont[st_:fin], ycont[fin : fin + 1]
 
         curprice = ycont_train[-1]
@@ -243,7 +244,7 @@ class SimEngine:
         save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
 
         if save_state:
-            colnames = [_shift_one_earlier(colname) for colname in colnames]
+            colnames = [shift_one_earlier(colname) for colname in colnames]
             most_recent_x = X[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
             d = AimodelPlotdata(
@@ -352,10 +353,3 @@ class SimEngine:
             return False, False
 
         return True, False
-
-
-@enforce_types
-def _shift_one_earlier(s: str):
-    """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
-    val = int(s[-1])
-    return s[:-1] + str(val - 1)
