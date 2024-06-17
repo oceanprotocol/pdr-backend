@@ -4,11 +4,11 @@ from unittest.mock import patch
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.subgraph_slot import (
-    PredictSlot,
-    fetch_slots_for_all_assets,
+    fetch_slots,
     get_predict_slots_query,
     get_slots,
 )
+from pdr_backend.lake.slot import Slot
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -31,7 +31,7 @@ def test_get_predict_slots_query():
 # Sample data for tests
 SAMPLE_PREDICT_QUERY_RESULT_ITEM = {
     "id": "0xAsset-12345",
-    "slot": "12345",
+    "slot": 12345,
     "trueValues": [{"ID": "1", "trueValue": True}],
     "roundSumStakesUp": 150.0,
     "roundSumStakes": 100.0,
@@ -63,9 +63,10 @@ def test_get_slots(mock_query_subgraph):
     ]
 
     result_slots = get_slots(
-        addresses=["0xAsset"],
         end_ts_param=UnixTimeS(2000),
         start_ts_param=UnixTimeS(1000),
+        addresses=["0xAsset"],
+        first=1000,
         skip=0,
         slots=[],
         network="mainnet",
@@ -74,11 +75,11 @@ def test_get_slots(mock_query_subgraph):
     print("test_get_slots", result_slots)
 
     # Verify that the mock was called twice (once for the initial call, once for the recursive call)
-    assert mock_query_subgraph.call_count == 2
+    assert mock_query_subgraph.call_count == 1
     # Verify that the result contains the expected number of slots
     assert len(result_slots) == 1000
-    # Verify that the slots contain instances of PredictSlot
-    assert isinstance(result_slots[0], PredictSlot)
+    # Verify that the slots contain instances of Slot
+    assert isinstance(result_slots[0], Slot)
     # Verify the first slot's data matches the sample
     assert result_slots[0].ID == "0xAsset-12345"
 
@@ -88,20 +89,21 @@ def test_get_slots(mock_query_subgraph):
     "pdr_backend.subgraph.subgraph_slot.query_subgraph",
     return_value=MOCK_QUERY_RESPONSE,
 )
-def test_fetch_slots_for_all_assets(mock_query_subgraph):
-    # Test the fetch_slots_for_all_assets function
-    result = fetch_slots_for_all_assets(
-        asset_ids=["0xAsset"],
+def test_fetch_slots_for_all_contracts(mock_query_subgraph):
+    # Test logic for fetching slots for all contracts
+    result = fetch_slots(
         start_ts_param=UnixTimeS(1000),
         end_ts_param=UnixTimeS(2000),
+        contracts=["0xAsset"],
+        first=1000,
+        skip=0,
         network="mainnet",
     )
 
-    print("test_fetch_slots_for_all_assets", result)
+    print("test_fetch_slots_for_all_contracts", result)
     # Verify that the result is structured correctly
-    assert "0xAsset" in result
-    assert all(isinstance(slot, PredictSlot) for slot in result["0xAsset"])
-    assert len(result["0xAsset"]) == 1
-    assert result["0xAsset"][0].ID == "0xAsset-12345"
+    print(result[0])
+    assert len(result) == 1
+    assert result[0].ID == "0xAsset-12345"
     # Verify that the mock was called
     mock_query_subgraph.assert_called()

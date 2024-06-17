@@ -15,8 +15,7 @@ from pdr_backend.cli.cli_module import (
     do_claim_ROSE,
     # power tools
     do_multisim,
-    do_lake,
-    do_analytics,
+    do_ohlcv,
     # utilities
     do_get_predictoors_info,
     do_get_predictions_info,
@@ -80,7 +79,7 @@ class _END:
 
 
 class _PQDIR:
-    PQDIR = "my_parquet_data/"
+    PQDIR = "my_lake_data/"
 
 
 class _FEEDS:
@@ -293,22 +292,11 @@ def test_do_multisim(monkeypatch):
 
 
 @enforce_types
-def test_do_lake(monkeypatch):
+def test_do_ohlcv(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.OhlcvDataFactory.get_mergedohlcv_df", mock_f)
 
-    do_lake(MockArgParser_PPSS_NETWORK().parse_args())
-    mock_f.assert_called()
-
-
-@enforce_types
-def test_do_analytics(monkeypatch):
-    mock_f = Mock()
-    monkeypatch.setattr(f"{_CLI_PATH}.GQLDataFactory", mock_f)
-    monkeypatch.setattr(f"{_CLI_PATH}.ETL", mock_f)
-    monkeypatch.setattr(f"{_CLI_PATH}.ETL.do_etl", mock_f)
-
-    do_analytics(MockArgParser_PPSS_NETWORK().parse_args())
+    do_ohlcv(MockArgParser_PPSS_NETWORK().parse_args())
     mock_f.assert_called()
 
 
