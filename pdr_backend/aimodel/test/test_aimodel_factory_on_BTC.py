@@ -107,7 +107,6 @@ def _test_aimodel_diff1(approach: str):
     train_acc = classif_acc(ytrue_train_hat, ytrue_train)
     test_acc = classif_acc(ytrue_test_hat, ytrue_test)
     print(f"train_acc={train_acc:.3f}, test_acc={train_acc:.3f}")
-    import pdb; pdb.set_trace()
 
     _ = model.predict_ptrue(X)
     if model.do_regr:
@@ -136,3 +135,4 @@ def _test_aimodel_diff1(approach: str):
     fig = plot_aimodel_varimps(plot_data)
     if SHOW_PLOT:
         fig.show()
+

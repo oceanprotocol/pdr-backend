@@ -43,12 +43,13 @@ def test_create_xy__0__diff1():
         }
     )
 
-    # set target X,y
+    # set z_d1_rel -- the main data
     z_d1_abs = np.array(vals[1:]) - np.array(vals[:-1])
-    assert z_d1_abs[-1] == 1.1 - 0.1
     z_d1_rel = z_d1_abs / np.array(vals[:-1])
+    assert z_d1_abs[-1] == 1.1 - 0.1
     assert z_d1_rel[-1] == (1.1 - 0.1)/(0.1)
     
+    # set target X,y
     target_x_df = pd.DataFrame(
         {
             "binanceus:ETH/USDT:close:(z(t-3)-z(t-4))/z(t-4)": z_d1_rel[-7:-2],
@@ -86,3 +87,19 @@ def test_create_xy__0__diff1():
     assert_allclose(x_df.to_numpy(), target_x_df.to_numpy())
     assert str(x_df) == str(target_x_df)
     assert_allclose(xrecent, target_xrecent)
+
+    
+    # do work
+    testshift = 1
+    X2, y2, x_df2, xrecent2 = factory.create_xy(
+        mergedohlcv_df,
+        testshift,
+        predict_feed,
+        train_feeds,
+    )
+    assert X2[-1,0] == X[-1-1,0]
+    assert y2[-1] == y[-1-1]
+    assert all(x_df.columns == x_df2.columns)
+    col0 = x_df.columns[0]
+    assert x_df2[col0][3] == x_df[col0][3]
+    assert xrecent2[1] == xrecent[0]
