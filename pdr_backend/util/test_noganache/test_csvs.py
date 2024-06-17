@@ -1,7 +1,7 @@
 import csv
 import os
 
-from pdr_backend.subgraph.legacy.prediction import mock_daily_predictions
+from pdr_backend.lake.prediction import mock_daily_predictions
 from pdr_backend.util.csvs import save_analysis_csv, save_prediction_csv
 
 
@@ -18,8 +18,8 @@ def test_save_analysis_csv(tmpdir):
         data = csv.DictReader(f)
         data_rows = list(data)
 
-    assert data_rows[0]["Predicted Value"] == str(predictions[0].prediction)
-    assert data_rows[0]["True Value"] == str(predictions[0].trueval)
+    assert data_rows[0]["Predicted Value"] == str(predictions[0].predvalue)
+    assert data_rows[0]["True Value"] == str(predictions[0].truevalue)
     assert data_rows[0]["Timestamp"] == str(predictions[0].timestamp)
     assert list(data_rows[0].keys()) == [
         "PredictionID",
