@@ -1,5 +1,6 @@
 import os
 
+from dash import Dash
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel import Aimodel
@@ -8,11 +9,13 @@ from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
+from pdr_backend.sim.dash_plots.callbacks import get_callbacks
+from pdr_backend.sim.dash_plots.view_elements import get_layout
 from pdr_backend.sim.sim_engine import SimEngine
 
 
 @enforce_types
-def test_sim_engine(tmpdir):
+def test_sim_engine(tmpdir, dash_duo):
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
 
@@ -57,3 +60,14 @@ def test_sim_engine(tmpdir):
     assert sim_engine.crt_trained_model is None
     sim_engine.run()
     assert isinstance(sim_engine.crt_trained_model, Aimodel)
+
+    app = Dash("pdr_backend.sim.sim_dash")
+    app.config["suppress_callback_exceptions"] = True
+    app.run_id = sim_engine.multi_id
+    app.layout = get_layout()
+    get_callbacks(app)
+
+    dash_duo.start_server(app)
+    dash_duo.wait_for_text_to_equal(
+        "#sim_state_text", f"Simulation ID: {sim_engine.multi_id}", timeout=100
+    )

@@ -205,3 +205,20 @@ def get_main_container():
             "height": "100%",
         },
     )
+
+
+@enforce_types
+def get_layout():
+    return html.Div(
+        [
+            get_main_container(),
+            dcc.Interval(
+                id="interval-component",
+                interval=3 * 1000,  # in milliseconds
+                n_intervals=0,
+                disabled=False,
+            ),
+            dcc.Store(id="selected-tab"),
+        ],
+        style={"height": "100vh"},
+    )
