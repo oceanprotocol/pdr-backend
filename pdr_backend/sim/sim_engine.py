@@ -211,7 +211,7 @@ class SimEngine:
         yerr = 0.0
         if model.do_regr:
             relchange = model.predict_ycont(X_test)[0]
-            predprice = curprice + relchange * prevprice
+            predprice = curprice + relchange * curprice
             yerr = trueprice - predprice
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
