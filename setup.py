@@ -25,7 +25,7 @@ install_requirements = [
     "imblearn",
     "kaleido==0.2.1",
     "mypy==1.10.0",
-    "numpy==1.26.4",
+    "numpy==2.0.0",
     "pandas==2.2.2",
     "pathlib",
     "plotly==5.22.0",
