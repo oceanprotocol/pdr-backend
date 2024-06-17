@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Union
 
 import dateparser
-import pytz
+
 from enforce_typing import enforce_types
 from numpy import int64
 
