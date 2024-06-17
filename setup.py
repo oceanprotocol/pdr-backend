@@ -38,6 +38,7 @@ install_requirements = [
     # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
     "pytest-asyncio==0.21.1",
     "pytest-env",
+    "pytz==2024.1",
     "pyyaml",
     "requests==2.32.3",
     "requests-mock==1.12.1",
