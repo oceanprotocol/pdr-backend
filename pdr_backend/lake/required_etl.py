@@ -128,16 +128,16 @@ class ETL:
                 # Insert new records into live tables
                 db.move_table_data(temp_table, prod_table)
                 
-                # drop all records that were updated
+                # # drop all records that were updated
                 db.drop_records_from_table_by_id(
                     drop_table_name=prod_table.fullname,
                     ref_table_name=temp_update_table.fullname
                 )
 
-                # Finally, insert the updated records into live table
+                # # Finally, insert the updated records into live table
                 db.move_table_data(temp_update_table, prod_table)
 
-                # Drop the update table 
+                # # Drop the update table 
                 db.drop_view(etl_table.fullname)
                 db.drop_table(temp_table.fullname)
                 db.drop_table(update_table.fullname)
