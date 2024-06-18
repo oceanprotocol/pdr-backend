@@ -18,9 +18,8 @@ pl.Config.set_tbl_hide_dataframe_shape(True)
 
 logger = logging.getLogger("LakeInfo")
 
-# pylint: disable = too - many - instance - attributes
 
-
+# pylint: disable=too-many-instance-attributes
 class LakeInfo:
     def __init__(self, ppss: PPSS, use_html: bool = False):
         self.db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=True)
