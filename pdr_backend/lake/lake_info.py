@@ -18,7 +18,6 @@ pl.Config.set_tbl_hide_dataframe_shape(True)
 
 logger = logging.getLogger("LakeInfo")
 
-
 # pylint: disable = too - many - instance - attributes
 
 
