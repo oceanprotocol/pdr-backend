@@ -4,7 +4,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS, LakeArgParser
 
-# from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.lake_info import LakeInfo
 from pdr_backend.lake.lake_validate import LakeValidate
@@ -104,20 +104,20 @@ def do_lake_etl_drop(args, ppss):
     drop_tables_from_st(db, "etl", args.ST)
 
 
-# @enforce_types
-# def do_lake_etl_update(_, ppss):
-#     """
-#     @description
-#         This runs all dependencies to build analytics
-#         All raw, clean, and aggregate data will be generated
-#         1. All subgraph data will be fetched
-#         2. All analytic data will be built
-#         3. Lake contains all required data
-#         4. Dashboards read from lake
-#
-#         Please use nested_args to control lake_ss
-#         ie: st_timestr, fin_timestr, lake_dir
-#     """
-#     gql_data_factory = GQLDataFactory(ppss)
-#     etl = ETL(ppss, gql_data_factory)
-#     etl.do_etl()
+@enforce_types
+def do_lake_etl_update(_, ppss):
+    """
+        @description
+            This runs all dependencies to build analytics
+            All raw, clean, and aggregate data will be generated
+            1. All subgraph data will be fetched
+            2. All analytic data will be built
+            3. Lake contains all required data
+            4. Dashboards read from lake
+    #
+            Please use nested_args to control lake_ss
+            ie: st_timestr, fin_timestr, lake_dir
+    """
+    gql_data_factory = GQLDataFactory(ppss)
+    etl = ETL(ppss, gql_data_factory)
+    etl.do_etl()
