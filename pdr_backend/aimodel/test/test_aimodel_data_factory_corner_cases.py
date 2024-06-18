@@ -1,24 +1,12 @@
 from enforce_typing import enforce_types
-import numpy as np
-from numpy.testing import assert_array_equal
-import pandas as pd
 import polars as pl
 import pytest
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import (
-    BINANCE_BTC_DATA,
-    BINANCE_ETH_DATA,
     ETHUSDT_RAWOHLCV_DFS,
-    KRAKEN_BTC_DATA,
-    KRAKEN_ETH_DATA,
-    _df_from_raw_data,
     _mergedohlcv_df_ETHUSDT,
-)
-from pdr_backend.ppss.aimodel_data_ss import (
-    AimodelDataSS,
-    aimodel_data_ss_test_dict,
 )
 from pdr_backend.ppss.predictoor_ss import (
     PredictoorSS,

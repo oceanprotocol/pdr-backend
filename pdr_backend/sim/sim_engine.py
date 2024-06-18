@@ -138,7 +138,7 @@ class SimEngine:
 
         st_, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
-        ycont_train, ycont_test = ycont[st_:fin], ycont[fin : fin + 1]
+        ycont_train, _ = ycont[st_:fin], ycont[fin : fin + 1]
 
         prices = mergedohlcv_df[hist_col_name(predict_feed)]
         curprice = prices[-2]

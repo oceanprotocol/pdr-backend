@@ -1,7 +1,6 @@
 import os
 
 from enforce_typing import enforce_types
-import numpy as np
 import pytest
 from pytest import approx
 
@@ -28,7 +27,7 @@ SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 # run a single test below with e.g.
-# pytest pdr_backend/aimodel/test/test_aimodel_factory_btc.py::test_aimodel_btc[ClassifLinearRidge-1]
+# pytest pdr_backend/aimodel/test/test_aimodel_factory_btc.py::test_aimodel_btc[ClassifLinearRidge-1] # pylint: disable=line-too-long
 
 
 @enforce_types
@@ -113,7 +112,7 @@ def test_aimodel_btc(approach: str, autoregressive_n: int):
     ytrue_test_hat = model.predict_true(X_test)
     train_acc = classif_acc(ytrue_train_hat, ytrue_train)
     test_acc = classif_acc(ytrue_test_hat, ytrue_test)
-    print(f"train_acc={train_acc:.3f}, test_acc={train_acc:.3f}")
+    print(f"train_acc={train_acc:.3f}, test_acc={test_acc:.3f}")
 
     _ = model.predict_ptrue(X)
     if model.do_regr:
