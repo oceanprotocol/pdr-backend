@@ -10,7 +10,7 @@ from pdr_backend.lake.table_bronze_pdr_predictions import (
     _process_truevals,
     _process_payouts,
 )
-from pdr_backend.lake.table_pdr_predictions import (
+from pdr_backend.lake.legacy.table_pdr_predictions import (
     predictions_schema,
     predictions_table_name,
 )

@@ -12,7 +12,10 @@ from pdr_backend.subgraph.subgraph_predictions import (
     get_all_contract_ids_by_owner,
     ContractIdAndSPE,
 )
-from pdr_backend.subgraph.subgraph_slot import fetch_slots_for_all_assets, PredictSlot
+from pdr_backend.subgraph.legacy.subgraph_slot import (
+    fetch_slots_for_all_assets,
+    PredictSlot,
+)
 from pdr_backend.util.time_types import UnixTimeS
 
 app = Flask(__name__)
