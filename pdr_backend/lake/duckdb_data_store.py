@@ -241,6 +241,26 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             raise e
 
     @enforce_types
+    def get_query_drop_records_from_table_by_id(self, drop_table_name: str, ref_table_name: str):
+        """
+        Builds the query string to perform the operation and returns it
+        @arguments:
+            drop_table_name - The table to drop records from.
+            ref_table_name - The table to reference for the IDs to drop.
+        @example:
+            get_query_drop_records_from_table_by_id("bronze_pdr_slots", "update_pdr_slots")
+        """
+
+        # Return the query string
+        return f"""
+        DELETE FROM {drop_table_name} 
+        WHERE ID IN (
+            SELECT DISTINCT ID 
+            FROM {ref_table_name}
+        );
+        """;
+
+    @enforce_types
     def drop_records_from_table_by_id(self, drop_table_name: str, ref_table_name: str):
         """
         Drop the records from the table by the provided IDs.
@@ -250,44 +270,101 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         @example:
             drop_records_from_table_by_id("bronze_pdr_slots", "update_pdr_slots")
         """
-        query = f"""
-        DELETE FROM {drop_table_name} 
-        WHERE ID IN (
-            SELECT DISTINCT ID 
-            FROM {ref_table_name}
-        )
-        """;
+        query = self.get_query_drop_records_from_table_by_id(drop_table_name, ref_table_name)
         self.execute_sql(query);
 
     @enforce_types
-    def move_table_data(self, temp_table, permanent_table):
+    def get_query_move_table_data(self, from_table, to_table):
         """
-        Move the table data from the temporary storage to the permanent storage.
+        Builds the query string to perform the operation and returns it
         @arguments:
-            temp_table - The temporary table object
-            permanent_table_name - The name of the permanent table.
+            from_table - where we'll be taking data from
+            to_table - wehere we'll be inserting data
         @example:
             move_table_data("temp_people", "people")
         """
 
         # Check if the table exists
         table_names = self.get_table_names()
+        assert from_table.fullname in table_names, f"Table {from_table.fullname} is "
 
-        if temp_table.fullname not in table_names:
-            logger.info(
-                "move_table_data - Table %s does not exist", temp_table.fullname
-            )
-
-        permanent_table_name = permanent_table.fullname
         # check if the permanent table exists
-        if permanent_table_name not in table_names:
-            # create table if it does not exist
-            self.execute_sql(
-                f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table.fullname}"
-            )
-            return
+        if to_table.fullname not in table_names:
+            return f"CREATE TABLE {to_table.fullname} AS SELECT * FROM {from_table.fullname};"
 
         # Move the data from the temporary table to the permanent table
-        self.execute_sql(
-            f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table.fullname}"
+        return f"INSERT INTO {to_table.fullname} SELECT * FROM {from_table.fullname};"
+
+    @enforce_types
+    def move_table_data(self, from_table, to_table):
+        """
+        Move the table data from the temporary storage to the permanent storage.
+        @arguments:
+            from_table - where we'll be taking data from
+            to_table - wehere we'll be inserting data
+        @example:
+            move_table_data("temp_people", "people")
+        """
+
+        # Check if the table exists
+        move_table_query = self.get_query_move_table_data(from_table, to_table)
+        self.execute_sql(move_table_query)
+
+    @enforce_types
+    def fill_table_from_csv(self, table_name: str, csv_folder_path: str):
+        """
+        Insert to table from CSV files.
+        @arguments:
+            table_name - A unique name for the table.
+            csv_folder_path - The path to the folder containing the CSV files.
+        @example:
+            fill_table_from_csv("data/csv", "people")
+        """
+
+        csv_files = glob.glob(os.path.join(csv_folder_path, "*.csv"))
+
+        logger.info("csv_files %s", csv_files)
+        for csv_file in csv_files:
+            df = pl.read_csv(csv_file)
+            self.insert_to_table(df, table_name)
+
+    @enforce_types
+    def update_data(self, df: pl.DataFrame, table_name: str, column_name: str):
+        """
+        Update the table with the provided DataFrame.
+        @arguments:
+            df - The Polars DataFrame to update.
+            table_name - A unique name for the table.
+            column_name - The column to use as the index for the update.
+        @example:
+            df = pl.DataFrame({
+                "id": [1, 2, 3],
+                "name": ["John", "Jane", "Doe"],
+                "age": [25, 30, 35]
+            })
+            update_data(df, "people", "id")
+        """
+
+        update_columns = ", ".join(
+            [f"{column} = {df[column]}" for column in df.columns]
         )
+        self.execute_sql(
+            f"""UPDATE {table_name}
+            SET {update_columns}
+            WHERE {column_name} = {df[column_name]}"""
+        )
+
+    @enforce_types
+    def row_count(self, table_name: str) -> int:
+        """
+        Get the number of rows in a table.
+        @arguments:
+            table_name - The name of the table.
+        @returns:
+            int - The number of rows in the table.
+        """
+        return self.duckdb_conn.execute(
+            f"SELECT COUNT(*) FROM {table_name}"
+        ).fetchone()[
+            0
+        ]  # type: ignore[index]

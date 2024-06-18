@@ -127,7 +127,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
 
         # execute the ETL
         etl.do_bronze_step()
-        etl._do_bronze_swap_to_prod()
+        etl._do_bronze_swap_to_prod_atomic()
         
         # get all bronze_pdr_predictions for this period
         bronze_prediction_table = NamedTable.from_dataclass(BronzePrediction).fullname
@@ -183,7 +183,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
 
         # execute the ETL
         etl.do_bronze_step()
-        etl._do_bronze_swap_to_prod()
+        etl._do_bronze_swap_to_prod_atomic()
         
         # get all bronze_pdr_predictions for this period
         bronze_prediction_table = NamedTable.from_dataclass(BronzePrediction).fullname
@@ -236,7 +236,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
 
         # execute the ETL
         etl.do_bronze_step()
-        etl._do_bronze_swap_to_prod()
+        etl._do_bronze_swap_to_prod_atomic()
         
         # get all bronze_pdr_predictions for this period
         bronze_prediction_table = NamedTable.from_dataclass(BronzePrediction).fullname
