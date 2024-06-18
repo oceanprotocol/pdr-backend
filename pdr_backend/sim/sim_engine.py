@@ -128,7 +128,7 @@ class SimEngine:
         train_feeds = self.predict_train_feedset.train_on
 
         # X, ycont, and x_df are all expressed in % change wrt prev candle
-        X, ycont, x_df, _ = data_f.create_xy(
+        X, ycont, ysignal, x_df, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
             predict_feed,
@@ -140,9 +140,8 @@ class SimEngine:
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         ycont_train, _ = ycont[st_:fin], ycont[fin : fin + 1]
 
-        prices = mergedohlcv_df[hist_col_name(predict_feed)]
-        curprice = prices[-2]
-        trueprice = prices[-1]
+        curprice = ysignal[-2]
+        trueprice = ysignal[-1]
 
         y_thr = 0.0  # always 0.0 when modeling % change
         ytrue = data_f.ycont_to_ytrue(ycont, y_thr)

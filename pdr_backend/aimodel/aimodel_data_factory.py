@@ -69,7 +69,7 @@ class AimodelDataFactory:
         predict_feed: ArgFeed,
         train_feeds: Optional[ArgFeeds] = None,
         do_fill_nans: bool = True,
-    ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
         @description
           Create X, y data for a regression setting
@@ -86,6 +86,7 @@ class AimodelDataFactory:
         @return
           X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
           ycont -- 1d array of [sample_i]:cont_value -- regression model outputs
+          ysignal -- 1d array. Un-transformed signal. Eg price, not % change
           x_df -- *pandas* DataFrame. See class docstring.
           xrecent -- [var_i]:value -- most recent X value. Bots use to predict
         """
@@ -170,11 +171,15 @@ class AimodelDataFactory:
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         hist_col = hist_col_name(predict_feed)
-        z = list(mergedohlcv_df[hist_col].pct_change()[1:])
-        y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
+        z1 = list(mergedohlcv_df[hist_col].pct_change()[1:])
+        ycont = np.array(_slice(z1, -testshift - N_train - 1, -testshift))
+
+        z2 = list(mergedohlcv_df[hist_col])
+        ysignal = np.array(_slice(z2, -testshift - N_train - 1, -testshift))
 
         # postconditions
-        assert X.shape[0] == y.shape[0]
+        assert X.shape[0] == ycont.shape[0]
+        assert X.shape[0] == ysignal.shape[0]
         assert X.shape[0] <= (ss.max_n_train + 1)
         assert X.shape[1] == x_dim_len
         assert isinstance(x_df, pd.DataFrame)
@@ -186,8 +191,7 @@ class AimodelDataFactory:
         logger.debug("Create model X/y data: done.")
 
         # return
-        ycont = y
-        return X, ycont, x_df, xrecent
+        return X, ycont, ysignal, x_df, xrecent
 
 
 @enforce_types
