@@ -172,6 +172,7 @@ my_logging.yaml
 logs/
 csvs/
 parquet_data/
+lake_data/
 pdr_predictions.parquet 
 
 # sim state
