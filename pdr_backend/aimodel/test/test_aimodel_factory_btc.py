@@ -30,13 +30,17 @@ SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 # run a single test below with e.g.
 # pytest pdr_backend/aimodel/test/test_aimodel_factory_btc.py::test_aimodel_btc[ClassifLinearRidge-1]
 
+
 @enforce_types
-@pytest.mark.parametrize("approach,autoregressive_n", [
-    ("ClassifLinearRidge", 1),
-    ("RegrLinearRidge", 1),
-    ("ClassifLinearRidge", 2),
-    ("RegrLinearRidge", 2),
-])
+@pytest.mark.parametrize(
+    "approach,autoregressive_n",
+    [
+        ("ClassifLinearRidge", 1),
+        ("RegrLinearRidge", 1),
+        ("ClassifLinearRidge", 2),
+        ("RegrLinearRidge", 2),
+    ],
+)
 def test_aimodel_btc(approach: str, autoregressive_n: int):
     n = autoregressive_n
     N, N_train = 5000, 4900
@@ -96,7 +100,7 @@ def test_aimodel_btc(approach: str, autoregressive_n: int):
     # create train/test data
     X_train, X_test = X[:N_train, :], X[N_train:, :]
     ycont_train, _ = ycont[:N_train], ycont[N_train:]
-    y_thr = 0.0 # always 0.0 when modeling % change
+    y_thr = 0.0  # always 0.0 when modeling % change
     ytrue = aimodel_data_factory.ycont_to_ytrue(ycont, y_thr)
     ytrue_train, ytrue_test = ytrue[:N_train], ytrue[N_train:]
 
@@ -116,8 +120,8 @@ def test_aimodel_btc(approach: str, autoregressive_n: int):
         _ = model.predict_ycont(X)
 
     # plot model response
-    sweep_vars=[0,1]
-    if n==1:
+    sweep_vars = [0, 1]
+    if n == 1:
         sweep_vars = [0]
     plot_data = AimodelPlotdata(
         model,
@@ -127,7 +131,7 @@ def test_aimodel_btc(approach: str, autoregressive_n: int):
         y_thr,
         colnames=list(x_df.columns),
         slicing_x=X[-1, :],  # arbitrary
-        sweep_vars=sweep_vars,  
+        sweep_vars=sweep_vars,
     )
     fig = plot_aimodel_response(plot_data)
     if SHOW_PLOT:
@@ -141,4 +145,3 @@ def test_aimodel_btc(approach: str, autoregressive_n: int):
     fig = plot_aimodel_varimps(plot_data)
     if SHOW_PLOT:
         fig.show()
-

@@ -144,7 +144,7 @@ class SimEngine:
         curprice = prices[-2]
         trueprice = prices[-1]
 
-        y_thr = 0.0 # always 0.0 when modeling % change
+        y_thr = 0.0  # always 0.0 when modeling % change
         ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 

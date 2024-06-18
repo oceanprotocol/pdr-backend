@@ -126,4 +126,3 @@ def test_create_xy_reg__handle_nan():
         predict_feed,
     )
     assert not has_nan(X) and not has_nan(y) and not has_nan(x_df)
-

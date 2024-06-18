@@ -38,6 +38,7 @@ class AimodelDataSS(StrMixin):
         """
         return self.d["autoregressive_n"]
 
+
 # =========================================================================
 # utilities for testing
 

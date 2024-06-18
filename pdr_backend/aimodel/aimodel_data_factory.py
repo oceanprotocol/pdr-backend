@@ -123,7 +123,9 @@ class AimodelDataFactory:
         x_list = []  # [col_i] : Series. Build this up. Not df here (slow)
         xrecent_list = []  ## ""
 
-        target_hist_cols = [hist_col_name(train_feed) for train_feed in train_feeds_list]
+        target_hist_cols = [
+            hist_col_name(train_feed) for train_feed in train_feeds_list
+        ]
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
             z = list(mergedohlcv_df[hist_col].pct_change()[1:])
@@ -143,13 +145,16 @@ class AimodelDataFactory:
                 logger.error(s)
                 sys.exit(1)
 
-            for delayshift in range(ss.autoregressive_n, 0, -1): # [.., 3, 2, 1, 0]
+            for delayshift in range(ss.autoregressive_n, 0, -1):  # [.., 3, 2, 1, 0]
                 shift = testshift + delayshift
                 # 1 point for test, the rest for train data
                 assert (shift + N_train + 1) <= len(z)
-                x_col = hist_col + ":" + \
-                    f"(z(t-{delayshift+1})-z(t-{delayshift+1+1}))" + \
-                    f"/z(t-{delayshift+1+1})"
+                x_col = (
+                    hist_col
+                    + ":"
+                    + f"(z(t-{delayshift+1})-z(t-{delayshift+1+1}))"
+                    + f"/z(t-{delayshift+1+1})"
+                )
                 xcol_list += [x_col]
                 x_list += [pd.Series(_slice(z, -shift - N_train - 1, -shift))]
                 xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
@@ -164,7 +169,7 @@ class AimodelDataFactory:
         xrecent = xrecent_df.to_numpy()[0, :]
 
         # y is set from yval_{exch_str, signal_str, pair_str}
-        hist_col = hist_col_name(predict_feed)        
+        hist_col = hist_col_name(predict_feed)
         z = list(mergedohlcv_df[hist_col].pct_change()[1:])
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 

@@ -12,7 +12,6 @@ from pdr_backend.ppss.predictoor_ss import (
 )
 
 
-
 @enforce_types
 def test_create_xy__0__diff1():
     # create predictoor_ss
@@ -47,8 +46,8 @@ def test_create_xy__0__diff1():
     z_d1_abs = np.array(vals[1:]) - np.array(vals[:-1])
     z_d1_rel = z_d1_abs / np.array(vals[:-1])
     assert z_d1_abs[-1] == 1.1 - 0.1
-    assert z_d1_rel[-1] == (1.1 - 0.1)/(0.1)
-    
+    assert z_d1_rel[-1] == (1.1 - 0.1) / (0.1)
+
     # set target X,y
     target_x_df = pd.DataFrame(
         {
@@ -57,11 +56,11 @@ def test_create_xy__0__diff1():
         }
     )
     target_X = target_x_df.to_numpy()
-    assert target_X.shape == (4 + 1, 2) # (max_n_train + 1, num_cols)
+    assert target_X.shape == (4 + 1, 2)  # (max_n_train + 1, num_cols)
 
     target_xrecent = np.array(z_d1_rel[-2:])
     target_y = np.array(z_d1_rel[-5:])  # oldest to newest
-    assert len(target_y) == 4 + 1 # max_n_train + 1
+    assert len(target_y) == 4 + 1  # max_n_train + 1
 
     # do work
     testshift = 0
@@ -88,7 +87,6 @@ def test_create_xy__0__diff1():
     assert str(x_df) == str(target_x_df)
     assert_allclose(xrecent, target_xrecent)
 
-    
     # do work
     testshift = 1
     X2, y2, x_df2, xrecent2 = factory.create_xy(
@@ -97,8 +95,8 @@ def test_create_xy__0__diff1():
         predict_feed,
         train_feeds,
     )
-    assert X2[-1,0] == X[-1-1,0]
-    assert y2[-1] == y[-1-1]
+    assert X2[-1, 0] == X[-1 - 1, 0]
+    assert y2[-1] == y[-1 - 1]
     assert all(x_df.columns == x_df2.columns)
     col0 = x_df.columns[0]
     assert x_df2[col0][3] == x_df[col0][3]
