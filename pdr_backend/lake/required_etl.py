@@ -137,6 +137,58 @@ class ETL:
                 db.drop_table(update_table.fullname)
                 db.drop_table(temp_update_table.fullname)
 
+    def _do_bronze_swap_to_prod_atomic(self):
+        """
+        @description
+            Merge the bronze ETL tables against prod database
+            This needs to become a single transaction per table
+            Such that it remains atomic, and is able to resume if it fails
+        """
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        
+        bronze_tables = [BronzePrediction]
+        for table in bronze_tables:
+            prod_table = NamedTable.from_dataclass(table)
+            etl_table = ETLTable.from_dataclass(table)
+            temp_table = TempTable.from_dataclass(table)
+            update_table = UpdateTable.from_dataclass(table)
+            temp_update_table = TempUpdateTable.from_dataclass(table)
+
+            if db.table_exists(update_table.fullname):
+                # Insert new records into live tables
+                # We don't know if the table exists or not, so get the query string
+                temp_to_prod_query = db.get_query_move_table_data(temp_table, prod_table)
+                
+                # We'll also get the query string from the helper
+                drop_records_from_table_by_id_query = db.get_query_drop_records_from_table_by_id(
+                    prod_table.fullname,
+                    temp_update_table.fullname
+                )
+                
+                # Here, the table needs to exist. So we'll build our own insert statement.
+                temp_update_to_prod_query = f"""
+                INSERT INTO {prod_table.fullname} SELECT * FROM {temp_update_table.fullname};
+                """
+
+                # We then need to drop the rows after all the ETL is complete
+                cleanup_query = f"""
+                DROP VIEW IF EXISTS {etl_table.fullname};
+                DROP TABLE IF EXISTS {temp_table.fullname};
+                DROP TABLE IF EXISTS {update_table.fullname};
+                DROP TABLE IF EXISTS {temp_update_table.fullname};
+                """
+
+                # Assemble and execute final transaction
+                final_query = f"""
+                {temp_to_prod_query}
+                {drop_records_from_table_by_id_query}
+                {temp_update_to_prod_query}
+                {cleanup_query}
+                """
+
+                db.execute_sql(final_query)
+
+                
     def do_etl(self):
         """
         @description
