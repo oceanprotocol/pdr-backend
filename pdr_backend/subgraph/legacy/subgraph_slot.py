@@ -1,11 +1,20 @@
-from typing import Dict, List
+from dataclasses import dataclass
+from typing import Any, Dict, List
 
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
-from pdr_backend.lake.slot import Slot
 from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.util.time_types import UnixTimeS
+
+
+@dataclass
+class PredictSlot:
+    ID: str
+    slot: str
+    trueValues: List[Dict[str, Any]]
+    roundSumStakesUp: float
+    roundSumStakes: float
 
 
 @enforce_types
@@ -41,15 +50,12 @@ def get_predict_slots_query(
                 slot_lte: %s
                 slot_gte: %s
                 predictContract_in: %s
-            },
-            orderBy: slot,
-            orderDirection: asc
+            }
             ) {
             id
             slot
             trueValues {
                 id
-                timestamp
                 trueValue
             }
             roundSumStakesUp
@@ -70,11 +76,10 @@ def get_slots(
     addresses: List[str],
     end_ts_param: UnixTimeS,
     start_ts_param: UnixTimeS,
-    first: int,
     skip: int,
-    slots: List[Slot],
+    slots: List[PredictSlot],
     network: str = "mainnet",
-) -> List[Slot]:
+) -> List[PredictSlot]:
     """
     Retrieves slots information for given addresses and a specified time range from a subgraph.
 
@@ -87,16 +92,18 @@ def get_slots(
         network: The blockchain network to query ('mainnet' or 'testnet').
 
     Returns:
-        A list of Slot TypedDicts with the queried slot information.
+        A list of PredictSlot TypedDicts with the queried slot information.
     """
 
     slots = slots or []
+
+    records_per_page = 1000
 
     query = get_predict_slots_query(
         addresses,
         end_ts_param,
         start_ts_param,
-        first,
+        records_per_page,
         skip,
     )
 
@@ -108,22 +115,15 @@ def get_slots(
 
     new_slots = result["data"]["predictSlots"] or []
 
-    # Convert the list of dicts to a list of Slot objects
+    # Convert the list of dicts to a list of PredictSlot objects
     # by passing the dict as keyword arguments
     # convert roundSumStakesUp and roundSumStakes to float
     new_slots = [
-        Slot(
+        PredictSlot(
             **{
                 "ID": slot["id"],
-                "timestamp": slot["slot"],
                 "slot": slot["slot"],
-                "truevalue": (
-                    slot["trueValues"][0]["trueValue"]
-                    if "trueValues" in slot
-                    and slot["trueValues"] is not None
-                    and len(slot["trueValues"]) > 0
-                    else None
-                ),
+                "trueValues": slot["trueValues"],
                 "roundSumStakesUp": float(slot["roundSumStakesUp"]),
                 "roundSumStakes": float(slot["roundSumStakes"]),
             }
@@ -132,33 +132,49 @@ def get_slots(
     ]
 
     slots.extend(new_slots)
+    if len(new_slots) == records_per_page:
+        return get_slots(
+            addresses,
+            end_ts_param,
+            start_ts_param,
+            skip + records_per_page,
+            slots,
+            network,
+        )
     return slots
 
 
 @enforce_types
-def fetch_slots(
+def fetch_slots_for_all_assets(
+    asset_ids: List[str],
     start_ts_param: UnixTimeS,
     end_ts_param: UnixTimeS,
-    contracts: List[str],
-    first: int,
-    skip: int,
     network: str = "mainnet",
-) -> Dict[str, List[Slot]]:
+) -> Dict[str, List[PredictSlot]]:
     """
     Fetches slots for all provided asset IDs within a given time range and organizes them by asset.
 
     Args:
-        contracts: A list of asset identifiers for which slots will be fetched.
+        asset_ids: A list of asset identifiers for which slots will be fetched.
         start_ts_param: The Unix timestamp marking the beginning of the desired time range.
         end_ts_param: The Unix timestamp marking the end of the desired time range.
         network: The blockchain network to query ('mainnet' or 'testnet').
 
     Returns:
-        A dictionary mapping asset IDs to lists of Slot dataclass
+        A dictionary mapping asset IDs to lists of PredictSlot dataclass
         containing slot information.
     """
 
-    all_slots = get_slots(
-        contracts, end_ts_param, start_ts_param, first, skip, [], network
-    )
-    return all_slots
+    all_slots = get_slots(asset_ids, end_ts_param, start_ts_param, 0, [], network)
+
+    slots_by_asset: Dict[str, List[PredictSlot]] = {}
+    for slot in all_slots:
+        slot_id = slot.ID
+        # split the id to get the asset id
+        asset_id = slot_id.split("-")[0]
+        if asset_id not in slots_by_asset:
+            slots_by_asset[asset_id] = []
+
+        slots_by_asset[asset_id].append(slot)
+
+    return slots_by_asset

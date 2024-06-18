@@ -6,7 +6,7 @@ import polars as pl
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.legacy.table import Table
 from pdr_backend.subgraph.subgraph_predictions import fetch_filtered_predictions
-from pdr_backend.lake.table_pdr_predictions import predictions_schema
+from pdr_backend.lake.legacy.table_pdr_predictions import predictions_schema
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -58,8 +58,8 @@ table_df_schema = {
     "user": Utf8,
 }
 table_name = "pdr_test_df"
-file_path = f"./parquet_data/{table_name}.parquet"
-file_path2 = "./parquet_data/test_prediction_table_multiple.parquet"
+file_path = f"./lake_data/{table_name}.parquet"
+file_path2 = "./lake_data/test_prediction_table_multiple.parquet"
 
 # delete test file if already exists
 if os.path.exists(file_path):
@@ -124,6 +124,10 @@ def test_save_table():
         st_timestr=st_timestr,
         fin_timestr=fin_timestr,
     )
+
+    ###
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
     table = Table(table_name, table_df_schema, ppss)
 
