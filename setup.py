@@ -9,11 +9,11 @@ from setuptools import find_packages, setup
 # Installed by pip install pdr-backend
 # or pip install -e .
 install_requirements = [
-    "black==24.2.0",
+    "black==24.3.0",
     "bumpversion",
     "ccxt==4.3.46",
     "coverage",
-    "dash==2.17.1",
+    "dash[testing]==2.17.1",
     "dash_bootstrap_components==1.6.0",
     "dateparser==1.2.0",
     "duckdb==1.0.0",
@@ -46,7 +46,6 @@ install_requirements = [
     "statsmodels==0.14.2",
     "types-pytz==2024.1.0.20240417",
     "types-pyYAML==6.0.12.20240311",
-    "types-requests==2.32.0.20240602",
     "dash_bootstrap_components==1.6.0",
     "web3==6.19.0",
     "sapphire.py==0.2.3",
