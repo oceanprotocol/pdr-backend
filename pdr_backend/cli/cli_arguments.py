@@ -41,6 +41,8 @@ HELP_DOT = """
 To pass args down to ppss, use dot notation.
 Example: pdr lake raw|etl update ppss.yaml sapphire-mainnet
 pdr lake raw|etl drop ppss.yaml sapphire-mainnet 2023-06-01
+pdr lake describe ppss.yaml sapphire-mainnet
+pdr lake validate ppss.yaml sapphire-mainnet
 """
 
 HELP_OTHER_TOOLS = """
