@@ -98,13 +98,13 @@ def test_create_xy_reg__handle_nan():
 
     # run create_xy() and force the nans to stick around
     # -> we want to ensure that we're building X/y with risk of nan
-    X, y, x_df, _ = factory.create_xy(
-        mergedohlcv_df,
-        testshift,
-        predict_feed,
-        do_fill_nans=False,
-    )
-    assert has_nan(X) and has_nan(y) and has_nan(x_df)
+    with pytest.raises(ValueError):
+        _, _, _, _ = factory.create_xy(
+            mergedohlcv_df,
+            testshift,
+            predict_feed,
+            do_fill_nans=False,
+        )
 
     # nan approach 1: fix externally
     mergedohlcv_df2 = fill_nans(mergedohlcv_df)

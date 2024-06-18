@@ -104,7 +104,9 @@ class AimodelDataFactory:
         #  let's verify! The timestamps should be in ascending order
         uts = mergedohlcv_df["timestamp"].to_list()
         assert uts == sorted(uts, reverse=False)
-        if do_fill_nans and has_nan(mergedohlcv_df):
+        if has_nan(mergedohlcv_df):
+            if not do_fill_nans:
+                raise ValueError("We have nans; need to fill them beforehand")
             mergedohlcv_df = fill_nans(mergedohlcv_df)
 
         # condition other inputs
@@ -124,12 +126,9 @@ class AimodelDataFactory:
         target_hist_cols = [hist_col_name(train_feed) for train_feed in train_feeds_list]
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
-            z_d0 = mergedohlcv_df[hist_col].to_numpy()  # [.. z(t-2), z(t-1)]
-            z_d1_abs = z_d0[1:] - z_d0[:-1]  #[.. z(t-2)-z(t-3), z(t-1)-(t-2)]
-            z_d1_rel = z_d1_abs / z_d0[:-1] #[.. (z(t-2)-z(t-3))/z(t-2), (z(t-1)-z(t-2))/z(t-2)]
-            z = list(z_d1_rel)
+            z = list(mergedohlcv_df[hist_col].pct_change()[1:])
             maxshift = testshift + ss.autoregressive_n
-            N_train = min(ss.max_n_train, len(z_d0) - maxshift - 1 - 1)
+            N_train = min(ss.max_n_train, len(z) - maxshift - 1)
             s = "\n"
             s += f"  ss.max_n_train={ss.max_n_train}\n"
             s += f"  ss.autoregressive_n={ss.autoregressive_n}\n"
@@ -165,11 +164,8 @@ class AimodelDataFactory:
         xrecent = xrecent_df.to_numpy()[0, :]
 
         # y is set from yval_{exch_str, signal_str, pair_str}
-        hist_col = hist_col_name(predict_feed) 
-        z_d0 = mergedohlcv_df[hist_col].to_numpy()  # [.. z(t-2), z(t-1)]
-        z_d1_abs = z_d0[1:] - z_d0[:-1]  #[.. z(t-2)-z(t-3), z(t-1)-(t-2)]
-        z_d1_rel = z_d1_abs / z_d0[:-1] #[.. (z(t-2)-z(t-3))/z(t-2), (z(t-1)-z(t-2))/z(t-2)]
-        z = list(z_d1_rel)
+        hist_col = hist_col_name(predict_feed)        
+        z = list(mergedohlcv_df[hist_col].pct_change()[1:])
         y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
 
         # postconditions
