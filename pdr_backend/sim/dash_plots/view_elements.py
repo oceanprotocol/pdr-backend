@@ -1,6 +1,6 @@
 from dash import dcc, html
-from plotly.graph_objs import Figure
 from enforce_typing import enforce_types
+from plotly.graph_objs import Figure
 
 figure_names = [
     "pdr_profit_vs_time",
@@ -96,6 +96,7 @@ def get_tabs(figures):
                 single_graph(figures, "pdr_profit_vs_time", width="100%"),
                 single_graph(figures, "pdr_profit_vs_ptrue", width="50%"),
             ],
+            "className": "predictor_profit_tab",
         },
         {
             "name": "Trader Profit",
@@ -103,12 +104,14 @@ def get_tabs(figures):
                 single_graph(figures, "trader_profit_vs_time", width="100%"),
                 single_graph(figures, "trader_profit_vs_ptrue", width="50%"),
             ],
+            "className": "trader_profit_tab",
         },
         {
             "name": "Model performance",
             "components": [
                 single_graph(figures, "model_performance_vs_time", "100%"),
             ],
+            "className": "model_performance_tab",
         },
         {
             "name": "Model response",
@@ -122,6 +125,7 @@ def get_tabs(figures):
                     width2="70%",
                 )
             ],
+            "className": "model_response_tab",
         },
         {
             "name": "Model residuals",
@@ -135,6 +139,7 @@ def get_tabs(figures):
                     width2="40%",
                 ),
             ],
+            "className": "model_residuals_tab",
         },
     ]
 
@@ -161,6 +166,7 @@ def get_tabs_component(elements, selectedTab):
                 children=e["components"],
                 style={"width": "200px"},
                 selected_style={"borderLeft": "4px solid blue"},
+                className=e["className"],
             )
             for e in elements
         ],
