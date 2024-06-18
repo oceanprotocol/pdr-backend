@@ -176,3 +176,28 @@ def get_graphs_container():
             "justifyContent": "space-between",
         },
     )
+
+
+def get_layout():
+    return html.Div(
+        [
+            dcc.Store(id="data-folder"),
+            dcc.Store(id="file-data"),
+            dcc.Store(id="window-data"),
+            dcc.Store(id="transition-data"),
+            html.H1(
+                "ARIMA-style feed analysis",
+                id="page_title",
+                style={"width": "100%", "textAlign": "center"},
+            ),
+            html.Div(id="input-elements", children=get_input_elements()),
+            html.Div(id="error-message"),
+            dcc.Loading(
+                id="loading",
+                type="default",
+                children=get_graphs_container(),
+                style={"height": "100%", "display": "flex", "alignItems": "flexStart"},
+                custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
+            ),
+        ]
+    )

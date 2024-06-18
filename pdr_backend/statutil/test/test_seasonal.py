@@ -1,16 +1,19 @@
 import os
-from enforce_typing import enforce_types
-import pandas as pd
 
+import pandas as pd
+from dash import Dash
+from enforce_typing import enforce_types
+
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
+from pdr_backend.statutil.dash_plots.callbacks import get_callbacks
+from pdr_backend.statutil.dash_plots.view_elements import get_layout
 from pdr_backend.statutil.seasonal import (
     SeasonalDecomposeFactory,
-    plot_seasonal,
     SeasonalPlotdata,
+    plot_seasonal,
 )
-from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.util.mathutil import has_nan
 from pdr_backend.util.time_types import UnixTimeMs
-
 
 DATA_FILE = (
     "./pdr_backend/lake/test/merged_ohlcv_df_BTC-ETH_2024-02-01_to_2024-03-08.csv"
@@ -51,6 +54,21 @@ def test_seasonal():
 
     if SHOW_PLOT:
         fig.show()
+
+
+@enforce_types
+def test_empty_dashboard(tmpdir, dash_duo):
+    app = Dash("pdr_backend.statutil.arima_dash")
+    app.config["suppress_callback_exceptions"] = True
+    app.layout = get_layout()
+    app.layout.children[0].data = str(tmpdir)
+    get_callbacks(app)
+
+    dash_duo.start_server(app)
+    dash_duo.wait_for_text_to_equal(
+        "#error-message h2",
+        "No data found! Fetch ohlcv data before running the ARIMA plots.",
+    )
 
 
 @enforce_types
