@@ -11,10 +11,7 @@ from sklearn.metrics import log_loss, precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel import Aimodel
-from pdr_backend.aimodel.aimodel_data_factory import (
-    AimodelDataFactory,
-    hist_col_name,
-)
+from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.cli.arg_feed import ArgFeed

@@ -67,7 +67,7 @@ def test_create_xy__0__diff1():
     factory = AimodelDataFactory(predictoor_ss)
     predict_feed = predictoor_ss.predict_train_feedsets[0].predict
     train_feeds = predictoor_ss.predict_train_feedsets[0].train_on
-    X, y, x_df, xrecent = factory.create_xy(
+    X, y, _, x_df, xrecent = factory.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,
@@ -89,7 +89,7 @@ def test_create_xy__0__diff1():
 
     # do work
     testshift = 1
-    X2, y2, x_df2, xrecent2 = factory.create_xy(
+    X2, y2, _, x_df2, xrecent2 = factory.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,

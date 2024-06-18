@@ -406,7 +406,7 @@ class PredictoorAgent:
         mergedohlcv_df = self.get_ohlcv_data()
 
         data_f = AimodelDataFactory(self.ppss.predictoor_ss)
-        X, ycont, _, xrecent = data_f.create_xy(
+        X, ycont, _, _, xrecent = data_f.create_xy(
             mergedohlcv_df,
             testshift=0,
             predict_feed=feedset.predict,

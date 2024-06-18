@@ -4,10 +4,7 @@ from enforce_typing import enforce_types
 import pytest
 from pytest import approx
 
-from pdr_backend.aimodel.aimodel_data_factory import (
-    AimodelDataFactory,
-    hist_col_name,
-)
+from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.aimodel.aimodel_plotter import (
@@ -55,14 +52,14 @@ def test_aimodel_btc_static(approach: str, autoregr_n: int):
     testshift = 0
     predict_feed = pdr_ss.predict_train_feedsets[0].predict
     train_feeds = pdr_ss.predict_train_feedsets[0].train_on
-    X, ycont, x_df, _ = data_f.create_xy(
+    X, ycont, _, x_df, _ = data_f.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,
         train_feeds,
     )
     _assert_cols_ok(x_df, autoregr_n)
-    
+
     # create train/test data
     N_train = max_n_train - 100
     X_train, X_test = X[:N_train, :], X[N_train:, :]
@@ -80,7 +77,9 @@ def test_aimodel_btc_static(approach: str, autoregr_n: int):
     ytrue_test_hat = model.predict_true(X_test)
     train_acc = classif_acc(ytrue_train_hat, ytrue_train)
     test_acc = classif_acc(ytrue_test_hat, ytrue_test)
-    #print(f"train_acc={train_acc:.3f}, test_acc={test_acc:.3f}")
+    assert train_acc < 0.95  # very loose
+    assert test_acc < 0.95  # ""
+    # print(f"train_acc={train_acc:.3f}, test_acc={test_acc:.3f}")
 
     _ = model.predict_ptrue(X)
     if model.do_regr:
@@ -121,7 +120,7 @@ def test_aimodel_btc_dynamic():
     sim_test_n = 200
     yerrs = []
     for test_i in range(sim_test_n):
-        #print(f"Iter #{test_i+1}/{sim_test_n}")
+        # print(f"Iter #{test_i+1}/{sim_test_n}")
         yerr = _run_one_iter(autoregr_n, max_n_train, sim_test_n, test_i)
         yerrs.append(yerr)
 
@@ -130,33 +129,33 @@ def test_aimodel_btc_dynamic():
     if SHOW_PLOT:
         fig.show()
 
+
 @enforce_types
 def _run_one_iter(autoregr_n, max_n_train, sim_test_n, test_i) -> float:
     """@return -- yerr"""
     mergedohlcv_df = _get_btc_data()
-    
+
     # mimic sim_engine::run_one_iter()
     approach = "RegrLinearRidge"
     pdr_ss = _get_predictoor_ss(approach, autoregr_n, max_n_train)
-    
+
     testshift = sim_test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
     data_f = AimodelDataFactory(pdr_ss)
     predict_feed = pdr_ss.predict_train_feedsets[0].predict
     train_feeds = pdr_ss.predict_train_feedsets[0].train_on
-    
+
     # X, ycont, and x_df are all expressed in % change wrt prev candle
-    X, ycont, ysignal, x_df, _ = data_f.create_xy(
+    X, ycont, ysignal, _, _ = data_f.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,
         train_feeds,
     )
-    colnames = list(x_df.columns)
 
     st_, fin = 0, X.shape[0] - 1
     X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
     ycont_train, _ = ycont[st_:fin], ycont[fin : fin + 1]
-    
+
     curprice = ysignal[-2]
     trueprice = ysignal[-1]
 
@@ -169,13 +168,14 @@ def _run_one_iter(autoregr_n, max_n_train, sim_test_n, test_i) -> float:
 
     # predict price direction
     prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+    assert 0.0 <= prob_up <= 1.0  # very loose
 
     # update classifier metrics
     assert model.do_regr
     relchange = model.predict_ycont(X_test)[0]
     predprice = curprice + relchange * curprice
     yerr = trueprice - predprice
-    
+
     s = f"prevprice={curprice:8.1f}"
     s += f", true_change={(trueprice-curprice)/(curprice)*100:9.5f}%"
     s += f", true_newprice={trueprice:8.1f}"
@@ -199,8 +199,9 @@ def _assert_cols_ok(x_df, autoregr_n: int):
         ]
         assert list(x_df.columns) == target_x_df_columns
 
+
 @enforce_types
-def _get_predictoor_ss(approach:str, autoregr_n:int, max_n_train:int):
+def _get_predictoor_ss(approach: str, autoregr_n: int, max_n_train: int):
     # create predictoor_ss
     feedset_list = [
         {
@@ -223,6 +224,7 @@ def _get_predictoor_ss(approach:str, autoregr_n:int, max_n_train:int):
         ),
     )
     return PredictoorSS(d)
+
 
 @enforce_types
 def _get_btc_data():
