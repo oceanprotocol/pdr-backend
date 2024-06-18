@@ -182,13 +182,15 @@ class DuckDBDataStore(BaseDataStore):
         @example:
             drop_records_from_table_by_id("bronze_pdr_slots", "update_pdr_slots")
         """
-        self.execute_sql(f"""
+        query = f"""
         DELETE FROM {drop_table_name} 
         WHERE ID IN (
-            SELECT ID 
+            SELECT DISTINCT ID 
             FROM {ref_table_name}
         )
-        """)
+        """;
+        print(query)
+        self.execute_sql(query);
 
     @enforce_types
     def move_table_data(self, temp_table, permanent_table):

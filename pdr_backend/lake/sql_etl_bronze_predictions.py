@@ -97,7 +97,7 @@ def _do_sql_bronze_predictions(
                 {bronze_prediction_table.fullname}.last_event_timestamp
             ) as last_event_timestamp
         FROM _update as u
-        LEFT JOIN {bronze_prediction_table.fullname}
+        INNER JOIN {bronze_prediction_table.fullname}
         ON u.ID = {bronze_prediction_table.fullname}.ID;
         """
     
