@@ -5,7 +5,7 @@ import polars as pl
 from enforce_typing import enforce_types
 from polars.dataframe.frame import DataFrame
 
-from pdr_backend.lake.required_etl import ETL
+from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.renderers.cli import CliRenderer

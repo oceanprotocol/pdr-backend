@@ -9,7 +9,6 @@ from enforce_typing import enforce_types
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.required_etl import ETL as RequiredETL
 from pdr_backend.lake.payout import Payout, mock_payout, mock_payouts
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import (
@@ -702,7 +701,7 @@ def _sample_etl(
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
 
     # provide the setup data to the test
-    etl = RequiredETL(ppss, gql_data_factory)
+    etl = ETL(ppss, gql_data_factory)
     db = _get_test_DuckDB(tmpdir)
 
     yield etl, db, gql_tables
