@@ -52,9 +52,8 @@ class ArgTimeframes(List[ArgTimeframe]):
 
         frames = []
         for timeframe in timeframes:
-            if isinstance(timeframe, str):
-                frame = ArgTimeframe(timeframe)
-                frames.append(frame)
+            frame = ArgTimeframe(timeframe) if isinstance(timeframe, str) else timeframe
+            frames.append(frame)
 
         super().__init__(frames)
 

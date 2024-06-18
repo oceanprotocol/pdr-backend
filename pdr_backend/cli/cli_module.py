@@ -17,8 +17,8 @@ from pdr_backend.cli.cli_arguments import (
 )
 from pdr_backend.deployer.deployer import main as deployer_main
 from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
-from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS
+from pdr_backend.cli.cli_module_lake import do_lake_subcommand
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
@@ -50,6 +50,12 @@ def _do_main():
         do_help_short(0)
     if sys.argv[1] == "help_long":
         do_help_long(0)
+
+    print("do_lake_submcommand: parsed_args:", sys.argv[1:])
+
+    if sys.argv[1] == "lake" and sys.argv[2] in LAKE_SUBCOMMANDS:
+        do_lake_subcommand(sys.argv[2:])
+        return
 
     func_name = f"do_{sys.argv[1]}"
     func = globals().get(func_name)
@@ -149,33 +155,11 @@ def do_deployer(args, nested_args=None):
 
 @enforce_types
 # pylint: disable=unused-argument
-def do_lake(args, nested_args=None):
+def do_ohlcv(args, nested_args=None):
     ppss = args.PPSS
     ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
     df = ohlcv_data_factory.get_mergedohlcv_df()
     print(df)
-
-
-@enforce_types
-# pylint: disable=unused-argument
-def do_analytics(args, nested_args=None):
-    """
-    @description
-        This runs all dependencies to build analytics
-        All raw, clean, and aggregate data will be generated
-        1. All subgraph data will be fetched
-        2. All analytic data will be built
-        3. Lake contains all required data
-        4. Dashboards read from lake
-
-        Please use nested_args to control lake_ss
-        ie: st_timestr, fin_timestr, parquet_dir
-    """
-    ppss = args.PPSS
-
-    gql_data_factory = GQLDataFactory(ppss)
-    etl = ETL(ppss, gql_data_factory)
-    etl.do_etl()
 
 
 @enforce_types
@@ -220,7 +204,7 @@ def do_get_traction_info(args, nested_args=None):
         END = End time string (e.g. "2022-01-01")
     """
     ppss = args.PPSS
-    ppss.lake_ss.d["parquet_dir"] = args.PQDIR
+    ppss.lake_ss.d["lake_dir"] = args.PQDIR
     get_traction_info_main(ppss, args.ST, args.END)
 
 

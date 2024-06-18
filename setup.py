@@ -9,6 +9,7 @@ from setuptools import find_packages, setup
 # Installed by pip install pdr-backend
 # or pip install -e .
 install_requirements = [
+    "black==24.3.0",
     "bumpversion",
     "ccxt==4.3.46",
     "coverage",
@@ -46,7 +47,7 @@ install_requirements = [
     "dash_bootstrap_components==1.6.0",
     "web3==6.19.0",
     "sapphire.py==0.2.3",
-    "typeguard==4.3.0",
+    "typeguard==4.2.1",
     "ocean-contracts==2.0.4",  # install this last
 ]
 

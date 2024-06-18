@@ -43,8 +43,8 @@ def _constructor_d_with_fast_runtime(tmpdir):
     feedset_list = [{"train_on": feed_s, "predict": feed_s}]
 
     # lake ss
-    parquet_dir = os.path.join(tmpdir, "parquet_data")
-    lake_d = lake_ss_test_dict(parquet_dir, input_feeds)
+    lake_dir = os.path.join(tmpdir, "parquet_data")
+    lake_d = lake_ss_test_dict(lake_dir, input_feeds)
     assert "st_timestr" in lake_d
     assert "fin_timestr" in lake_d
     lake_d["st_timestr"] = "2023-06-18"

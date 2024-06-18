@@ -1,10 +1,10 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.subgraph.legacy.trueval import Trueval, mock_truevals
+from pdr_backend.lake.trueval import Trueval, mock_truevals
 
 
 @enforce_types
-def test_subscriptions():
+def test_truevals():
     truevals = mock_truevals()
 
     assert len(truevals) == 6
