@@ -112,22 +112,16 @@ class ETL:
             update_table = UpdateTable.from_dataclass(table)
             temp_update_table = TempUpdateTable.from_dataclass(table)
 
-            prod_table_exists = db.table_exists(prod_table.fullname)
-            etl_table_exists = db.view_exists(etl_table.fullname)
-            temp_table_exists = db.table_exists(temp_table.fullname)
-            update_table_exists = db.table_exists(update_table.fullname)
-            temp_update_table_exists = db.table_exists(temp_update_table.fullname)
-
-            print("prod_table_exists", prod_table_exists)
-            print("etl_table_exists", etl_table_exists)
-            print("temp_table_exists", temp_table_exists)
-            print("update_table_exists", update_table_exists)
-            print("temp_update_table_exists", temp_update_table_exists)
-
             if db.table_exists(update_table.fullname):
                 # Insert new records into live tables
                 db.move_table_data(temp_table, prod_table)
                 
+                # _update_table_records = db.query_data(f"SELECT * FROM {update_table.fullname}")
+                # _update_table_records.write_csv(f"update_records_before_swap_strategy.csv")
+
+                # _temp_update_records = db.query_data(f"SELECT * FROM {temp_update_table.fullname}")
+                # _temp_update_records.write_csv(f"temp_update_records_before_swap_strategy.csv")
+
                 # # drop all records that were updated
                 db.drop_records_from_table_by_id(
                     drop_table_name=prod_table.fullname,
@@ -137,7 +131,7 @@ class ETL:
                 # # Finally, insert the updated records into live table
                 db.move_table_data(temp_update_table, prod_table)
 
-                # # Drop the update table 
+                # # Drop all ETL tables 
                 db.drop_view(etl_table.fullname)
                 db.drop_table(temp_table.fullname)
                 db.drop_table(update_table.fullname)
