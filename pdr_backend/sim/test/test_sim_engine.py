@@ -12,7 +12,7 @@ from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
 from pdr_backend.sim.dash_plots.callbacks import get_callbacks
-from pdr_backend.sim.dash_plots.view_elements import figure_names, get_layout
+from pdr_backend.sim.dash_plots.view_elements import get_layout
 from pdr_backend.sim.sim_engine import SimEngine
 
 
@@ -75,14 +75,14 @@ def test_sim_engine(tmpdir, dash_duo):
     )
 
     # default visibility: shows figure from first tab
-    dash_duo.find_element(f"#pdr_profit_vs_time")
+    dash_duo.find_element("#pdr_profit_vs_time")
 
     # does not show figures from other tabs
     with pytest.raises(NoSuchElementException):
-        dash_duo.find_element(f"#trader_profit_vs_time")
+        dash_duo.find_element("#trader_profit_vs_time")
 
     with pytest.raises(NoSuchElementException):
-        dash_duo.find_element(f"#model_performance_vs_time")
+        dash_duo.find_element("#model_performance_vs_time")
 
     tabs = {
         "predictor_profit_tab": ["pdr_profit_vs_time", "pdr_profit_vs_ptrue"],
