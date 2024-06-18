@@ -133,15 +133,6 @@ class SimEngine:
             predict_feed,
             train_feeds,
         )
-
-        shifted_mergedohlcv_df = mergedohlcv_df[
-            pdr_ss.aimodel_ss.autoregressive_n + len(x_df) - 2
-        ]  # t-2
-        high_col = f"{predict_feed.exchange}:{predict_feed.pair}:high"
-        low_col = f"{predict_feed.exchange}:{predict_feed.pair}:low"
-        high_value = shifted_mergedohlcv_df[high_col].to_numpy()[0]
-        low_value = shifted_mergedohlcv_df[low_col].to_numpy()[0]
-
         colnames = list(x_df.columns)
 
         st_, fin = 0, X.shape[0] - 1
@@ -150,6 +141,14 @@ class SimEngine:
 
         curprice = ycont_train[-1]
         trueprice = ycont_test[-1]
+
+        shifted_mergedohlcv_df = mergedohlcv_df.filter(
+            (pl.col(f"{predict_feed.exchange}:{predict_feed.pair}:close") == curprice)
+        )
+        high_col = f"{predict_feed.exchange}:{predict_feed.pair}:high"
+        low_col = f"{predict_feed.exchange}:{predict_feed.pair}:low"
+        high_value = shifted_mergedohlcv_df[high_col].to_numpy()[0]
+        low_value = shifted_mergedohlcv_df[low_col].to_numpy()[0]
 
         y_thr = curprice
         ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
