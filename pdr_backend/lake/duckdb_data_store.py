@@ -189,7 +189,6 @@ class DuckDBDataStore(BaseDataStore):
             FROM {ref_table_name}
         )
         """;
-        print(query)
         self.execute_sql(query);
 
     @enforce_types

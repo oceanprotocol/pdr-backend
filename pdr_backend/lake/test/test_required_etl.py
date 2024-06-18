@@ -278,13 +278,12 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
     bronze_pdr_predictions_records = db.query_data(query)
     # bronze_pdr_predictions_records.write_csv('final_bronze_pdr_predictions_records.csv')
 
-    assert bronze_pdr_predictions_records is not None
-    
     # verify final production table
     prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
     prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
 
-    # TODO: _step2 ist updating _step1 records
+    # 
     assert prod_null_payouts == 379
     assert prod_valid_payouts == 1678
+    assert bronze_pdr_predictions_records.shape[0] == 2057
     assert prod_null_payouts + prod_valid_payouts == bronze_pdr_predictions_records.shape[0]
