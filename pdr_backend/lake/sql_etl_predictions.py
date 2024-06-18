@@ -37,7 +37,7 @@ def _do_sql_predictions(
         {prediction_table.fullname}
     where
         {prediction_table.fullname}.timestamp >= {st_ms}
-        and {prediction_table.fullname}.timestamp < {fin_ms}
+        and {prediction_table.fullname}.timestamp <= {fin_ms}
     )
 
     INSERT INTO {temp_bronze_prediction_table.fullname}
