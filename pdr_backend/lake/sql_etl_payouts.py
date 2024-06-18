@@ -27,7 +27,7 @@ def _do_sql_payouts(
         {payout_table.fullname}
     where
         {payout_table.fullname}.timestamp >= {st_ms}
-        and {payout_table.fullname}.timestamp < {fin_ms}
+        and {payout_table.fullname}.timestamp <= {fin_ms}
     )
 
     -- We track data we need from payout into _update_prediction_predctions table

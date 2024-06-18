@@ -278,7 +278,8 @@ class ETL:
             min(max(source_tables_max_timestamp)).
 
         @flags
-            use self._clamp_checkpoints_to_ppss to skip calc
+            use self._clamp_checkpoints_to_ppss operate ETL manually with ppss
+            this skips checkpoint calculations 
         """
         if self._clamp_checkpoints_to_ppss:
             return self.ppss.lake_ss.st_timestamp, self.ppss.lake_ss.fin_timestamp

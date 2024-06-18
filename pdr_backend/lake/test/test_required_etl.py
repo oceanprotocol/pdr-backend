@@ -73,9 +73,9 @@ def test_etl_do_bronze_step(_sample_etl):
     valid_payouts = temp_bronze_pdr_predictions_records['payout'].is_not_null().sum()
     
     # assert temp_bronze_pdr_predictions table that will be moved to production
-    assert null_payouts == 377
+    assert null_payouts == 379
     assert valid_payouts == 1678
-    assert null_payouts + valid_payouts == 2055
+    assert null_payouts + valid_payouts == 2057
     
     # move tables to production
     etl._move_from_temp_tables_to_live()
@@ -91,9 +91,9 @@ def test_etl_do_bronze_step(_sample_etl):
     prod_null_payouts = bronze_pdr_predictions_records['payout'].is_null().sum()
     prod_valid_payouts = bronze_pdr_predictions_records['payout'].is_not_null().sum()
 
-    assert prod_null_payouts == 377
+    assert prod_null_payouts == 379
     assert prod_valid_payouts == 1678
-    assert prod_null_payouts + prod_valid_payouts == 2055
+    assert prod_null_payouts + prod_valid_payouts == 2057
 
 
 # pylint: disable=too-many-statements
