@@ -80,8 +80,8 @@ def save_prediction_csv(all_predictions: List[Prediction], csv_output_dir: str):
         all_predictions,
         csv_output_dir,
         {
-            "Predicted Value": "prediction",
-            "True Value": "trueval",
+            "Predicted Value": "predvalue",
+            "True Value": "truevalue",
             "Timestamp": "timestamp",
             "Stake": "stake",
             "Payout": "payout",
@@ -101,7 +101,7 @@ def save_analysis_csv(all_predictions: List[Prediction], csv_output_dir: str):
             "Stake": "stake",
             "Wallet": "user",
             "Payout": "payout",
-            "True Value": "trueval",
-            "Predicted Value": "prediction",
+            "True Value": "truevalue",
+            "Predicted Value": "predvalue",
         },
     )
