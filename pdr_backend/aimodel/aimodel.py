@@ -168,27 +168,43 @@ class Aimodel:
         else:
             skm = self._sk_classif
             scoring = "f1"
-        imps_bunch = permutation_importance(
-            skm,
-            X,
-            y,
-            scoring=scoring,
-            n_repeats=30,  # magic number
-        )
-        imps_avg = imps_bunch.importances_mean
 
-        if max(imps_avg) <= 0:  # all vars have negligible importance
-            return flat_imps_avg, flat_imps_stddev
+        if self.do_regr:
+            model = self._sk_regrs[0] # fixme
+        else:
+            model = self._sk_classif
 
-        imps_avg[imps_avg < 0.0] = 0.0  # some vars have negligible importance
-        assert max(imps_avg) > 0.0, "should have some vars with imp > 0"
+        if hasattr(model, 'coef_'):
+            if self.do_regr:
+                coefs = np.mean([regr.coef_ for regr in self._sk_regrs], axis=0)
+            else:
+                coefs = model.coef_
 
-        imps_stddev = imps_bunch.importances_std
+            coefs = np.abs(coefs)
+            imps_avg = coefs / np.sum(coefs)
+            imps_stddev = np.zeros_like(imps_avg)
+        else:
+            imps_bunch = permutation_importance(
+                skm,
+                X,
+                y,
+                scoring=scoring,
+                n_repeats=30,  # magic number
+            )
+            imps_avg = imps_bunch.importances_mean
 
-        # normalize
-        _sum = sum(imps_avg)
-        imps_avg = np.array(imps_avg) / _sum
-        imps_stddev = np.array(imps_stddev) / _sum
+            if max(imps_avg) <= 0:  # all vars have negligible importance
+                return flat_imps_avg, flat_imps_stddev
+
+            imps_avg[imps_avg < 0.0] = 0.0  # some vars have negligible importance
+            assert max(imps_avg) > 0.0, "should have some vars with imp > 0"
+
+            imps_stddev = imps_bunch.importances_std
+
+            # normalize
+            _sum = sum(imps_avg)
+            imps_avg = np.array(imps_avg) / _sum
+            imps_stddev = np.array(imps_stddev) / _sum
 
         # postconditions
         assert imps_avg.shape == (n,)
