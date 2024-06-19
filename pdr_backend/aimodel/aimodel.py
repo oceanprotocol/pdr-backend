@@ -2,6 +2,7 @@ from typing import Optional
 
 from enforce_typing import enforce_types
 import numpy as np
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.inspection import permutation_importance
 
 
@@ -172,7 +173,10 @@ class Aimodel:
         if self.do_regr:
             models = self._sk_regrs
         else:
-            models = [self._sk_classif]
+            if type(self._sk_classif) is CalibratedClassifierCV:
+                models = [i.estimator for i in self._sk_classif.calibrated_classifiers_]
+            else:
+                models = [self._sk_classif]
 
         if all(hasattr(model, "coef_") for model in models):
             if self.do_regr:
