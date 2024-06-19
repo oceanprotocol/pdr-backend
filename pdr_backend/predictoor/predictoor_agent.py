@@ -415,12 +415,12 @@ class PredictoorAgent:
         )
 
         curprice = yraw[-1]
-        
+
         if pdr_ss.aimodel_data_ss.transform == "None":
             y_thr = curprice
-        else: # transform = "RelDiff"
+        else:  # transform = "RelDiff"
             y_thr = 0.0
-            
+
         ybool = data_f.ycont_to_ytrue(ytran, y_thr)
 
         if (self.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs) == 0:

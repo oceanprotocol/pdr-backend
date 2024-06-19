@@ -19,7 +19,6 @@ from pdr_backend.ppss.aimodel_ss import (
     AimodelSS,
     aimodel_ss_test_dict,
     APPROACH_OPTIONS,
-    REGR_APPROACH_OPTIONS,
 )
 from pdr_backend.statutil.scoring import classif_acc
 
@@ -227,7 +226,6 @@ def test_aimodel_1var(approach: str):
         figure.show()
 
 
-
 @enforce_types
 @pytest.mark.parametrize("approach", ["ClassifLinearRidge", "RegrLinearRidge"])
 def test_aimodel_5varmodel_lineplot(approach: str):
@@ -281,12 +279,15 @@ def test_aimodel_5varmodel_lineplot(approach: str):
 
 
 @enforce_types
-@pytest.mark.parametrize("approach,target_n_classes", [
-    ("ClassifLinearRidge", 1),
-    ("ClassifLinearRidge", 2),
-    ("RegrLinearRidge", 1),
-    ("RegrLinearRidge", 2),
-])
+@pytest.mark.parametrize(
+    "approach,target_n_classes",
+    [
+        ("ClassifLinearRidge", 1),
+        ("ClassifLinearRidge", 2),
+        ("RegrLinearRidge", 1),
+        ("RegrLinearRidge", 2),
+    ],
+)
 def test_aimodel_4vars_response(approach: str, target_n_classes: int):
     """4 input vars. It will plot the 2 most important vars."""
     assert target_n_classes in [1, 2]
@@ -367,7 +368,7 @@ def test_aimodel_nvars_varimps(n: int):
 
 
 @enforce_types
-@pytest.mark.parametrize("approach", ["RegrLinearRidge","RegrConstant"])
+@pytest.mark.parametrize("approach", ["RegrLinearRidge", "RegrConstant"])
 def test_aimodel__regr_0error__via_10000x(approach):
     d = aimodel_ss_test_dict(
         approach=approach,
@@ -381,7 +382,7 @@ def test_aimodel__regr_0error__via_10000x(approach):
 
 
 @enforce_types
-@pytest.mark.parametrize("approach", ["RegrLinearRidge","RegrConstant"])
+@pytest.mark.parametrize("approach", ["RegrLinearRidge", "RegrConstant"])
 def test_aimodel__regr_0error__via_calibrate_regr(approach):
     d = aimodel_ss_test_dict(
         approach=approach,

@@ -3,7 +3,6 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import pandas as pd
 import polars as pl
-import pytest
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
@@ -14,7 +13,6 @@ from pdr_backend.lake.test.resources import (
     KRAKEN_BTC_DATA,
     KRAKEN_ETH_DATA,
     _df_from_raw_data,
-    _mergedohlcv_df_ETHUSDT,
 )
 from pdr_backend.ppss.aimodel_data_ss import (
     AimodelDataSS,
@@ -24,7 +22,6 @@ from pdr_backend.ppss.predictoor_ss import (
     PredictoorSS,
     predictoor_ss_test_dict,
 )
-from pdr_backend.util.mathutil import fill_nans, has_nan
 
 
 @enforce_types
@@ -116,37 +113,46 @@ def test_create_xy_notransform__1exchange_1coin_1signal():
     # =========== have testshift = 0
     target_X = np.array(
         [
-            [11., 10., 9.],  # oldest
-            [10., 9., 8.],
-            [9., 8., 7.],
-            [8., 7., 6.],
-            [7., 6., 5.],
-            [6., 5., 4.],
-            [5., 4., 3.],
-            [4., 3., 2.],  # newest
+            [11.0, 10.0, 9.0],  # oldest
+            [10.0, 9.0, 8.0],
+            [9.0, 8.0, 7.0],
+            [8.0, 7.0, 6.0],
+            [7.0, 6.0, 5.0],
+            [6.0, 5.0, 4.0],
+            [5.0, 4.0, 3.0],
+            [4.0, 3.0, 2.0],  # newest
         ]
     )
 
     target_y = np.array(
         [
-            8.,  # oldest
-            7.,
-            6.,
-            5.,
-            4.,
-            3.,
-            2.,
-            1.,  # newest
+            8.0,  # oldest
+            7.0,
+            6.0,
+            5.0,
+            4.0,
+            3.0,
+            2.0,
+            1.0,  # newest
         ]
     )
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH/USDT:high:z(t-4)": [11., 10., 9., 8., 7., 6., 5., 4.],
-            "binanceus:ETH/USDT:high:z(t-3)": [10., 9., 8., 7., 6., 5., 4., 3.],
-            "binanceus:ETH/USDT:high:z(t-2)": [9.0, 8., 7., 6., 5., 4., 3., 2.],
+            "binanceus:ETH/USDT:high:z(t-4)": [
+                11.0,
+                10.0,
+                9.0,
+                8.0,
+                7.0,
+                6.0,
+                5.0,
+                4.0,
+            ],
+            "binanceus:ETH/USDT:high:z(t-3)": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
+            "binanceus:ETH/USDT:high:z(t-2)": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
         }
     )
-    target_xrecent = np.array([3., 2., 1.])
+    target_xrecent = np.array([3.0, 2.0, 1.0])
 
     testshift = 0
     X, y, _, x_df, xrecent = aimodel_data_factory.create_xy(
@@ -165,36 +171,54 @@ def test_create_xy_notransform__1exchange_1coin_1signal():
     # =========== now, have testshift = 1
     target_X = np.array(
         [
-            [12., 11., 10.],  # oldest
-            [11., 10., 9.],
-            [10., 9., 8.],
-            [9., 8., 7.],
-            [8., 7., 6.],
-            [7., 6., 5.],
-            [6., 5., 4.],
-            [5., 4., 3.],
+            [12.0, 11.0, 10.0],  # oldest
+            [11.0, 10.0, 9.0],
+            [10.0, 9.0, 8.0],
+            [9.0, 8.0, 7.0],
+            [8.0, 7.0, 6.0],
+            [7.0, 6.0, 5.0],
+            [6.0, 5.0, 4.0],
+            [5.0, 4.0, 3.0],
         ]
     )  # newest
     target_y = np.array(
         [
-            9.,  # oldest
-            8.,
-            7.,
-            6.,
-            5.,
-            4.,
-            3.,
-            2.,  # newest
+            9.0,  # oldest
+            8.0,
+            7.0,
+            6.0,
+            5.0,
+            4.0,
+            3.0,
+            2.0,  # newest
         ]
     )
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH/USDT:high:z(t-4)": [12., 11., 10., 9., 8., 7., 6., 5.],
-            "binanceus:ETH/USDT:high:z(t-3)": [11., 10., 9., 8., 7., 6., 5., 4.],
-            "binanceus:ETH/USDT:high:z(t-2)": [10., 9., 8., 7., 6., 5., 4., 3.],
+            "binanceus:ETH/USDT:high:z(t-4)": [
+                12.0,
+                11.0,
+                10.0,
+                9.0,
+                8.0,
+                7.0,
+                6.0,
+                5.0,
+            ],
+            "binanceus:ETH/USDT:high:z(t-3)": [
+                11.0,
+                10.0,
+                9.0,
+                8.0,
+                7.0,
+                6.0,
+                5.0,
+                4.0,
+            ],
+            "binanceus:ETH/USDT:high:z(t-2)": [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
         }
     )
-    target_xrecent = np.array([4., 3., 2.])
+    target_xrecent = np.array([4.0, 3.0, 2.0])
 
     testshift = 1
     X, y, _, x_df, xrecent = aimodel_data_factory.create_xy(
@@ -213,20 +237,20 @@ def test_create_xy_notransform__1exchange_1coin_1signal():
     # =========== now have a different max_n_train
     target_X = np.array(
         [
-            [9., 8., 7.],  # oldest
-            [8., 7., 6.],
-            [7., 6., 5.],
-            [6., 5., 4.],
-            [5., 4., 3.],
-            [4., 3., 2.],
+            [9.0, 8.0, 7.0],  # oldest
+            [8.0, 7.0, 6.0],
+            [7.0, 6.0, 5.0],
+            [6.0, 5.0, 4.0],
+            [5.0, 4.0, 3.0],
+            [4.0, 3.0, 2.0],
         ]
     )  # newest
-    target_y = np.array([6., 5., 4., 3., 2., 1.])  # oldest  # newest
+    target_y = np.array([6.0, 5.0, 4.0, 3.0, 2.0, 1.0])  # oldest  # newest
     target_x_df = pd.DataFrame(
         {
-            "binanceus:ETH/USDT:high:z(t-4)": [9., 8., 7., 6., 5., 4.],
-            "binanceus:ETH/USDT:high:z(t-3)": [8., 7., 6., 5., 4., 3.],
-            "binanceus:ETH/USDT:high:z(t-2)": [7., 6., 5., 4., 3., 2.],
+            "binanceus:ETH/USDT:high:z(t-4)": [9.0, 8.0, 7.0, 6.0, 5.0, 4.0],
+            "binanceus:ETH/USDT:high:z(t-3)": [8.0, 7.0, 6.0, 5.0, 4.0, 3.0],
+            "binanceus:ETH/USDT:high:z(t-2)": [7.0, 6.0, 5.0, 4.0, 3.0, 2.0],
         }
     )
 
@@ -327,15 +351,15 @@ def test_create_xy_notransform__2exchanges_2coins_2signals():
         "binanceus:ETH/USDT:high:z(t-2)",
     ]
     Xa = X[:, 3:6]
-    assert Xa[-1, :].tolist() == [4., 3., 2.] and y[-1] == 1
-    assert Xa[-2, :].tolist() == [5., 4., 3.] and y[-2] == 2
-    assert Xa[0, :].tolist() == [11., 10., 9.] and y[0] == 8
+    assert Xa[-1, :].tolist() == [4.0, 3.0, 2.0] and y[-1] == 1
+    assert Xa[-2, :].tolist() == [5.0, 4.0, 3.0] and y[-2] == 2
+    assert Xa[0, :].tolist() == [11.0, 10.0, 9.0] and y[0] == 8
 
-    assert x_df.iloc[-1].tolist()[3:6] == [4., 3., 2.]
-    assert x_df.iloc[-2].tolist()[3:6] == [5, 4., 3.]
-    assert x_df.iloc[0].tolist()[3:6] == [11., 10., 9.]
+    assert x_df.iloc[-1].tolist()[3:6] == [4.0, 3.0, 2.0]
+    assert x_df.iloc[-2].tolist()[3:6] == [5, 4.0, 3.0]
+    assert x_df.iloc[0].tolist()[3:6] == [11.0, 10.0, 9.0]
 
-    target_list = [9., 8., 7., 6., 5., 4., 3., 2.]
+    target_list = [9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0]
     assert x_df["binanceus:ETH/USDT:high:z(t-2)"].tolist() == target_list
     assert Xa[:, 2].tolist() == target_list
 

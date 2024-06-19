@@ -32,7 +32,7 @@ def test_aimodel_data_ss__nondefault_values():
 
     ss = AimodelDataSS(aimodel_data_ss_test_dict(autoregressive_n=13))
     assert ss.autoregressive_n == 13
-    
+
     ss = AimodelDataSS(aimodel_data_ss_test_dict(transform="RelDiff"))
     assert ss.transform == "RelDiff"
 
@@ -53,7 +53,7 @@ def test_aimodel_data_ss__bad_inputs():
 
     with pytest.raises(TypeError):
         AimodelDataSS(aimodel_data_ss_test_dict(autoregressive_n=np.inf))
-        
+
     with pytest.raises(ValueError):
         AimodelDataSS(aimodel_data_ss_test_dict(transform="foo"))
 

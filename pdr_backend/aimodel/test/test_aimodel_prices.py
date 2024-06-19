@@ -45,7 +45,7 @@ SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
     ],
 )
 def test_aimodel_prices_static(approach: str, autoregr_n: int, transform: str):
-    max_n_train = 200 # 5000 for manual testing
+    max_n_train = 200  # 5000 for manual testing
     pdr_ss = _get_predictoor_ss(approach, autoregr_n, max_n_train, transform)
     mergedohlcv_df = _get_btc_data()
 
@@ -125,7 +125,11 @@ def test_aimodel_prices_dynamic(transform: str):
     for test_i in range(sim_test_n):
         # print(f"Iter #{test_i+1}/{sim_test_n}")
         yerr = _run_one_iter(
-            autoregr_n, max_n_train, transform, sim_test_n, test_i,
+            autoregr_n,
+            max_n_train,
+            transform,
+            sim_test_n,
+            test_i,
         )
         yerrs.append(yerr)
 
@@ -136,8 +140,7 @@ def test_aimodel_prices_dynamic(transform: str):
 
 
 @enforce_types
-def _run_one_iter(autoregr_n, max_n_train, transform, sim_test_n, test_i) \
-        -> float:
+def _run_one_iter(autoregr_n, max_n_train, transform, sim_test_n, test_i) -> float:
     """@return -- yerr"""
     mergedohlcv_df = _get_btc_data()
 
@@ -196,11 +199,11 @@ def _run_one_iter(autoregr_n, max_n_train, transform, sim_test_n, test_i) \
 
 
 @enforce_types
-def _assert_cols_ok(x_df, autoregr_n: int, transform:str):
+def _assert_cols_ok(x_df, autoregr_n: int, transform: str):
     assert len(x_df.columns) == autoregr_n
     if autoregr_n != 2:
         return
-    
+
     if transform == "None":
         target_x_df_columns = [
             "binanceus:BTC/USDT:close:z(t-3)",
@@ -216,7 +219,10 @@ def _assert_cols_ok(x_df, autoregr_n: int, transform:str):
 
 @enforce_types
 def _get_predictoor_ss(
-        approach: str, autoregr_n: int, max_n_train: int, transform: str,
+    approach: str,
+    autoregr_n: int,
+    max_n_train: int,
+    transform: str,
 ) -> PredictoorSS:
     feedset_list = [
         {
@@ -241,7 +247,9 @@ def _get_predictoor_ss(
     )
     return PredictoorSS(d)
 
+
 _mergedohlcv_df = None
+
 
 @enforce_types
 def _get_btc_data():

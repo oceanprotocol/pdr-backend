@@ -155,8 +155,8 @@ class AimodelDataFactory:
                 x_list += [pd.Series(_slice(z, -shift - N_train - 1, -shift))]
                 xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
                 ds1, ds11 = delayshift + 1, delayshift + 1 + 1
-                if diff == 0:
-                    x_col = hist_col + f":z(t-{ds1})"
+
+                x_col = hist_col + f":z(t-{ds1})"
                 if diff == 1:
                     x_col = hist_col + f":(z(t-{ds1})-z(t-{ds11}))/z(t-{ds11})"
                 xcol_list += [x_col]
@@ -172,11 +172,11 @@ class AimodelDataFactory:
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         hist_col = hist_col_name(predict_feed)
-        
+
         zraw_series = mergedohlcv_df[hist_col]
         zraw = zraw_series.to_list()
         yraw = np.array(_slice(zraw, -testshift - N_train - 1, -testshift))
-        
+
         ztran = apply_transform(zraw_series, diff)
         ytran = np.array(_slice(ztran, -testshift - N_train - 1, -testshift))
 
@@ -198,7 +198,7 @@ class AimodelDataFactory:
 
 
 @enforce_types
-def apply_transform(zraw: Union[pl.Series,pd.Series], diff:int) -> List[float]:
+def apply_transform(zraw: Union[pl.Series, pd.Series], diff: int) -> List[float]:
     assert diff in [0, 1]
 
     if diff == 0:
