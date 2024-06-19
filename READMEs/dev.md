@@ -76,8 +76,9 @@ pylint --rcfile .pylintrc * pdr_backend/*
 mypy --config-file mypy.ini ./
 ```
 
-=======
-Check code coverage:
+### Local Usage: Check code coverage
+
+In work console:
 
 ```console
 coverage run --omit="*test*" -m pytest # Run all. For subset, add eg: pdr_backend/lake
