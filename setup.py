@@ -45,6 +45,7 @@ install_requirements = [
     "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
     "typeguard==4.2.1",
+    "types-pytz==2024.1.0.20240417",
     "types-pyYAML==6.0.12.20240311",
     "types-requests==2.31.0.6",
     "urllib3<2.0.2",
