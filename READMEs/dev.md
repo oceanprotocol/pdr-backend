@@ -61,17 +61,17 @@ pytest pdr_backend/util/test_ganache/test_contract.py::test_get_contract_filenam
 pytest
 ```
 
-In work console, run linting checks:
+In work console, run linting checks. The commands use the same configuration as CI.
 
 ```console
-# mypy does static type-checking and more. Configure it via mypy.ini
-mypy ./
+# mypy does static type-checking and more
+mypy --config-file mypy.ini ./
 
-# run linting on code style. Configure it via .pylintrc.
-pylint *
+# run linting on code style
+pylint --rcfile .pylintrc * pdr_backend/*
 
 # auto-fix some pylint complaints like whitespace
-black ./
+black --check .
 ```
 
 =======
