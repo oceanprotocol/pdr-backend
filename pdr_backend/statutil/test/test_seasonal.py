@@ -57,7 +57,8 @@ def test_seasonal():
 
 
 @enforce_types
-def test_empty_dashboard(tmpdir, dash_duo):
+# pylint: disable=unused-argument
+def test_empty_dashboard(tmpdir, check_chromedriver, dash_duo):
     app = Dash("pdr_backend.statutil.arima_dash")
     app.config["suppress_callback_exceptions"] = True
     app.layout = get_layout()
@@ -72,7 +73,8 @@ def test_empty_dashboard(tmpdir, dash_duo):
 
 
 @enforce_types
-def test_dashboard(tmpdir, dash_duo):
+# pylint: disable=unused-argument
+def test_dashboard(tmpdir, check_chromedriver, dash_duo):
     test_dir = str(tmpdir)
 
     # Sample Parquet file
