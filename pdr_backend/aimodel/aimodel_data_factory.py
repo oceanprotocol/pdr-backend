@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -28,13 +28,19 @@ class AimodelDataFactory:
       X -- 2d array of [sample_i, var_i]:value -- inputs for model
       y -- 1d array of [sample_i]:value -- target outputs for model
 
-      x_df -- *pandas* DataFrame with cols like:
-        "binanceus:ETH-USDT:open:t-3",
-        "binanceus:ETH-USDT:open:t-2",
-        "binanceus:ETH-USDT:open:t-1",
-        "binanceus:ETH-USDT:high:t-3",
-        "binanceus:ETH-USDT:high:t-2",
-        "binanceus:ETH-USDT:high:t-1",
+      x_df -- *pandas* DataFrame.
+        If transform is "None", cols are like:
+          "binanceus:ETH-USDT:open:t-2",
+          "binanceus:ETH-USDT:open:t-1",
+          "binanceus:ETH-USDT:high:t-2",
+          "binanceus:ETH-USDT:high:t-1",
+
+        or, if transform is "RelDiff", cols are like:
+          "binanceus:ETH-USDT:open:(z(t-2)-z(t-3))/z(t-3)",
+          "binanceus:ETH-USDT:open:(z(t-1)-z(t-2))/z(t-2)",
+          "binanceus:ETH-USDT:high:(z(t-2)-z(t-3))/z(t-3)",
+          "binanceus:ETH-USDT:high:(z(t-1)-z(t-2))/z(t-2)",
+
         ...
         (no "timestamp" or "datetime" column)
         (and index = 0, 1, .. -- nothing special)
@@ -71,7 +77,7 @@ class AimodelDataFactory:
         predict_feed: ArgFeed,
         train_feeds: Optional[ArgFeeds] = None,
         do_fill_nans: bool = True,
-    ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
         @description
           Create X, y data for a regression setting
@@ -83,11 +89,12 @@ class AimodelDataFactory:
           predict_feed -- feed to predict
           train_feeds -- feeds to use for model inputs. If None use predict feed
           do_fill_nans -- if any values are nan, fill them? (Via interpolation)
-            If you turn this off and mergedohlcv_df has nans, then X/y/etc gets nans
+            If you turn this off and mergedohlcv_df has nans, it raises error
 
         @return
-          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
-          ycont -- 1d array of [sample_i]:cont_value -- regression model outputs
+          X -- 2d array of [sample_i, var_i]:float -- model inputs
+          ytran -- 1d array of [sample_i]:float -- transformed regr outputs. Eg % chg
+          yraw -- 1d array of [sample_i]:float. Un-transformed outputs. Eg price
           x_df -- *pandas* DataFrame. See class docstring.
           xrecent -- [var_i]:value -- most recent X value. Bots use to predict
         """
@@ -106,7 +113,9 @@ class AimodelDataFactory:
         #  let's verify! The timestamps should be in ascending order
         uts = mergedohlcv_df["timestamp"].to_list()
         assert uts == sorted(uts, reverse=False)
-        if do_fill_nans and has_nan(mergedohlcv_df):
+        if has_nan(mergedohlcv_df):
+            if not do_fill_nans:
+                raise ValueError("We have nans; need to fill them beforehand")
             mergedohlcv_df = fill_nans(mergedohlcv_df)
 
         # condition other inputs
@@ -116,7 +125,8 @@ class AimodelDataFactory:
         else:
             train_feeds_list = [predict_feed]
         ss = self.ss.aimodel_data_ss
-        x_dim_len = len(train_feeds_list) * ss.autoregressive_n * (1 + ss.max_diff)
+        x_dim_len = len(train_feeds_list) * ss.autoregressive_n
+        diff = 0 if ss.transform == "None" else 1
 
         # main work
         xcol_list = []  # [col_i] : name_str
@@ -124,70 +134,32 @@ class AimodelDataFactory:
         xrecent_list = []  ## ""
 
         target_hist_cols = [
-            f"{train_feed.exchange}:{train_feed.pair}:{train_feed.signal}"
-            for train_feed in train_feeds_list
+            hist_col_name(train_feed) for train_feed in train_feeds_list
         ]
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
-            z_d0 = mergedohlcv_df[hist_col].to_numpy()  # [..., z(t-2), z(t-1)]
-            z_d1 = z_d0[1:] - z_d0[:-1]  # [..., z(t-2) - z(t-3),    z(t-1) - z(t-2)]
-            z_d2 = z_d1[1:] - z_d1[:-1]  # [...,     (z(t-1)-z(t-2)) - z(t-2)-z(t-3)]
-            z_d0, z_d1, z_d2 = list(z_d0), list(z_d1), list(z_d2)  # type: ignore[assignment]
+            zraw_series = mergedohlcv_df[hist_col]
+            z = apply_transform(zraw_series, diff)
             maxshift = testshift + ss.autoregressive_n
-            N_train = min(ss.max_n_train, len(z_d0) - maxshift - 1 - ss.max_diff)
-            s = "\n"
-            s += f"  ss.autoregressive_n={ss.autoregressive_n}\n"
-            s += f"  ss.max_n_train={ss.max_n_train}; ss.max_diff={ss.max_diff}\n"
-            s += f"  testshift={testshift}\n"
-            s += f"  maxshift=autoregressive_n+testshift={maxshift}\n"
-            s += f"  len(z_d0)={len(z_d0)}, len(z_d1)={len(z_d1)}, len(z_d2)={len(z_d2)}\n"
-            s += f"  N_train={N_train}\n"
-            logger.debug(s)
+            N_train = min(ss.max_n_train, len(z) - maxshift - diff)
             if N_train <= 0:
-                s = "Too little data."
-                s += (
-                    "To fix: broaden time, or shrink testshift, max_diff, or autoregr_n"
-                )
+                s = "Too little data. To fix:"
+                s += "broaden time, or shrink testshift, max_diff, or autoregr_n"
                 logger.error(s)
                 sys.exit(1)
 
-            for diff in range(ss.max_diff + 1):
-                for delayshift in range(
-                    ss.autoregressive_n, 0, -1
-                ):  # eg [4, 3, 2, 1, 0]
-                    shift = testshift + delayshift
-                    # 1 point for test, the rest for train data. For each of diff=0, 1, 2
-                    if diff == 0:
-                        assert (shift + N_train + 1) <= len(z_d0)
-                        x_col_d0 = hist_col + f":z(t-{delayshift+1})"
-                        xcol_list += [x_col_d0]
-                        x_list += [
-                            pd.Series(_slice(z_d0, -shift - N_train - 1, -shift))
-                        ]
-                        xrecent_list += [pd.Series(_slice(z_d0, -shift, -shift + 1))]
+            for delayshift in range(ss.autoregressive_n, 0, -1):  # [.., 3, 2, 1, 0]
+                shift = testshift + delayshift
+                assert len(z) >= (N_train + shift)
+                # 1 point for test, the rest for train data
+                x_list += [pd.Series(_slice(z, -shift - N_train - 1, -shift))]
+                xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
+                ds1, ds11 = delayshift + 1, delayshift + 1 + 1
 
-                    if diff == 1:
-                        assert (shift + N_train + 1) <= len(z_d1)
-                        x_col_d1 = (
-                            hist_col + f":z(t-{delayshift+1})-z(t-{delayshift+1+1})"
-                        )
-                        xcol_list += [x_col_d1]
-                        x_list += [
-                            pd.Series(_slice(z_d1, -shift - N_train - 1, -shift))
-                        ]
-                        xrecent_list += [pd.Series(_slice(z_d1, -shift, -shift + 1))]
-
-                    if diff == 2:
-                        assert (shift + N_train + 1) <= len(z_d2)
-                        x_col_d2 = (
-                            hist_col + f":(z(t-{delayshift+1})-z(t-{delayshift+1+1}))-"
-                            f"(z(t-{delayshift+1+1})-z(t-{delayshift+1+1+1}))"
-                        )
-                        xcol_list += [x_col_d2]
-                        x_list += [
-                            pd.Series(_slice(z_d2, -shift - N_train - 1, -shift))
-                        ]
-                        xrecent_list += [pd.Series(_slice(z_d2, -shift, -shift + 1))]
+                x_col = hist_col + f":z(t-{ds1})"
+                if diff == 1:
+                    x_col = hist_col + f":(z(t-{ds1})-z(t-{ds11}))/z(t-{ds11})"
+                xcol_list += [x_col]
 
         # convert x lists to dfs, all at once. Faster than building up df.
         assert len(x_list) == len(xrecent_list) == len(xcol_list)
@@ -199,13 +171,18 @@ class AimodelDataFactory:
         xrecent = xrecent_df.to_numpy()[0, :]
 
         # y is set from yval_{exch_str, signal_str, pair_str}
-        # eg y = [BinEthC_-1, BinEthC_-2, ..., BinEthC_-450, BinEthC_-451]
-        hist_col = f"{predict_feed.exchange}:{predict_feed.pair}:{predict_feed.signal}"
-        z = mergedohlcv_df[hist_col].to_list()
-        y = np.array(_slice(z, -testshift - N_train - 1, -testshift))
+        hist_col = hist_col_name(predict_feed)
+
+        zraw_series = mergedohlcv_df[hist_col]
+        zraw = zraw_series.to_list()
+        yraw = np.array(_slice(zraw, -testshift - N_train - 1, -testshift))
+
+        ztran = apply_transform(zraw_series, diff)
+        ytran = np.array(_slice(ztran, -testshift - N_train - 1, -testshift))
 
         # postconditions
-        assert X.shape[0] == y.shape[0]
+        assert X.shape[0] == ytran.shape[0]
+        assert X.shape[0] == yraw.shape[0]
         assert X.shape[0] <= (ss.max_n_train + 1)
         assert X.shape[1] == x_dim_len
         assert isinstance(x_df, pd.DataFrame)
@@ -217,8 +194,22 @@ class AimodelDataFactory:
         logger.debug("Create model X/y data: done.")
 
         # return
-        ycont = y
-        return X, ycont, x_df, xrecent
+        return X, ytran, yraw, x_df, xrecent
+
+
+@enforce_types
+def apply_transform(zraw: Union[pl.Series, pd.Series], diff: int) -> List[float]:
+    assert diff in [0, 1]
+
+    if diff == 0:
+        return zraw.to_list()
+
+    return zraw.pct_change()[1:].to_list()
+
+
+@enforce_types
+def hist_col_name(feed: ArgFeed) -> str:
+    return f"{feed.exchange}:{feed.pair}:{feed.signal}"
 
 
 @enforce_types

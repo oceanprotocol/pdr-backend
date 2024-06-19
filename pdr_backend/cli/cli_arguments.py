@@ -41,7 +41,7 @@ HELP_DOT = """
 To pass args down to ppss, use dot notation.
 Example: pdr lake raw|etl update ppss.yaml sapphire-mainnet
 pdr lake raw|etl drop ppss.yaml sapphire-mainnet 2023-06-01
-pdr lake describe ppss.yaml sapphire-mainnet
+pdr lake describe --HTML ppss.yaml sapphire-mainnet
 pdr lake validate ppss.yaml sapphire-mainnet
 """
 
@@ -52,7 +52,7 @@ Power tools:
   pdr deployer (for >1 predictoor bots)
   pdr lake raw|etl update PPSS_FILE NETWORK
   pdr lake raw|etl drop PPSS_FILE NETWORK ST
-  pdr lake describe PPSS_FILE NETWORK
+  pdr lake describe --HTML PPSS_FILE NETWORK
   pdr lake validate PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
 

@@ -5,6 +5,11 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.strutil import StrMixin
 
+TRANSFORM_OPTIONS = [
+    "None",
+    "RelDiff",
+]
+
 
 class AimodelDataSS(StrMixin):
     __STR_OBJDIR__ = ["d"]
@@ -19,8 +24,8 @@ class AimodelDataSS(StrMixin):
             raise ValueError(self.max_n_train)
         if not 0 < self.autoregressive_n < np.inf:
             raise ValueError(self.autoregressive_n)
-        if not 0 <= self.max_diff <= 2:
-            raise ValueError(self.max_diff)
+        if self.transform not in TRANSFORM_OPTIONS:
+            raise ValueError(self.transform)
 
     # --------------------------------
     # yaml properties
@@ -41,9 +46,9 @@ class AimodelDataSS(StrMixin):
         return self.d["autoregressive_n"]
 
     @property
-    def max_diff(self) -> int:
-        """can be 0, 1 or 2"""
-        return self.d["max_diff"]
+    def transform(self) -> int:
+        """eg 'RelDiff'"""
+        return self.d["transform"]
 
 
 # =========================================================================
@@ -54,12 +59,12 @@ class AimodelDataSS(StrMixin):
 def aimodel_data_ss_test_dict(
     max_n_train: Optional[int] = None,
     autoregressive_n: Optional[int] = None,
-    max_diff: Optional[int] = None,
+    transform: Optional[str] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct AimodelDataSS(d)"""
     d = {
         "max_n_train": 7 if max_n_train is None else max_n_train,
         "autoregressive_n": 3 if autoregressive_n is None else autoregressive_n,
-        "max_diff": 0 if max_diff is None else max_diff,
+        "transform": transform or "None",
     }
     return d

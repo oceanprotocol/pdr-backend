@@ -44,12 +44,13 @@ install_requirements = [
     "requests-mock==1.12.1",
     "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
-    "types-pytz==2024.1.0.20240417",
+    "typeguard==4.2.1",
     "types-pyYAML==6.0.12.20240311",
+    "types-requests==2.31.0.6",
+    "urllib3<2.0.2",
     "dash_bootstrap_components==1.6.0",
     "web3==6.19.0",
     "sapphire.py==0.2.3",
-    "typeguard==4.2.1",
     "ocean-contracts==2.0.4",  # install this last
 ]
 

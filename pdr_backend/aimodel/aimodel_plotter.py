@@ -226,7 +226,7 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata):
     s2 = "regr: contours = model y-value"
     if d.model.do_regr:
         fig = make_subplots(
-            rows=2, cols=1, subplot_titles=(s1, s2), vertical_spacing=0.07
+            rows=2, cols=1, subplot_titles=[s1, s2], vertical_spacing=0.07
         )
     else:
         fig = make_subplots(rows=1, cols=1, subplot_titles=s1)

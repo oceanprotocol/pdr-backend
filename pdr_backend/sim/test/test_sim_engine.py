@@ -3,7 +3,7 @@ import os
 import pytest
 from dash import Dash
 from enforce_typing import enforce_types
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException  # type: ignore[import-untyped]
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
@@ -17,7 +17,8 @@ from pdr_backend.sim.sim_engine import SimEngine
 
 
 @enforce_types
-def test_sim_engine(tmpdir, dash_duo):
+# pylint: disable=unused-argument
+def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
 
