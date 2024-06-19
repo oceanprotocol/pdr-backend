@@ -170,6 +170,7 @@ class Aimodel:
             skm = self._sk_classif
             scoring = "f1"
 
+        models = []
         if self.do_regr:
             models = self._sk_regrs
         else:
