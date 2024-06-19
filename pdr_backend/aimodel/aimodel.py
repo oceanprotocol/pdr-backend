@@ -174,7 +174,7 @@ class Aimodel:
         else:
             models = [self._sk_classif]
 
-        if all(hasattr(model, 'coef_') for model in models):
+        if all(hasattr(model, "coef_") for model in models):
             if self.do_regr:
                 coefs = np.mean([np.abs(regr.coef_) for regr in self._sk_regrs], axis=0)
             else:
