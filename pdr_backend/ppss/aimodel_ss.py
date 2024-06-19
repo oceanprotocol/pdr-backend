@@ -12,6 +12,8 @@ CLASSIF_APPROACH_OPTIONS = [
     "ClassifLinearElasticNet",
     "ClassifLinearElasticNet_Balanced",
     "ClassifLinearSVM",
+    "ClassifGaussianProcess",
+    "ClassifXgboost",
     "ClassifConstant",
 ]
 REGR_APPROACH_OPTIONS = [
@@ -19,6 +21,8 @@ REGR_APPROACH_OPTIONS = [
     "RegrLinearLasso",
     "RegrLinearRidge",
     "RegrLinearElasticNet",
+    "RegrGaussianProcess",
+    "RegrXgboost",
     "RegrConstant",
 ]
 APPROACH_OPTIONS = CLASSIF_APPROACH_OPTIONS + REGR_APPROACH_OPTIONS
