@@ -72,6 +72,26 @@ def test_empty_dashboard(tmpdir, dash_duo):
 
 
 @enforce_types
+def test_dashboard(tmpdir, dash_duo):
+    test_dir = str(tmpdir)
+
+    # Sample Parquet file
+    parquet_data = {"timestamp": [4, 5, 6], "close": [40, 50, 60]}
+    pd.DataFrame(parquet_data).to_parquet(
+        os.path.join(test_dir, "sample.parquet"), index=False
+    )
+
+    app = Dash("pdr_backend.statutil.arima_dash")
+    app.config["suppress_callback_exceptions"] = True
+    app.layout = get_layout()
+    app.layout.children[0].data = test_dir
+    get_callbacks(app)
+
+    dash_duo.start_server(app)
+    dash_duo.wait_for_text_to_equal("#error-message", "")
+
+
+@enforce_types
 def _get_data():
     """Return (start_ut, timeframe, yvals) for BTC 5min"""
     df = pd.read_csv(DATA_FILE)  # all data start_time = UnixTimeMs(df["timestamp"][0])
