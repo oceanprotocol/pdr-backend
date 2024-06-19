@@ -173,7 +173,7 @@ class Aimodel:
             X,
             y,
             scoring=scoring,
-            n_repeats=1,#30,  # magic number
+            n_repeats=1,  # 30,  # magic number
         )
         imps_avg = imps_bunch.importances_mean
 
