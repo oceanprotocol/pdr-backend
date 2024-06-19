@@ -170,17 +170,21 @@ class Aimodel:
             scoring = "f1"
 
         if self.do_regr:
-            model = self._sk_regrs[0] # fixme
+            models = self._sk_regrs
         else:
-            model = self._sk_classif
+            models = [self._sk_classif]
 
-        if hasattr(model, 'coef_'):
+        if all(hasattr(model, 'coef_') for model in models):
             if self.do_regr:
-                coefs = np.mean([regr.coef_ for regr in self._sk_regrs], axis=0)
+                coefs = np.mean([np.abs(regr.coef_) for regr in self._sk_regrs], axis=0)
             else:
-                coefs = model.coef_
+                coefs = np.abs(self._sk_classif.coef_)
 
-            coefs = np.abs(coefs)
+            if len(coefs.shape) == 1:
+                coefs = np.abs(coefs)
+            else:
+                coefs = np.mean(np.abs(coefs), axis=0)
+
             imps_avg = coefs / np.sum(coefs)
             imps_stddev = np.zeros_like(imps_avg)
         else:
