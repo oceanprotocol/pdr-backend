@@ -182,7 +182,7 @@ class Aimodel:
             if self.do_regr:
                 coefs = np.mean([np.abs(regr.coef_) for regr in self._sk_regrs], axis=0)
             else:
-                coefs = np.abs(self._sk_classif.coef_)
+                coefs = np.mean([np.abs(clf.coef_[0]) for clf in models], axis=0)
 
             if len(coefs.shape) == 1:
                 coefs = np.abs(coefs)
