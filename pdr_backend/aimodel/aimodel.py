@@ -172,6 +172,7 @@ class Aimodel:
 
         models: list = []
         if self.do_regr:
+            assert self._sk_regrs is not None, "should have _sk_regrs"
             models = self._sk_regrs
         else:
             if type(self._sk_classif) is CalibratedClassifierCV:
@@ -181,6 +182,7 @@ class Aimodel:
 
         if all(hasattr(model, "coef_") for model in models):
             if self.do_regr:
+                assert self._sk_regrs is not None, "should have _sk_regrs"
                 coefs = np.mean([np.abs(regr.coef_) for regr in self._sk_regrs], axis=0)
             else:
                 coefs = np.mean([np.abs(clf.coef_[0]) for clf in models], axis=0)
