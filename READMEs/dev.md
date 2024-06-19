@@ -64,10 +64,10 @@ pytest
 In work console, run linting checks. The commands use the same configuration as CI.
 
 ```console
-# mypy does static type-checking and more. Use same configuration as in CI
+# mypy does static type-checking and more
 mypy --config-file mypy.ini ./
 
-# run linting on code style. Use same configuration as in CI
+# run linting on code style
 pylint --rcfile .pylintrc * pdr_backend/*
 
 # auto-fix some pylint complaints like whitespace
