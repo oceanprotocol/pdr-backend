@@ -21,6 +21,7 @@ from sklearn.linear_model import (
 )
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+from xgboost import XGBClassifier, XGBRegressor
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.ppss.aimodel_ss import AimodelSS
@@ -258,6 +259,8 @@ def _approach_to_skm(approach: str):
         return ElasticNet()
     if approach == "RegrGaussianProcess":
         return GaussianProcessRegressor()
+    if approach == "RegrXgboost":
+        return XGBRegressor()
 
     # classifier approaches
     if approach == "ClassifLinearLasso":
@@ -288,6 +291,8 @@ def _approach_to_skm(approach: str):
         return SVC(kernel="linear", probability=True, C=0.025)
     if approach == "ClassifGaussianProcess":
         return GaussianProcessClassifier()
+    if approach == "ClassifXgboost":
+        return XGBClassifier()
 
     # unidentified
     return None
