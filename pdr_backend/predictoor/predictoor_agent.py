@@ -403,25 +403,29 @@ class PredictoorAgent:
           stake_up -- amt to stake up, in units of Eth
           stake_down -- amt to stake down, ""
         """
+        pdr_ss = self.ppss.predictoor_ss
         mergedohlcv_df = self.get_ohlcv_data()
 
-        data_f = AimodelDataFactory(self.ppss.predictoor_ss)
-        X, ycont, _, _, xrecent = data_f.create_xy(
+        data_f = AimodelDataFactory(pdr_ss)
+        X, ytran, yraw, _, xrecent = data_f.create_xy(
             mergedohlcv_df,
             testshift=0,
             predict_feed=feedset.predict,
             train_feeds=feedset.train_on,
         )
 
-        curprice = ycont[-1]
-        y_thr = curprice
-        ybool = data_f.ycont_to_ytrue(ycont, y_thr)
+        curprice = yraw[-1]
+        
+        if pdr_ss.aimodel_data_ss.transform == "None":
+            y_thr = curprice
+        else: # transform = "RelDiff"
+            y_thr = 0.0
+            
+        ybool = data_f.ycont_to_ytrue(ytran, y_thr)
 
-        if (
-            self.iter_number % self.ppss.predictoor_ss.aimodel_ss.train_every_n_epochs
-        ) == 0:
-            model_f = AimodelFactory(self.ppss.predictoor_ss.aimodel_ss)
-            model = model_f.build(X, ybool, ycont, y_thr)
+        if (self.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs) == 0:
+            model_f = AimodelFactory(pdr_ss.aimodel_ss)
+            model = model_f.build(X, ybool, ytran, y_thr)
         else:
             assert self.crt_trained_model is not None
             model = self.crt_trained_model
@@ -431,7 +435,7 @@ class PredictoorAgent:
         prob_up = model.predict_ptrue(X_test)[0]
 
         # calc stake amounts
-        tot_amt = self.ppss.predictoor_ss.stake_amount
+        tot_amt = pdr_ss.stake_amount
         stake_up = tot_amt * prob_up
         stake_down = tot_amt * (1.0 - prob_up)
 

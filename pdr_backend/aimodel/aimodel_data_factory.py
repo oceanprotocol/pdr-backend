@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -28,11 +28,19 @@ class AimodelDataFactory:
       X -- 2d array of [sample_i, var_i]:value -- inputs for model
       y -- 1d array of [sample_i]:value -- target outputs for model
 
-      x_df -- *pandas* DataFrame with cols like:
-        "binanceus:ETH-USDT:open:(z(t-2)-z(t-3))/z(t-3)",
-        "binanceus:ETH-USDT:open:(z(t-1)-z(t-2))/z(t-2)",
-        "binanceus:ETH-USDT:high:(z(t-2)-z(t-3))/z(t-3)",
-        "binanceus:ETH-USDT:high:(z(t-1)-z(t-2))/z(t-2)",
+      x_df -- *pandas* DataFrame.
+        If transform is "None", cols are like:
+          "binanceus:ETH-USDT:open:t-2",
+          "binanceus:ETH-USDT:open:t-1",
+          "binanceus:ETH-USDT:high:t-2",
+          "binanceus:ETH-USDT:high:t-1",
+
+        or, if transform is "RelDiff", cols are like:
+          "binanceus:ETH-USDT:open:(z(t-2)-z(t-3))/z(t-3)",
+          "binanceus:ETH-USDT:open:(z(t-1)-z(t-2))/z(t-2)",
+          "binanceus:ETH-USDT:high:(z(t-2)-z(t-3))/z(t-3)",
+          "binanceus:ETH-USDT:high:(z(t-1)-z(t-2))/z(t-2)",
+
         ...
         (no "timestamp" or "datetime" column)
         (and index = 0, 1, .. -- nothing special)
@@ -81,12 +89,12 @@ class AimodelDataFactory:
           predict_feed -- feed to predict
           train_feeds -- feeds to use for model inputs. If None use predict feed
           do_fill_nans -- if any values are nan, fill them? (Via interpolation)
-            If you turn this off and mergedohlcv_df has nans, then X/y/etc gets nans
+            If you turn this off and mergedohlcv_df has nans, it raises error
 
         @return
-          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
-          ycont -- 1d array of [sample_i]:cont_value -- regression model outputs
-          ysignal -- 1d array. Un-transformed signal. Eg price, not % change
+          X -- 2d array of [sample_i, var_i]:float -- model inputs
+          ytran -- 1d array of [sample_i]:float -- transformed regr outputs. Eg % chg
+          yraw -- 1d array of [sample_i]:float. Un-transformed outputs. Eg price
           x_df -- *pandas* DataFrame. See class docstring.
           xrecent -- [var_i]:value -- most recent X value. Bots use to predict
         """
@@ -118,6 +126,7 @@ class AimodelDataFactory:
             train_feeds_list = [predict_feed]
         ss = self.ss.aimodel_data_ss
         x_dim_len = len(train_feeds_list) * ss.autoregressive_n
+        diff = 0 if ss.transform == "None" else 1
 
         # main work
         xcol_list = []  # [col_i] : name_str
@@ -129,17 +138,10 @@ class AimodelDataFactory:
         ]
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
-            z = list(mergedohlcv_df[hist_col].pct_change()[1:])
+            zraw_series = mergedohlcv_df[hist_col]
+            z = apply_transform(zraw_series, diff)
             maxshift = testshift + ss.autoregressive_n
-            N_train = min(ss.max_n_train, len(z) - maxshift - 1)
-            s = "\n"
-            s += f"  ss.max_n_train={ss.max_n_train}\n"
-            s += f"  ss.autoregressive_n={ss.autoregressive_n}\n"
-            s += f"  testshift={testshift}\n"
-            s += f"  maxshift=autoregressive_n+testshift={maxshift}\n"
-            s += f"  len(z)={len(z)}\n"
-            s += f"  N_train={N_train}\n"
-            logger.debug(s)
+            N_train = min(ss.max_n_train, len(z) - maxshift - diff)
             if N_train <= 0:
                 s = "Too little data. To fix:"
                 s += "broaden time, or shrink testshift, max_diff, or autoregr_n"
@@ -148,17 +150,16 @@ class AimodelDataFactory:
 
             for delayshift in range(ss.autoregressive_n, 0, -1):  # [.., 3, 2, 1, 0]
                 shift = testshift + delayshift
+                assert len(z) >= (N_train + shift)
                 # 1 point for test, the rest for train data
-                assert (shift + N_train + 1) <= len(z)
-                x_col = (
-                    hist_col
-                    + ":"
-                    + f"(z(t-{delayshift+1})-z(t-{delayshift+1+1}))"
-                    + f"/z(t-{delayshift+1+1})"
-                )
-                xcol_list += [x_col]
                 x_list += [pd.Series(_slice(z, -shift - N_train - 1, -shift))]
                 xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
+                ds1, ds11 = delayshift + 1, delayshift + 1 + 1
+                if diff == 0:
+                    x_col = hist_col + f":z(t-{ds1})"
+                if diff == 1:
+                    x_col = hist_col + f":(z(t-{ds1})-z(t-{ds11}))/z(t-{ds11})"
+                xcol_list += [x_col]
 
         # convert x lists to dfs, all at once. Faster than building up df.
         assert len(x_list) == len(xrecent_list) == len(xcol_list)
@@ -171,15 +172,17 @@ class AimodelDataFactory:
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         hist_col = hist_col_name(predict_feed)
-        z1 = list(mergedohlcv_df[hist_col].pct_change()[1:])
-        ycont = np.array(_slice(z1, -testshift - N_train - 1, -testshift))
-
-        z2 = list(mergedohlcv_df[hist_col])
-        ysignal = np.array(_slice(z2, -testshift - N_train - 1, -testshift))
+        
+        zraw_series = mergedohlcv_df[hist_col]
+        zraw = zraw_series.to_list()
+        yraw = np.array(_slice(zraw, -testshift - N_train - 1, -testshift))
+        
+        ztran = apply_transform(zraw_series, diff)
+        ytran = np.array(_slice(ztran, -testshift - N_train - 1, -testshift))
 
         # postconditions
-        assert X.shape[0] == ycont.shape[0]
-        assert X.shape[0] == ysignal.shape[0]
+        assert X.shape[0] == ytran.shape[0]
+        assert X.shape[0] == yraw.shape[0]
         assert X.shape[0] <= (ss.max_n_train + 1)
         assert X.shape[1] == x_dim_len
         assert isinstance(x_df, pd.DataFrame)
@@ -191,7 +194,17 @@ class AimodelDataFactory:
         logger.debug("Create model X/y data: done.")
 
         # return
-        return X, ycont, ysignal, x_df, xrecent
+        return X, ytran, yraw, x_df, xrecent
+
+
+@enforce_types
+def apply_transform(zraw: Union[pl.Series,pd.Series], diff:int) -> List[float]:
+    assert diff in [0, 1]
+
+    if diff == 0:
+        return zraw.to_list()
+
+    return zraw.pct_change()[1:].to_list()
 
 
 @enforce_types

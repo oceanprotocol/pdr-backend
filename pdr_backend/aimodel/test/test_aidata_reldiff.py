@@ -13,7 +13,7 @@ from pdr_backend.ppss.predictoor_ss import (
 
 
 @enforce_types
-def test_create_xy__0__diff1():
+def test_create_xy__reldiff():
     # create predictoor_ss
     feedset_list = [
         {
@@ -26,6 +26,7 @@ def test_create_xy__0__diff1():
         aimodel_data_ss_dict=aimodel_data_ss_test_dict(
             max_n_train=4,
             autoregressive_n=2,
+            transform="RelDiff",
         ),
     )
     predictoor_ss = PredictoorSS(d)

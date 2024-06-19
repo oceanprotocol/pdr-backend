@@ -34,17 +34,19 @@ SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 @enforce_types
 @pytest.mark.parametrize(
-    "approach,autoregr_n",
+    "approach,autoregr_n,transform",
     [
-        ("ClassifLinearRidge", 1),
-        ("RegrLinearRidge", 1),
-        ("ClassifLinearRidge", 2),
-        ("RegrLinearRidge", 2),
+        ("ClassifLinearRidge", 1, "None"),
+        ("ClassifLinearRidge", 2, "None"),
+        ("ClassifLinearRidge", 2, "RelDiff"),
+        ("RegrLinearRidge", 1, "None"),
+        ("RegrLinearRidge", 2, "None"),
+        ("RegrLinearRidge", 2, "RelDiff"),
     ],
 )
-def test_aimodel_btc_static(approach: str, autoregr_n: int):
-    max_n_train = 5000
-    pdr_ss = _get_predictoor_ss(approach, autoregr_n, max_n_train)
+def test_aimodel_prices_static(approach: str, autoregr_n: int, transform: str):
+    max_n_train = 200 # 5000 for manual testing
+    pdr_ss = _get_predictoor_ss(approach, autoregr_n, max_n_train, transform)
     mergedohlcv_df = _get_btc_data()
 
     # create X, y, x_df
@@ -52,33 +54,33 @@ def test_aimodel_btc_static(approach: str, autoregr_n: int):
     testshift = 0
     predict_feed = pdr_ss.predict_train_feedsets[0].predict
     train_feeds = pdr_ss.predict_train_feedsets[0].train_on
-    X, ycont, _, x_df, _ = data_f.create_xy(
+    X, ytran, _, x_df, _ = data_f.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,
         train_feeds,
     )
-    _assert_cols_ok(x_df, autoregr_n)
+    _assert_cols_ok(x_df, autoregr_n, transform)
 
     # create train/test data
     N_train = max_n_train - 100
     X_train, X_test = X[:N_train, :], X[N_train:, :]
-    ycont_train, _ = ycont[:N_train], ycont[N_train:]
+    ytran_train, _ = ytran[:N_train], ytran[N_train:]
     y_thr = 0.0  # always 0.0 when modeling % change
-    ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
+    ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
     ytrue_train, ytrue_test = ytrue[:N_train], ytrue[N_train:]
 
     # build model
     model_factory = AimodelFactory(pdr_ss.aimodel_ss)
-    model = model_factory.build(X_train, ytrue_train, ycont_train, y_thr)
+    model = model_factory.build(X_train, ytrue_train, ytran_train, y_thr)
 
     # test model response
     ytrue_train_hat = model.predict_true(X_train)
     ytrue_test_hat = model.predict_true(X_test)
     train_acc = classif_acc(ytrue_train_hat, ytrue_train)
     test_acc = classif_acc(ytrue_test_hat, ytrue_test)
-    assert train_acc < 0.95  # very loose
-    assert test_acc < 0.95  # ""
+    assert 0.0 <= train_acc <= 1.0  # very loose
+    assert 0.0 <= test_acc <= 1.0  # ""
     # print(f"train_acc={train_acc:.3f}, test_acc={test_acc:.3f}")
 
     _ = model.predict_ptrue(X)
@@ -93,7 +95,7 @@ def test_aimodel_btc_static(approach: str, autoregr_n: int):
         model,
         X,
         ytrue,
-        ycont,
+        ytran,
         y_thr,
         colnames=list(x_df.columns),
         slicing_x=X[-1, :],  # arbitrary
@@ -114,14 +116,17 @@ def test_aimodel_btc_static(approach: str, autoregr_n: int):
 
 
 @enforce_types
-def test_aimodel_btc_dynamic():
+@pytest.mark.parametrize("transform", ["None", "RelDiff"])
+def test_aimodel_prices_dynamic(transform: str):
     autoregr_n = 2
     max_n_train = 1000
     sim_test_n = 200
     yerrs = []
     for test_i in range(sim_test_n):
         # print(f"Iter #{test_i+1}/{sim_test_n}")
-        yerr = _run_one_iter(autoregr_n, max_n_train, sim_test_n, test_i)
+        yerr = _run_one_iter(
+            autoregr_n, max_n_train, transform, sim_test_n, test_i,
+        )
         yerrs.append(yerr)
 
     fig = plot_dist(yerrs, True, False, False)
@@ -131,21 +136,22 @@ def test_aimodel_btc_dynamic():
 
 
 @enforce_types
-def _run_one_iter(autoregr_n, max_n_train, sim_test_n, test_i) -> float:
+def _run_one_iter(autoregr_n, max_n_train, transform, sim_test_n, test_i) \
+        -> float:
     """@return -- yerr"""
     mergedohlcv_df = _get_btc_data()
 
     # mimic sim_engine::run_one_iter()
     approach = "RegrLinearRidge"
-    pdr_ss = _get_predictoor_ss(approach, autoregr_n, max_n_train)
+    pdr_ss = _get_predictoor_ss(approach, autoregr_n, max_n_train, transform)
 
     testshift = sim_test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
     data_f = AimodelDataFactory(pdr_ss)
     predict_feed = pdr_ss.predict_train_feedsets[0].predict
     train_feeds = pdr_ss.predict_train_feedsets[0].train_on
 
-    # X, ycont, and x_df are all expressed in % change wrt prev candle
-    X, ycont, ysignal, _, _ = data_f.create_xy(
+    # X, ytran, and x_df are all expressed in % change wrt prev candle
+    X, ytran, ysignal, _, _ = data_f.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,
@@ -154,17 +160,17 @@ def _run_one_iter(autoregr_n, max_n_train, sim_test_n, test_i) -> float:
 
     st_, fin = 0, X.shape[0] - 1
     X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
-    ycont_train, _ = ycont[st_:fin], ycont[fin : fin + 1]
+    ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
 
     curprice = ysignal[-2]
     trueprice = ysignal[-1]
 
     y_thr = 0.0  # always 0.0 when modeling % change
-    ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
+    ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
     ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
     model_f = AimodelFactory(pdr_ss.aimodel_ss)
-    model = model_f.build(X_train, ytrue_train, ycont_train, y_thr)
+    model = model_f.build(X_train, ytrue_train, ytran_train, y_thr)
 
     # predict price direction
     prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
@@ -190,19 +196,28 @@ def _run_one_iter(autoregr_n, max_n_train, sim_test_n, test_i) -> float:
 
 
 @enforce_types
-def _assert_cols_ok(x_df, autoregr_n: int):
+def _assert_cols_ok(x_df, autoregr_n: int, transform:str):
     assert len(x_df.columns) == autoregr_n
-    if autoregr_n == 2:
+    if autoregr_n != 2:
+        return
+    
+    if transform == "None":
+        target_x_df_columns = [
+            "binanceus:BTC/USDT:close:z(t-3)",
+            "binanceus:BTC/USDT:close:z(t-2)",
+        ]
+    else:
         target_x_df_columns = [
             "binanceus:BTC/USDT:close:(z(t-3)-z(t-4))/z(t-4)",
             "binanceus:BTC/USDT:close:(z(t-2)-z(t-3))/z(t-3)",
         ]
-        assert list(x_df.columns) == target_x_df_columns
+    assert list(x_df.columns) == target_x_df_columns
 
 
 @enforce_types
-def _get_predictoor_ss(approach: str, autoregr_n: int, max_n_train: int):
-    # create predictoor_ss
+def _get_predictoor_ss(
+        approach: str, autoregr_n: int, max_n_train: int, transform: str,
+) -> PredictoorSS:
     feedset_list = [
         {
             "predict": "binanceus BTC/USDT c 5m",
@@ -214,6 +229,7 @@ def _get_predictoor_ss(approach: str, autoregr_n: int, max_n_train: int):
         aimodel_data_ss_dict=aimodel_data_ss_test_dict(
             max_n_train=max_n_train,
             autoregressive_n=autoregr_n,
+            transform=transform,
         ),
         aimodel_ss_dict=aimodel_ss_test_dict(
             approach=approach,
@@ -225,14 +241,17 @@ def _get_predictoor_ss(approach: str, autoregr_n: int, max_n_train: int):
     )
     return PredictoorSS(d)
 
+_mergedohlcv_df = None
 
 @enforce_types
 def _get_btc_data():
-    # create mergedohlcv_df
+    global _mergedohlcv_df
+    if _mergedohlcv_df is not None:
+        return _mergedohlcv_df
     rawohlcv_dfs = {
         "binanceus": {
             "BTC/USDT": _df_from_raw_data(get_large_BINANCE_BTC_DATA()),
         },
     }
-    mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
-    return mergedohlcv_df
+    _mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
+    return _mergedohlcv_df

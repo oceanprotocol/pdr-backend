@@ -42,12 +42,12 @@ def test_create_xy_reg__input_type():
     assert isinstance(mergedohlcv_df, pl.DataFrame)
     assert isinstance(factory, AimodelDataFactory)
 
-    # create_xy() input should be pl
+    # create_xy() input should be polars (pl)
     testshift = 0
     predict_feed = factory.ss.predict_train_feedsets[0].predict
     factory.create_xy(mergedohlcv_df, testshift, predict_feed)
 
-    # create_xy() inputs shouldn't be pd
+    # create_xy() inputs shouldn't be pandas (pd)
     pandas_df = mergedohlcv_df.to_pandas()
     with pytest.raises(AssertionError):
         factory.create_xy(pandas_df, testshift, predict_feed)
