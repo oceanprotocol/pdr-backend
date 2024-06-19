@@ -1,6 +1,6 @@
 from dash import dcc, html
-from plotly.graph_objs import Figure
 from enforce_typing import enforce_types
+from plotly.graph_objs import Figure
 
 figure_names = [
     "pdr_profit_vs_time",
@@ -10,6 +10,8 @@ figure_names = [
     "model_performance_vs_time",
     "aimodel_varimps",
     "aimodel_response",
+    "prediction_residuals_dist",
+    "prediction_residuals_other",
 ]
 
 empty_selected_vars = dcc.Checklist([], [], id="selected_vars")
@@ -94,6 +96,7 @@ def get_tabs(figures):
                 single_graph(figures, "pdr_profit_vs_time", width="100%"),
                 single_graph(figures, "pdr_profit_vs_ptrue", width="50%"),
             ],
+            "className": "predictor_profit_tab",
         },
         {
             "name": "Trader Profit",
@@ -101,12 +104,14 @@ def get_tabs(figures):
                 single_graph(figures, "trader_profit_vs_time", width="100%"),
                 single_graph(figures, "trader_profit_vs_ptrue", width="50%"),
             ],
+            "className": "trader_profit_tab",
         },
         {
             "name": "Model performance",
             "components": [
                 single_graph(figures, "model_performance_vs_time", "100%"),
             ],
+            "className": "model_performance_tab",
         },
         {
             "name": "Model response",
@@ -120,6 +125,21 @@ def get_tabs(figures):
                     width2="70%",
                 )
             ],
+            "className": "model_response_tab",
+        },
+        {
+            "name": "Model residuals",
+            "components": [
+                side_by_side_graphs(
+                    figures,
+                    name1="prediction_residuals_dist",
+                    name2="prediction_residuals_other",
+                    height="100%",
+                    width1="60%",
+                    width2="40%",
+                ),
+            ],
+            "className": "model_residuals_tab",
         },
     ]
 
@@ -146,6 +166,7 @@ def get_tabs_component(elements, selectedTab):
                 children=e["components"],
                 style={"width": "200px"},
                 selected_style={"borderLeft": "4px solid blue"},
+                className=e["className"],
             )
             for e in elements
         ],
@@ -177,7 +198,6 @@ def get_main_container():
                 },
             ),
             html.Div(
-                empty_graphs_template,
                 id="tabs-container",
                 style={"height": "calc(100% - 60px)"},
             ),
@@ -190,4 +210,21 @@ def get_main_container():
             "alignIntems": "start",
             "height": "100%",
         },
+    )
+
+
+@enforce_types
+def get_layout():
+    return html.Div(
+        [
+            get_main_container(),
+            dcc.Interval(
+                id="interval-component",
+                interval=3 * 1000,  # in milliseconds
+                n_intervals=0,
+                disabled=False,
+            ),
+            dcc.Store(id="selected-tab"),
+        ],
+        style={"height": "100vh"},
     )

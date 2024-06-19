@@ -1,11 +1,10 @@
-from typing import Optional
+from typing import Optional, Tuple
 
-import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.util.strutil import StrMixin
 
-APPROACH_OPTIONS = [
+CLASSIF_APPROACH_OPTIONS = [
     "ClassifLinearLasso",
     "ClassifLinearLasso_Balanced",
     "ClassifLinearRidge",
@@ -14,19 +13,24 @@ APPROACH_OPTIONS = [
     "ClassifLinearElasticNet_Balanced",
     "ClassifLinearSVM",
     "ClassifConstant",
+]
+REGR_APPROACH_OPTIONS = [
     "RegrLinearLS",
     "RegrLinearLasso",
     "RegrLinearRidge",
     "RegrLinearElasticNet",
     "RegrConstant",
 ]
-WEIGHT_RECENT_OPTIONS = ["10x_5x", "None"]
+APPROACH_OPTIONS = CLASSIF_APPROACH_OPTIONS + REGR_APPROACH_OPTIONS
+
+WEIGHT_RECENT_OPTIONS = ["10x_5x", "10000x", "None"]
 BALANCE_CLASSES_OPTIONS = ["SMOTE", "RandomOverSampler", "None"]
 CALIBRATE_PROBS_OPTIONS = [
     "CalibratedClassifierCV_Sigmoid",
     "CalibratedClassifierCV_Isotonic",
     "None",
 ]
+CALIBRATE_REGR_OPTIONS = ["CurrentYval", "None"]
 
 
 class AimodelSS(StrMixin):
@@ -38,11 +42,6 @@ class AimodelSS(StrMixin):
         self.d = d
 
         # test inputs
-        if not 0 < self.max_n_train:
-            raise ValueError(self.max_n_train)
-        if not 0 < self.autoregressive_n < np.inf:
-            raise ValueError(self.autoregressive_n)
-
         if self.approach not in APPROACH_OPTIONS:
             raise ValueError(self.approach)
         if self.weight_recent not in WEIGHT_RECENT_OPTIONS:
@@ -51,19 +50,11 @@ class AimodelSS(StrMixin):
             raise ValueError(self.balance_classes)
         if self.calibrate_probs not in CALIBRATE_PROBS_OPTIONS:
             raise ValueError(self.calibrate_probs)
+        if self.calibrate_regr not in CALIBRATE_REGR_OPTIONS:
+            raise ValueError(self.calibrate_regr)
 
     # --------------------------------
     # yaml properties
-
-    @property
-    def max_n_train(self) -> int:
-        """eg 50000. It's subject to what data is actually available"""
-        return self.d["max_n_train"]
-
-    @property
-    def autoregressive_n(self) -> int:
-        """eg 10. model inputs ar_n past pts z[t-1], .., z[t-ar_n]"""
-        return self.d["autoregressive_n"]
 
     @property
     def approach(self) -> str:
@@ -109,11 +100,27 @@ class AimodelSS(StrMixin):
             return "isotonic"
         raise ValueError(c)
 
+    @property
+    def calibrate_regr(self) -> str:
+        """eg 'CurrentYval'"""
+        return self.d["calibrate_regr"]
+
     # --------------------------------
     # derivative properties
     @property
     def do_regr(self) -> bool:
         return self.approach[:4] == "Regr"
+
+    @property
+    def weight_recent_n(self) -> Tuple[int, int]:
+        """@return -- (n_repeat1, n_repeat2)"""
+        if self.weight_recent == "None":
+            return 0, 0
+        if self.weight_recent == "10x_5x":
+            return 10, 5
+        if self.weight_recent == "10000x":
+            return 10000, 0
+        raise ValueError(self.weight_recent)
 
 
 # =========================================================================
@@ -122,21 +129,19 @@ class AimodelSS(StrMixin):
 
 @enforce_types
 def aimodel_ss_test_dict(
-    max_n_train: Optional[int] = None,
-    autoregressive_n: Optional[int] = None,
     approach: Optional[str] = None,
     weight_recent: Optional[str] = None,
     balance_classes: Optional[str] = None,
     calibrate_probs: Optional[str] = None,
+    calibrate_regr: Optional[str] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct AimodelSS(d)"""
     d = {
-        "max_n_train": 7 if max_n_train is None else max_n_train,
-        "train_every_n_epochs": 1,
-        "autoregressive_n": 3 if autoregressive_n is None else autoregressive_n,
         "approach": approach or "ClassifLinearRidge",
         "weight_recent": weight_recent or "10x_5x",
         "balance_classes": balance_classes or "SMOTE",
+        "train_every_n_epochs": 1,
         "calibrate_probs": calibrate_probs or "CalibratedClassifierCV_Sigmoid",
+        "calibrate_regr": calibrate_regr or "None",
     }
     return d

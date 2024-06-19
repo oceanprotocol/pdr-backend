@@ -4,7 +4,7 @@ from typing import List
 
 from enforce_typing import enforce_types
 
-from pdr_backend.subgraph.subscription import Subscription
+from pdr_backend.lake.subscription import Subscription
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.util.networkutil import get_subgraph_url
@@ -61,7 +61,8 @@ def fetch_filtered_subscriptions(
     # pylint: disable=line-too-long
     query = f"""
         {{
-            predictSubscriptions(skip: {skip}, first: {first} {where_clause}) {{
+            predictSubscriptions(skip: {skip}, first: {first} {where_clause}, orderBy: timestamp,
+            orderDirection: asc) {{
                 id
                 txId
                 timestamp

@@ -3,6 +3,8 @@ Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
+> 📢 _Do you love AI, Python, and competitive games? The Predictoor team is hiring. [Learn more](https://github.com/oceanprotocol/jobs/blob/main/datascience.md)_.
+
 # pdr-backend
 
 ## Run bots (agents)
@@ -84,7 +86,7 @@ OPF-run bots & higher-level tools:
 - `trueval` - report true values to contract
 - `dfbuyer` - buy feeds on behalf of Predictoor DF
 - `publisher` - publish pdr data feeds
-- `analytics` - analytics tools
+- `lake` - data lake and analytics tools
 - `deployer` - deployer tool
 - `accuracy` - calculates % correct, for display in predictoor.ai webapp
 
@@ -92,7 +94,7 @@ Mid-level building blocks:
 
 - `cli` - implementation of CLI
 - `ppss` - implements settings
-- `lake` - data lake and data pipeline
+- `ohlcv` - financial data pipeline
 - `subgraph` - blockchain queries, complements lake
 - `aimodel` - AI/ML modeling engine
 - `accuracy` - to report % correct in webapp

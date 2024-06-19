@@ -1,3 +1,4 @@
+import os
 from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
@@ -15,13 +16,8 @@ DATA_FILE = (
 )
 BTC_COL = "binance:BTC/USDT:close"
 
-SHOW_PLOT = False  # only turn on for manual testing
-
-
-@enforce_types
-def test_autocorrelation_SHOW_PLOT():
-    """SHOW_PLOT should only be set to True temporarily in local testing."""
-    assert not SHOW_PLOT
+# set env variable as true to show plots
+SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 @enforce_types
@@ -37,14 +33,14 @@ def test_autocorrelation_SHOW_PLOT():
 def test_autocorrelation(do_boxcox, differencing_order):
     nlags = 5  # play with me
 
-    y = _get_data()
-    y = np.array(y)
+    x = _get_data()
+    x = np.array(x)
     if do_boxcox:
-        y = safe_boxcox(y)
+        x = safe_boxcox(x)
     for _ in range(differencing_order):
-        y = y[1:] - y[:-1]
+        x = x[1:] - x[:-1]
 
-    d = AutocorrelationPlotdataFactory.build(y, nlags)
+    d = AutocorrelationPlotdataFactory.build(x, nlags)
     assert isinstance(d, AutocorrelationPlotdata)
 
     fig = plot_acf(d)
@@ -58,8 +54,8 @@ def test_autocorrelation(do_boxcox, differencing_order):
 
 @enforce_types
 def _get_data():
-    """Return (start_ut, timeframe, yvals) for BTC 5min"""
+    """Return (start_ut, timeframe, xvals) for BTC 5min"""
     df = pd.read_csv(DATA_FILE)  # all data start_time = UnixTimeMs(df["timestamp"][0])
-    y = df[BTC_COL].array
+    x = df[BTC_COL].array
 
-    return y
+    return x

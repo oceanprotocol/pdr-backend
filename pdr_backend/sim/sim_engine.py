@@ -23,6 +23,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_logger import SimLogLine
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_state import SimState
+from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
@@ -43,6 +44,9 @@ class SimEngine:
         assert isinstance(self.usdcoin, str)
 
         self.ppss = ppss
+
+        # can be disabled by calling disable_realtime_state()
+        self.do_state_updates = True
 
         self.st = SimState(
             copy.copy(self.ppss.trader_ss.init_holdings),
@@ -127,7 +131,9 @@ class SimEngine:
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
         predict_feed = self.predict_train_feedset.predict
         train_feeds = self.predict_train_feedset.train_on
-        X, ycont, x_df, _ = data_f.create_xy(
+
+        # X, ycont, and x_df are all expressed in % change wrt prev candle
+        X, ytran, yraw, x_df, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
             predict_feed,
@@ -136,11 +142,11 @@ class SimEngine:
         colnames = list(x_df.columns)
 
         st_, fin = 0, X.shape[0] - 1
-        X_train, X_test = X[st_:fin, :], X[fin : fin + 1]
-        ycont_train, ycont_test = ycont[st_:fin], ycont[fin : fin + 1]
+        X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
+        ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
 
-        curprice = ycont_train[-1]
-        trueprice = ycont_test[-1]
+        curprice = yraw[-2]
+        trueprice = yraw[-1]
 
         shifted_mergedohlcv_df = mergedohlcv_df.filter(
             (pl.col(f"{predict_feed.exchange}:{predict_feed.pair}:close") == curprice)
@@ -152,11 +158,18 @@ class SimEngine:
 
         y_thr = curprice
         ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
+
+        if pdr_ss.aimodel_data_ss.transform == "None":
+            y_thr = curprice
+        else:  # transform = "RelDiff"
+            y_thr = 0.0
+        ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
+
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
         if self.st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0:
             model_f = AimodelFactory(pdr_ss.aimodel_ss)
-            model = model_f.build(X_train, ytrue_train, ycont_train, y_thr)
+            model = model_f.build(X_train, ytrue_train, ytran_train, y_thr)
             self.crt_trained_model = model
         else:
             assert self.crt_trained_model is not None
@@ -214,7 +227,12 @@ class SimEngine:
             loss = 3.0
         else:
             loss = log_loss(st.ytrues, st.probs_up)
-        st.clm.update(acc_est, acc_l, acc_u, f1, precision, recall, loss)
+        yerr = 0.0
+        if model.do_regr:
+            relchange = model.predict_ycont(X_test)[0]
+            predprice = curprice + relchange * curprice
+            yerr = trueprice - predprice
+        st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
         # track predictoor profit
         tot_stake = others_stake + stake_amt
@@ -235,14 +253,14 @@ class SimEngine:
         save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
 
         if save_state:
-            colnames = [_shift_one_earlier(colname) for colname in colnames]
+            colnames = [shift_one_earlier(colname) for colname in colnames]
             most_recent_x = X[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
             d = AimodelPlotdata(
                 model,
                 X_train,
                 ytrue_train,
-                ycont_train,
+                ytran_train,
                 y_thr,
                 colnames,
                 slicing_x,
@@ -419,11 +437,18 @@ class SimEngine:
 
         return usdcoin_amt_recd
 
+    def disable_realtime_state(self):
+        self.do_state_updates = False
+
     @enforce_types
     def save_state(self, i: int, N: int):
         "Save state on this iteration Y/N?"
         if self.ppss.sim_ss.is_final_iter(i):
             return True, True
+
+        # don't save if disabled
+        if not self.do_state_updates:
+            return False, False
 
         # don't save first 5 iters -> not interesting
         # then save the next 5 -> "stuff's happening!"
@@ -433,10 +458,3 @@ class SimEngine:
             return False, False
 
         return True, False
-
-
-@enforce_types
-def _shift_one_earlier(s: str):
-    """eg 'binance:BTC/USDT:close:t-3' -> 'binance:BTC/USDT:close:t-2'"""
-    val = int(s[-1])
-    return s[:-1] + str(val - 1)

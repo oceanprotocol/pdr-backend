@@ -20,7 +20,7 @@ Usage: pdr sim|predictoor|trader|..
 HELP_MAIN = """
 Main tools:
   pdr sim PPSS_FILE
-  pdr sim_plots [--run_id RUN_ID] [--port PORT]
+  pdr sim_plots [--run_id RUN_ID] [--port PORT] [--debug_mode False]
   pdr predictoor PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
@@ -39,15 +39,21 @@ Transactions are signed with envvar 'PRIVATE_KEY`.
 
 HELP_DOT = """
 To pass args down to ppss, use dot notation.
-Example: pdr lake ppss.yaml sapphire-mainnet --lake_ss.st_timestr=2023-01-01 --lake_ss.fin_timestr=2023-12-31
+Example: pdr lake raw update ppss.yaml sapphire-mainnet
+pdr lake raw drop ppss.yaml sapphire-mainnet 2023-06-01
+pdr lake describe ppss.yaml sapphire-mainnet
+pdr lake validate ppss.yaml sapphire-mainnet
 """
 
 HELP_OTHER_TOOLS = """
 Power tools:
   pdr multisim PPSS_FILE
-  pdr arima_plots PPSS_FILE
+  pdr arima_plots PPSS_FILE [--debug_mode False]
   pdr deployer (for >1 predictoor bots)
-  pdr lake PPSS_FILE NETWORK
+  pdr lake raw update PPSS_FILE NETWORK
+  pdr lake raw drop PPSS_FILE NETWORK ST
+  pdr lake describe PPSS_FILE NETWORK
+  pdr lake validate PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
 
 Utilities:
@@ -195,6 +201,21 @@ class LOOKBACK_Mixin:
             type=int,
             help="# hours to check back on",
             required=False,
+        )
+
+
+@enforce_types
+class DEBUG_Mixin:
+    def add_argument_DEBUG(self):
+        self.add_argument(
+            "--debug_mode",
+            type=bool,
+            help=(
+                "debug_mode defines if app should run or not in debug mode."
+                "If not provided, debug mode will be disabled."
+            ),
+            required=False,
+            default=False,
         )
 
 
@@ -537,7 +558,6 @@ def print_args(arguments: Namespace, nested_args: dict):
 
 # main tools
 SimArgParser = _ArgParser_PPSS
-ArimaArgParser = _ArgParser_PPSS
 PredictoorArgParser = _ArgParser_PPSS_NETWORK
 TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
 ClaimOceanArgParser = _ArgParser_PPSS
@@ -576,6 +596,16 @@ class SimPlotsArgParser(CustomArgParser):
         super().__init__(description=description)
 
         self.add_argument(
+            "--debug_mode",
+            help=(
+                "debug_mode defines if app should run or not in debug mode."
+                "If not provided, debug mode will be disabled."
+            ),
+            type=bool,
+            default=False,
+        )
+
+        self.add_argument(
             "--run_id",
             help=(
                 "The run_id of the simulation to visualize. "
@@ -593,11 +623,15 @@ class SimPlotsArgParser(CustomArgParser):
         )
 
 
-class ArimaPlotsArgParser(CustomArgParser):
+class ArimaPlotsArgParser(CustomArgParser, PPSS_Mixin, DEBUG_Mixin):
     # pylint: disable=unused-argument
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
-        self.add_arguments_bulk(command_name, ["PPSS"])
+
+        self.add_arguments_bulk(
+            command_name,
+            ["PPSS", "DEBUG"],
+        )
 
 
 # below, list each entry in defined_parsers in same order as HELP_LONG
@@ -645,7 +679,7 @@ defined_parsers = {
     "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
     "do_sim_plots": SimPlotsArgParser("Visualize simulation data", "sim_plots"),
-    "do_arima_plots": ArimaArgParser("Visualize ARIMA data", "arima_plots"),
+    "do_arima_plots": ArimaPlotsArgParser("Visualize ARIMA data", "arima_plots"),
 }
 
 

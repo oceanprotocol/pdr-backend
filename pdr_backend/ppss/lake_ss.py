@@ -19,13 +19,13 @@ class LakeSS(MultiFeedMixin):
         # yaml_dict["lake_ss"]
         super().__init__(d, assert_feed_attributes=["timeframe"])
 
-        # handle parquet_dir
-        assert self.parquet_dir == os.path.abspath(self.parquet_dir)
-        if not os.path.exists(self.parquet_dir):
+        # handle lake_dir
+        assert self.lake_dir == os.path.abspath(self.lake_dir)
+        if not os.path.exists(self.lake_dir):
             logger.warning(
-                "Could not find parquet dir, creating one at: %s", self.parquet_dir
+                "Could not find lake dir, creating one at: %s", self.lake_dir
             )
-            os.makedirs(self.parquet_dir)
+            os.makedirs(self.lake_dir)
 
         # test inputs
         assert (
@@ -38,8 +38,8 @@ class LakeSS(MultiFeedMixin):
     # --------------------------------
     # yaml properties
     @property
-    def parquet_dir(self) -> str:
-        s = self.d["parquet_dir"]
+    def lake_dir(self) -> str:
+        s = self.d["lake_dir"]
         if s != os.path.abspath(s):  # rel path given; needs an abs path
             return os.path.abspath(s)
         # abs path given
@@ -85,7 +85,7 @@ class LakeSS(MultiFeedMixin):
         s += f"fin_timestr={self.fin_timestr}"
         s += f" -> fin_timestamp={self.fin_timestamp.pretty_timestr()}\n"
         s += f" -> n_exchs={self.n_exchs}\n"
-        s += f"parquet_dir={self.parquet_dir}\n"
+        s += f"lake_dir={self.lake_dir}\n"
         s += "-" * 10 + "\n"
         return s
 
@@ -95,12 +95,12 @@ class LakeSS(MultiFeedMixin):
 
 
 @enforce_types
-def lake_ss_test_dict(parquet_dir: str, feeds: Optional[list] = None):
+def lake_ss_test_dict(lake_dir: str, feeds: Optional[list] = None):
     """Use this function's return dict 'd' to construct LakeSS(d)"""
     feeds = feeds or ["binance BTC/USDT c 5m"]
     d = {
         "feeds": feeds,
-        "parquet_dir": parquet_dir,
+        "lake_dir": lake_dir,
         "st_timestr": "2023-06-18",
         "fin_timestr": "2023-06-30",
         "timeframe": "5m",
