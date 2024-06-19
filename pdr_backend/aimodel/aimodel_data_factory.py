@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -139,7 +139,10 @@ class AimodelDataFactory:
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
             zraw_series = mergedohlcv_df[hist_col]
-            z = apply_transform(zraw_series, diff)
+            if diff == 0:
+                z = zraw_series.to_list()
+            else:
+                z = zraw_series.pct_change()[1:].to_list()
             maxshift = testshift + ss.autoregressive_n
             N_train = min(ss.max_n_train, len(z) - maxshift - diff)
             if N_train <= 0:
@@ -148,16 +151,17 @@ class AimodelDataFactory:
                 logger.error(s)
                 sys.exit(1)
 
-            for delayshift in range(ss.autoregressive_n, 0, -1):  # [.., 3, 2, 1, 0]
+            for delayshift in range(ss.autoregressive_n, 0, -1):  # eg [2, 1, 0]
                 shift = testshift + delayshift
-                assert len(z) >= (N_train + shift)
+                assert (shift + N_train + 1) <= len(z)
                 # 1 point for test, the rest for train data
                 x_list += [pd.Series(_slice(z, -shift - N_train - 1, -shift))]
                 xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
-                ds1, ds11 = delayshift + 1, delayshift + 1 + 1
 
-                x_col = hist_col + f":z(t-{ds1})"
-                if diff == 1:
+                ds1, ds11 = delayshift + 1, delayshift + 1 + 1
+                if diff == 0:
+                    x_col = hist_col + f":z(t-{ds1})"
+                else:
                     x_col = hist_col + f":(z(t-{ds1})-z(t-{ds11}))/z(t-{ds11})"
                 xcol_list += [x_col]
 
@@ -173,16 +177,20 @@ class AimodelDataFactory:
         # y is set from yval_{exch_str, signal_str, pair_str}
         hist_col = hist_col_name(predict_feed)
 
-        zraw_series = mergedohlcv_df[hist_col]
-        zraw = zraw_series.to_list()
-        yraw = np.array(_slice(zraw, -testshift - N_train - 1, -testshift))
+        yraw_series = mergedohlcv_df[hist_col]
+        yraw_list = yraw_series.to_list()
+        yraw = np.array(_slice(yraw_list, -testshift - N_train - 1, -testshift))
+        assert X.shape[0] == yraw.shape[0]
 
-        ztran = apply_transform(zraw_series, diff)
-        ytran = np.array(_slice(ztran, -testshift - N_train - 1, -testshift))
+        if diff == 0:
+            ytran = yraw
+        else:
+            ztran_list = zraw_series.pct_change()[1:].to_list()
+            ytran = np.array(_slice(ztran_list, -testshift - N_train - 1, -testshift))
+        assert X.shape[0] == ytran.shape[0]
 
         # postconditions
-        assert X.shape[0] == ytran.shape[0]
-        assert X.shape[0] == yraw.shape[0]
+        assert X.shape[0] == yraw.shape[0] == ytran.shape[0]
         assert X.shape[0] <= (ss.max_n_train + 1)
         assert X.shape[1] == x_dim_len
         assert isinstance(x_df, pd.DataFrame)
@@ -195,16 +203,6 @@ class AimodelDataFactory:
 
         # return
         return X, ytran, yraw, x_df, xrecent
-
-
-@enforce_types
-def apply_transform(zraw: Union[pl.Series, pd.Series], diff: int) -> List[float]:
-    assert diff in [0, 1]
-
-    if diff == 0:
-        return zraw.to_list()
-
-    return zraw.pct_change()[1:].to_list()
 
 
 @enforce_types
