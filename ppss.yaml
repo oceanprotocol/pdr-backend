@@ -33,7 +33,7 @@ predictoor_ss:
     transform: None # None -> raw value of signal; RelDiff -> rel % diff
     
   aimodel_ss: # used by AimodelFactory
-    approach: ClassifLinearRidge # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVC | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrGaussianProcess | RegrConstant
+    approach: ClassifLinearRidge # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVC | ClassifGaussianProcess | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrGaussianProcess | RegrConstant
     weight_recent: 10x_5x # 10x_5x | 10000x | None
     balance_classes: None # SMOTE | RandomOverSampler | None
     calibrate_probs: CalibratedClassifierCV_Sigmoid # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None

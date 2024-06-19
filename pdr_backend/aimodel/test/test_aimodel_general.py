@@ -31,6 +31,8 @@ SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
     "approach,func",
     [
         ("ClassifLinearRidge", "lin"),
+        ("ClassifGaussianProcess", "lin"),
+        ("ClassifGaussianProcess", "nonlin"),
         ("RegrLinearRidge", "lin"),
         ("RegrGaussianProcess", "lin"),
         ("RegrGaussianProcess", "nonlin"),
