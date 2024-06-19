@@ -69,6 +69,7 @@ Main tools:
 - [Run dfbuyer bot](READMEs/dfbuyer.md) - runs Predictoor DF rewards
 - [Run publisher](READMEs/publisher.md) - publish new feeds
 - [Run trueval](READMEs/trueval.md) - run trueval bot
+- [Run lake](READMEs/lake-and-etl.md) - run data lake
 
 ## Repo structure
 
