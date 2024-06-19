@@ -27,6 +27,60 @@ SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 @enforce_types
+@pytest.mark.parametrize(
+    "approach,func",
+    [
+        ("ClassifLinearRidge", "lin"),
+        ("RegrLinearRidge", "lin"),
+        ("RegrGaussianProcess", "lin"),
+        ("RegrGaussianProcess", "nonlin"),
+    ],
+)
+def test_aimodel_1var(approach: str, func: str):
+    """1 input var. It will plot that var on both axes"""
+    # settings, factory
+    ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
+    factory = AimodelFactory(ss)
+
+    # data
+    N = 50
+    mn, mx = -10.0, +10.0
+    X = np.random.uniform(mn, mx, (N, 1))
+    if func == "lin":
+        ycont = 3.0 + 4.0 * X[:, 0]
+    else:
+        ycont = 3.0 + 4.0 * X[:, 0] + 0.3 * (X[:, 0] - 3) ** 2
+    y_thr = np.average(ycont)  # avg gives good class balance
+    ytrue = ycont > y_thr
+
+    # build model
+    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
+
+    # test variable importances
+    imps = model.importance_per_var()
+    assert_array_equal(imps, np.array([1.0]))
+
+    # plot response: always classifier, and regressor if relevant
+    colnames = ["x0"]
+    slicing_x = np.array([0.1])  # arbitrary
+    sweep_vars = [0]
+    aimodel_plotdata = AimodelPlotdata(
+        model,
+        X,
+        ytrue,
+        ycont,
+        y_thr,
+        colnames,
+        slicing_x,
+        sweep_vars,
+    )
+    figure = plot_aimodel_response(aimodel_plotdata)
+    assert isinstance(figure, Figure)
+    if SHOW_PLOT:
+        figure.show()
+
+
+@enforce_types
 @pytest.mark.parametrize("approach", APPROACH_OPTIONS)
 def test_aimodel_2vars(approach: str):
     # settings, factory
@@ -181,49 +235,6 @@ def test_aimodel_classif_accuracy():
 
     yptrue_trn_hat = model.predict_ptrue(X_trn)
     assert_array_equal(yptrue_trn_hat > 0.5, ytrue_trn_hat)
-
-
-@enforce_types
-@pytest.mark.parametrize("approach", ["ClassifLinearRidge", "RegrLinearRidge"])
-def test_aimodel_1var(approach: str):
-    """1 input var. It will plot that var on both axes"""
-    # settings, factory
-    ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
-    factory = AimodelFactory(ss)
-
-    # data
-    N = 50
-    mn, mx = -10.0, +10.0
-    X = np.random.uniform(mn, mx, (N, 1))
-    ycont = 3.0 + 4.0 * X[:, 0]
-    y_thr = np.average(ycont)  # avg gives good class balance
-    ytrue = ycont > y_thr
-
-    # build model
-    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
-
-    # test variable importances
-    imps = model.importance_per_var()
-    assert_array_equal(imps, np.array([1.0]))
-
-    # plot response: always classifier, and regressor if relevant
-    colnames = ["x0"]
-    slicing_x = np.array([0.1])  # arbitrary
-    sweep_vars = [0]
-    aimodel_plotdata = AimodelPlotdata(
-        model,
-        X,
-        ytrue,
-        ycont,
-        y_thr,
-        colnames,
-        slicing_x,
-        sweep_vars,
-    )
-    figure = plot_aimodel_response(aimodel_plotdata)
-    assert isinstance(figure, Figure)
-    if SHOW_PLOT:
-        figure.show()
 
 
 @enforce_types

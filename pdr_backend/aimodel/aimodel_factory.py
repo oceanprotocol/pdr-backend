@@ -8,6 +8,7 @@ from enforce_typing import enforce_types
 from imblearn.over_sampling import SMOTE, RandomOverSampler  # type: ignore[import-untyped]
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.dummy import DummyClassifier, DummyRegressor
+from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.linear_model import (
     ElasticNet,
     Lasso,
@@ -252,6 +253,8 @@ def _approach_to_skm(approach: str):
         return Ridge()
     if approach == "RegrLinearElasticNet":
         return ElasticNet()
+    if approach == "RegrGaussianProcess":
+        return GaussianProcessRegressor()
 
     # classifier approaches
     if approach == "ClassifLinearLasso":

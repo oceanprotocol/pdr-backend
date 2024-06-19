@@ -19,6 +19,7 @@ REGR_APPROACH_OPTIONS = [
     "RegrLinearLasso",
     "RegrLinearRidge",
     "RegrLinearElasticNet",
+    "RegrGaussianProcess",
     "RegrConstant",
 ]
 APPROACH_OPTIONS = CLASSIF_APPROACH_OPTIONS + REGR_APPROACH_OPTIONS
