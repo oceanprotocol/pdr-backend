@@ -1,9 +1,9 @@
 import logging
 import pytest
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import WebDriverException
+from selenium import webdriver  # type: ignore[import-untyped]
+from selenium.webdriver.chrome.options import Options  # type: ignore[import-untyped]
+from selenium.common.exceptions import WebDriverException  # type: ignore[import-untyped]
 
 logger = logging.getLogger("dependencies")
 

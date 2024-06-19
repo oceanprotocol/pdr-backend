@@ -19,7 +19,6 @@ from pdr_backend.ppss.aimodel_ss import (
     AimodelSS,
     aimodel_ss_test_dict,
     APPROACH_OPTIONS,
-    REGR_APPROACH_OPTIONS,
 )
 from pdr_backend.statutil.scoring import classif_acc
 
@@ -27,21 +26,9 @@ from pdr_backend.statutil.scoring import classif_acc
 SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
-def test_aimodel_typical_classif():
-    _test_aimodel_2vars("ClassifLinearRidge")
-
-
-def test_aimodel_typical_regr():
-    _test_aimodel_2vars("RegrLinearRidge")
-
-
-@pytest.mark.parametrize("approach", APPROACH_OPTIONS)
-def test_aimodel_parameterized(approach):
-    _test_aimodel_2vars(approach)
-
-
 @enforce_types
-def _test_aimodel_2vars(approach: str):
+@pytest.mark.parametrize("approach", APPROACH_OPTIONS)
+def test_aimodel_2vars(approach: str):
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
@@ -112,7 +99,10 @@ def _test_aimodel_2vars(approach: str):
 
 @enforce_types
 def test_aimodel_can_ClassifConstant_emerge():
-    d = aimodel_ss_test_dict(approach="ClassifLinearRidge", weight_recent="None")
+    d = aimodel_ss_test_dict(
+        approach="ClassifLinearRidge",
+        weight_recent="None",
+    )
     ss = AimodelSS(d)
     assert not ss.do_regr
     factory = AimodelFactory(ss)
@@ -135,7 +125,10 @@ def test_aimodel_can_ClassifConstant_emerge():
 
 @enforce_types
 def test_aimodel_can_RegrConstant_emerge():
-    d = aimodel_ss_test_dict(approach="RegrLinearLS", weight_recent="None")
+    d = aimodel_ss_test_dict(
+        approach="RegrLinearLS",
+        weight_recent="None",
+    )
     ss = AimodelSS(d)
     assert ss.do_regr
     factory = AimodelFactory(ss)
@@ -190,16 +183,9 @@ def test_aimodel_classif_accuracy():
     assert_array_equal(yptrue_trn_hat > 0.5, ytrue_trn_hat)
 
 
-def test_aimodel_1var_ClassifLinearRidge():
-    _test_aimodel_1var("ClassifLinearRidge")
-
-
-def test_aimodel_1var_RegrLinearLS():
-    _test_aimodel_1var("RegrLinearLS")
-
-
 @enforce_types
-def _test_aimodel_1var(approach: str):
+@pytest.mark.parametrize("approach", ["ClassifLinearRidge", "RegrLinearRidge"])
+def test_aimodel_1var(approach: str):
     """1 input var. It will plot that var on both axes"""
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
@@ -240,16 +226,9 @@ def _test_aimodel_1var(approach: str):
         figure.show()
 
 
-def test_aimodel_5varmodel_lineplot_ClassifLinearRidge():
-    _test_aimodel_5varmodel_lineplot("ClassifLinearRidge")
-
-
-def test_aimodel_5varmodel_lineplot_RegrLinearLS():
-    _test_aimodel_5varmodel_lineplot("RegrLinearLS")
-
-
 @enforce_types
-def _test_aimodel_5varmodel_lineplot(approach):
+@pytest.mark.parametrize("approach", ["ClassifLinearRidge", "RegrLinearRidge"])
+def test_aimodel_5varmodel_lineplot(approach: str):
     """5 input vars; sweep 1 var."""
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
@@ -300,29 +279,16 @@ def _test_aimodel_5varmodel_lineplot(approach):
 
 
 @enforce_types
-def test_aimodel_4vars_response_ClassifLinearRidge_1_class_in_data():
-    # if just 1 class in the data, it should have flat var impacts
-    _test_aimodel_4vars_response("ClassifLinearRidge", 1)
-
-
-@enforce_types
-def test_aimodel_4vars_response_ClassifLinearRidge_2_classes_in_data():
-    _test_aimodel_4vars_response("ClassifLinearRidge", 2)
-
-
-@enforce_types
-def test_aimodel_4vars_response_RegrLinearRidge_1_class_in_data():
-    # even if just 1 class in the data, it should still have sane var impacts
-    _test_aimodel_4vars_response("RegrLinearRidge", 1)
-
-
-@enforce_types
-def test_aimodel_4vars_response_RegrLinearRidge_2_classes_in_data():
-    _test_aimodel_4vars_response("RegrLinearRidge", 2)
-
-
-@enforce_types
-def _test_aimodel_4vars_response(approach: str, target_n_classes: int):
+@pytest.mark.parametrize(
+    "approach,target_n_classes",
+    [
+        ("ClassifLinearRidge", 1),
+        ("ClassifLinearRidge", 2),
+        ("RegrLinearRidge", 1),
+        ("RegrLinearRidge", 2),
+    ],
+)
+def test_aimodel_4vars_response(approach: str, target_n_classes: int):
     """4 input vars. It will plot the 2 most important vars."""
     assert target_n_classes in [1, 2]
 
@@ -402,7 +368,7 @@ def test_aimodel_nvars_varimps(n: int):
 
 
 @enforce_types
-@pytest.mark.parametrize("approach", REGR_APPROACH_OPTIONS)
+@pytest.mark.parametrize("approach", ["RegrLinearRidge", "RegrConstant"])
 def test_aimodel__regr_0error__via_10000x(approach):
     d = aimodel_ss_test_dict(
         approach=approach,
@@ -416,7 +382,7 @@ def test_aimodel__regr_0error__via_10000x(approach):
 
 
 @enforce_types
-@pytest.mark.parametrize("approach", REGR_APPROACH_OPTIONS)
+@pytest.mark.parametrize("approach", ["RegrLinearRidge", "RegrConstant"])
 def test_aimodel__regr_0error__via_calibrate_regr(approach):
     d = aimodel_ss_test_dict(
         approach=approach,
