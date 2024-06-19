@@ -2,12 +2,6 @@ from unittest.mock import patch
 
 import polars as pl
 from enforce_typing import enforce_types
-from pdr_backend.lake.plutil import _object_list_to_df
-from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema,
-    predictoor_summary_df_schema,
-    feed_summary_df_schema,
-)
 
 from pdr_backend.analytics.predictoor_stats import (
     calculate_slot_daily_statistics,
@@ -19,24 +13,26 @@ from pdr_backend.analytics.predictoor_stats import (
     plot_traction_cum_sum_statistics,
     plot_traction_daily_statistics,
 )
+from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.table_pdr_predictions import FeedSummary, PredictoorSummary
 
 
 @enforce_types
 def test_get_feed_statistics(_sample_first_predictions):
-    predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
+    predictions_df = _object_list_to_df(_sample_first_predictions)
     feed_summary_df = get_feed_summary_stats(predictions_df)
 
     assert isinstance(feed_summary_df, pl.DataFrame)
-    assert len(feed_summary_df.schema) == len(feed_summary_df_schema)
+    assert len(feed_summary_df.schema) == len(FeedSummary.get_lake_schema())
 
 
 @enforce_types
 def test_get_predictoor_statistics(_sample_first_predictions):
-    predictions_df = _object_list_to_df(_sample_first_predictions, predictions_schema)
+    predictions_df = _object_list_to_df(_sample_first_predictions)
     predictoor_summary_df = get_predictoor_summary_stats(predictions_df)
 
     assert isinstance(predictoor_summary_df, pl.DataFrame)
-    assert len(predictoor_summary_df.schema) == len(predictoor_summary_df_schema)
+    assert len(predictoor_summary_df.schema) == len(PredictoorSummary.get_lake_schema())
 
 
 @enforce_types
@@ -57,7 +53,7 @@ def test_get_traction_statistics(
     assert "daily_unique_predictoors_count" in stats_df.columns
     assert stats_df["cum_daily_unique_predictoors_count"].to_list() == [2, 3, 4]
 
-    pq_dir = "parquet_data/"
+    pq_dir = "lake_data/"
     plot_traction_daily_statistics(stats_df, pq_dir)
     plot_traction_cum_sum_statistics(stats_df, pq_dir)
 
@@ -124,7 +120,7 @@ def test_plot_slot_statistics(
         1.0,
     ]
 
-    pq_dir = "parquet_data/"
+    pq_dir = "lake_data/"
     plot_slot_daily_statistics(slots_df, pq_dir)
 
     assert mock_savefig.call_count == 2

@@ -1,6 +1,7 @@
 from unittest.mock import Mock
-
+import os
 import numpy as np
+
 from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
 from plotly.graph_objs._figure import Figure
@@ -21,30 +22,13 @@ from pdr_backend.ppss.aimodel_ss import (
 )
 from pdr_backend.statutil.scoring import classif_acc
 
-SHOW_PLOT = False  # only turn on for manual testing
+# set env variable as true to show plots
+SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 @enforce_types
-def test_aimodel_factory_SHOW_PLOT():
-    """SHOW_PLOT should only be set to True temporarily in local testing."""
-    assert not SHOW_PLOT
-
-
-def test_aimodel_typical_classif():
-    _test_aimodel_2vars("ClassifLinearRidge")
-
-
-def test_aimodel_typical_regr():
-    _test_aimodel_2vars("RegrLinearRidge")
-
-
 @pytest.mark.parametrize("approach", APPROACH_OPTIONS)
-def test_aimodel_parameterized(approach):
-    _test_aimodel_2vars(approach)
-
-
-@enforce_types
-def _test_aimodel_2vars(approach: str):
+def test_aimodel_2vars(approach: str):
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
     factory = AimodelFactory(ss)
@@ -86,7 +70,7 @@ def _test_aimodel_2vars(approach: str):
     assert imps[0] == approx(0.333, abs=0.3)
     assert imps[1] == approx(0.667, abs=0.3)
 
-    # plot classifier response
+    # plot model response
     colnames = ["x0", "x1"]
     slicing_x = np.array([0.0, 1.0])  # arbitrary
     sweep_vars = [0, 1]
@@ -100,10 +84,10 @@ def _test_aimodel_2vars(approach: str):
         slicing_x,
         sweep_vars,
     )
-    classif_figure = plot_aimodel_response(d)
-    assert isinstance(classif_figure, Figure)
+    fig = plot_aimodel_response(d)
+    assert isinstance(fig, Figure)
     if SHOW_PLOT:
-        classif_figure.show()
+        fig.show()
 
     # test predict_ycont()
     if not model.do_regr:
@@ -115,7 +99,10 @@ def _test_aimodel_2vars(approach: str):
 
 @enforce_types
 def test_aimodel_can_ClassifConstant_emerge():
-    d = aimodel_ss_test_dict(approach="ClassifLinearRidge", weight_recent="None")
+    d = aimodel_ss_test_dict(
+        approach="ClassifLinearRidge",
+        weight_recent="None",
+    )
     ss = AimodelSS(d)
     assert not ss.do_regr
     factory = AimodelFactory(ss)
@@ -138,7 +125,10 @@ def test_aimodel_can_ClassifConstant_emerge():
 
 @enforce_types
 def test_aimodel_can_RegrConstant_emerge():
-    d = aimodel_ss_test_dict(approach="RegrLinearLS", weight_recent="None")
+    d = aimodel_ss_test_dict(
+        approach="RegrLinearLS",
+        weight_recent="None",
+    )
     ss = AimodelSS(d)
     assert ss.do_regr
     factory = AimodelFactory(ss)
@@ -165,7 +155,7 @@ def test_aimodel_can_RegrConstant_emerge():
 
 
 @enforce_types
-def test_aimodel_accuracy_from_create_xy():
+def test_aimodel_classif_accuracy():
     ss = AimodelSS(aimodel_ss_test_dict(weight_recent="None"))
     aimodel_factory = AimodelFactory(ss)
 
@@ -193,16 +183,9 @@ def test_aimodel_accuracy_from_create_xy():
     assert_array_equal(yptrue_trn_hat > 0.5, ytrue_trn_hat)
 
 
-def test_aimodel_1var_ClassifLinearRidge():
-    _test_aimodel_1var("ClassifLinearRidge")
-
-
-def test_aimodel_1var_RegrLinearLS():
-    _test_aimodel_1var("RegrLinearLS")
-
-
 @enforce_types
-def _test_aimodel_1var(approach: str):
+@pytest.mark.parametrize("approach", ["ClassifLinearRidge", "RegrLinearRidge"])
+def test_aimodel_1var(approach: str):
     """1 input var. It will plot that var on both axes"""
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
@@ -243,16 +226,9 @@ def _test_aimodel_1var(approach: str):
         figure.show()
 
 
-def test_aimodel_5varmodel_lineplot_ClassifLinearRidge():
-    _test_aimodel_5varmodel_lineplot("ClassifLinearRidge")
-
-
-def test_aimodel_5varmodel_lineplot_RegrLinearLS():
-    _test_aimodel_5varmodel_lineplot("RegrLinearLS")
-
-
 @enforce_types
-def _test_aimodel_5varmodel_lineplot(approach):
+@pytest.mark.parametrize("approach", ["ClassifLinearRidge", "RegrLinearRidge"])
+def test_aimodel_5varmodel_lineplot(approach: str):
     """5 input vars; sweep 1 var."""
     # settings, factory
     ss = AimodelSS(aimodel_ss_test_dict(approach=approach))
@@ -303,29 +279,16 @@ def _test_aimodel_5varmodel_lineplot(approach):
 
 
 @enforce_types
-def test_aimodel_4vars_response_ClassifLinearRidge_1_class_in_data():
-    # if just 1 class in the data, it should have flat var impacts
-    _test_aimodel_4vars_response("ClassifLinearRidge", 1)
-
-
-@enforce_types
-def test_aimodel_4vars_response_ClassifLinearRidge_2_classes_in_data():
-    _test_aimodel_4vars_response("ClassifLinearRidge", 2)
-
-
-@enforce_types
-def test_aimodel_4vars_response_RegrLinearRidge_1_class_in_data():
-    # even if just 1 class in the data, it should still have sane var impacts
-    _test_aimodel_4vars_response("RegrLinearRidge", 1)
-
-
-@enforce_types
-def test_aimodel_4vars_response_RegrLinearRidge_2_classes_in_data():
-    _test_aimodel_4vars_response("RegrLinearRidge", 2)
-
-
-@enforce_types
-def _test_aimodel_4vars_response(approach: str, target_n_classes: int):
+@pytest.mark.parametrize(
+    "approach,target_n_classes",
+    [
+        ("ClassifLinearRidge", 1),
+        ("ClassifLinearRidge", 2),
+        ("RegrLinearRidge", 1),
+        ("RegrLinearRidge", 2),
+    ],
+)
+def test_aimodel_4vars_response(approach: str, target_n_classes: int):
     """4 input vars. It will plot the 2 most important vars."""
     assert target_n_classes in [1, 2]
 
@@ -400,5 +363,78 @@ def test_aimodel_nvars_varimps(n: int):
     figure = plot_aimodel_varimps(plot_data)
     assert isinstance(figure, Figure)
 
+    if SHOW_PLOT:
+        figure.show()
+
+
+@enforce_types
+@pytest.mark.parametrize("approach", ["RegrLinearRidge", "RegrConstant"])
+def test_aimodel__regr_0error__via_10000x(approach):
+    d = aimodel_ss_test_dict(
+        approach=approach,
+        weight_recent="10000x",  # main setting
+        balance_classes="None",
+        calibrate_probs="None",
+        calibrate_regr="None",  # explicitly None here
+    )
+    for curprice_xval in [-8, -5, -2, 2, 5, 8]:
+        _test_aimodel__regr_0error(d, curprice_xval)
+
+
+@enforce_types
+@pytest.mark.parametrize("approach", ["RegrLinearRidge", "RegrConstant"])
+def test_aimodel__regr_0error__via_calibrate_regr(approach):
+    d = aimodel_ss_test_dict(
+        approach=approach,
+        weight_recent="None",  # explicitly None here
+        balance_classes="None",
+        calibrate_probs="None",
+        calibrate_regr="CurrentYval",  # main setting
+    )
+    for curprice_xval in [-8, -5, -2, 2, 5, 8]:
+        _test_aimodel__regr_0error(d, curprice_xval)
+
+
+@enforce_types
+def _test_aimodel__regr_0error(d: dict, curprice_xval):
+    """Want regressor to have near-zero error at current price. See #1213"""
+    ss = AimodelSS(d)
+    if "constant" in ss.approach.lower():
+        return
+    factory = AimodelFactory(ss)
+
+    # X/y data
+    N = 50
+    x = np.random.uniform(-10, +10, (N,))
+    x[-1] = curprice_xval
+    ycont = 3.0 + 4.0 * x + 1.0 * x**2
+    X = np.reshape(x, (N, 1))
+    y_thr = 1.0  # arbitrary
+    ytrue = ycont > y_thr
+
+    # build model
+    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
+
+    # is error at current near-zero?
+    yhat = model.predict_ycont(X)
+    err = abs(ycont[-1] - yhat[-1]) / np.std(ycont)
+    assert abs(err) < 0.1, err
+
+    # plot response
+    colnames = ["x0"]
+    slicing_x = np.array([0.1])  # arbitrary
+    sweep_vars = [0]
+    aimodel_plotdata = AimodelPlotdata(
+        model,
+        X,
+        ytrue,
+        ycont,
+        y_thr,
+        colnames,
+        slicing_x,
+        sweep_vars,
+    )
+    figure = plot_aimodel_response(aimodel_plotdata)
+    assert isinstance(figure, Figure)
     if SHOW_PLOT:
         figure.show()

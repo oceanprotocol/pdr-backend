@@ -1,4 +1,11 @@
-def BTC_history():
+def get_large_BINANCE_BTC_DATA() -> list:
+    # shaped like BINANCE_ETH_DATA, BINANCE_BTC_DATA, etc
+    y = BTC_history()
+    t0 = 1686805500000
+    return [[t0 + i, yi, yi, yi, yi, 7.0] for i, yi in enumerate(y)]
+
+
+def BTC_history() -> list:
     """5050 historical values of BTC"""
     # pylint: disable=too-many-lines
     return [

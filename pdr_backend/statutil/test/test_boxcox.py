@@ -1,24 +1,20 @@
+import os
 from enforce_typing import enforce_types
 from scipy import stats
 
 from pdr_backend.lake.test.resources2_btc import BTC_history
-from pdr_backend.statutil.hist import plot_hist
+from pdr_backend.statutil.dist_plotter import plot_dist
 from pdr_backend.statutil.boxcox import safe_boxcox
 
-SHOW_PLOT = False  # only turn on for manual testing
-
-
-@enforce_types
-def test_boxcox_SHOW_PLOT():
-    """SHOW_PLOT should only be set to True temporarily in local testing."""
-    assert not SHOW_PLOT
+# set env variable as true to show plots
+SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 @enforce_types
 def test_safe_boxcox():
     y: list = BTC_history()  # 5050 historical values of BTC, eg $60234.23
     if SHOW_PLOT:
-        fig = plot_hist(y)
+        fig = plot_dist(y, True, False, False)
         fig.update_layout(title="original")
         fig.show()
 
@@ -31,6 +27,6 @@ def test_safe_boxcox():
     y_bc2 = safe_boxcox(y)
     assert min(y_bc2) != max(y_bc2)
     if SHOW_PLOT:
-        fig = plot_hist(y_bc2)
+        fig = plot_dist(y_bc2, True, False, False)
         fig.update_layout(title="safe box-cox transformed")
         fig.show()

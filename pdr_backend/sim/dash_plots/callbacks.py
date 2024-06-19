@@ -64,10 +64,9 @@ def get_callbacks(app):
     )
     # pylint: disable=unused-argument
     def update_graph_live(n, selected_vars, selected_vars_old, selected_tab):
-        run_id = app.run_id if app.run_id else SimPlotter.get_latest_run_id()
-        sim_plotter = SimPlotter()
-
         try:
+            run_id = app.run_id if app.run_id else SimPlotter.get_latest_run_id()
+            sim_plotter = SimPlotter()
             st, ts = wait_for_state(sim_plotter, run_id)
         except Exception as e:
             return [], [get_waiting_template(e)]

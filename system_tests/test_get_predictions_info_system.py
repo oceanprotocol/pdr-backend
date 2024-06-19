@@ -1,26 +1,20 @@
 import sys
+from unittest.mock import MagicMock, Mock, patch
 
-from unittest.mock import Mock, patch, MagicMock
-from pdr_backend.lake.plutil import _object_list_to_df
-from pdr_backend.lake.table_pdr_predictions import (
-    predictions_schema,
-)
-from pdr_backend.lake.table import Table
-from pdr_backend.ppss.ppss import mock_ppss
-from pdr_backend.subgraph.prediction import Prediction
 from pdr_backend.cli import cli_module
-from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.util.web3_config import Web3Config
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.lake.plutil import _object_list_to_df
+from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
+from pdr_backend.ppss.ppss import mock_ppss
+from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.util.web3_config import Web3Config
 
 
 @patch("pdr_backend.analytics.get_predictions_info.get_feed_summary_stats")
-@patch("pdr_backend.analytics.get_predictions_info.GQLDataFactory.get_gql_tables")
-def test_get_predictions_info_system(
-    mock_get_gql_tables, mock_get_feed_summary_stats, caplog
-):
-    _feed = "0x2d8e2267779d27C2b3eD5408408fF15D9F3a3152"
+def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog):
+    _feed = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
     _user = "0xaaaa4cb4ff2584bad80ff5f109034a891c3d88dd"
 
     mock_predictions = [
@@ -42,6 +36,7 @@ def test_get_predictions_info_system(
 
     st_timestr = "2023-12-03"
     fin_timestr = "2024-12-05"
+
     ppss = mock_ppss(
         [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
@@ -50,12 +45,16 @@ def test_get_predictions_info_system(
         fin_timestr=fin_timestr,
     )
 
-    predictions_df = _object_list_to_df(mock_predictions, predictions_schema)
+    predictions_df = _object_list_to_df(mock_predictions)
     predictions_df = _transform_timestamp_to_ms(predictions_df)
 
-    table = Table("pdr_predictions", predictions_schema, ppss)
-    table.df = predictions_df
-    mock_get_gql_tables.return_value = {"pdr_predictions": table}
+    # DROP TABLE IF EXISTS
+    DuckDBDataStore(ppss.lake_ss.lake_dir).drop_table("pdr_predictions")
+
+    DuckDBDataStore(ppss.lake_ss.lake_dir).insert_to_table(
+        predictions_df, "pdr_predictions"
+    )
+
     mock_get_feed_summary_stats.return_value = predictions_df
 
     mock_web3_pp = MagicMock(spec=Web3PP)
@@ -76,7 +75,7 @@ def test_get_predictions_info_system(
             "get_predictions_info",
             "2023-12-01",
             "2023-12-31",
-            "./dir",
+            ppss.lake_ss.lake_dir,
             "ppss.yaml",
             "development",
             "--FEEDS",
@@ -94,5 +93,4 @@ def test_get_predictions_info_system(
 
         # # Additional assertions
         mock_get_feed_summary_stats.assert_called_once()
-        mock_get_gql_tables.assert_called_once()
         mock_get_feed_summary_stats.call_args[0][0].equals(predictions_df)
