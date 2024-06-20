@@ -125,6 +125,7 @@ class AimodelDataFactory:
         else:
             train_feeds_list = [predict_feed]
         ss = self.ss.aimodel_data_ss
+        N_train = ss.max_n_train
         x_dim_len = len(train_feeds_list) * ss.autoregressive_n
         diff = 0 if ss.transform == "None" else 1
 
@@ -144,8 +145,7 @@ class AimodelDataFactory:
             else:
                 z = zraw_series.pct_change()[1:].to_list()
             maxshift = testshift + ss.autoregressive_n
-            N_train = min(ss.max_n_train, len(z) - maxshift - diff)
-            if N_train <= 0:
+            if (maxshift + N_train) > len(z):
                 s = "Too little data. To fix:"
                 s += "broaden time, or shrink testshift, max_diff, or autoregr_n"
                 logger.error(s)
@@ -153,7 +153,7 @@ class AimodelDataFactory:
 
             for delayshift in range(ss.autoregressive_n, 0, -1):  # eg [2, 1, 0]
                 shift = testshift + delayshift
-                assert (shift + N_train + 1) <= len(z)
+                assert (shift + N_train) <= len(z)
                 # 1 point for test, the rest for train data
                 x_list += [pd.Series(_slice(z, -shift - N_train - 1, -shift))]
                 xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
@@ -185,13 +185,13 @@ class AimodelDataFactory:
         if diff == 0:
             ytran = yraw
         else:
-            ztran_list = zraw_series.pct_change()[1:].to_list()
-            ytran = np.array(_slice(ztran_list, -testshift - N_train - 1, -testshift))
+            ytran_list = yraw_series.pct_change()[1:].to_list()
+            ytran = np.array(_slice(ytran_list, -testshift - N_train - 1, -testshift))
         assert X.shape[0] == ytran.shape[0]
 
         # postconditions
         assert X.shape[0] == yraw.shape[0] == ytran.shape[0]
-        assert X.shape[0] <= (ss.max_n_train + 1)
+        assert X.shape[0] <= (N_train + 1)
         assert X.shape[1] == x_dim_len
         assert isinstance(x_df, pd.DataFrame)
 
