@@ -120,7 +120,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         FROM {prediction_table}
         where
             {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-            and {prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+            and {prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
         """
         expected_rows = db.query_data(query)
         assert len(expected_rows) == 485
@@ -137,7 +137,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         FROM {bronze_prediction_table}
         where
             {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-            and {bronze_prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+            and {bronze_prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
         """
         bronze_pdr_predictions_records = db.query_data(query)
         # bronze_pdr_predictions_records.write_csv('step_1_bronze_pdr_predictions_records.csv')
@@ -176,7 +176,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         FROM {prediction_table}
         where
             {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-            and {prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+            and {prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
         """
         expected_rows = db.query_data(query)
         assert len(expected_rows) == 797
@@ -193,7 +193,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         FROM {bronze_prediction_table}
         where
             {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-            and {bronze_prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+            and {bronze_prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
         """
         bronze_pdr_predictions_records = db.query_data(query)
         # bronze_pdr_predictions_records.write_csv('step_2_bronze_pdr_predictions_records.csv')
@@ -229,7 +229,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         FROM {prediction_table}
         where
             {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-            and {prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+            and {prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
         """
         expected_rows = db.query_data(query)
         assert len(expected_rows) == 775
@@ -246,7 +246,7 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         FROM {bronze_prediction_table}
         where
             {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
-            and {bronze_prediction_table}.timestamp < {etl.ppss.lake_ss.fin_timestamp}
+            and {bronze_prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
         """
         bronze_pdr_predictions_records = db.query_data(query)
         # bronze_pdr_predictions_records.write_csv('step_3_bsronze_pdr_predictions_records.csv')
