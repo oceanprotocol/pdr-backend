@@ -39,6 +39,7 @@ predictoor_ss:
     calibrate_probs: CalibratedClassifierCV_Sigmoid # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
     calibrate_regr: CurrentYval # CurrentYval | None
     train_every_n_epochs: 1
+    calc_imps: True
 
 exchange_mgr_ss: # used by trader and sim
   timeout: 30000
