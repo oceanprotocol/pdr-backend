@@ -72,6 +72,7 @@ class SimEngine:
         self.sl_percent = (
             0.03  # take profit percent TODO make this a parameter in yaml config
         )
+
         if multi_id:
             self.multi_id = multi_id
         else:
@@ -199,6 +200,7 @@ class SimEngine:
             high=high_value,
             low=low_value,
         )
+
         st.trader_profits_USD.append(profit)
 
         # observe true price
@@ -289,9 +291,11 @@ class SimEngine:
             high -- highest price reached during the period
             low -- lowest price reached during the period
 
+
         @return
             profit -- profit made by the trader in this iteration
         """
+
 
         def close_long_position(sell_price: float) -> float:
             tokcoin_amt_send = self.position_size
@@ -311,11 +315,13 @@ class SimEngine:
         if self.position_open == "":
             if pred_up:
                 # Open long position if pred up and no position open
+
                 usdcoin_amt_send = trade_amt * (1 + conf_up)
                 tok_received = self._buy(curprice, usdcoin_amt_send)
                 self.position_open = "long"
                 self.position_worth = usdcoin_amt_send
                 self.position_size = tok_received
+
                 self.tp = curprice + (curprice * self.tp_percent)
                 self.sl = curprice - (curprice * self.sl_percent)
 
@@ -351,6 +357,7 @@ class SimEngine:
 
             if not pred_down:
                 return close_short_position(curprice)
+
 
         return 0
 
