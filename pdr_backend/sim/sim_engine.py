@@ -61,7 +61,9 @@ class SimEngine:
         self.exchange = exchange_mgr.exchange(
             "mock" if mock else ppss.predictoor_ss.exchange_str,
         )
-
+        self.position_open = ""  # long, short, ""
+        self.position_size = 0  # amount of tokens in position
+        self.position_worth = 0  # amount of USD in position
         if multi_id:
             self.multi_id = multi_id
         else:
@@ -117,7 +119,6 @@ class SimEngine:
         stake_amt = pdr_ss.stake_amount.amt_eth
         others_stake = pdr_ss.others_stake.amt_eth
         revenue = pdr_ss.revenue.amt_eth
-        trade_amt = ppss.trader_ss.buy_amt_usd.amt_eth
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
@@ -177,16 +178,8 @@ class SimEngine:
         acct_up_profit -= stake_up
         acct_down_profit -= stake_down
 
-        # trader: enter the trading position
-        usdcoin_holdings_before = st.holdings[self.usdcoin]
-        if pred_up:  # buy; exit later by selling
-            usdcoin_amt_send = trade_amt * conf_up
-            tokcoin_amt_recd = self._buy(curprice, usdcoin_amt_send)
-        elif pred_down:  # sell; exit later by buying
-            target_usdcoin_amt_recd = trade_amt * conf_down
-            p = self.ppss.trader_ss.fee_percent
-            tokcoin_amt_send = target_usdcoin_amt_recd / curprice / (1 - p)
-            self._sell(curprice, tokcoin_amt_send)
+        profit = self.sim_trader(curprice, pred_up, pred_down, conf_up, conf_down)
+        st.trader_profits_USD.append(profit)
 
         # observe true price
         true_up = trueprice > curprice
@@ -214,19 +207,6 @@ class SimEngine:
             yerr = trueprice - predprice
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
-        # trader: exit the trading position
-        if pred_up:
-            # we'd bought; so now sell
-            self._sell(trueprice, tokcoin_amt_recd)
-        elif pred_down:
-            # we'd sold, so buy back the same # tokcoins as we sold
-            # (do *not* buy back the same # usdcoins! Not the same thing!)
-            target_tokcoin_amt_recd = tokcoin_amt_send
-            p = self.ppss.trader_ss.fee_percent
-            usdcoin_amt_send = target_tokcoin_amt_recd * trueprice / (1 - p)
-            tokcoin_amt_recd = self._buy(trueprice, usdcoin_amt_send)
-        usdcoin_holdings_after = st.holdings[self.usdcoin]
-
         # track predictoor profit
         tot_stake = others_stake + stake_amt
         others_stake_correct = others_stake * pdr_ss.others_accuracy
@@ -240,10 +220,6 @@ class SimEngine:
             acct_down_profit += (revenue + tot_stake) * percent_to_me
         pdr_profit_OCEAN = acct_up_profit + acct_down_profit
         st.pdr_profits_OCEAN.append(pdr_profit_OCEAN)
-
-        # track trading profit
-        trader_profit_USD = usdcoin_holdings_after - usdcoin_holdings_before
-        st.trader_profits_USD.append(trader_profit_USD)
 
         SimLogLine(ppss, st, test_i, ut, acct_up_profit, acct_down_profit).log_line()
 
@@ -266,6 +242,69 @@ class SimEngine:
             self.sim_plotter.save_state(self.st, d, is_final_state)
 
     @enforce_types
+    def sim_trader(
+        self,
+        curprice: float,
+        pred_up,
+        pred_down,
+        conf_up: float,
+        conf_down: float,
+    ) -> float:
+        """
+        @description
+            Simulate trader's actions based on predictions and confidence levels.
+            If trader has an open position, it will close it if the prediction
+            changes. If trader has no open position, it will open a position if
+            the prediction is strong enough.
+
+        @arguments
+            curprice -- current price of the token
+            pred_up -- prediction that the price will go up
+            pred_down -- prediction that the price will go down
+            conf_up -- confidence in the prediction that the price will go up
+            conf_down -- confidence in the prediction that the price will go down
+
+        @return
+            profit -- profit made by the trader in this iteration
+        """
+
+        trade_amt = self.ppss.trader_ss.buy_amt_usd.amt_eth
+        if self.position_open == "":
+            if pred_up:
+                # Open long position if pred up and no position open
+                usdcoin_amt_send = trade_amt * conf_up
+                tok_received = self._buy(curprice, usdcoin_amt_send)
+                self.position_open = "long"
+                self.position_worth = usdcoin_amt_send
+                self.position_size = tok_received
+            elif pred_down:
+                # Open short position if pred down and no position open
+                tokcoin_amt_send = trade_amt * conf_down / curprice
+                usd_received = self._sell(curprice, tokcoin_amt_send)
+                self.position_open = "short"
+                self.position_worth = usd_received
+                self.position_size = tokcoin_amt_send
+            return 0
+
+        if self.position_open == "long" and not pred_up:
+            # Close long position if not pred up and position open
+            tokcoin_amt_send = self.position_size
+            usd_received = self._sell(curprice, tokcoin_amt_send)
+            self.position_open = ""
+            profit = usd_received - self.position_worth
+            return profit
+
+        if self.position_open == "short" and not pred_down:
+            # Close short position, buyback tokens if not pred down and position open
+            usdcoin_amt_send = self.position_size * curprice
+            tok_received = self._buy(curprice, usdcoin_amt_send)
+            self.position_open = ""
+            profit = self.position_worth - usdcoin_amt_send
+            return profit
+
+        return 0
+
+    @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:
         """
         @description
@@ -277,12 +316,13 @@ class SimEngine:
         @return
           tokcoin_amt_recd -- # tokcoins received.
         """
-        usdcoin_amt_send = min(usdcoin_amt_send, self.st.holdings[self.usdcoin])
+        if usdcoin_amt_send > self.st.holdings[self.usdcoin]:
+            raise Exception("Out of USD, this shouldn't happen.")
         self.st.holdings[self.usdcoin] -= usdcoin_amt_send
 
         p = self.ppss.trader_ss.fee_percent
         usdcoin_amt_fee = usdcoin_amt_send * p
-        tokcoin_amt_recd = usdcoin_amt_send * (1 - p) / price
+        tokcoin_amt_recd = (usdcoin_amt_send - usdcoin_amt_fee) / price
         self.st.holdings[self.tokcoin] += tokcoin_amt_recd
 
         self.exchange.create_market_buy_order(
@@ -314,18 +354,20 @@ class SimEngine:
         @return
           usdcoin_amt_recd -- # usdcoins received
         """
-        tokcoin_amt_send = min(tokcoin_amt_send, self.st.holdings[self.tokcoin])
+        if tokcoin_amt_send > self.st.holdings[self.tokcoin]:
+            raise Exception("Out of tokens, this shouldn't happen.")
         self.st.holdings[self.tokcoin] -= tokcoin_amt_send
 
         p = self.ppss.trader_ss.fee_percent
-        usdcoin_amt_fee = tokcoin_amt_send * p * price
-        usdcoin_amt_recd = tokcoin_amt_send * (1 - p) * price
+        tok_amt_fee = tokcoin_amt_send * p
+        usdcoin_amt_recd = (tokcoin_amt_send - tok_amt_fee) * price
         self.st.holdings[self.usdcoin] += usdcoin_amt_recd
 
         self.exchange.create_market_sell_order(
             str(self.predict_feed.pair), tokcoin_amt_send
         )
 
+        usdcoin_amt_fee = tok_amt_fee * price
         logger.info(
             "TX: SELL: send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
             tokcoin_amt_send,
