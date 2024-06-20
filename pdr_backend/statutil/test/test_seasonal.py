@@ -101,17 +101,28 @@ def test_dashboard(tmpdir, check_chromedriver, dash_duo):
     dash_duo.wait_for_text_to_equal("#error-message", "")
     dash_duo.find_element("#arima-graphs")
 
+    _check_dashboard(dash_duo)
+    dash_duo.find_element("#autocorelation-lag").send_keys("12")
+    _check_dashboard(dash_duo)
+    dash_duo.find_element("input[type='radio']").click()
+    _check_dashboard(dash_duo, adf_text="BC=F,D=0")
+
+
+def _check_dashboard(dash_duo, adf_text="BC=T,D=1"):
     dash_duo.wait_for_element("#seasonal_column #relativeEnergies")
     dash_duo.wait_for_element("#seasonal_column #seasonal_plots")
     dash_duo.wait_for_text_to_equal(
         "#seasonal_column #Seasonal-title",
-        "Seasonal Decomp. for BC=T,D=1 ⓘ",
+        f"Seasonal Decomp. for {adf_text} ⓘ",
+        timeout=20,
     )
     dash_duo.wait_for_element("#autocorelation_column #autocorelation")
     dash_duo.wait_for_element("#autocorelation_column #pautocorelation")
     dash_duo.wait_for_text_to_equal(
-        "#autocorelation_column #Autocorelation-title", "ACF & PACF for BC=T,D=1 ⓘ"
+        "#autocorelation_column #Autocorelation-title", f"ACF & PACF for {adf_text} ⓘ"
     )
+    dash_duo.wait_for_element("#transition_column #transition_table")
+    dash_duo.wait_for_text_to_equal("#transition_column #Transition-title", "ADF ⓘ")
 
 
 @enforce_types
