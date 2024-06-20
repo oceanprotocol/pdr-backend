@@ -47,8 +47,6 @@ install_requirements = [
     "typeguard==4.2.1",
     "types-pytz==2024.1.0.20240417",
     "types-pyYAML==6.0.12.20240311",
-    "types-requests==2.31.0.6",
-    "urllib3<2.0.2",
     "xgboost==2.0.3",
     "dash_bootstrap_components==1.6.0",
     "web3==6.19.0",
