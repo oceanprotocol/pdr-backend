@@ -40,7 +40,7 @@ export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2
 
 All other settings are in [`ppss.yaml`](../ppss.yaml). Some of these are used in unit tests. Whereas most READMEs make a copy `my_ppss.yaml`, for development we typically want to operate directly on `ppss.yaml`.
 
-### Local Usage: Testing & linting
+### Local Usage: Testing
 
 In work console, run tests:
 
@@ -61,21 +61,24 @@ pytest pdr_backend/util/test_ganache/test_contract.py::test_get_contract_filenam
 pytest
 ```
 
-In work console, run linting checks. The commands use the same configuration as CI.
+### Local Usage: Linting
+
+In work console, run linting checks.
 
 ```console
-# mypy does static type-checking and more
-mypy --config-file mypy.ini ./
+# auto-fix some pylint complaints like whitespace. CI doesn't modify files; we do
+black ./
 
-# run linting on code style
+# run linting on code style. Use same setup as CI
 pylint --rcfile .pylintrc * pdr_backend/*
 
-# auto-fix some pylint complaints like whitespace
-black --check .
+# mypy does static type-checking and more. Use same setup as CI
+mypy --config-file mypy.ini ./
 ```
 
-=======
-Check code coverage:
+### Local Usage: Check code coverage
+
+In work console:
 
 ```console
 coverage run --omit="*test*" -m pytest # Run all. For subset, add eg: pdr_backend/lake
