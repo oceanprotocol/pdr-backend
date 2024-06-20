@@ -1,14 +1,14 @@
 from argparse import Namespace
 from unittest.mock import Mock, patch
 
-# import pytest
+import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.cli_module_lake import (
     DuckDBDataStore,
     do_lake_describe,
     do_lake_etl_drop,
-    #    do_lake_etl_update,
+    do_lake_etl_update,
     do_lake_query,
     do_lake_raw_drop,
     do_lake_raw_update,
@@ -113,27 +113,27 @@ def test_do_lake_raw_delegation():
     assert raw_update.called
 
 
-# @enforce_types
-# def test_do_lake_etl_delegation():
-#     args = ["etl", "drop", "ppss.yaml", "sapphire-mainnet", "2021-01-01"]
+@enforce_types
+def test_do_lake_etl_delegation():
+    args = ["etl", "drop", "ppss.yaml", "sapphire-mainnet", "2021-01-01"]
 
-#     with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_drop") as etl_drop:
-#         do_lake_subcommand(args)
+    with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_drop") as etl_drop:
+        do_lake_subcommand(args)
 
-#     assert etl_drop.called
-#     assert isinstance(etl_drop.call_args[0][0].ST, UnixTimeMs)
+    assert etl_drop.called
+    assert isinstance(etl_drop.call_args[0][0].ST, UnixTimeMs)
 
-#     args.append("2021-01-01")
-#     with pytest.raises(SystemExit):
-#         # raw does not recognize the extra END argument
-#         do_lake_subcommand(args)
+    args.append("2021-01-01")
+    with pytest.raises(SystemExit):
+        # raw does not recognize the extra END argument
+        do_lake_subcommand(args)
 
-#     args = ["etl", "update", "ppss.yaml", "sapphire-mainnet"]
+    args = ["etl", "update", "ppss.yaml", "sapphire-mainnet"]
 
-#     with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_update") as etl_update:
-#         do_lake_subcommand(args)
+    with patch("pdr_backend.cli.cli_module_lake.do_lake_etl_update") as etl_update:
+        do_lake_subcommand(args)
 
-#     assert etl_update.called
+    assert etl_update.called
 
 
 def _make_and_fill_timestamps(db, table_name, first_entry_ts):
@@ -219,13 +219,13 @@ def test_do_lake_raw_update(capsys):
 
 
 #
-# @enforce_types
-# def test_do_lake_etl_update(capsys):
-#     args = Namespace()
-#     ppss = Mock(spec=PPSS)
-#
-#     with patch("pdr_backend.cli.cli_module_lake.GQLDataFactory"):
-#         with patch("pdr_backend.cli.cli_module_lake.ETL"):
-#             do_lake_etl_update(args, ppss)
-#
-#     assert capsys.readouterr().out == ""
+@enforce_types
+def test_do_lake_etl_update(capsys):
+    args = Namespace()
+    ppss = Mock(spec=PPSS)
+
+    with patch("pdr_backend.cli.cli_module_lake.GQLDataFactory"):
+        with patch("pdr_backend.cli.cli_module_lake.ETL"):
+            do_lake_etl_update(args, ppss)
+
+    assert capsys.readouterr().out == ""

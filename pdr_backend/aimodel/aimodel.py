@@ -2,6 +2,7 @@ from typing import Optional
 
 from enforce_typing import enforce_types
 import numpy as np
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.inspection import permutation_importance
 
 
@@ -168,27 +169,53 @@ class Aimodel:
         else:
             skm = self._sk_classif
             scoring = "f1"
-        imps_bunch = permutation_importance(
-            skm,
-            X,
-            y,
-            scoring=scoring,
-            n_repeats=30,  # magic number
-        )
-        imps_avg = imps_bunch.importances_mean
 
-        if max(imps_avg) <= 0:  # all vars have negligible importance
-            return flat_imps_avg, flat_imps_stddev
+        models: list = []
+        if self.do_regr:
+            assert self._sk_regrs is not None, "should have _sk_regrs"
+            models = self._sk_regrs
+        else:
+            if type(self._sk_classif) is CalibratedClassifierCV:
+                models = [i.estimator for i in self._sk_classif.calibrated_classifiers_]
+            else:
+                models = [self._sk_classif]
 
-        imps_avg[imps_avg < 0.0] = 0.0  # some vars have negligible importance
-        assert max(imps_avg) > 0.0, "should have some vars with imp > 0"
+        if all(hasattr(model, "coef_") for model in models):
+            if self.do_regr:
+                assert self._sk_regrs is not None, "should have _sk_regrs"
+                coefs = np.mean([np.abs(regr.coef_) for regr in self._sk_regrs], axis=0)
+            else:
+                coefs = np.mean([np.abs(clf.coef_[0]) for clf in models], axis=0)
 
-        imps_stddev = imps_bunch.importances_std
+            if len(coefs.shape) == 1:
+                coefs = np.abs(coefs)
+            else:
+                coefs = np.mean(np.abs(coefs), axis=0)
 
-        # normalize
-        _sum = sum(imps_avg)
-        imps_avg = np.array(imps_avg) / _sum
-        imps_stddev = np.array(imps_stddev) / _sum
+            imps_avg = coefs / np.sum(coefs)
+            imps_stddev = np.zeros_like(imps_avg)
+        else:
+            imps_bunch = permutation_importance(
+                skm,
+                X,
+                y,
+                scoring=scoring,
+                n_repeats=30,  # magic number
+            )
+            imps_avg = imps_bunch.importances_mean
+
+            if max(imps_avg) <= 0:  # all vars have negligible importance
+                return flat_imps_avg, flat_imps_stddev
+
+            imps_avg[imps_avg < 0.0] = 0.0  # some vars have negligible importance
+            assert max(imps_avg) > 0.0, "should have some vars with imp > 0"
+
+            imps_stddev = imps_bunch.importances_std
+
+            # normalize
+            _sum = sum(imps_avg)
+            imps_avg = np.array(imps_avg) / _sum
+            imps_stddev = np.array(imps_stddev) / _sum
 
         # postconditions
         assert imps_avg.shape == (n,)

@@ -12,6 +12,8 @@ CLASSIF_APPROACH_OPTIONS = [
     "ClassifLinearElasticNet",
     "ClassifLinearElasticNet_Balanced",
     "ClassifLinearSVM",
+    "ClassifGaussianProcess",
+    "ClassifXgboost",
     "ClassifConstant",
 ]
 REGR_APPROACH_OPTIONS = [
@@ -19,6 +21,8 @@ REGR_APPROACH_OPTIONS = [
     "RegrLinearLasso",
     "RegrLinearRidge",
     "RegrLinearElasticNet",
+    "RegrGaussianProcess",
+    "RegrXgboost",
     "RegrConstant",
 ]
 APPROACH_OPTIONS = CLASSIF_APPROACH_OPTIONS + REGR_APPROACH_OPTIONS
@@ -80,6 +84,11 @@ class AimodelSS(StrMixin):
     def calibrate_probs(self) -> str:
         """eg 'CalibratedClassifierCV_Sigmoid'"""
         return self.d["calibrate_probs"]
+
+    @property
+    def calc_imps(self) -> bool:
+        """Calc feature importances"""
+        return self.d.get("calc_imps", True)
 
     def calibrate_probs_skmethod(self, N: int) -> str:
         """
