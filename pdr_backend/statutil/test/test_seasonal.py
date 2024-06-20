@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import pandas as pd
 from dash import Dash
@@ -77,11 +78,18 @@ def test_empty_dashboard(tmpdir, check_chromedriver, dash_duo):
 def test_dashboard(tmpdir, check_chromedriver, dash_duo):
     test_dir = str(tmpdir)
 
-    # Sample Parquet file
-    parquet_data = {"timestamp": [4, 5, 6], "close": [40, 50, 60]}
-    pd.DataFrame(parquet_data).to_parquet(
-        os.path.join(test_dir, "sample.parquet"), index=False
+    # Sample Parquet files
+    """
+    src = os.path.join(
+        os.path.dirname(__file__), "../../tests/resources/binance_ETH-USDT_5m.parquet"
     )
+    shutil.copyfile(src, test_dir + "/binance_ETH-USDT_5m.parquet")
+    """
+
+    src = os.path.join(
+        os.path.dirname(__file__), "../../tests/resources/binance_ETH-USDT_5m.parquet"
+    )
+    shutil.copyfile(src, test_dir + "/binance_ETH-USDT_5m.parquet")
 
     app = Dash("pdr_backend.statutil.arima_dash")
     app.config["suppress_callback_exceptions"] = True
@@ -91,6 +99,19 @@ def test_dashboard(tmpdir, check_chromedriver, dash_duo):
 
     dash_duo.start_server(app)
     dash_duo.wait_for_text_to_equal("#error-message", "")
+    dash_duo.find_element("#arima-graphs")
+
+    dash_duo.wait_for_element("#seasonal_column #relativeEnergies")
+    dash_duo.wait_for_element("#seasonal_column #seasonal_plots")
+    dash_duo.wait_for_text_to_equal(
+        "#seasonal_column #Seasonal-title",
+        "Seasonal Decomp. for BC=T,D=1 ⓘ",
+    )
+    dash_duo.wait_for_element("#autocorelation_column #autocorelation")
+    dash_duo.wait_for_element("#autocorelation_column #pautocorelation")
+    dash_duo.wait_for_text_to_equal(
+        "#autocorelation_column #Autocorelation-title", "ACF & PACF for BC=T,D=1 ⓘ"
+    )
 
 
 @enforce_types
