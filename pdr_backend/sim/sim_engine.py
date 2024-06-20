@@ -264,6 +264,7 @@ class SimEngine:
             self.sim_plotter.save_state(self.st, d, is_final_state)
 
     @enforce_types
+    # pylint: disable=too-many-return-statements
     def sim_trader(
         self,
         curprice: float,
