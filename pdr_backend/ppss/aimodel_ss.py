@@ -85,6 +85,11 @@ class AimodelSS(StrMixin):
         """eg 'CalibratedClassifierCV_Sigmoid'"""
         return self.d["calibrate_probs"]
 
+    @property
+    def calc_imps(self) -> bool:
+        """Calc feature importances"""
+        return self.d.get("calc_imps", True)
+
     def calibrate_probs_skmethod(self, N: int) -> str:
         """
         @description
