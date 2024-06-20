@@ -67,10 +67,10 @@ class SimEngine:
         self.tp = 0.0  # take profit
         self.sl = 0.0  # stop loss
         self.tp_percent = (
-            0.005  # take profit percent TODO make this a parameter in yaml config
+            0.03  # take profit percent TODO make this a parameter in yaml config
         )
         self.sl_percent = (
-            0.005  # take profit percent TODO make this a parameter in yaml config
+            0.03  # take profit percent TODO make this a parameter in yaml config
         )
         if multi_id:
             self.multi_id = multi_id
@@ -147,18 +147,11 @@ class SimEngine:
 
         curprice = yraw[-2]
         trueprice = yraw[-1]
-
-        shifted_mergedohlcv_df = mergedohlcv_df.filter(
-            (pl.col(f"{predict_feed.exchange}:{predict_feed.pair}:close") == curprice)
-        )
+        shifted_mergedohlcv_df = mergedohlcv_df[- testshift - 3]
         high_col = f"{predict_feed.exchange}:{predict_feed.pair}:high"
         low_col = f"{predict_feed.exchange}:{predict_feed.pair}:low"
         high_value = shifted_mergedohlcv_df[high_col].to_numpy()[0]
         low_value = shifted_mergedohlcv_df[low_col].to_numpy()[0]
-
-        y_thr = curprice
-        ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
-
         if pdr_ss.aimodel_data_ss.transform == "None":
             y_thr = curprice
         else:  # transform = "RelDiff"
@@ -318,7 +311,7 @@ class SimEngine:
         if self.position_open == "":
             if pred_up:
                 # Open long position if pred up and no position open
-                usdcoin_amt_send = trade_amt * conf_up
+                usdcoin_amt_send = trade_amt * (1 + conf_up)
                 tok_received = self._buy(curprice, usdcoin_amt_send)
                 self.position_open = "long"
                 self.position_worth = usdcoin_amt_send
@@ -328,7 +321,7 @@ class SimEngine:
 
             elif pred_down:
                 # Open short position if pred down and no position open
-                tokcoin_amt_send = trade_amt * conf_down / curprice
+                tokcoin_amt_send = trade_amt * (1 + conf_down) / curprice
                 usd_received = self._sell(curprice, tokcoin_amt_send)
                 self.position_open = "short"
                 self.position_worth = usd_received
