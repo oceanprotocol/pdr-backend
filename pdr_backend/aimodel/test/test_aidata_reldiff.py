@@ -15,6 +15,7 @@ from pdr_backend.ppss.predictoor_ss import (
 
 @enforce_types
 def test_create_xy__reldiff():
+    # pylint: disable=too-many-statements
     # create predictoor_ss
     feedset_list = [
         {
@@ -83,7 +84,7 @@ def test_create_xy__reldiff():
     assert X.shape[0] == (predictoor_ss.aimodel_data_ss.max_n_train + 1)
     assert X.shape[0] == ytran.shape[0] == yraw.shape[0]
     assert len(x_df) == X.shape[0]
-    
+
     assert not has_nan(X)
     assert not has_nan(ytran) and not has_nan(yraw)
     assert not has_nan(xrecent)
@@ -104,7 +105,7 @@ def test_create_xy__reldiff():
         predict_feed,
         train_feeds,
     )
-    
+
     ### for testshift=1, see results
     # all but 1 are for training, then the +1 is for testing
     assert X2.shape[0] == (predictoor_ss.aimodel_data_ss.max_n_train + 1)
@@ -114,7 +115,7 @@ def test_create_xy__reldiff():
     assert not has_nan(X2)
     assert not has_nan(ytran2) and not has_nan(yraw2)
     assert not has_nan(xrecent2)
-    
+
     assert X2[-1, 0] == X[-1 - 1, 0]
     assert ytran2[-1] == ytran[-1 - 1]
     assert yraw2[-1] == yraw[-1 - 1]
