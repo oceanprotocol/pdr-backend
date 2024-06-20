@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long
 import logging
 from collections import OrderedDict
 from typing import Callable
