@@ -66,13 +66,13 @@ class SimEngine:
         self.position_worth = 0  # amount of USD in position
         self.tp = 0.0  # take profit
         self.sl = 0.0  # stop loss
-        self.tp_percent = (
-            0.03  # take profit percent TODO make this a parameter in yaml config
-        )
-        self.sl_percent = (
-            0.03  # take profit percent TODO make this a parameter in yaml config
-        )
+        self.tp_percent = self.ppss.trader_ss.take_profit
+        self.sl_percent = self.ppss.trader_ss.stop_loss
 
+        if self.sl_percent > 0 or self.tp_percent > 0:
+            assert (
+                self.predict_feed.signal == "close"
+            ), "SL/TP only works when predicting close"
         if multi_id:
             self.multi_id = multi_id
         else:
@@ -148,7 +148,7 @@ class SimEngine:
 
         curprice = yraw[-2]
         trueprice = yraw[-1]
-        shifted_mergedohlcv_df = mergedohlcv_df[- testshift - 3]
+        shifted_mergedohlcv_df = mergedohlcv_df[-testshift - 2]
         high_col = f"{predict_feed.exchange}:{predict_feed.pair}:high"
         low_col = f"{predict_feed.exchange}:{predict_feed.pair}:low"
         high_value = shifted_mergedohlcv_df[high_col].to_numpy()[0]
@@ -296,7 +296,6 @@ class SimEngine:
             profit -- profit made by the trader in this iteration
         """
 
-
         def close_long_position(sell_price: float) -> float:
             tokcoin_amt_send = self.position_size
             usd_received = self._sell(sell_price, tokcoin_amt_send)
@@ -357,7 +356,6 @@ class SimEngine:
 
             if not pred_down:
                 return close_short_position(curprice)
-
 
         return 0
 
