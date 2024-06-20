@@ -53,6 +53,8 @@ trader_ss:
     buy_amt: 1000 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee
     confidence_threshold: 0.02 # skip trade if confidence < this
+    stop_loss: 0.05 # sell if price drops by this %
+    take_profit: 0.05 # sell if price rises by this %
     init_holdings:
       - 100000 USDT
       - 2 BTC
