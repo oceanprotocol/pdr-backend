@@ -123,7 +123,9 @@ class SimEngine:
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
         predict_feed = self.predict_train_feedset.predict
         train_feeds = self.predict_train_feedset.train_on
-        X, ycont, x_df, _ = data_f.create_xy(
+
+        # X, ycont, and x_df are all expressed in % change wrt prev candle
+        X, ytran, yraw, x_df, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
             predict_feed,
@@ -133,18 +135,21 @@ class SimEngine:
 
         st_, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
-        ycont_train, ycont_test = ycont[st_:fin], ycont[fin : fin + 1]
+        ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
 
-        curprice = ycont_train[-1]
-        trueprice = ycont_test[-1]
+        curprice = yraw[-2]
+        trueprice = yraw[-1]
 
-        y_thr = curprice
-        ytrue = data_f.ycont_to_ytrue(ycont, y_thr)
+        if pdr_ss.aimodel_data_ss.transform == "None":
+            y_thr = curprice
+        else:  # transform = "RelDiff"
+            y_thr = 0.0
+        ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
         if self.st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0:
             model_f = AimodelFactory(pdr_ss.aimodel_ss)
-            model = model_f.build(X_train, ytrue_train, ycont_train, y_thr)
+            model = model_f.build(X_train, ytrue_train, ytran_train, y_thr)
             self.crt_trained_model = model
         else:
             assert self.crt_trained_model is not None
@@ -204,7 +209,8 @@ class SimEngine:
             loss = log_loss(st.ytrues, st.probs_up)
         yerr = 0.0
         if model.do_regr:
-            predprice = model.predict_ycont(X_test)[0]
+            relchange = model.predict_ycont(X_test)[0]
+            predprice = curprice + relchange * curprice
             yerr = trueprice - predprice
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
@@ -251,7 +257,7 @@ class SimEngine:
                 model,
                 X_train,
                 ytrue_train,
-                ycont_train,
+                ytran_train,
                 y_thr,
                 colnames,
                 slicing_x,

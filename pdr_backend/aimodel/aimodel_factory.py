@@ -8,6 +8,10 @@ from enforce_typing import enforce_types
 from imblearn.over_sampling import SMOTE, RandomOverSampler  # type: ignore[import-untyped]
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.dummy import DummyClassifier, DummyRegressor
+from sklearn.gaussian_process import (
+    GaussianProcessClassifier,
+    GaussianProcessRegressor,
+)
 from sklearn.linear_model import (
     ElasticNet,
     Lasso,
@@ -17,6 +21,7 @@ from sklearn.linear_model import (
 )
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+from xgboost import XGBClassifier, XGBRegressor
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.ppss.aimodel_ss import AimodelSS
@@ -252,6 +257,10 @@ def _approach_to_skm(approach: str):
         return Ridge()
     if approach == "RegrLinearElasticNet":
         return ElasticNet()
+    if approach == "RegrGaussianProcess":
+        return GaussianProcessRegressor()
+    if approach == "RegrXgboost":
+        return XGBRegressor()
 
     # classifier approaches
     if approach == "ClassifLinearLasso":
@@ -280,6 +289,10 @@ def _approach_to_skm(approach: str):
         )
     if approach == "ClassifLinearSVM":
         return SVC(kernel="linear", probability=True, C=0.025)
+    if approach == "ClassifGaussianProcess":
+        return GaussianProcessClassifier()
+    if approach == "ClassifXgboost":
+        return XGBClassifier()
 
     # unidentified
     return None
