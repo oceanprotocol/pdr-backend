@@ -2,6 +2,7 @@ import copy
 import logging
 import os
 import uuid
+import time
 from typing import Optional
 
 import numpy as np
@@ -25,6 +26,9 @@ from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.cli.arg_timeframe import timeframe_str_to_s
+from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 logger = logging.getLogger("sim_engine")
 
@@ -104,6 +108,11 @@ class SimEngine:
         # main loop!
         f = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = f.get_mergedohlcv_df()
+
+        # fetch predictions data
+        chain_prediction_data = self._get_past_predictions_from_chain(self.ppss)
+        if not chain_prediction_data:
+            return
 
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
@@ -359,3 +368,25 @@ class SimEngine:
             return False, False
 
         return True, False
+
+    @enforce_types
+    def _get_past_predictions_from_chain(self, ppss: PPSS):
+        # calculate needed data start date
+        current_time_s = int(time.time())
+        timeframe = ppss.trader_ss.feed.timeframe
+        number_of_data_points = ppss.sim_ss.test_n
+        start_date = current_time_s - (timeframe.s * number_of_data_points)
+
+        # fetch data from subgraph
+        print(UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr) / 1000)
+        if start_date > int(
+            UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr) / 1000
+        ):
+            logger.info(
+                "Not enough predictions data in the lake. Make sure you fetch data starting from %s up to today",
+                time.strftime("%Y-%m-%d", time.localtime(start_date)),
+            )
+            return None
+        # gql_data_factory = GQLDataFactory(ppss)
+        # etl = ETL(ppss, gql_data_factory)
+        # etl.do_etl()
