@@ -85,15 +85,6 @@ def s_to_timeframe_str(seconds: int) -> str:
 
 
 @enforce_types
-def timeframe_str_to_s(timeframe_str: str) -> int:
-    if timeframe_str == "5m":
-        return 300
-    if timeframe_str == "1h":
-        return 3600
-    return ""
-
-
-@enforce_types
 def verify_timeframe_str(timeframe_str: str):
     """Raise an error if input string is invalid."""
     _ = ArgTimeframe(timeframe_str)

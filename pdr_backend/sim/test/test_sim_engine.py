@@ -53,7 +53,7 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
 
     # sim ss
     log_dir = os.path.join(tmpdir, "logs")
-    d = sim_ss_test_dict(log_dir, test_n=5)
+    d = sim_ss_test_dict(log_dir, True, test_n=5)
     ppss.sim_ss = SimSS(d)
 
     # go

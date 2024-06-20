@@ -62,7 +62,9 @@ def _constructor_d_with_fast_runtime(tmpdir):
 
     # sim ss
     log_dir = os.path.join(tmpdir, "logs")
-    sim_d = sim_ss_test_dict(log_dir=log_dir, test_n=10)
+    sim_d = sim_ss_test_dict(
+        log_dir=tmpdir, use_own_model=True, log_dir=log_dir, test_n=10
+    )
     assert "sim_ss" in main_d
     main_d["sim_ss"] = sim_d
 
