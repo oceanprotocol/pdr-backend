@@ -94,6 +94,7 @@ class SimEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         ppss, pdr_ss, st = self.ppss, self.ppss.predictoor_ss, self.st
+        transform = pdr_ss.aimodel_data_ss.transform
         stake_amt = pdr_ss.stake_amount.amt_eth
         others_stake = pdr_ss.others_stake.amt_eth
         revenue = pdr_ss.revenue.amt_eth
@@ -123,7 +124,7 @@ class SimEngine:
         curprice = close_value
         truevalue = yraw[-1]
 
-        if pdr_ss.aimodel_data_ss.transform == "None":
+        if transform == "None":
             y_thr = curprice
         else:  # transform = "RelDiff"
             y_thr = 0.0
@@ -194,9 +195,14 @@ class SimEngine:
             loss = log_loss(st.ytrues, st.probs_up)
         yerr = 0.0
         if model.do_regr:
-            relchange = model.predict_ycont(X_test)[0]
-            predprice = curprice + relchange * curprice
-            yerr = truevalue - predprice
+            pred_ycont = model.predict_ycont(X_test)[0]
+            if transform == "None":
+                predprice = pred_ycont
+            else:  # transform = "RelDiff"
+                relchange = pred_ycont
+                predprice = curprice + relchange * curprice
+            yerr = trueprice - predprice
+
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
         # track predictoor profit
