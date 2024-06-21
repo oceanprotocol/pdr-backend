@@ -66,7 +66,6 @@ class SimEngine:
     def predict_feed(self) -> ArgFeed:
         return self.predict_train_feedset.predict
 
-
     @enforce_types
     def _init_loop_attributes(self):
         filebase = f"out_{UnixTimeMs.now()}.txt"
@@ -235,7 +234,6 @@ class SimEngine:
             )
             self.st.iter_number = test_i
             self.sim_plotter.save_state(self.st, d, is_final_state)
-
 
     def disable_realtime_state(self):
         self.do_state_updates = False

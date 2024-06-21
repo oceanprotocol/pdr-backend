@@ -1,10 +1,10 @@
-
 import logging
 from enforce_typing import enforce_types
 from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 
 
 logger = logging.getLogger("sim_trader")
+
 
 class SimTrader:
     def __init__(self, ppss, predict_feed):
