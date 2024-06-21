@@ -100,3 +100,33 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
         assert "tab--selected" in tab.get_attribute("class")
         for figure_name in figures:
             dash_duo.find_element(f"#{figure_name}")
+
+
+def test_get_past_predictions_from_chain():
+    s = os.path.abspath("ppss.yaml")
+    d = PPSS.constructor_dict(s)
+
+    d["lake_ss"]["st_timestr"] = "2 hours ago"
+    d["trader_ss"]["feed.timeframe"] = "5m"
+    d["sim_ss"]["test_n"] = 1000
+    ppss = PPSS(d=d, network="sapphire-mainnet")
+    feedsets = ppss.predictoor_ss.predict_train_feedsets
+    sim_engine = SimEngine(ppss, feedsets[0])
+
+    # run with wrong ppss lake config so there is not enough data fetched
+    resp = sim_engine._get_past_predictions_from_chain(ppss)
+    assert resp is None
+
+    # run with right ppss lake config
+    d["sim_ss"]["test_n"] = 20
+    ppss = PPSS(d=d, network="sapphire-mainnet")
+    sim_engine = SimEngine(ppss, feedsets[0])
+    resp = sim_engine._get_past_predictions_from_chain(ppss)
+    assert resp is True
+
+    # run with right ppss lake config
+    d["sim_ss"]["test_n"] = 20
+    ppss = PPSS(d=d, network="sapphire-testnet")
+    sim_engine = SimEngine(ppss, feedsets[0])
+    resp = sim_engine._get_past_predictions_from_chain(ppss)
+    assert resp is True

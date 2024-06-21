@@ -28,6 +28,7 @@ from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 
 logger = logging.getLogger("sim_engine")
 
@@ -383,8 +384,8 @@ class SimEngine:
         ):
             logger.info(
                 (
-                    "Not enough predictions data in the lake. "
-                    "Make sure you fetch data starting from %s up to today"
+                    "Lake dates configuration doesn't meet the requirements. "
+                    "Make sure you set start date before %s"
                 ),
                 time.strftime("%Y-%m-%d", time.localtime(start_date)),
             )
@@ -392,4 +393,36 @@ class SimEngine:
         gql_data_factory = GQLDataFactory(ppss)
         etl = ETL(ppss, gql_data_factory)
         etl.do_etl()
-        return "Data"
+
+        # check if required data exists
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        query = """
+        (SELECT timestamp
+            FROM pdr_payouts
+            ORDER BY timestamp ASC
+            LIMIT 1)
+            UNION ALL
+            (SELECT timestamp
+            FROM pdr_payouts
+            ORDER BY timestamp DESC
+            LIMIT 1);
+        """
+        data = db.query_data(query)
+        start_timestamp = data["timestamp"][0] / 1000
+        end_timestamp = data["timestamp"][1] / 1000
+
+        if start_timestamp > start_date:
+            logger.info(
+                (
+                    "Not enough predictions data in the lake. "
+                    "Make sure you fetch data starting from %s up to today"
+                ),
+                time.strftime("%Y-%m-%d", time.localtime(start_date)),
+            )
+            return None
+
+        if (end_timestamp + timeframe.s) < time.time():
+            logger.info("Lake data is not up to date.")
+            return None
+
+        return True
