@@ -2,8 +2,6 @@ from typing import Dict, List, Optional, Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.currency_types import Eth
-
 
 @enforce_types
 class AimodelMetrics:

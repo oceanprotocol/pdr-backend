@@ -6,6 +6,7 @@ from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 logger = logging.getLogger("sim_trader")
 
 
+# pylint: disable=too-many-instance-attributes
 class SimTrader:
     def __init__(self, ppss, predict_feed):
         self.ppss = ppss
@@ -52,6 +53,7 @@ class SimTrader:
         profit = self.position_worth - usdcoin_amt_send
         return profit
 
+    # pylint: disable = too-many-return-statements
     def trade_iter(
         self,
         curprice: float,
