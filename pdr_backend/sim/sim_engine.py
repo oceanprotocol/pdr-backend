@@ -39,7 +39,7 @@ class SimEngine:
     ):
         self.predict_train_feedset = predict_train_feedset
         assert isinstance(self.predict_feed, ArgFeed)
-        assert predict_feed.signal == "close", "only operates on close predictions"
+        assert self.predict_feed.signal == "close", "only operates on close predictions"
         self.ppss = ppss
 
         # can be disabled by calling disable_realtime_state()
