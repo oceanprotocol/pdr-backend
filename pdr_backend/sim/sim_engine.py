@@ -189,13 +189,7 @@ class SimEngine:
         acct_down_profit -= stake_down
 
         profit = self.sim_trader(
-            curprice,
-            pred_up,
-            pred_down,
-            conf_up,
-            conf_down,
-            high=high_value,
-            low=low_value,
+            curprice, pred_up, pred_down, conf_up, conf_down, high_value, low_value,
         )
 
         st.trader_profits_USD.append(profit)
@@ -260,6 +254,21 @@ class SimEngine:
             self.st.iter_number = test_i
             self.sim_plotter.save_state(self.st, d, is_final_state)
 
+
+    def close_long_position(sell_price: float) -> float:
+        tokcoin_amt_send = self.position_size
+        usd_received = self._sell(sell_price, tokcoin_amt_send)
+        self.position_open = ""
+        profit = usd_received - self.position_worth
+        return profit
+
+    def close_short_position(buy_price: float) -> float:
+        usdcoin_amt_send = self.position_size * buy_price
+        self._buy(buy_price, usdcoin_amt_send)
+        self.position_open = ""
+        profit = self.position_worth - usdcoin_amt_send
+        return profit
+
     @enforce_types
     # pylint: disable=too-many-return-statements
     def sim_trader(
@@ -294,31 +303,15 @@ class SimEngine:
             profit -- profit made by the trader in this iteration
         """
 
-        def close_long_position(sell_price: float) -> float:
-            tokcoin_amt_send = self.position_size
-            usd_received = self._sell(sell_price, tokcoin_amt_send)
-            self.position_open = ""
-            profit = usd_received - self.position_worth
-            return profit
-
-        def close_short_position(buy_price: float) -> float:
-            usdcoin_amt_send = self.position_size * buy_price
-            self._buy(buy_price, usdcoin_amt_send)
-            self.position_open = ""
-            profit = self.position_worth - usdcoin_amt_send
-            return profit
-
         trade_amt = self.ppss.trader_ss.buy_amt_usd.amt_eth
         if self.position_open == "":
             if pred_up:
                 # Open long position if pred up and no position open
-
                 usdcoin_amt_send = trade_amt * (1 + conf_up)
                 tok_received = self._buy(curprice, usdcoin_amt_send)
                 self.position_open = "long"
                 self.position_worth = usdcoin_amt_send
                 self.position_size = tok_received
-
                 self.tp = curprice + (curprice * self.tp_percent)
                 self.sl = curprice - (curprice * self.sl_percent)
 
@@ -337,23 +330,23 @@ class SimEngine:
         # Check for take profit or stop loss
         if self.position_open == "long":
             if high >= self.tp:
-                return close_long_position(self.tp)
+                return self.close_long_position(self.tp)
 
             if low <= self.sl:
-                return close_long_position(self.sl)
+                return self.close_long_position(self.sl)
 
             if not pred_up:
-                return close_long_position(curprice)
+                return self.close_long_position(curprice)
 
         if self.position_open == "short":
             if low <= self.tp:
-                return close_short_position(self.tp)
+                return self.close_short_position(self.tp)
 
             if high >= self.sl:
-                return close_short_position(self.sl)
+                return self.close_short_position(self.sl)
 
             if not pred_down:
-                return close_short_position(curprice)
+                return self.close_short_position(curprice)
 
         return 0
 
