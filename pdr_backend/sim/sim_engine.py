@@ -146,7 +146,9 @@ class SimEngine:
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
 
-        high_value, low_value, close_value = data_f.get_highlowclose(mergedohlcv_df, predict_feed, testshift)
+        high_value, low_value, close_value = data_f.get_highlowclose(
+            mergedohlcv_df, predict_feed, testshift
+        )
 
         curprice = close_value
 
@@ -189,7 +191,13 @@ class SimEngine:
         acct_down_profit -= stake_down
 
         profit = self.sim_trader(
-            curprice, pred_up, pred_down, conf_up, conf_down, high_value, low_value,
+            curprice,
+            pred_up,
+            pred_down,
+            conf_up,
+            conf_down,
+            high_value,
+            low_value,
         )
 
         st.trader_profits_USD.append(profit)
@@ -253,7 +261,6 @@ class SimEngine:
             )
             self.st.iter_number = test_i
             self.sim_plotter.save_state(self.st, d, is_final_state)
-
 
     def close_long_position(self, sell_price: float) -> float:
         tokcoin_amt_send = self.position_size
