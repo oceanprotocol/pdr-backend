@@ -151,6 +151,7 @@ class SimEngine:
         )
 
         curprice = close_value
+        trueprice = yraw[-1]
 
         if pdr_ss.aimodel_data_ss.transform == "None":
             y_thr = curprice
