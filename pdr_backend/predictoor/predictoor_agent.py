@@ -414,10 +414,10 @@ class PredictoorAgent:
             train_feeds=feedset.train_on,
         )
 
-        curprice = yraw[-1]
+        cur_close = yraw[-1]
 
         if pdr_ss.aimodel_data_ss.transform == "None":
-            y_thr = curprice
+            y_thr = cur_close
         else:  # transform = "RelDiff"
             y_thr = 0.0
 

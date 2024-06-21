@@ -165,7 +165,7 @@ def _run_one_iter(autoregr_n, max_n_train, transform, sim_test_n, test_i) -> flo
     X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
     ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
 
-    curprice = ysignal[-2]
+    cur_close = ysignal[-2]
     trueprice = ysignal[-1]
 
     y_thr = 0.0  # always 0.0 when modeling % change
@@ -182,11 +182,11 @@ def _run_one_iter(autoregr_n, max_n_train, transform, sim_test_n, test_i) -> flo
     # update classifier metrics
     assert model.do_regr
     relchange = model.predict_ycont(X_test)[0]
-    predprice = curprice + relchange * curprice
+    predprice = cur_close + relchange * cur_close
     yerr = trueprice - predprice
 
-    s = f"prevprice={curprice:8.1f}"
-    s += f", true_change={(trueprice-curprice)/(curprice)*100:9.5f}%"
+    s = f"prevprice={cur_close:8.1f}"
+    s += f", true_change={(trueprice-cur_close)/(cur_close)*100:9.5f}%"
     s += f", true_newprice={trueprice:8.1f}"
     s += "||"
     s += f" pred_change={relchange*100:9.5f}%"

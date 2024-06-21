@@ -117,15 +117,15 @@ class SimEngine:
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
 
-        high_value, low_value, _ = data_f.get_highlow(
+        cur_high, cur_low, _ = data_f.get_highlow(
             mergedohlcv_df, predict_feed, testshift
         )
 
-        curprice = yraw[-2]
-        trueprice = yraw[-1]
+        cur_close = yraw[-2]
+        next_close = yraw[-1]
 
         if transform == "None":
-            y_thr = curprice
+            y_thr = cur_close
         else:  # transform = "RelDiff"
             y_thr = 0.0
         ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
@@ -163,19 +163,19 @@ class SimEngine:
         acct_down_profit -= stake_down
 
         profit = self.trader.trade_iter(
-            curprice,
+            cur_close,
             pred_up,
             pred_down,
             conf_up,
             conf_down,
-            high_value,
-            low_value,
+            cur_high,
+            cur_low,
         )
 
         st.trader_profits_USD.append(profit)
 
         # observe true price
-        true_up = trueprice > curprice
+        true_up = next_close > cur_close
         st.ytrues.append(true_up)
 
         # update classifier metrics
@@ -197,11 +197,11 @@ class SimEngine:
         if model.do_regr:
             pred_ycont = model.predict_ycont(X_test)[0]
             if transform == "None":
-                predprice = pred_ycont
+                pred_next_close = pred_ycont
             else:  # transform = "RelDiff"
                 relchange = pred_ycont
-                predprice = curprice + relchange * curprice
-            yerr = trueprice - predprice
+                pred_next_close = cur_close + relchange * cur_close
+            yerr = next_close - pred_next_close
 
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 

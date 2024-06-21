@@ -210,10 +210,10 @@ class AimodelDataFactory:
         shifted_mergedohlcv_df = mergedohlcv_df[-testshift - 2]
         high_col = f"{feed.exchange}:{feed.pair}:high"
         low_col = f"{feed.exchange}:{feed.pair}:low"
-        high_value = shifted_mergedohlcv_df[high_col].to_numpy()[0]
-        low_value = shifted_mergedohlcv_df[low_col].to_numpy()[0]
+        cur_high = shifted_mergedohlcv_df[high_col].to_numpy()[0]
+        cur_low = shifted_mergedohlcv_df[low_col].to_numpy()[0]
 
-        return (high_value, low_value)
+        return (cur_high, cur_low)
 
 
 @enforce_types

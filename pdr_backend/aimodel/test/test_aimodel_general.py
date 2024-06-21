@@ -390,8 +390,8 @@ def test_aimodel__regr_0error__via_10000x(approach):
         calibrate_probs="None",
         calibrate_regr="None",  # explicitly None here
     )
-    for curprice_xval in [-8, -5, -2, 2, 5, 8]:
-        _test_aimodel__regr_0error(d, curprice_xval)
+    for cur_close_xval in [-8, -5, -2, 2, 5, 8]:
+        _test_aimodel__regr_0error(d, cur_close_xval)
 
 
 @enforce_types
@@ -404,12 +404,12 @@ def test_aimodel__regr_0error__via_calibrate_regr(approach):
         calibrate_probs="None",
         calibrate_regr="CurrentYval",  # main setting
     )
-    for curprice_xval in [-8, -5, -2, 2, 5, 8]:
-        _test_aimodel__regr_0error(d, curprice_xval)
+    for cur_close_xval in [-8, -5, -2, 2, 5, 8]:
+        _test_aimodel__regr_0error(d, cur_close_xval)
 
 
 @enforce_types
-def _test_aimodel__regr_0error(d: dict, curprice_xval):
+def _test_aimodel__regr_0error(d: dict, cur_close_xval):
     """Want regressor to have near-zero error at current price. See #1213"""
     ss = AimodelSS(d)
     if "constant" in ss.approach.lower():
@@ -419,7 +419,7 @@ def _test_aimodel__regr_0error(d: dict, curprice_xval):
     # X/y data
     N = 50
     x = np.random.uniform(-10, +10, (N,))
-    x[-1] = curprice_xval
+    x[-1] = cur_close_xval
     ycont = 3.0 + 4.0 * x + 1.0 * x**2
     X = np.reshape(x, (N, 1))
     y_thr = 1.0  # arbitrary

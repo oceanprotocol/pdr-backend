@@ -56,7 +56,7 @@ class SimTrader:
     # pylint: disable = too-many-return-statements
     def trade_iter(
         self,
-        curprice: float,
+        cur_close: float,
         pred_up,
         pred_down,
         conf_up: float,
@@ -73,7 +73,7 @@ class SimTrader:
             hits the stop loss or take profit levels.
 
         @arguments
-            curprice -- current price of the token
+            cur_close -- current price of the token
             pred_up -- prediction that the price will go up
             pred_down -- prediction that the price will go down
             conf_up -- confidence in the prediction that the price will go up
@@ -90,22 +90,22 @@ class SimTrader:
             if pred_up:
                 # Open long position if pred up and no position open
                 usdcoin_amt_send = trade_amt * (1 + conf_up)
-                tok_received = self._buy(curprice, usdcoin_amt_send)
+                tok_received = self._buy(cur_close, usdcoin_amt_send)
                 self.position_open = "long"
                 self.position_worth = usdcoin_amt_send
                 self.position_size = tok_received
-                self.tp = curprice + (curprice * self.tp_percent)
-                self.sl = curprice - (curprice * self.sl_percent)
+                self.tp = cur_close + (cur_close * self.tp_percent)
+                self.sl = cur_close - (cur_close * self.sl_percent)
 
             elif pred_down:
                 # Open short position if pred down and no position open
-                tokcoin_amt_send = trade_amt * (1 + conf_down) / curprice
-                usd_received = self._sell(curprice, tokcoin_amt_send)
+                tokcoin_amt_send = trade_amt * (1 + conf_down) / cur_close
+                usd_received = self._sell(cur_close, tokcoin_amt_send)
                 self.position_open = "short"
                 self.position_worth = usd_received
                 self.position_size = tokcoin_amt_send
-                self.tp = curprice - (curprice * self.tp_percent)
-                self.sl = curprice + (curprice * self.sl_percent)
+                self.tp = cur_close - (cur_close * self.tp_percent)
+                self.sl = cur_close + (cur_close * self.sl_percent)
             return 0
 
         # Check for take profit or stop loss
@@ -117,7 +117,7 @@ class SimTrader:
                 return self.close_long_position(self.sl)
 
             if not pred_up:
-                return self.close_long_position(curprice)
+                return self.close_long_position(cur_close)
 
         if self.position_open == "short":
             if low <= self.tp:
@@ -127,7 +127,7 @@ class SimTrader:
                 return self.close_short_position(self.sl)
 
             if not pred_down:
-                return self.close_short_position(curprice)
+                return self.close_short_position(cur_close)
 
         return 0
 
