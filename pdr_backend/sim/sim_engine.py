@@ -151,7 +151,7 @@ class SimEngine:
         )
 
         curprice = close_value
-        trueprice = yraw[-1]
+        truevalue = yraw[-1]
 
         if pdr_ss.aimodel_data_ss.transform == "None":
             y_thr = curprice
@@ -204,7 +204,7 @@ class SimEngine:
         st.trader_profits_USD.append(profit)
 
         # observe true price
-        true_up = trueprice > curprice
+        true_up = truevalue > curprice
         st.ytrues.append(true_up)
 
         # update classifier metrics
@@ -226,7 +226,7 @@ class SimEngine:
         if model.do_regr:
             relchange = model.predict_ycont(X_test)[0]
             predprice = curprice + relchange * curprice
-            yerr = trueprice - predprice
+            yerr = truevalue - predprice
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
         # track predictoor profit
