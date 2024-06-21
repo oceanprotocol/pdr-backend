@@ -146,7 +146,7 @@ class SimEngine:
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
 
-        high_value, low_value, close_value = data_f.get_highlowclose(mergedohlcv_df, feed, testshift)
+        high_value, low_value, close_value = data_f.get_highlowclose(mergedohlcv_df, predict_feed, testshift)
 
         curprice = close_value
 
