@@ -201,7 +201,7 @@ class SimEngine:
             else:  # transform = "RelDiff"
                 relchange = pred_ycont
                 predprice = curprice + relchange * curprice
-            yerr = trueprice - predprice
+            yerr = truevalue - predprice
 
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
