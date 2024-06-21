@@ -146,13 +146,10 @@ class SimEngine:
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
 
-        curprice = yraw[-2]
-        trueprice = yraw[-1]
-        shifted_mergedohlcv_df = mergedohlcv_df[-testshift - 2]
-        high_col = f"{predict_feed.exchange}:{predict_feed.pair}:high"
-        low_col = f"{predict_feed.exchange}:{predict_feed.pair}:low"
-        high_value = shifted_mergedohlcv_df[high_col].to_numpy()[0]
-        low_value = shifted_mergedohlcv_df[low_col].to_numpy()[0]
+        high_value, low_value, close_value = data_f.get_highlowclose(mergedohlcv_df, feed, testshift)
+
+        curprice = close_value
+
         if pdr_ss.aimodel_data_ss.transform == "None":
             y_thr = curprice
         else:  # transform = "RelDiff"
