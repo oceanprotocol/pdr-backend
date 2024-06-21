@@ -44,6 +44,14 @@ class TraderSS(SingleFeedMixin, StrMixin):
     def sim_confidence_threshold(self) -> float:
         return self.d["sim_only"].get("confidence_threshold", 0.0)
 
+    @property
+    def stop_loss_percent(self) -> float:
+        return self.d["sim_only"].get("stop_loss_percent", 1.0)
+
+    @property
+    def take_profit_percent(self) -> float:
+        return self.d["sim_only"].get("take_profit_percent", 100.0)
+
     # feed defined in base
 
     # --------------------------------

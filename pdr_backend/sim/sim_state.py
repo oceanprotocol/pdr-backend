@@ -2,8 +2,6 @@ from typing import Dict, List, Optional, Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.currency_types import Eth
-
 
 @enforce_types
 class AimodelMetrics:
@@ -69,10 +67,7 @@ class AimodelMetrics:
 # pylint: disable=too-many-instance-attributes
 @enforce_types
 class SimState:
-    def __init__(self, init_holdings: Dict[str, Eth]):
-        self.holdings: Dict[str, float] = {
-            tok: float(amt.amt_eth) for tok, amt in init_holdings.items()
-        }
+    def __init__(self):
         self.init_loop_attributes()
         self.iter_number = 0
 
