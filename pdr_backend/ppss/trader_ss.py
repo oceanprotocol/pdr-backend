@@ -46,11 +46,11 @@ class TraderSS(SingleFeedMixin, StrMixin):
 
     @property
     def stop_loss(self) -> float:
-        return self.d["sim_only"].get("stop_loss", 0.0)
+        return self.d["sim_only"].get("stop_loss", 1.0)
 
     @property
     def take_profit(self) -> float:
-        return self.d["sim_only"].get("take_profit", 0.0)
+        return self.d["sim_only"].get("take_profit", 100.0)
 
     # feed defined in base
 
