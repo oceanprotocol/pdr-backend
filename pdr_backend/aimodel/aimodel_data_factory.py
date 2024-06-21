@@ -204,7 +204,7 @@ class AimodelDataFactory:
         # return
         return X, ytran, yraw, x_df, xrecent
 
-    def get_highlowclose(mergedohlcv_df: pl.DataFrame, feed: ArgFeed, testshift: int) -> tuple:
+    def get_highlowclose(self, mergedohlcv_df: pl.DataFrame, feed: ArgFeed, testshift: int) -> tuple:
         shifted_mergedohlcv_df = mergedohlcv_df[-testshift - 2]
         high_col = f"{feed.exchange}:{feed.pair}:high"
         low_col = f"{feed.exchange}:{feed.pair}:low"
