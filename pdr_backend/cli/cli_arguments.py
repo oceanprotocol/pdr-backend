@@ -19,7 +19,7 @@ Usage: pdr sim|predictoor|trader|..
 
 HELP_MAIN = """
 Main tools:
-  pdr sim PPSS_FILE
+  pdr sim PPSS_FILE NETWORK
   pdr sim_plots [--run_id RUN_ID] [--port PORT] [--debug_mode False]
   pdr predictoor PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
@@ -557,7 +557,7 @@ def print_args(arguments: Namespace, nested_args: dict):
 ## below, list *ArgParser classes in same order as HELP_LONG
 
 # main tools
-SimArgParser = _ArgParser_PPSS
+SimArgParser = _ArgParser_PPSS_NETWORK
 PredictoorArgParser = _ArgParser_PPSS_NETWORK
 TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
 ClaimOceanArgParser = _ArgParser_PPSS

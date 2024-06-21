@@ -378,13 +378,12 @@ class SimEngine:
         start_date = current_time_s - (timeframe.s * number_of_data_points)
 
         # fetch data from subgraph
-        print(UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr) / 1000)
-        if start_date > int(
+        if start_date < int(
             UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr) / 1000
         ):
             logger.info(
                 (
-                    "Not enough predictions data in the lake."
+                    "Not enough predictions data in the lake. "
                     "Make sure you fetch data starting from %s up to today"
                 ),
                 time.strftime("%Y-%m-%d", time.localtime(start_date)),
