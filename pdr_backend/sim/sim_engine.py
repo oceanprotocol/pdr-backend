@@ -117,7 +117,7 @@ class SimEngine:
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
 
-        high_value, low_value, _ = data_f.get_highlowclose(
+        high_value, low_value, _ = data_f.get_highlow(
             mergedohlcv_df, predict_feed, testshift
         )
 
