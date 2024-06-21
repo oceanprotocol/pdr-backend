@@ -16,8 +16,8 @@ class SimTrader:
         self.position_worth = 0  # amount of USD in position
         self.tp = 0.0  # take profit
         self.sl = 0.0  # stop loss
-        self.tp_percent = self.ppss.trader_ss.take_profit
-        self.sl_percent = self.ppss.trader_ss.stop_loss
+        self.tp_percent = self.ppss.trader_ss.take_profit_percent
+        self.sl_percent = self.ppss.trader_ss.stop_loss_percent
 
         mock = self.ppss.sim_ss.tradetype in ["histmock"]
         exchange_mgr = ExchangeMgr(self.ppss.exchange_mgr_ss)

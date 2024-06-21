@@ -15,8 +15,8 @@ FEE_PERCENT = 0.01
 @pytest.fixture
 def mock_ppss():
     ppss = Mock()
-    ppss.trader_ss.take_profit = 0.05
-    ppss.trader_ss.stop_loss = 0.05
+    ppss.trader_ss.take_profit_percent = 0.05
+    ppss.trader_ss.stop_loss_percent = 0.05
     ppss.trader_ss.buy_amt_usd.amt_eth = 1000
     ppss.trader_ss.fee_percent = FEE_PERCENT
     ppss.sim_ss.tradetype = "histmock"
@@ -82,7 +82,7 @@ def test_trade_iter_open_short(sim_trader):
     assert sim_trader.position_size == 15
 
 
-def test_trade_iter_close_long_take_profit(sim_trader):
+def test_trade_iter_close_long_take_profit_percent(sim_trader):
     sim_trader.position_open = "long"
     sim_trader.position_size = 10
     sim_trader.position_worth = 1000
@@ -93,7 +93,7 @@ def test_trade_iter_close_long_take_profit(sim_trader):
     assert sim_trader.position_open == ""
 
 
-def test_trade_iter_close_short_stop_loss(sim_trader):
+def test_trade_iter_close_short_stop_loss_percent(sim_trader):
     sim_trader.position_open = "short"
     sim_trader.position_size = 10
     sim_trader.position_worth = 1000
