@@ -39,7 +39,7 @@ class SimEngine:
     ):
         self.predict_train_feedset = predict_train_feedset
         assert isinstance(self.predict_feed, ArgFeed)
-
+        assert predict_feed.signal == "close", "only operates on close predictions"
         self.ppss = ppss
 
         # can be disabled by calling disable_realtime_state()
@@ -117,12 +117,12 @@ class SimEngine:
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
 
-        high_value, low_value, close_value = data_f.get_highlowclose(
+        high_value, low_value, _ = data_f.get_highlowclose(
             mergedohlcv_df, predict_feed, testshift
         )
 
-        curprice = close_value
-        truevalue = yraw[-1]
+        curprice = yraw[-2]
+        trueprice = yraw[-1]
 
         if transform == "None":
             y_thr = curprice
@@ -175,7 +175,7 @@ class SimEngine:
         st.trader_profits_USD.append(profit)
 
         # observe true price
-        true_up = truevalue > curprice
+        true_up = trueprice > curprice
         st.ytrues.append(true_up)
 
         # update classifier metrics
@@ -201,7 +201,7 @@ class SimEngine:
             else:  # transform = "RelDiff"
                 relchange = pred_ycont
                 predprice = curprice + relchange * curprice
-            yerr = truevalue - predprice
+            yerr = trueprice - predprice
 
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
