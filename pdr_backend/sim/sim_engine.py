@@ -255,14 +255,14 @@ class SimEngine:
             self.sim_plotter.save_state(self.st, d, is_final_state)
 
 
-    def close_long_position(sell_price: float) -> float:
+    def close_long_position(self, sell_price: float) -> float:
         tokcoin_amt_send = self.position_size
         usd_received = self._sell(sell_price, tokcoin_amt_send)
         self.position_open = ""
         profit = usd_received - self.position_worth
         return profit
 
-    def close_short_position(buy_price: float) -> float:
+    def close_short_position(self, buy_price: float) -> float:
         usdcoin_amt_send = self.position_size * buy_price
         self._buy(buy_price, usdcoin_amt_send)
         self.position_open = ""
