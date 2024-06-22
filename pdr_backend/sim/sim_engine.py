@@ -109,29 +109,20 @@ class SimEngine:
         predict_feed_close = p
         predict_feed_high = ArgFeed(p.exchange, "high", p.pair, p.timeframe)
         predict_feed_low = ArgFeed(p.exchange, "low", p.pair, p.timeframe)
-        _, _, yraw_close, x_df_close, _ = data_f.create_xy(
-            mergedohlcv_df,
-            testshift,
-            predict_feed_close,
-            train_feeds,
+        _, _, yraw_close, _, _ = data_f.create_xy(
+            mergedohlcv_df, testshift, predict_feed_close, train_feeds,
         )
-        X_high, ytran_high, yraw_high, _, _ = data_f.create_xy(
-            mergedohlcv_df,
-            testshift,
-            predict_feed_high,
-            train_feeds,
+        X_high, ytran_high, yraw_high, x_df_high, _ = data_f.create_xy(
+            mergedohlcv_df, testshift, predict_feed_high, train_feeds,
         )
         X_low, ytran_low, yraw_low, _, _ = data_f.create_xy(
-            mergedohlcv_df,
-            testshift,
-            predict_feed_low,
-            train_feeds,
+            mergedohlcv_df, testshift, predict_feed_low, train_feeds,
         )
-        colnames = list(x_df_close.columns)
-        
-        cur_high, cur_low = data_f.get_highlow(mergedohlcv_df, p, testshift)
-        cur_close = yraw_close[-2]
-        next_close = yraw_close[-1]
+        colnames_high = list(x_df_high.columns)
+
+        cur_close, next_close = yraw_close[-2], yraw_close[-1]
+        cur_high, next_high = yraw_high[-2], yraw_high[-1]
+        cur_low, next_low = yraw_low[-2], yraw_low[-1]
 
         st_, fin = 0, X_high.shape[0] - 1
         X_train_high, X_test_high = X_high[st_:fin, :], X_high[fin : fin + 1, :]
@@ -181,6 +172,7 @@ class SimEngine:
         pred_up: bool = prob_up > 0.5 and conf_up > conf_threshold
         pred_down: bool = prob_down > 0.5 and conf_down > conf_threshold
         st.probs_up.append(prob_up)
+        st.ytrues_hat.append(prob_up > 0.5)
 
         # predictoor: (simulate) submit predictions with stake
         acct_up_profit = acct_down_profit = 0.0
@@ -203,9 +195,13 @@ class SimEngine:
 
         st.trader_profits_USD.append(trader_profit)
 
-        # observe true price
-        true_up = next_close > cur_close
-        true_up_high = next_close > cur_close * (1 + percent_change_needed)
+        # observe true price change
+        true_up_close = next_close > cur_close
+
+        if transform == "None":
+            true_up_high = next_high > y_thr_high
+        else:
+            raise NotImplementedError("build me")
         st.ytrues.append(true_up_high)
 
         # update classifier metrics
@@ -238,7 +234,7 @@ class SimEngine:
         # track predictoor profit
         tot_stake = others_stake + stake_up + stake_down
         others_stake_correct = others_stake * pdr_ss.others_accuracy
-        if true_up:
+        if true_up_close:
             tot_stake_correct = others_stake_correct + stake_up
             percent_to_me = stake_up / tot_stake_correct
             acct_up_profit += (revenue + tot_stake) * percent_to_me
@@ -254,7 +250,7 @@ class SimEngine:
         save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
 
         if save_state:
-            colnames1 = [shift_one_earlier(colname) for colname in colnames]
+            cs_ = [shift_one_earlier(c_) for c_ in colnames_high]
             most_recent_x = X_high[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
             d = AimodelPlotdata(
@@ -263,7 +259,7 @@ class SimEngine:
                 ytrue_train_high,
                 ytran_train_high,
                 y_thr_high,
-                colnames1,
+                cs_,
                 slicing_x,
             )
             self.st.iter_number = test_i

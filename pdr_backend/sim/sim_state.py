@@ -76,6 +76,7 @@ class SimState:
 
         # base data
         self.ytrues: List[bool] = []  # [i] : was-truly-up
+        self.ytrues_hat: List[bool] = []  # [i] : was-predicted-up
         self.probs_up: List[float] = []  # [i] : predicted-prob-up
 
         # aimodel metrics
@@ -108,10 +109,6 @@ class SimState:
             rm["prob_up"] = self.probs_up[-1]
 
         return rm
-
-    @property
-    def ytrues_hat(self) -> List[bool]:
-        return [p > 0.5 for p in self.probs_up]
 
     @property
     def n_correct(self) -> int:
