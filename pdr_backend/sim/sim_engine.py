@@ -58,7 +58,7 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
 
-        self.crt_trained_model: Optional[Aimodel] = None
+        self.model: Optional[Aimodel] = None
 
     @property
     def predict_feed(self) -> ArgFeed:
@@ -130,13 +130,12 @@ class SimEngine:
 
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
-        if self.st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0:
+        if (
+            self.model is None
+            or self.st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0
+        ):
             model_f = AimodelFactory(pdr_ss.aimodel_ss)
-            model = model_f.build(X_train, ytrue_train, ytran_train, y_thr)
-            self.crt_trained_model = model
-        else:
-            assert self.crt_trained_model is not None
-            model = self.crt_trained_model
+            self.model = model_f.build(X_train, ytrue_train, ytran_train, y_thr)
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
@@ -144,7 +143,7 @@ class SimEngine:
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
 
         # predict price direction
-        prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+        prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
         prob_down: float = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
         conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
@@ -192,8 +191,8 @@ class SimEngine:
         else:
             loss = log_loss(st.ytrues, st.probs_up)
         yerr = 0.0
-        if model.do_regr:
-            pred_ycont = model.predict_ycont(X_test)[0]
+        if self.model.do_regr:
+            pred_ycont = self.model.predict_ycont(X_test)[0]
             if transform == "None":
                 pred_next_close = pred_ycont
             else:  # transform = "RelDiff"
@@ -226,7 +225,7 @@ class SimEngine:
             most_recent_x = X[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
             d = AimodelPlotdata(
-                model,
+                self.model,
                 X_train,
                 ytrue_train,
                 ytran_train,
