@@ -110,19 +110,28 @@ class SimEngine:
         predict_feed_high = ArgFeed(p.exchange, "high", p.pair, p.timeframe)
         predict_feed_low = ArgFeed(p.exchange, "low", p.pair, p.timeframe)
         _, _, yraw_close, _, _ = data_f.create_xy(
-            mergedohlcv_df, testshift, predict_feed_close, train_feeds,
+            mergedohlcv_df,
+            testshift,
+            predict_feed_close,
+            train_feeds,
         )
         X_high, ytran_high, yraw_high, x_df_high, _ = data_f.create_xy(
-            mergedohlcv_df, testshift, predict_feed_high, train_feeds,
+            mergedohlcv_df,
+            testshift,
+            predict_feed_high,
+            train_feeds,
         )
         X_low, ytran_low, yraw_low, _, _ = data_f.create_xy(
-            mergedohlcv_df, testshift, predict_feed_low, train_feeds,
+            mergedohlcv_df,
+            testshift,
+            predict_feed_low,
+            train_feeds,
         )
         colnames_high = list(x_df_high.columns)
 
         cur_close, next_close = yraw_close[-2], yraw_close[-1]
         cur_high, next_high = yraw_high[-2], yraw_high[-1]
-        cur_low, next_low = yraw_low[-2], yraw_low[-1]
+        cur_low, _ = yraw_low[-2], yraw_low[-1]
 
         st_, fin = 0, X_high.shape[0] - 1
         X_train_high, X_test_high = X_high[st_:fin, :], X_high[fin : fin + 1, :]
@@ -130,13 +139,13 @@ class SimEngine:
         X_train_low, X_test_low = X_low[st_:fin, :], X_low[fin : fin + 1, :]
         ytran_train_low, _ = ytran_low[st_:fin], ytran_low[fin : fin + 1]
 
-        percent_change_needed = 0.002 # magic number. TODO: move to ppss.yaml
+        percent_change_needed = 0.002  # magic number. TODO: move to ppss.yaml
         if transform == "None":
             y_thr_high = cur_close * (1 + percent_change_needed)
             y_thr_low = cur_close * (1 - percent_change_needed)
         else:  # transform = "RelDiff"
-            y_thr_high = + np.std(yraw_close) * percent_change_needed
-            y_thr_high = - np.std(yraw_close) * percent_change_needed
+            y_thr_high = +np.std(yraw_close) * percent_change_needed
+            y_thr_low = -np.std(yraw_close) * percent_change_needed
         ytrue_high = data_f.ycont_to_ytrue(ytran_high, y_thr_high)
         ytrue_low = data_f.ycont_to_ytrue(ytran_low, y_thr_low)
 
@@ -149,10 +158,16 @@ class SimEngine:
         ):
             model_f = AimodelFactory(pdr_ss.aimodel_ss)
             self.model_high = model_f.build(
-                X_train_high, ytrue_train_high, ytran_train_high, y_thr_high,
+                X_train_high,
+                ytrue_train_high,
+                ytran_train_high,
+                y_thr_high,
             )
             self.model_low = model_f.build(
-                X_train_low, ytrue_train_low, ytran_train_low, y_thr_low,
+                X_train_low,
+                ytrue_train_low,
+                ytran_train_low,
+                y_thr_low,
             )
 
         # current time
@@ -162,8 +177,8 @@ class SimEngine:
 
         # predict price direction
         prob_up: float = self.model_high.predict_ptrue(X_test_high)[0]
-        prob_down: float = 1.0 - self.model_low.predict_ptrue(X_test_low)[0]
-        if (prob_up + prob_down) > 1.0: # ensure predictions don't conflict
+        prob_down: float = 1.0 - self.model_low.predict_ptrue(X_test_low)[0]  # type: ignore
+        if (prob_up + prob_down) > 1.0:  # ensure predictions don't conflict
             prob_up = prob_up / (prob_up + prob_down)
             prob_down = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
@@ -221,7 +236,7 @@ class SimEngine:
             loss = log_loss(st.ytrues, st.probs_up)
         yerr = 0.0
         if self.model_high.do_regr:
-            pred_ycont = self.model_high.predict_ycont(X_test)[0]
+            pred_ycont = self.model_high.predict_ycont(X_test_high)[0]
             if transform == "None":
                 pred_next_close = pred_ycont
             else:  # transform = "RelDiff"
