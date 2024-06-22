@@ -96,7 +96,6 @@ class SimEngine:
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         ppss, pdr_ss, st = self.ppss, self.ppss.predictoor_ss, self.st
         transform = pdr_ss.aimodel_data_ss.transform
-        stake_amt = pdr_ss.stake_amount.amt_eth
         others_stake = pdr_ss.others_stake.amt_eth
         revenue = pdr_ss.revenue.amt_eth
 
@@ -173,24 +172,26 @@ class SimEngine:
         # predict price direction
         prob_up: float = self.model_high.predict_ptrue(X_test_high)[0]
         prob_down: float = 1.0 - self.model_low.predict_ptrue(X_test_low)[0]
+        if (prob_up + prob_down) > 1.0: # ensure predictions don't conflict
+            prob_up = prob_up / (prob_up + prob_down)
+            prob_down = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
         conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
         conf_threshold = self.ppss.trader_ss.sim_confidence_threshold
         pred_up: bool = prob_up > 0.5 and conf_up > conf_threshold
         pred_down: bool = prob_down > 0.5 and conf_down > conf_threshold
-        if pred_up and pred_down: # predictions conflict, so reset them
-            prob_up = prob_down = 0.0
-            pred_up = pred_down = False
         st.probs_up.append(prob_up)
 
         # predictoor: (simulate) submit predictions with stake
         acct_up_profit = acct_down_profit = 0.0
-        stake_up = stake_amt * prob_up
-        stake_down = stake_amt * (1.0 - prob_up)
+        max_stake_amt = pdr_ss.stake_amount.amt_eth
+        assert (prob_up + prob_down) <= 1.0
+        stake_up = max_stake_amt * prob_up
+        stake_down = max_stake_amt * prob_down
         acct_up_profit -= stake_up
         acct_down_profit -= stake_down
 
-        profit = self.trader.trade_iter(
+        trader_profit = self.trader.trade_iter(
             cur_close,
             pred_up,
             pred_down,
@@ -200,11 +201,12 @@ class SimEngine:
             cur_low,
         )
 
-        st.trader_profits_USD.append(profit)
+        st.trader_profits_USD.append(trader_profit)
 
         # observe true price
         true_up = next_close > cur_close
-        st.ytrues.append(true_up)
+        true_up_high = next_close > cur_close * (1 + percent_change_needed)
+        st.ytrues.append(true_up_high)
 
         # update classifier metrics
         n_correct = sum(np.array(st.ytrues) == np.array(st.ytrues_hat))
@@ -234,7 +236,7 @@ class SimEngine:
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
         # track predictoor profit
-        tot_stake = others_stake + stake_amt
+        tot_stake = others_stake + stake_up + stake_down
         others_stake_correct = others_stake * pdr_ss.others_accuracy
         if true_up:
             tot_stake_correct = others_stake_correct + stake_up
