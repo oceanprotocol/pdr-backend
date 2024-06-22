@@ -58,7 +58,8 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
 
-        self.model: Optional[Aimodel] = None
+        self.model_high: Optional[Aimodel] = None
+        self.model_low: Optional[Aimodel] = None
 
     @property
     def predict_feed(self) -> ArgFeed:
@@ -105,37 +106,64 @@ class SimEngine:
         train_feeds = self.predict_train_feedset.train_on
 
         # X, ycont, and x_df are all expressed in % change wrt prev candle
-        X, ytran, yraw, x_df, _ = data_f.create_xy(
+        p = predict_feed
+        predict_feed_close = p
+        predict_feed_high = ArgFeed(p.exchange, "high", p.pair, p.timeframe)
+        predict_feed_low = ArgFeed(p.exchange, "low", p.pair, p.timeframe)
+        _, _, yraw_close, x_df_close, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
-            predict_feed,
+            predict_feed_close,
             train_feeds,
         )
-        colnames = list(x_df.columns)
+        X_high, ytran_high, yraw_high, _, _ = data_f.create_xy(
+            mergedohlcv_df,
+            testshift,
+            predict_feed_high,
+            train_feeds,
+        )
+        X_low, ytran_low, yraw_low, _, _ = data_f.create_xy(
+            mergedohlcv_df,
+            testshift,
+            predict_feed_low,
+            train_feeds,
+        )
+        colnames = list(x_df_close.columns)
+        
+        cur_high, cur_low = data_f.get_highlow(mergedohlcv_df, p, testshift)
+        cur_close = yraw_close[-2]
+        next_close = yraw_close[-1]
 
-        st_, fin = 0, X.shape[0] - 1
-        X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
-        ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
+        st_, fin = 0, X_high.shape[0] - 1
+        X_train_high, X_test_high = X_high[st_:fin, :], X_high[fin : fin + 1, :]
+        ytran_train_high, _ = ytran_high[st_:fin], ytran_high[fin : fin + 1]
+        X_train_low, X_test_low = X_low[st_:fin, :], X_low[fin : fin + 1, :]
+        ytran_train_low, _ = ytran_low[st_:fin], ytran_low[fin : fin + 1]
 
-        cur_high, cur_low = data_f.get_highlow(mergedohlcv_df, predict_feed, testshift)
-
-        cur_close = yraw[-2]
-        next_close = yraw[-1]
-
+        percent_change_needed = 0.002 # magic number. TODO: move to ppss.yaml
         if transform == "None":
-            y_thr = cur_close
+            y_thr_high = cur_close * (1 + percent_change_needed)
+            y_thr_low = cur_close * (1 - percent_change_needed)
         else:  # transform = "RelDiff"
-            y_thr = 0.0
-        ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
+            y_thr_high = + np.std(yraw_close) * percent_change_needed
+            y_thr_high = - np.std(yraw_close) * percent_change_needed
+        ytrue_high = data_f.ycont_to_ytrue(ytran_high, y_thr_high)
+        ytrue_low = data_f.ycont_to_ytrue(ytran_low, y_thr_low)
 
-        ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
+        ytrue_train_high, _ = ytrue_high[st_:fin], ytrue_high[fin : fin + 1]
+        ytrue_train_low, _ = ytrue_low[st_:fin], ytrue_low[fin : fin + 1]
 
         if (
-            self.model is None
+            self.model_high is None
             or self.st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0
         ):
             model_f = AimodelFactory(pdr_ss.aimodel_ss)
-            self.model = model_f.build(X_train, ytrue_train, ytran_train, y_thr)
+            self.model_high = model_f.build(
+                X_train_high, ytrue_train_high, ytran_train_high, y_thr_high,
+            )
+            self.model_low = model_f.build(
+                X_train_low, ytrue_train_low, ytran_train_low, y_thr_low,
+            )
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
@@ -143,13 +171,16 @@ class SimEngine:
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
 
         # predict price direction
-        prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
-        prob_down: float = 1.0 - prob_up
+        prob_up: float = self.model_high.predict_ptrue(X_test_high)[0]
+        prob_down: float = 1.0 - self.model_low.predict_ptrue(X_test_low)[0]
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
         conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
         conf_threshold = self.ppss.trader_ss.sim_confidence_threshold
         pred_up: bool = prob_up > 0.5 and conf_up > conf_threshold
-        pred_down: bool = prob_up < 0.5 and conf_down > conf_threshold
+        pred_down: bool = prob_down > 0.5 and conf_down > conf_threshold
+        if pred_up and pred_down: # predictions conflict, so reset them
+            prob_up = prob_down = 0.0
+            pred_up = pred_down = False
         st.probs_up.append(prob_up)
 
         # predictoor: (simulate) submit predictions with stake
@@ -191,8 +222,8 @@ class SimEngine:
         else:
             loss = log_loss(st.ytrues, st.probs_up)
         yerr = 0.0
-        if self.model.do_regr:
-            pred_ycont = self.model.predict_ycont(X_test)[0]
+        if self.model_high.do_regr:
+            pred_ycont = self.model_high.predict_ycont(X_test)[0]
             if transform == "None":
                 pred_next_close = pred_ycont
             else:  # transform = "RelDiff"
@@ -221,16 +252,16 @@ class SimEngine:
         save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
 
         if save_state:
-            colnames = [shift_one_earlier(colname) for colname in colnames]
-            most_recent_x = X[-1, :]
+            colnames1 = [shift_one_earlier(colname) for colname in colnames]
+            most_recent_x = X_high[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
             d = AimodelPlotdata(
-                self.model,
-                X_train,
-                ytrue_train,
-                ytran_train,
-                y_thr,
-                colnames,
+                self.model_high,
+                X_train_high,
+                ytrue_train_high,
+                ytran_train_high,
+                y_thr_high,
+                colnames1,
                 slicing_x,
             )
             self.st.iter_number = test_i
