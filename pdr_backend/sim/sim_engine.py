@@ -98,6 +98,7 @@ class SimEngine:
         transform = pdr_ss.aimodel_data_ss.transform
         others_stake = pdr_ss.others_stake.amt_eth
         revenue = pdr_ss.revenue.amt_eth
+        model_conf_thr = self.ppss.trader_ss.sim_confidence_threshold
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
@@ -178,29 +179,44 @@ class SimEngine:
         # predict price direction
         prob_up_UP = self.model_UP.predict_ptrue(X_test_UP)[0]
         prob_up_DOWN = self.model_DOWN.predict_ptrue(X_test_DOWN)[0]
-        
-        prob_up, prob_down = prob_up_UP, 1.0 - prob_up_DOWN
-        if (prob_up + prob_down) > 1.0:  # ensure predictions don't conflict
-            prob_up = prob_up / (prob_up + prob_down)
-            prob_down = 1.0 - prob_up
-            
-        conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
-        conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
-        conf_threshold = self.ppss.trader_ss.sim_confidence_threshold
-        pred_up: bool = prob_up > 0.5 and conf_up > conf_threshold
-        pred_down: bool = prob_down > 0.5 and conf_down > conf_threshold
-        
+        prob_down_DOWN = 1.0 - prob_up_DOWN
+
+        models_in_conflict = (prob_up_UP > 0.5 and prob_down_DOWN > 0.5) or \
+            (prob_up_UP < 0.5 and prob_down_DOWN < 0.5)
+        if models_in_conflict:
+            conf_up = conf_down = 0.0
+            pred_up = pred_down = False
+            prob_up_MERGED = 0.5
+        elif prob_up_UP >= prob_down_DOWN:
+            conf_up = (prob_up_UP - 0.5) * 2.0  # to range [0,1]
+            conf_down = 0.0
+            pred_up = conf_up > model_conf_thr
+            pred_down = False
+            prob_up_MERGED = prob_up_UP
+        else: # prob_down_DOWN > prob_up_UP
+            conf_up = 0.0
+            conf_down = (prob_down_DOWN - 0.5) * 2.0
+            pred_up = False
+            pred_down = conf_down > model_conf_thr
+            prob_up_MERGED = 1.0 - prob_down_DOWN
+                    
         st.probs_up_UP.append(prob_up_UP)
-        st.probs_up_DOWN.append(prob_up_DOWN)
         st.ytrues_hat_UP.append(prob_up_UP > 0.5)
+        st.probs_up_DOWN.append(prob_up_DOWN)
         st.ytrues_hat_DOWN.append(prob_up_DOWN > 0.5)
+        st.probs_up_MERGED.append(prob_up_MERGED)
 
         # predictoor: (simulate) submit predictions with stake
         acct_up_profit = acct_down_profit = 0.0
         max_stake_amt = pdr_ss.stake_amount.amt_eth
-        assert (prob_up + prob_down) <= 1.0
-        stake_up = max_stake_amt * prob_up
-        stake_down = max_stake_amt * prob_down
+        if models_in_conflict or pred_up or pred_down:
+            stake_up = stake_down = 0
+        elif prob_up_UP >= prob_down_DOWN:
+            stake_up = stake_amt * prob_up_MERGED
+            stake_down = stake_amt * (1.0 - prob_up_MERGED)
+        else: # prob_down_DOWN > prob_up_UP
+            stake_up = stake_amt * prob_up_MERGED
+            stake_down = stake_amt * (1.0 - prob_up_MERGED)
         acct_up_profit -= stake_up
         acct_down_profit -= stake_down
 

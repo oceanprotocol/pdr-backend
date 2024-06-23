@@ -77,12 +77,15 @@ class SimState:
         # base data for UP classifier
         self.ytrues_UP: List[bool] = []  # [i] : true value
         self.ytrues_hat_UP: List[bool] = []  # [i] : model pred. value
-        self.probs_up_UP: List[float] = []  # [i] : model's pred. probability 
+        self.probs_up_UP: List[float] = []  # [i] : model's pred. prob.
 
         # base data for DOWN classifier
         self.ytrues_DOWN: List[bool] = []  # [i] : true value
         self.ytrues_hat_DOWN: List[bool] = []  # [i] : model pred. value
-        self.probs_up_DOWN: List[float] = []  # [i] : model's pred. probability
+        self.probs_up_DOWN: List[float] = []  # [i] : model's pred. prob.
+
+        # merged values
+        self.probs_up_MERGED: List[float] = []  # [i] : merged pred. prob.
 
         # aimodel metrics
         self.aim = AimodelMetrics()
