@@ -212,9 +212,11 @@ class SimEngine:
         if models_in_conflict or pred_up or pred_down:
             stake_up = stake_down = 0
         elif prob_up_UP >= prob_down_DOWN:
+            stake_amt = max_stake_amt * conf_up
             stake_up = stake_amt * prob_up_MERGED
             stake_down = stake_amt * (1.0 - prob_up_MERGED)
         else: # prob_down_DOWN > prob_up_UP
+            stake_amt = max_stake_amt * conf_down
             stake_up = stake_amt * prob_up_MERGED
             stake_down = stake_amt * (1.0 - prob_up_MERGED)
         acct_up_profit -= stake_up
