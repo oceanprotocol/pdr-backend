@@ -159,7 +159,7 @@ class SimPlotter:
 
     @enforce_types
     def plot_pdr_profit_vs_ptrue(self):
-        x = self.st.probs_up
+        x = self.st.probs_up_UP # FIXME: account for DOWN
         y = self.st.pdr_profits_OCEAN
         fig = go.Figure(
             go.Scatter(
@@ -179,7 +179,7 @@ class SimPlotter:
 
     @enforce_types
     def plot_trader_profit_vs_ptrue(self):
-        x = self.st.probs_up
+        x = self.st.probs_up_UP # FIXME: account for DOWN
         y = self.st.trader_profits_USD
         fig = go.Figure(
             go.Scatter(

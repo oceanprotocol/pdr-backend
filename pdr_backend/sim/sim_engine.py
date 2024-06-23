@@ -58,8 +58,8 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
 
-        self.model_high: Optional[Aimodel] = None
-        self.model_low: Optional[Aimodel] = None
+        self.model_UP: Optional[Aimodel] = None
+        self.model_DOWN: Optional[Aimodel] = None
 
     @property
     def predict_feed(self) -> ArgFeed:
@@ -115,13 +115,13 @@ class SimEngine:
             predict_feed_close,
             train_feeds,
         )
-        X_high, ytran_high, yraw_high, x_df_high, _ = data_f.create_xy(
+        X_UP, ytran_UP, yraw_high, x_df_high, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
             predict_feed_high,
             train_feeds,
         )
-        X_low, ytran_low, yraw_low, _, _ = data_f.create_xy(
+        X_DOWN, ytran_DOWN, yraw_low, _, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
             predict_feed_low,
@@ -131,43 +131,43 @@ class SimEngine:
 
         cur_close, next_close = yraw_close[-2], yraw_close[-1]
         cur_high, next_high = yraw_high[-2], yraw_high[-1]
-        cur_low, _ = yraw_low[-2], yraw_low[-1]
+        cur_low, next_low = yraw_low[-2], yraw_low[-1]
 
-        st_, fin = 0, X_high.shape[0] - 1
-        X_train_high, X_test_high = X_high[st_:fin, :], X_high[fin : fin + 1, :]
-        ytran_train_high, _ = ytran_high[st_:fin], ytran_high[fin : fin + 1]
-        X_train_low, X_test_low = X_low[st_:fin, :], X_low[fin : fin + 1, :]
-        ytran_train_low, _ = ytran_low[st_:fin], ytran_low[fin : fin + 1]
+        st_, fin = 0, X_UP.shape[0] - 1
+        X_train_UP, X_test_UP = X_UP[st_:fin, :], X_UP[fin : fin + 1, :]
+        ytran_train_UP, _ = ytran_UP[st_:fin], ytran_UP[fin : fin + 1]
+        X_train_DOWN, X_test_DOWN = X_DOWN[st_:fin, :], X_DOWN[fin : fin + 1, :]
+        ytran_train_DOWN, _ = ytran_DOWN[st_:fin], ytran_DOWN[fin : fin + 1]
 
         percent_change_needed = 0.002  # magic number. TODO: move to ppss.yaml
         if transform == "None":
-            y_thr_high = cur_close * (1 + percent_change_needed)
-            y_thr_low = cur_close * (1 - percent_change_needed)
+            y_thr_UP = cur_close * (1 + percent_change_needed)
+            y_thr_DOWN = cur_close * (1 - percent_change_needed)
         else:  # transform = "RelDiff"
-            y_thr_high = +np.std(yraw_close) * percent_change_needed
-            y_thr_low = -np.std(yraw_close) * percent_change_needed
-        ytrue_high = data_f.ycont_to_ytrue(ytran_high, y_thr_high)
-        ytrue_low = data_f.ycont_to_ytrue(ytran_low, y_thr_low)
+            y_thr_UP = +np.std(yraw_close) * percent_change_needed
+            y_thr_DOWN = -np.std(yraw_close) * percent_change_needed
+        ytrue_UP = data_f.ycont_to_ytrue(ytran_UP, y_thr_UP)
+        ytrue_DOWN = data_f.ycont_to_ytrue(ytran_DOWN, y_thr_DOWN)
 
-        ytrue_train_high, _ = ytrue_high[st_:fin], ytrue_high[fin : fin + 1]
-        ytrue_train_low, _ = ytrue_low[st_:fin], ytrue_low[fin : fin + 1]
+        ytrue_train_UP, _ = ytrue_UP[st_:fin], ytrue_UP[fin : fin + 1]
+        ytrue_train_DOWN, _ = ytrue_DOWN[st_:fin], ytrue_DOWN[fin : fin + 1]
 
         if (
-            self.model_high is None
+            self.model_UP is None
             or self.st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0
         ):
             model_f = AimodelFactory(pdr_ss.aimodel_ss)
-            self.model_high = model_f.build(
-                X_train_high,
-                ytrue_train_high,
-                ytran_train_high,
-                y_thr_high,
+            self.model_UP = model_f.build(
+                X_train_UP,
+                ytrue_train_UP,
+                ytran_train_UP,
+                y_thr_UP,
             )
-            self.model_low = model_f.build(
-                X_train_low,
-                ytrue_train_low,
-                ytran_train_low,
-                y_thr_low,
+            self.model_DOWN = model_f.build(
+                X_train_DOWN,
+                ytrue_train_DOWN,
+                ytran_train_DOWN,
+                y_thr_DOWN,
             )
 
         # current time
@@ -176,18 +176,24 @@ class SimEngine:
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
 
         # predict price direction
-        prob_up: float = self.model_high.predict_ptrue(X_test_high)[0]
-        prob_down: float = 1.0 - self.model_low.predict_ptrue(X_test_low)[0]  # type: ignore
+        prob_up_UP = self.model_UP.predict_ptrue(X_test_UP)[0]
+        prob_up_DOWN = self.model_DOWN.predict_ptrue(X_test_DOWN)[0]
+        
+        prob_up, prob_down = prob_up_UP, 1.0 - prob_up_DOWN
         if (prob_up + prob_down) > 1.0:  # ensure predictions don't conflict
             prob_up = prob_up / (prob_up + prob_down)
             prob_down = 1.0 - prob_up
+            
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
         conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
         conf_threshold = self.ppss.trader_ss.sim_confidence_threshold
         pred_up: bool = prob_up > 0.5 and conf_up > conf_threshold
         pred_down: bool = prob_down > 0.5 and conf_down > conf_threshold
-        st.probs_up.append(prob_up)
-        st.ytrues_hat.append(prob_up > 0.5)
+        
+        st.probs_up_UP.append(prob_up_UP)
+        st.probs_up_DOWN.append(prob_up_DOWN)
+        st.ytrues_hat_UP.append(prob_up_UP > 0.5)
+        st.ytrues_hat_DOWN.append(prob_up_DOWN > 0.5)
 
         # predictoor: (simulate) submit predictions with stake
         acct_up_profit = acct_down_profit = 0.0
@@ -214,35 +220,33 @@ class SimEngine:
         true_up_close = next_close > cur_close
 
         if transform == "None":
-            true_up_high = next_high > y_thr_high
+            true_up_UP = next_high > y_thr_UP
+            true_up_DOWN = next_low > y_thr_DOWN
         else:
             raise NotImplementedError("build me")
-        st.ytrues.append(true_up_high)
+        st.ytrues_UP.append(true_up_UP)
+        st.ytrues_DOWN.append(true_up_DOWN)
 
-        # update classifier metrics
-        n_correct = sum(np.array(st.ytrues) == np.array(st.ytrues_hat))
-        n_trials = len(st.ytrues)
-        acc_est = n_correct / n_trials
-        acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
-        (precision, recall, f1, _) = precision_recall_fscore_support(
-            st.ytrues,
-            st.ytrues_hat,
-            average="binary",
-            zero_division=0.0,
-        )
-        if min(st.ytrues) == max(st.ytrues):
-            loss = 3.0
-        else:
-            loss = log_loss(st.ytrues, st.probs_up)
+        # update classifier performances
+        perf_UP = get_perf(st.ytrues_UP, st.ytrues_hat_UP, st.probs_up_UP)
+        perf_DOWN = get_perf(st.ytrues_DOWN, st.ytrues_hat_DOWN, st.probs_up_DOWN)
+        perf_merged = merge_tups(perf_UP, perf_DOWN)
+        (acc_est, acc_l, acc_u, precision, recall, f1, loss) = perf_merged
+
         yerr = 0.0
-        if self.model_high.do_regr:
-            pred_ycont = self.model_high.predict_ycont(X_test_high)[0]
+        if self.model_UP.do_regr:
+            pred_ycont_UP = self.model_UP.predict_ycont(X_test_UP)[0]
+            pred_ycont_DOWN = self.model_DOWN.predict_ycont(X_test_DOWN)[0]
             if transform == "None":
-                pred_next_close = pred_ycont
+                pred_next_high = pred_ycont_UP
+                pred_next_low = pred_ycont_DOWN
             else:  # transform = "RelDiff"
                 relchange = pred_ycont
-                pred_next_close = cur_close + relchange * cur_close
-            yerr = next_close - pred_next_close
+                pred_next_high = cur_high + relchange * cur_high
+                pred_next_low = cur_low + relchange * cur_low
+            yerr_UP = next_high - pred_next_high
+            yerr_DOWN = next_low - pred_next_low
+            yerr = np.mean([yerr_UP, yerr_DOWN])
 
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
@@ -266,14 +270,14 @@ class SimEngine:
 
         if save_state:
             cs_ = [shift_one_earlier(c_) for c_ in colnames_high]
-            most_recent_x = X_high[-1, :]
+            most_recent_x = X_UP[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
             d = AimodelPlotdata(
-                self.model_high,
-                X_train_high,
-                ytrue_train_high,
-                ytran_train_high,
-                y_thr_high,
+                self.model_UP,
+                X_train_UP,
+                ytrue_train_UP,
+                ytran_train_UP,
+                y_thr_UP,
                 cs_,
                 slicing_x,
             )
@@ -301,3 +305,27 @@ class SimEngine:
             return False, False
 
         return True, False
+
+def get_perf(ytrues, ytrues_hat, probs_up) -> tuple:
+    """Get classifier performances: accuracy, precision/recall/f1, log loss"""
+    n_correct = sum(np.array(ytrues) == np.array(ytrues_hat))
+    n_trials = len(ytrues)
+    acc_est = n_correct / n_trials
+    acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
+    
+    (precision, recall, f1, _) = precision_recall_fscore_support(
+        ytrues,
+        ytrues_hat,
+        average="binary",
+        zero_division=0.0,
+    )
+    
+    if min(ytrues) == max(ytrues):
+        loss = 3.0 # magic number
+    else:
+        loss = log_loss(ytrues, probs_up)
+    
+    return (acc_est, acc_l, acc_u, precision, recall, f1, loss)
+
+def merge_tups(tup1, tup2):
+    return (np.mean([val1, val2]) for val1, val2 in zip(tup1, tup2))

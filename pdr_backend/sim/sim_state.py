@@ -74,10 +74,15 @@ class SimState:
     def init_loop_attributes(self):
         # 'i' is iteration number i
 
-        # base data
-        self.ytrues: List[bool] = []  # [i] : was-truly-up
-        self.ytrues_hat: List[bool] = []  # [i] : was-predicted-up
-        self.probs_up: List[float] = []  # [i] : predicted-prob-up
+        # base data for UP classifier
+        self.ytrues_UP: List[bool] = []  # [i] : true value
+        self.ytrues_hat_UP: List[bool] = []  # [i] : model pred. value
+        self.probs_up_UP: List[float] = []  # [i] : model's pred. probability 
+
+        # base data for DOWN classifier
+        self.ytrues_DOWN: List[bool] = []  # [i] : true value
+        self.ytrues_hat_DOWN: List[bool] = []  # [i] : model pred. value
+        self.probs_up_DOWN: List[float] = []  # [i] : model's pred. probability
 
         # aimodel metrics
         self.aim = AimodelMetrics()
@@ -106,7 +111,7 @@ class SimState:
         )
 
         if extras and "prob_up" in extras:
-            rm["prob_up"] = self.probs_up[-1]
+            rm["prob_up"] = self.probs_up_UP[-1] # FIXME: account for DOWN
 
         return rm
 

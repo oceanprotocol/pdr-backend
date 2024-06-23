@@ -20,8 +20,9 @@ class SimLogLine:
         self.acct_up_profit = acct_up_profit
         self.acct_down_profit = acct_down_profit
 
-        self.n_correct = sum(np.array(st.ytrues) == np.array(st.ytrues_hat))
-        self.n_trials = len(st.ytrues)
+        # TODO: account for DOWN too
+        self.n_correct = sum(np.array(st.ytrues_UP) == np.array(st.ytrues_hat_UP))
+        self.n_trials = len(st.ytrues_UP)
 
         for key, item in st.recent_metrics(extras=["prob_up"]).items():
             setattr(self, key, item)
