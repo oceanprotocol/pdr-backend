@@ -209,7 +209,7 @@ class SimEngine:
         # predictoor: (simulate) submit predictions with stake
         acct_up_profit = acct_down_profit = 0.0
         max_stake_amt = pdr_ss.stake_amount.amt_eth
-        if models_in_conflict or pred_up or pred_down:
+        if models_in_conflict or not (pred_up or pred_down):
             stake_up = stake_down = 0
         elif prob_up_UP >= prob_down_DOWN:
             stake_amt = max_stake_amt * conf_up
