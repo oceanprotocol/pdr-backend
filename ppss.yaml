@@ -65,7 +65,7 @@ sim_ss: # sim only
   log_dir: logs
   test_n: 5000 # number of epochs to simulate
   tradetype: histmock # histmock | livemock | livereal
-  use_own_model: False # use own model predictions signals if true, else use chain signals
+  use_own_model: True # use own model predictions signals if true, else use chain signals
 
 multisim_ss:
   approach: SimpleSweep # SimpleSweep | FastSweep (future) | ..

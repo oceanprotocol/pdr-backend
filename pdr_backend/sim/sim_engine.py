@@ -408,6 +408,8 @@ class SimEngine:
             LIMIT 1);
         """
         data = db.query_data(query)
+        if len(data["timestamp"]) < 2:
+            return None
         start_timestamp = data["timestamp"][0] / 1000
         end_timestamp = data["timestamp"][1] / 1000
 
