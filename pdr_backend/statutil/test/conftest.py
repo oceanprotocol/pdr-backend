@@ -1,5 +1,6 @@
 from selenium.webdriver.chrome.options import Options
 
+# pylint: disable=unused-import
 from pdr_backend.sim.test.conftest import check_chromedriver
 
 
