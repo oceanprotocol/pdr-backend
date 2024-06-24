@@ -2,7 +2,7 @@ import copy
 import logging
 import os
 import uuid
-from typing import Optional
+from typing import Optional, Dict
 
 import numpy as np
 import polars as pl
@@ -25,6 +25,7 @@ from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 
 logger = logging.getLogger("sim_engine")
 
@@ -68,6 +69,7 @@ class SimEngine:
             self.multi_id = str(uuid.uuid4())
 
         self.crt_trained_model: Optional[Aimodel] = None
+        self.prediction_dataset: Optional[Dict[int, float]] = None
 
     @property
     def predict_feed(self) -> ArgFeed:
@@ -105,6 +107,14 @@ class SimEngine:
         f = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = f.get_mergedohlcv_df()
 
+        use_own_model = False
+
+        if use_own_model is False:
+            self.prediction_dataset = self._get_prediction_dataset(
+                UnixTimeMs(self.ppss.lake_ss.st_timestamp).to_seconds(),
+                UnixTimeMs(self.ppss.lake_ss.fin_timestamp).to_seconds()
+            )
+
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
 
@@ -120,6 +130,7 @@ class SimEngine:
         trade_amt = ppss.trader_ss.buy_amt_usd.amt_eth
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
+
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
         predict_feed = self.predict_train_feedset.predict
         train_feeds = self.predict_train_feedset.train_on
@@ -161,8 +172,20 @@ class SimEngine:
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
 
         # predict price direction
-        prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
-        prob_down: float = 1.0 - prob_up
+        use_own_model = False
+        print("worked here")
+        if use_own_model is not False:
+            prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+        else:
+            ut_seconds = ut.to_seconds()
+            if self.prediction_dataset is not None and ut_seconds in self.prediction_dataset:
+                # check if the current slot is in the keys
+                prob_up = self.prediction_dataset[ut_seconds]
+            else:
+                return
+
+        print("prob_up--->", prob_up)   
+        prob_down: Optional[float] = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
         conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
         conf_threshold = self.ppss.trader_ss.sim_confidence_threshold
@@ -359,3 +382,34 @@ class SimEngine:
             return False, False
 
         return True, False
+
+    @enforce_types
+    def _get_prediction_dataset(self, start_slot: int, end_slot: int) -> Dict[int, Optional[float]]:
+        query = f"""
+            SELECT
+                slot,
+                CASE
+                    WHEN roundSumStakes = 0.0 THEN NULL
+                    WHEN roundSumStakesUp = 0.0 THEN NULL
+                    ELSE roundSumStakesUp / roundSumStakes
+                END AS probUp
+            FROM
+                pdr_payouts
+            WHERE
+                slot > {start_slot}
+                AND slot < {end_slot}
+                AND token = '{self.tokcoin}/{self.usdcoin}'
+        """
+
+        print("query--->", query)
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        df: pl.DataFrame = db.query_data(query)
+        
+        result_dict = {}
+
+        print(df)
+        for i in range(len(df)):
+            if df["probUp"][i] is not None:
+                result_dict[df["slot"][i]] = df["probUp"][i]
+
+        return result_dict
