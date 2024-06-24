@@ -120,13 +120,13 @@ class SimEngine:
             mergedohlcv_df,
             testshift,
             predict_feed_high,
-            train_feeds,
+            [predict_feed_high],
         )
         X_DOWN, ytran_DOWN, yraw_low, _, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
             predict_feed_low,
-            train_feeds,
+            [predict_feed_low],
         )
         colnames_high = list(x_df_high.columns)
 
