@@ -105,7 +105,7 @@ def test_get_past_predictions_from_chain(tmpdir):
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
 
-    d["lake_ss"]["lake_dir"] = os.path.join(tmpdir, "lake_data"),
+    d["lake_ss"]["lake_dir"] = os.path.join(tmpdir, "lake_data")
     d["lake_ss"]["st_timestr"] = "2 hours ago"
     d["trader_ss"]["feed.timeframe"] = "5m"
     d["sim_ss"]["test_n"] = 1000
