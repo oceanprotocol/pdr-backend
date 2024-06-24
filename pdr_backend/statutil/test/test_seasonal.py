@@ -79,12 +79,10 @@ def test_dashboard(tmpdir, check_chromedriver, dash_duo):
     test_dir = str(tmpdir)
 
     # Sample Parquet files
-    """
     src = os.path.join(
-        os.path.dirname(__file__), "../../tests/resources/binance_ETH-USDT_5m.parquet"
+        os.path.dirname(__file__), "../../tests/resources/binance_BTC-USDT_5m.parquet"
     )
-    shutil.copyfile(src, test_dir + "/binance_ETH-USDT_5m.parquet")
-    """
+    shutil.copyfile(src, test_dir + "/binance_BTC-USDT_5m.parquet")
 
     src = os.path.join(
         os.path.dirname(__file__), "../../tests/resources/binance_ETH-USDT_5m.parquet"
@@ -101,8 +99,13 @@ def test_dashboard(tmpdir, check_chromedriver, dash_duo):
     dash_duo.wait_for_text_to_equal("#error-message", "")
     dash_duo.find_element("#arima-graphs")
 
+    dash_duo.find_element(".Select-input input").send_keys("binance_ETH-USDT_5m")
     _check_dashboard(dash_duo)
     dash_duo.find_element("#autocorelation-lag").send_keys("12")
+    _check_dashboard(dash_duo)
+    dash_duo.find_element(".DateInput_input_1").send_keys("06/03/2024")
+    _check_dashboard(dash_duo)
+    dash_duo.find_element(".Select-input input").send_keys("binance_BTC-USDT_5m")
     _check_dashboard(dash_duo)
     dash_duo.find_element("input[type='radio']").click()
     _check_dashboard(dash_duo, adf_text="BC=F,D=0")
@@ -114,7 +117,7 @@ def _check_dashboard(dash_duo, adf_text="BC=T,D=1"):
     dash_duo.wait_for_text_to_equal(
         "#seasonal_column #Seasonal-title",
         f"Seasonal Decomp. for {adf_text} ⓘ",
-        timeout=20,
+        timeout=30,
     )
     dash_duo.wait_for_element("#autocorelation_column #autocorelation")
     dash_duo.wait_for_element("#autocorelation_column #pautocorelation")
