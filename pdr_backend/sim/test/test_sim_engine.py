@@ -1,5 +1,5 @@
 import os
-
+import shutil
 import pytest
 from dash import Dash
 from enforce_typing import enforce_types
@@ -102,12 +102,11 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
             dash_duo.find_element(f"#{figure_name}")
 
 
-def test_get_past_predictions_from_chain(
-    tmpdir
-):
+def test_get_past_predictions_from_chain(tmpdir):
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
 
+    d["lake_ss"]["lake_dir"] = str(tmpdir)
     d["lake_ss"]["st_timestr"] = "2 hours ago"
     d["trader_ss"]["feed.timeframe"] = "5m"
     d["sim_ss"]["test_n"] = 1000
@@ -117,7 +116,7 @@ def test_get_past_predictions_from_chain(
 
     # run with wrong ppss lake config so there is not enough data fetched
     resp = sim_engine._get_past_predictions_from_chain(ppss)
-    assert resp is None
+    assert resp is False
 
     # run with right ppss lake config
     d["sim_ss"]["test_n"] = 20
