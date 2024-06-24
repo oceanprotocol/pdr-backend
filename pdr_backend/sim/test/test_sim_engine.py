@@ -1,5 +1,5 @@
 import os
-
+import shutil
 import pytest
 from dash import Dash
 from enforce_typing import enforce_types
@@ -102,10 +102,12 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
             dash_duo.find_element(f"#{figure_name}")
 
 
-def test_get_past_predictions_from_chain():
+def test_get_past_predictions_from_chain(tmpdir):
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
+    print(os.path.join(tmpdir, "lake_dir"))
 
+    d["lake_ss"]["lake_dir"] = os.path.join(tmpdir, "lake_dir")
     d["lake_ss"]["st_timestr"] = "2 hours ago"
     d["trader_ss"]["feed.timeframe"] = "5m"
     d["sim_ss"]["test_n"] = 1000
@@ -123,3 +125,5 @@ def test_get_past_predictions_from_chain():
     sim_engine = SimEngine(ppss, feedsets[0])
     resp = sim_engine._get_past_predictions_from_chain(ppss)
     assert resp is True
+
+    shutil.rmtree(os.path.join(tmpdir, "lake_dir"))
