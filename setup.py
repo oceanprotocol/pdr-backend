@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 install_requirements = [
     "black==24.4.2",
     "bumpversion",
-    "ccxt==4.3.46",
+    "ccxt==4.3.50",
     "coverage",
     "dash[testing]==2.17.1",
     "dash_bootstrap_components==1.6.0",
@@ -47,7 +47,7 @@ install_requirements = [
     "typeguard==4.3.0",
     "types-pytz==2024.1.0.20240417",
     "types-pyYAML==6.0.12.20240311",
-    "xgboost==2.0.3",
+    "xgboost==2.1.0",
     "dash_bootstrap_components==1.6.0",
     "web3==6.19.0",
     "sapphire.py==0.2.3",
