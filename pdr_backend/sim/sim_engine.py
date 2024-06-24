@@ -378,7 +378,7 @@ class SimEngine:
         number_of_data_points = ppss.sim_ss.test_n
         start_date = current_time_s - (timeframe.s * number_of_data_points)
 
-        # fetch data from subgraph
+        # check if ppss is correctly configured for data ferching
         if start_date < int(
             UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr) / 1000
         ):
@@ -389,12 +389,14 @@ class SimEngine:
                 ),
                 time.strftime("%Y-%m-%d", time.localtime(start_date)),
             )
-            return None
+            return False
+
+        # fetch data from subgraph
         gql_data_factory = GQLDataFactory(ppss)
         etl = ETL(ppss, gql_data_factory)
         etl.do_etl()
 
-        # check if required data exists
+        # check if required data exists in the data base
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         query = """
         (SELECT timestamp
@@ -409,7 +411,10 @@ class SimEngine:
         """
         data = db.query_data(query)
         if len(data["timestamp"]) < 2:
-            return None
+            logger.info(
+                "No prediction data found in database at %s", self.ppss.lake_ss.lake_dir
+            )
+            return False
         start_timestamp = data["timestamp"][0] / 1000
         end_timestamp = data["timestamp"][1] / 1000
 
@@ -421,10 +426,10 @@ class SimEngine:
                 ),
                 time.strftime("%Y-%m-%d", time.localtime(start_date)),
             )
-            return None
+            return False
 
         if (end_timestamp + timeframe.s) < time.time():
             logger.info("Lake data is not up to date.")
-            return None
+            return False
 
         return True

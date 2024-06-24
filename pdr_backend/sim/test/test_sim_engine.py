@@ -105,9 +105,11 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
 def test_get_past_predictions_from_chain(tmpdir):
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
-    print(os.path.join(tmpdir, "lake_dir"))
+    dir_path = os.path.join(tmpdir, "lake_dir")
+    if os.path.isdir(dir_path):
+        shutil.rmtree(dir_path)
 
-    d["lake_ss"]["lake_dir"] = os.path.join(tmpdir, "lake_dir")
+    d["lake_ss"]["lake_dir"] = dir_path
     d["lake_ss"]["st_timestr"] = "2 hours ago"
     d["trader_ss"]["feed.timeframe"] = "5m"
     d["sim_ss"]["test_n"] = 1000
@@ -117,7 +119,7 @@ def test_get_past_predictions_from_chain(tmpdir):
 
     # run with wrong ppss lake config so there is not enough data fetched
     resp = sim_engine._get_past_predictions_from_chain(ppss)
-    assert resp is None
+    assert resp is False
 
     # run with right ppss lake config
     d["sim_ss"]["test_n"] = 20
@@ -125,5 +127,3 @@ def test_get_past_predictions_from_chain(tmpdir):
     sim_engine = SimEngine(ppss, feedsets[0])
     resp = sim_engine._get_past_predictions_from_chain(ppss)
     assert resp is True
-
-    shutil.rmtree(os.path.join(tmpdir, "lake_dir"))
