@@ -121,7 +121,7 @@ def test_get_past_predictions_from_chain(tmpdir):
     # run with right ppss lake config
     d["sim_ss"]["test_n"] = 20
     ppss = PPSS(d=d, network="sapphire-mainnet")
-    ppss.lake_ss.lake_dir = str(tmpdir)
+
     sim_engine = SimEngine(ppss, feedsets[0])
     resp = sim_engine._get_past_predictions_from_chain(ppss)
     assert resp is True
