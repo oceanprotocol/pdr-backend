@@ -5,14 +5,14 @@ lake_ss:
     - binance BTC/USDT ETH/USDT 5m
   #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
   #    - kraken BTC/USDT 5m
-  st_timestr: 18 days ago # starting date for data
+  st_timestr: 30 days ago # starting date for data
   fin_timestr: now # ending date for data
 
 predictoor_ss:
   predict_train_feedsets:
-    - predict: binance BTC/USDT ETH/USDT c 5m
+    - predict: binance BTC/USDT c 5m
       train_on:
-      - binance BTC/USDT ETH/USDT c 5m
+      - binance BTC/USDT c 5m
   approach: 2 # 1->50/50; 2->two-sided model-based; 3-> one-sided model-based
   stake_amount: 100 # How much your bot stakes. In OCEAN per epoch, per feed
   sim_only:
@@ -28,8 +28,8 @@ predictoor_ss:
     min_payout_slots: 0 # Run payout if payout is available for > this many slots
     
   aimodel_data_ss: # used by AimodelDataFactory
-    max_n_train: 5000 # no. epochs to train model on
-    autoregressive_n: 1 # no. epochs that model looks back, to predict next
+    max_n_train: 1000 # no. epochs to train model on
+    autoregressive_n: 2 # no. epochs that model looks back, to predict next
     transform: None # None -> raw value of signal; RelDiff -> rel % diff
     
   aimodel_ss: # used by AimodelFactory
@@ -39,6 +39,7 @@ predictoor_ss:
     calibrate_probs: CalibratedClassifierCV_Sigmoid # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
     calibrate_regr: CurrentYval # CurrentYval | None
     train_every_n_epochs: 1
+    calc_imps: True
 
 exchange_mgr_ss: # used by trader and sim
   timeout: 30000
@@ -52,9 +53,9 @@ trader_ss:
     buy_amt: 1000 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee
     confidence_threshold: 0.02 # skip trade if confidence < this
-    init_holdings:
-      - 100000 USDT
-      - 2 BTC
+    stop_loss_percent: 1.0 # sell if price drops by this %, . 1.0 = disabled
+    take_profit_percent: 100.0 # sell if price rises by this %, . 100.0 = disabled
+
   bot_only:
     min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
