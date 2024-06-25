@@ -25,6 +25,7 @@ install_requirements = [
     "freezegun==1.5.1",
     "imblearn",
     "kaleido==0.2.1",
+    "kaiko==0.0.1",
     "mypy==1.10.0",
     "numpy==2.0.0",
     "pandas==2.2.2",
