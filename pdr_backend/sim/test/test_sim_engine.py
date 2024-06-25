@@ -1,20 +1,21 @@
 import os
-
 import pytest
 from dash import Dash
 from enforce_typing import enforce_types
 from selenium.common.exceptions import NoSuchElementException  # type: ignore[import-untyped]
+import polars as pl
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
 from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
-from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str, mock_ppss
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
 from pdr_backend.sim.dash_plots.callbacks import get_callbacks
 from pdr_backend.sim.dash_plots.view_elements import get_layout
 from pdr_backend.sim.sim_engine import SimEngine
-
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.util.time_types import UnixTimeMs
 
 @enforce_types
 # pylint: disable=unused-argument
@@ -100,3 +101,28 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
         assert "tab--selected" in tab.get_attribute("class")
         for figure_name in figures:
             dash_duo.find_element(f"#{figure_name}")
+
+@enforce_types
+def test_get_prediction_dataset(tmpdir):
+    s = os.path.abspath("ppss.yaml")
+    d = PPSS.constructor_dict(s)
+
+    d["lake_ss"]["lake_dir"] = os.path.join(tmpdir, "lake_data")
+    d["lake_ss"]["st_timestr"] = "2 hours ago"
+    d["trader_ss"]["feed.timeframe"] = "5m"
+    d["sim_ss"]["test_n"] = 1000
+    ppss = PPSS(d=d, network="sapphire-mainnet")
+    feedsets = ppss.predictoor_ss.predict_train_feedsets
+    sim_engine = SimEngine(ppss, feedsets[0])
+
+    # Getting prediction dataset
+
+    prediction_dataset = sim_engine._get_prediction_dataset(
+        UnixTimeMs(ppss.lake_ss.st_timestamp).to_seconds(),
+        UnixTimeMs(ppss.lake_ss.fin_timestamp).to_seconds()
+    )
+
+    assert isinstance(prediction_dataset, dict)
+
+    assert "probUp" in prediction_dataset
+    assert "slot" in prediction_dataset

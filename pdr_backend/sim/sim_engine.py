@@ -26,6 +26,7 @@ from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
 
 logger = logging.getLogger("sim_engine")
 
@@ -385,6 +386,20 @@ class SimEngine:
 
     @enforce_types
     def _get_prediction_dataset(self, start_slot: int, end_slot: int) -> Dict[int, Optional[float]]:
+        contracts = query_feed_contracts(
+            self.ppss.web3_pp.subgraph_url,
+            self.ppss.web3_pp.owner_addrs,
+        )
+
+        sPE = 300 if self.predict_feed.timeframe == "5m" else 3600
+        # Filter contracts with the correct token pair and timeframe
+        contract_to_use = [
+            addr
+            for addr, feed in contracts.items()
+            if feed.symbol == f"{self.tokcoin}/{self.usdcoin}"
+            and feed.seconds_per_epoch == sPE
+        ]
+        
         query = f"""
             SELECT
                 slot,
@@ -398,10 +413,10 @@ class SimEngine:
             WHERE
                 slot > {start_slot}
                 AND slot < {end_slot}
-                AND token = '{self.tokcoin}/{self.usdcoin}'
+                AND ID LIKE '{contract_to_use[0]}%'
         """
 
-        print("query--->", query)
+        print("self.ppss.lake_ss.lake_dir--->", self.ppss.lake_ss.lake_dir)
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         df: pl.DataFrame = db.query_data(query)
         
