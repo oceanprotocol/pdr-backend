@@ -84,7 +84,7 @@ class PredictoorAgent:
         self.prev_submit_payouts: List[int] = []
 
         self.iter_number: int = 0
-        self.crt_trained_model: Optional[Aimodel] = None
+        self.model: Optional[Aimodel] = None
 
     @enforce_types
     def run(self):
@@ -414,25 +414,25 @@ class PredictoorAgent:
             train_feeds=feedset.train_on,
         )
 
-        curprice = yraw[-1]
+        cur_close = yraw[-1]
 
         if pdr_ss.aimodel_data_ss.transform == "None":
-            y_thr = curprice
+            y_thr = cur_close
         else:  # transform = "RelDiff"
             y_thr = 0.0
 
         ybool = data_f.ycont_to_ytrue(ytran, y_thr)
 
-        if (self.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs) == 0:
+        if (
+            self.model is None
+            or (self.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs) == 0
+        ):
             model_f = AimodelFactory(pdr_ss.aimodel_ss)
-            model = model_f.build(X, ybool, ytran, y_thr)
-        else:
-            assert self.crt_trained_model is not None
-            model = self.crt_trained_model
+            self.model = model_f.build(X, ybool, ytran, y_thr)
 
         # predict
         X_test = xrecent.reshape((1, len(xrecent)))
-        prob_up = model.predict_ptrue(X_test)[0]
+        prob_up = self.model.predict_ptrue(X_test)[0]
 
         # calc stake amounts
         tot_amt = pdr_ss.stake_amount

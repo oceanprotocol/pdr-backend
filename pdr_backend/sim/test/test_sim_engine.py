@@ -60,9 +60,9 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
     feedsets = ppss.predictoor_ss.predict_train_feedsets
     sim_engine = SimEngine(ppss, feedsets[0])
 
-    assert sim_engine.crt_trained_model is None
+    assert sim_engine.model is None
     sim_engine.run()
-    assert isinstance(sim_engine.crt_trained_model, Aimodel)
+    assert isinstance(sim_engine.model, Aimodel)
 
     app = Dash("pdr_backend.sim.sim_dash")
     app.config["suppress_callback_exceptions"] = True
