@@ -58,6 +58,14 @@ class PredictoorSS(StrMixin):
         return Eth(self.d["stake_amount"])
 
     @property
+    def use_live_stake_and_accuracy(self) -> bool:
+        """
+        @description
+          Fetch average stake and accuracy values from live predictoor feeds
+        """
+        return self.d["sim_only"].get("use_live_stake_and_accuracy", False)
+
+    @property
     def others_stake(self) -> Eth:
         """
         @description
