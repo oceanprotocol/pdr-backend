@@ -112,7 +112,7 @@ def test_get_prediction_dataset(tmpdir):
     d["lake_ss"]["lake_dir"] = os.path.join(tmpdir, "lake_data")
     d["lake_ss"]["st_timestr"] = "2 hours ago"
     d["trader_ss"]["feed.timeframe"] = "5m"
-    d["sim_ss"]["test_n"] = 500
+    d["sim_ss"]["test_n"] = 20
     ppss = PPSS(d=d, network="sapphire-mainnet")
     feedsets = ppss.predictoor_ss.predict_train_feedsets
     sim_engine = SimEngine(ppss, feedsets[0])
@@ -153,7 +153,7 @@ def test_get_past_predictions_from_chain():
     d["lake_ss"]["lake_dir"] = path
     d["lake_ss"]["st_timestr"] = "2 hours ago"
     d["trader_ss"]["feed.timeframe"] = "5m"
-    d["sim_ss"]["test_n"] = 500
+    d["sim_ss"]["test_n"] = 1000
     ppss = PPSS(d=d, network="sapphire-mainnet")
     feedsets = ppss.predictoor_ss.predict_train_feedsets
     sim_engine = SimEngine(ppss, feedsets[0])

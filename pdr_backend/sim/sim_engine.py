@@ -348,17 +348,17 @@ class SimEngine:
         start_date = current_time_s - (timeframe.s * number_of_data_points)
 
         # check if ppss is correctly configured for data ferching
-        # if start_date < int(
-        #    UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr) / 1000
-        # ):
-        #    logger.info(
-        #        (
-        #            "Lake dates configuration doesn't meet the requirements. "
-        #            "Make sure you set start date before %s"
-        #        ),
-        #        time.strftime("%Y-%m-%d", time.localtime(start_date)),
-        #    )
-        #    return False
+        if start_date < int(
+            UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr) / 1000
+        ):
+            logger.info(
+                (
+                    "Lake dates configuration doesn't meet the requirements. "
+                    "Make sure you set start date before %s"
+                ),
+                time.strftime("%Y-%m-%d", time.localtime(start_date)),
+            )
+            return False
 
         # fetch data from subgraph
         gql_data_factory = GQLDataFactory(ppss)
