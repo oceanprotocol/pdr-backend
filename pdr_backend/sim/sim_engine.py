@@ -429,4 +429,8 @@ class SimEngine:
             )
             return False
 
+        # if (end_timestamp + timeframe.s) < time.time():
+        #    logger.info("Lake data is not up to date.")
+        #    return False
+
         return True

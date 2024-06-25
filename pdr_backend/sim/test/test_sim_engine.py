@@ -102,10 +102,10 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
             dash_duo.find_element(f"#{figure_name}")
 
 
-def test_get_past_predictions_from_chain(tmpdir):
+def test_get_past_predictions_from_chain():
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
-    path = str(tmpdir)
+    path = "my_lake_data"
 
     d["lake_ss"]["lake_dir"] = path
     d["lake_ss"]["st_timestr"] = "2 hours ago"
