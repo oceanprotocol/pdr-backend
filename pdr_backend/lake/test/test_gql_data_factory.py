@@ -151,36 +151,39 @@ def test_update_partial_then_resume(
     assert target_records is None
 
     # Validate expected records we'll be finding
-    df = _mock_fetch_gql_predictions(
-        "sapphire-mainnet",
-        UnixTimeMs.from_timestr("2023-11-01"),
-        UnixTimeMs.from_timestr("2023-11-07"),
-        1000,
-        1000,
-        gql_data_factory.record_config["config"],
-    )
-    assert len(df) == 6, "Expected 6 records"
+    st_timestr = "2023-11-03"
+    fin_timestr = "2023-11-07"
+
+    mock_predictions = mock_daily_predictions()
+    work_2_expected_predictions = [
+        x
+        for x in mock_predictions
+        if UnixTimeMs.from_timestr(st_timestr)
+        <= x.timestamp * 1000
+        <= UnixTimeMs.from_timestr(fin_timestr)
+    ]
+    assert len(work_2_expected_predictions) == 4, "Expected 4 records"
 
     # manipulate ppss poorly and run gql_data_factory again
-    gql_data_factory.ppss.lake_ss.d["st_timestr"] = "2023-11-01"
-    gql_data_factory.ppss.lake_ss.d["fin_timestr"] = "2023-11-07"
+    gql_data_factory.ppss.lake_ss.d["st_timestr"] = st_timestr
+    gql_data_factory.ppss.lake_ss.d["fin_timestr"] = fin_timestr
     gql_data_factory._update()
 
     # Verify expected records were written to db
     target_table = Table.from_dataclass(Prediction)
     target_records = db.query_data("SELECT * FROM {}".format(target_table.table_name))
-    assert len(target_records) == 6, "Expected 6 records"
+    assert len(target_records) == 4, "Expected 4 records"
+    assert len(target_records) == len(
+        work_2_expected_predictions
+    ), "Expected records to match"
+
     assert target_records["pair"].to_list() == [
-        "ETH/USDT",
-        "BTC/USDT",
         "ADA/USDT",
         "BNB/USDT",
         "ETH/USDT",
         "ETH/USDT",
     ]
     assert target_records["timestamp"].to_list() == [
-        1698865200000,
-        1698951600000,
         1699038000000,
         1699124400000,
         1699214400000,
