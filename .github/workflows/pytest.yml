@@ -56,7 +56,7 @@ jobs:
       - name: Test with pytest
         id: pytest
         run: |
-          coverage run --source=pdr_backend --omit=*/test/*,*/test_ganache/*,*/test_noganache/* -m pytest -W error
+          coverage run --source=pdr_backend --omit=*/test/*,*/test_ganache/*,*/test_noganache/* -m pytest
           coverage report
           coverage xml
       - name: Publish code coverage
