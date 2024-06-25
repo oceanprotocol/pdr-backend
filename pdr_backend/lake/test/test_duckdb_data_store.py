@@ -6,7 +6,7 @@ import duckdb
 import polars as pl
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
+from pdr_backend.lake.table import Table, TempTable
 
 
 # Initialize the DuckDBDataStore instance for testing
@@ -191,26 +191,26 @@ def test__duckdb_connection(tmpdir):
 
 def test_move_table_data(tmpdir):
     db, example_df, table_name = _setup_fixture(tmpdir)
-    db.insert_to_table(example_df, TempTable(table_name).fullname)
+    db.insert_to_table(example_df, TempTable(table_name).table_name)
 
     # Check if the table is registered
-    table_exists = db.table_exists(TempTable(table_name).fullname)
+    table_exists = db.table_exists(TempTable(table_name).table_name)
     assert table_exists
 
     # Move the table
-    table = NamedTable(table_name)
+    table = Table(table_name)
     db.move_table_data(TempTable(table_name), table)
 
     # Assert table hasn't dropped
     table_names = db.get_table_names()
-    assert TempTable(table_name).fullname in table_names
+    assert TempTable(table_name).table_name in table_names
 
     # Drop interim TEMP table
-    db.drop_table(TempTable(table_name).fullname)
+    db.drop_table(TempTable(table_name).table_name)
 
     # Assert temp table is dropped
     table_names = db.get_table_names()
-    assert TempTable(table_name).fullname not in table_names
+    assert TempTable(table_name).table_name not in table_names
 
     # Check if the new table is created
     assert table_name in table_names
@@ -220,51 +220,6 @@ def test_move_table_data(tmpdir):
 
     assert len(result) == 3
     assert result[0][0] == "2022-01-01"
-
-
-def test_etl_view(tmpdir):
-    db, example_df, table_name = _setup_fixture(tmpdir)
-    db.insert_to_table(example_df, NamedTable(table_name).fullname)
-
-    other_df = pl.DataFrame(
-        {"timestamp": ["2022-04-01", "2022-05-01", "2022-06-01"], "value": [40, 50, 60]}
-    )
-    db.insert_to_table(other_df, TempTable(table_name).fullname)
-
-    # Assemble view query and create the view
-    view_name = ETLTable(table_name).fullname
-    view_query = """
-    CREATE VIEW {} AS
-    (
-        SELECT * FROM {}
-        UNION ALL
-        SELECT * FROM {}
-    )""".format(
-        ETLTable(table_name).fullname,
-        NamedTable(table_name).fullname,
-        TempTable(table_name).fullname,
-    )
-    db.query_data(view_query)
-
-    # Assert number of views is equal to 1
-    view_names = db.get_view_names()
-    assert len(view_names) == 1
-
-    # Assert view is registered
-    check_result = db.view_exists(view_name)
-    assert check_result
-
-    # Assert view returns the correct, min(timestamp)
-    result = db.duckdb_conn.execute(
-        f"SELECT min(timestamp) FROM {view_name}"
-    ).fetchall()
-    assert result[0][0] == "2022-01-01"
-
-    # Assert view returns the correct, max(timestamp)
-    result = db.duckdb_conn.execute(
-        f"SELECT max(timestamp) FROM {view_name}"
-    ).fetchall()
-    assert result[0][0] == "2022-06-01"
 
 
 def thread_with_return_value(db, table_name):

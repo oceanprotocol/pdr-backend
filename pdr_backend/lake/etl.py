@@ -9,7 +9,13 @@ from pdr_backend.lake.gql_data_factory import (
     GQLDataFactory,
     _GQLDF_REGISTERED_TABLE_NAMES,
 )
-from pdr_backend.lake.table import ETLTable, NamedTable, TempTable, UpdateTable, TempUpdateTable
+from pdr_backend.lake.table import (
+    Table,
+    TempTable,
+    NewEventsTable,
+    UpdateEventsTable,
+    TempUpdateTable,
+)
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
@@ -32,8 +38,9 @@ _ETL_REGISTERED_TABLE_NAMES = [
 _ETL_REGISTERED_QUERIES = [
     _do_sql_predictions,
     _do_sql_payouts,
-    _do_sql_bronze_predictions
+    _do_sql_bronze_predictions,
 ]
+
 
 class ETL:
     """
@@ -51,7 +58,7 @@ class ETL:
     def __init__(self, ppss: PPSS, gql_data_factory: GQLDataFactory):
         self.ppss = ppss
         self.gql_data_factory = gql_data_factory
-        
+
         # ETL uses ppss and it's own internal fns for checkpoints
         # Use this to clamp checkpoints to ppss
         self._clamp_checkpoints_to_ppss = False
@@ -66,34 +73,10 @@ class ETL:
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         for dataclass in _ETL_REGISTERED_LAKE_TABLES:
             table_name = dataclass.get_lake_table_name()
-            db.drop_view(ETLTable(table_name).fullname)
-            db.drop_table(TempTable(table_name).fullname)
-            db.drop_table(UpdateTable(table_name).fullname)
-            db.drop_table(TempUpdateTable(table_name).fullname)
-
-    def _move_from_temp_tables_to_live(self):
-        """
-        @description
-            Move the records from our bronze temporary tables to live, in-production tables
-        """
-
-        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        for dataclass in _ETL_REGISTERED_LAKE_TABLES:
-            table_name = dataclass.get_lake_table_name()
-            logger.info("move table %s to live", table_name)
-            prod_table = NamedTable(table_name)
-            etl_table = ETLTable(table_name)
-            temp_table = TempTable(table_name)
-            update_table = UpdateTable(table_name)
-            temp_update_table = TempUpdateTable(table_name)
-            
-            if db.table_exists(temp_table.fullname):
-                db.move_table_data(temp_table, prod_table)
-
-                db.drop_view(etl_table.fullname)
-                db.drop_table(temp_table.fullname)
-                db.drop_table(update_table.fullname)
-                db.drop_table(temp_update_table.fullname)
+            db.drop_table(TempTable(table_name).table_name)
+            db.drop_table(NewEventsTable(table_name).table_name)
+            db.drop_table(UpdateEventsTable(table_name).table_name)
+            db.drop_table(TempUpdateTable(table_name).table_name)
 
     def _do_bronze_swap_to_prod_atomic(self):
         """
@@ -103,37 +86,38 @@ class ETL:
             Such that it remains atomic, and is able to resume if it fails
         """
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        
+
         bronze_tables = [BronzePrediction]
         for table in bronze_tables:
-            prod_table = NamedTable.from_dataclass(table)
-            etl_table = ETLTable.from_dataclass(table)
-            temp_table = TempTable.from_dataclass(table)
-            update_table = UpdateTable.from_dataclass(table)
+            prod_table = Table.from_dataclass(table)
+            new_events_table = NewEventsTable.from_dataclass(table)
+            update_events_table = UpdateEventsTable.from_dataclass(table)
             temp_update_table = TempUpdateTable.from_dataclass(table)
 
-            if db.table_exists(update_table.fullname):
+            if db.table_exists(update_events_table.table_name):
                 # Insert new records into live tables
                 # We don't know if the table exists or not, so get the query string
-                temp_to_prod_query = db.get_query_move_table_data(temp_table, prod_table)
-                
-                # We'll also get the query string from the helper
-                drop_records_from_table_by_id_query = db.get_query_drop_records_from_table_by_id(
-                    prod_table.fullname,
-                    temp_update_table.fullname
+                temp_to_prod_query = db.get_query_move_table_data(
+                    new_events_table, prod_table
                 )
-                
+
+                # We'll also get the query string from the helper
+                drop_records_from_table_by_id_query = (
+                    db.get_query_drop_records_from_table_by_id(
+                        prod_table.table_name, temp_update_table.table_name
+                    )
+                )
+
                 # Here, the table needs to exist. So we'll build our own insert statement.
                 temp_update_to_prod_query = f"""
-                INSERT INTO {prod_table.fullname} SELECT * FROM {temp_update_table.fullname};
+                INSERT INTO {prod_table.table_name} SELECT * FROM {temp_update_table.table_name};
                 """
 
                 # We then need to drop the rows after all the ETL is complete
                 cleanup_query = f"""
-                DROP VIEW IF EXISTS {etl_table.fullname};
-                DROP TABLE IF EXISTS {temp_table.fullname};
-                DROP TABLE IF EXISTS {update_table.fullname};
-                DROP TABLE IF EXISTS {temp_update_table.fullname};
+                DROP TABLE IF EXISTS {new_events_table.table_name};
+                DROP TABLE IF EXISTS {update_events_table.table_name};
+                DROP TABLE IF EXISTS {temp_update_table.table_name};
                 """
 
                 # Assemble and execute final transaction
@@ -146,7 +130,6 @@ class ETL:
 
                 db.execute_sql(final_query)
 
-                
     def do_etl(self):
         """
         @description
@@ -195,11 +178,13 @@ class ETL:
         self.do_bronze_queries()
 
         end_ts = time.time_ns() / 1e9
-        logger.info(">>>> REQUIRED ETL - do_bronze_step - Completed in %s sec.", end_ts - st_ts)
+        logger.info(
+            ">>>> REQUIRED ETL - do_bronze_step - Completed in %s sec.", end_ts - st_ts
+        )
 
     @enforce_types
     def _get_max_timestamp_values_from(
-        self, tables: List[NamedTable]
+        self, tables: List[Table]
     ) -> Dict[str, Optional[UnixTimeMs]]:
         """
         @description
@@ -220,16 +205,18 @@ class ETL:
         queries = []
 
         for table in tables:
-            if table.fullname not in all_db_tables:
+            if table.table_name not in all_db_tables:
                 logger.info(
                     "_get_max_timestamp_values_from - Table %s does not exist.",
-                    table.fullname,
+                    table.table_name,
                 )
                 continue
 
-            queries.append(max_timestamp_query.format(table.fullname, table.fullname))
+            queries.append(
+                max_timestamp_query.format(table.table_name, table.table_name)
+            )
 
-        table_names = [table.fullname for table in tables]
+        table_names = [table.table_name for table in tables]
         none_values: Dict[str, Optional[UnixTimeMs]] = {
             table_name: None for table_name in table_names
         }
@@ -258,7 +245,7 @@ class ETL:
         self, table_names: List[str], default_timestr: str
     ) -> UnixTimeMs:
         max_timestamp_values = self._get_max_timestamp_values_from(
-            [NamedTable(tb) for tb in table_names]
+            [Table(tb) for tb in table_names]
         )
 
         # check if all values are None in max_timestamp_values
@@ -289,7 +276,7 @@ class ETL:
 
         @flags
             use self._clamp_checkpoints_to_ppss operate ETL manually with ppss
-            this skips checkpoint calculations 
+            this skips checkpoint calculations
         """
         if self._clamp_checkpoints_to_ppss:
             return self.ppss.lake_ss.st_timestamp, self.ppss.lake_ss.fin_timestamp
@@ -308,55 +295,6 @@ class ETL:
         )
 
         return from_timestamp, to_timestamp
-
-    @enforce_types
-    def create_etl_view(self, table_name: str):
-        # Assemble view query and create the view
-        assert (
-            table_name in _ETL_REGISTERED_TABLE_NAMES
-        ), f"{table_name} must be a bronze table"
-
-        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        temp_table = TempTable(table_name)
-        etl_view = ETLTable(table_name)
-
-        table_exists = db.table_exists(table_name)
-        temp_table_exists = db.table_exists(temp_table.fullname)
-        etl_view_exists = db.view_exists(etl_view.fullname)
-        assert temp_table_exists, f"{temp_table.fullname} must already exist"
-        if etl_view_exists:
-            logger.error("%s must not exist", etl_view.fullname)
-            return
-
-        view_query = None
-
-        if table_exists and temp_table_exists:
-            view_query = """
-                CREATE VIEW {} AS
-                (
-                    SELECT * FROM {}
-                    UNION ALL
-                    SELECT * FROM {}
-                )""".format(
-                etl_view.fullname,
-                table_name,
-                temp_table.fullname,
-            )
-            db.query_data(view_query)
-            logger.info(
-                "  Created %s view using %s table and %s temp table",
-                etl_view.fullname,
-                table_name,
-                temp_table.fullname,
-            )
-        else:
-            view_query = f"CREATE VIEW {etl_view.fullname} AS SELECT * FROM {temp_table.fullname}"
-            db.query_data(view_query)
-            logger.info(
-                "  Created %s view using %s temp table",
-                etl_view.fullname,
-                temp_table.fullname,
-            )
 
     def update_bronze_pdr(self):
         """
@@ -380,10 +318,6 @@ class ETL:
                 "update_bronze_pdr - Inserting data into %s",
                 dataclass.get_lake_table_name(),
             )
-
-            # For each bronze table that we process, that data will be entered into TEMP
-            # Create view so downstream queries can access production + TEMP data
-            self.create_etl_view(dataclass.get_lake_table_name())
 
     def do_bronze_queries(self):
         """

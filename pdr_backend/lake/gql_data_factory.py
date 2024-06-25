@@ -10,7 +10,7 @@ from pdr_backend.lake.lake_mapper import LakeMapper
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.table import NamedTable, TempTable
+from pdr_backend.lake.table import Table, NewEventsTable
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.ppss import PPSS
@@ -65,54 +65,8 @@ class GQLDataFactory:
             }
         }
 
-    def _prepare_temp_table(self, dataclass: Type[LakeMapper], st_ut, fin_ut):
-        """
-        @description
-            _prepare_temp_table is a helper function to fill the temp table with
-            missing data that already exists in the csv files. This way all new records
-            can be appended to the temp table and then moved to the live table.
-
-            # 1. get last timestamp from database
-            # 2. get last timestamp from csv
-            # 3. in preparation to append, check missing data to move FROM CSV -> TO TEMP TABLES
-            # 4. resume appending to CSVs + Temp tables until complete
-        """
-        table = NamedTable.from_dataclass(dataclass)
-        temp_table = TempTable.from_dataclass(dataclass)
-        schema = dataclass.get_lake_schema()
-        csv_last_timestamp = CSVDataStore.from_table(
-            table, self.ppss
-        ).get_last_timestamp()
-        db_last_timestamp = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(
-            f"SELECT MAX(timestamp) FROM {table.fullname}"
-        )
-
-        if csv_last_timestamp is None:
-            return
-
-        if (db_last_timestamp is None) or (
-            db_last_timestamp['max("timestamp")'][0] is None
-        ):
-            logger.info(
-                "  Table not yet created. Insert all %s csv data", table.fullname
-            )
-            data = CSVDataStore.from_table(table, self.ppss).read_all(schema)
-            temp_table._append_to_db(data, self.ppss)
-            return
-
-        if db_last_timestamp['max("timestamp")'][0] and (
-            csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]
-        ):
-            logger.info("  Table exists. Insert pending %s csv data", table.fullname)
-            data = CSVDataStore.from_table(table, self.ppss).read(
-                st_ut,
-                fin_ut,
-                schema,
-            )
-            temp_table._append_to_db(data, self.ppss)
-
     @enforce_types
-    def _calc_start_ut(self, table: NamedTable) -> UnixTimeMs:
+    def _calc_start_ut(self, table: Table) -> UnixTimeMs:
         """
         @description
             Calculate start timestamp, reconciling whether file exists and where
@@ -135,6 +89,55 @@ class GQLDataFactory:
 
         return UnixTimeMs(start_ut + 1000)
 
+    def _prepare_subgraph_fetch(self, dataclass: Type[LakeMapper], st_ut, fin_ut):
+        """
+        @description
+            _prepare_subgraph_fetch is a helper function to fill the temp table with
+            missing data that already exists in the csv files. This way all new records
+            can be appended to the temp table and then moved to the live table.
+
+            # 1. get last timestamp from database
+            # 2. get last timestamp from csv
+            # 3. in preparation to append, check missing data to move FROM CSV -> TO TEMP TABLES
+            # 4. resume appending to CSVs + Temp tables until complete
+        """
+        table = Table.from_dataclass(dataclass)
+        new_events_table = NewEventsTable.from_dataclass(dataclass)
+        schema = dataclass.get_lake_schema()
+        csv_last_timestamp = CSVDataStore.from_table(
+            table, self.ppss
+        ).get_last_timestamp()
+        db_last_timestamp = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(
+            f"SELECT MAX(timestamp) FROM {table.table_name}"
+        )
+
+        if csv_last_timestamp is None:
+            print("  csv_last_timestamp is None:")
+            return
+
+        if (db_last_timestamp is None) or (
+            db_last_timestamp['max("timestamp")'][0] is None
+        ):
+            print("  Table not yet created. Insert all %s csv data", table.table_name)
+            logger.info(
+                "  Table not yet created. Insert all %s csv data", table.table_name
+            )
+            data = CSVDataStore.from_table(table, self.ppss).read_all(schema)
+            new_events_table._append_to_db(data, self.ppss)
+            return
+
+        if db_last_timestamp['max("timestamp")'][0] and (
+            csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]
+        ):
+            print("  Table exists. Insert pending %s csv data", table.table_name)
+            logger.info("  Table exists. Insert pending %s csv data", table.table_name)
+            data = CSVDataStore.from_table(table, self.ppss).read(
+                st_ut,
+                fin_ut,
+                schema,
+            )
+            new_events_table._append_to_db(data, self.ppss)
+
     @enforce_types
     def _do_subgraph_fetch(
         self,
@@ -152,10 +155,10 @@ class GQLDataFactory:
             Update function for graphql query, returns raw data
             + Transforms ts into ms as required for data factory
         """
-        table = NamedTable.from_dataclass(dataclass)
-        temp_table = TempTable.from_dataclass(dataclass)
+        table = Table.from_dataclass(dataclass)
+        new_events_table = NewEventsTable.from_dataclass(dataclass)
 
-        logger.info("Fetching data for %s", table.fullname)
+        logger.info("Fetching data for %s", table.table_name)
         network = get_sapphire_postfix(network)
 
         # save to file when this amount of data is fetched
@@ -165,7 +168,7 @@ class GQLDataFactory:
         buffer_df = pl.DataFrame([], schema=dataclass.get_lake_schema())
 
         DuckDBDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
-            temp_table.fullname,
+            new_events_table.table_name,
             dataclass.get_lake_schema(),
         )
 
@@ -206,7 +209,7 @@ class GQLDataFactory:
                 save_backoff_count >= save_backoff_limit or len(df) < pagination_limit
             ) and len(buffer_df) > 0:
                 assert df.schema == dataclass.get_lake_schema()
-                temp_table.append_to_storage(buffer_df, self.ppss)
+                new_events_table.append_to_storage(buffer_df, self.ppss)
                 logger.info(
                     "Saved %s records to storage while fetching", len(buffer_df)
                 )
@@ -225,22 +228,22 @@ class GQLDataFactory:
             pagination_offset += pagination_limit
 
         if len(buffer_df) > 0:
-            temp_table.append_to_storage(buffer_df, self.ppss)
+            new_events_table.append_to_storage(buffer_df, self.ppss)
             logger.info("Saved %s records to storage while fetching", len(buffer_df))
 
     @enforce_types
-    def _move_from_temp_tables_to_live(self):
+    def _do_swap_to_prod(self):
         """
         @description
-            Move the records from our ETL temporary build tables to live, in-production tables
+            Move the records from our build tables to production tables
         """
 
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:
-            temp_table = TempTable.from_dataclass(dataclass)
+            table = NewEventsTable.from_dataclass(dataclass)
 
-            db.move_table_data(temp_table, NamedTable.from_dataclass(dataclass))
-            db.drop_table(temp_table.fullname)
+            db.move_table_data(table, Table.from_dataclass(dataclass))
+            db.drop_table(table.table_name)
 
     @enforce_types
     def _update(self):
@@ -264,16 +267,16 @@ class GQLDataFactory:
 
         for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:
             # calculate start and end timestamps
-            table = NamedTable.from_dataclass(dataclass)
+            table = Table.from_dataclass(dataclass)
             st_ut = self._calc_start_ut(table)
             if st_ut > min(UnixTimeMs.now(), fin_ut):
                 logger.info("      Given start time, no data to gather. Exit.")
 
             # make sure that unwritten csv records are pre-loaded into the temp table
-            self._prepare_temp_table(dataclass, st_ut, fin_ut)
+            self._prepare_subgraph_fetch(dataclass, st_ut, fin_ut)
 
             # fetch from subgraph and add to temp table
-            logger.info("Updating table %s", table.fullname)
+            logger.info("Updating table %s", table.table_name)
             self._do_subgraph_fetch(
                 dataclass,
                 self.ppss.web3_pp.network,
@@ -283,5 +286,5 @@ class GQLDataFactory:
             )
 
         # move data from temp tables to live tables
-        self._move_from_temp_tables_to_live()
+        self._do_swap_to_prod()
         logger.info("GQLDataFactory - Update done.")

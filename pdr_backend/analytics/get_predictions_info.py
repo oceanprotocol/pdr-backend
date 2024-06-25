@@ -13,7 +13,7 @@ from pdr_backend.analytics.predictoor_stats import (
     plot_traction_daily_statistics,
 )
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.lake.table import NamedTable
+from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -41,7 +41,7 @@ def get_predictions_info_main(
     logger.info("get_predictions_info_main start_timestr %s", start_timestr)
     logger.info("get_predictions_info_main end_timestr %s", end_timestr)
 
-    table_name = NamedTable("pdr_predictions").fullname
+    table_name = Table("pdr_predictions").table_name
 
     # convert feed addresses to string for SQL query
     feed_addrs_str = _address_list_to_str(feed_addrs)
@@ -70,7 +70,7 @@ def get_predictoors_info_main(
     logger.info(
         "get_predictoors_info_main_ppss.lake_ss.lake_dir--- %s", ppss.lake_ss.lake_dir
     )
-    table_name = NamedTable("pdr_predictions").fullname
+    table_name = Table("pdr_predictions").table_name
 
     # convert feed addresses to string for SQL query
     pdr_addrs_str = _address_list_to_str(pdr_addrs)
@@ -94,7 +94,7 @@ def get_predictoors_info_main(
 
 @enforce_types
 def get_traction_info_main(ppss: PPSS, start_timestr: str, end_timestr: str):
-    table_name = NamedTable("pdr_predictions").fullname
+    table_name = Table("pdr_predictions").table_name
 
     query = f"""
         SELECT *,

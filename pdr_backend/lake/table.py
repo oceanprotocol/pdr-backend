@@ -14,23 +14,23 @@ logger = logging.getLogger("table")
 
 
 class TableType(Enum):
-    NORMAL = "NORMAL"
+    PROD = "PROD"
+    NEW_EVENTS = "NEW_EVENTS"
+    UPDATE_EVENTS = "UPDATE_EVENTS"
     TEMP = "TEMP"
-    UPDATE = "UPDATE"
     TEMP_UPDATE = "TEMP_UPDATE"
-    ETL = "ETL"
-    
+
 
 @enforce_types
 def is_etl_table(table_name: str) -> bool:
     table_name = table_name.removeprefix("_")
     table_name = table_name.removeprefix("temp_")
     table_name = table_name.removeprefix("_")
-    table_name = table_name.removeprefix("etl_")
-    table_name = table_name.removeprefix("update_")
+    table_name = table_name.removeprefix("new_events_")
+    table_name = table_name.removeprefix("update_events_")
     table_name = table_name.removeprefix("temp_update_")
     table_name = table_name.removeprefix("temp_")
-    
+
     return (
         table_name.startswith("bronze_")
         or table_name.startswith("silver_")
@@ -47,12 +47,6 @@ def drop_tables_from_st(db: DuckDBDataStore, type_filter: str, st: UnixTimeMs):
     table_names = db.get_table_names()
 
     for table_name in table_names:
-        if type_filter == "update" and not is_etl_table(table_name):
-            logger.info(
-                "[while dropping update tables] skipping non-update table %s", table_name
-            )
-            continue
-
         if type_filter == "etl" and not is_etl_table(table_name):
             logger.info(
                 "[while dropping etl tables] skipping non-etl table %s", table_name
@@ -84,24 +78,24 @@ def drop_tables_from_st(db: DuckDBDataStore, type_filter: str, st: UnixTimeMs):
 
 
 @enforce_types
-class NamedTable:
-    def __init__(self, table_name: str, table_type: TableType = TableType.NORMAL):
-        self.table_name = table_name
+class Table:
+    def __init__(self, table_name: str, table_type: TableType = TableType.PROD):
         self.table_type = table_type
+        self._base_table_name = table_name
         self._dataclass: Union[None, Type["LakeMapper"]] = None
 
     @property
-    def fullname(self) -> str:
+    def table_name(self) -> str:
+        if self.table_type == TableType.NEW_EVENTS:
+            return f"_new_events_{self._base_table_name}"
+        if self.table_type == TableType.UPDATE_EVENTS:
+            return f"_update_events_{self._base_table_name}"
         if self.table_type == TableType.TEMP:
-            return f"_temp_{self.table_name}"
-        if self.table_type == TableType.ETL:
-            return f"_etl_{self.table_name}"
-        if self.table_type == TableType.UPDATE:
-            return f"_update_{self.table_name}"
+            return f"_temp_{self._base_table_name}"
         if self.table_type == TableType.TEMP_UPDATE:
-            return f"_temp_update_{self.table_name}"
+            return f"_temp_update_{self._base_table_name}"
 
-        return self.table_name
+        return self._base_table_name
 
     @property
     def dataclass(self) -> Type[LakeMapper]:
@@ -113,13 +107,13 @@ class NamedTable:
     @staticmethod
     def from_dataclass(
         dataclass: Type[LakeMapper], table_type: Optional[TableType] = None
-    ) -> "NamedTable":
+    ) -> "Table":
         if not table_type:
-            table_type = TableType.NORMAL
+            table_type = TableType.PROD
 
-        named_table = NamedTable(dataclass.get_lake_table_name(), table_type)
-        named_table._dataclass = dataclass
-        return named_table
+        db_table = Table(dataclass.get_lake_table_name(), table_type)
+        db_table._dataclass = dataclass
+        return db_table
 
     @enforce_types
     def append_to_storage(self, data: pl.DataFrame, ppss):
@@ -140,7 +134,9 @@ class NamedTable:
             data,
             schema=self.dataclass.get_lake_schema(),
         )
-        logger.info("  Saved %s rows to csv files: %s", data.shape[0], self.table_name)
+        logger.info(
+            "  Saved %s rows to csv files: %s", data.shape[0], self._base_table_name
+        )
 
     @enforce_types
     def _append_to_db(self, data: pl.DataFrame, ppss):
@@ -151,11 +147,39 @@ class NamedTable:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        DuckDBDataStore(ppss.lake_ss.lake_dir).insert_to_table(data, self.fullname)
-        logger.info("  Appended %s rows to db table: %s", data.shape[0], self.fullname)
+        DuckDBDataStore(ppss.lake_ss.lake_dir).insert_to_table(data, self.table_name)
+        logger.info(
+            "  Appended %s rows to db table: %s", data.shape[0], self.table_name
+        )
 
 
-class TempTable(NamedTable):
+class NewEventsTable(Table):
+    def __init__(self, table_name: str):
+        super().__init__(table_name, TableType.NEW_EVENTS)
+
+    @staticmethod
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_dataclass(dataclass: Type[LakeMapper]) -> "NewEventsTable":
+        table = NewEventsTable(dataclass.get_lake_table_name())
+        table._dataclass = dataclass
+        return table
+
+
+class UpdateEventsTable(Table):
+    def __init__(self, table_name: str):
+        super().__init__(table_name, TableType.UPDATE_EVENTS)
+
+    @staticmethod
+    # type: ignore[override]
+    # pylint: disable=arguments-differ
+    def from_dataclass(dataclass: Type[LakeMapper]) -> "UpdateEventsTable":
+        table = UpdateEventsTable(dataclass.get_lake_table_name())
+        table._dataclass = dataclass
+        return table
+
+
+class TempTable(Table):
     def __init__(self, table_name: str):
         super().__init__(table_name, TableType.TEMP)
 
@@ -163,37 +187,12 @@ class TempTable(NamedTable):
     # type: ignore[override]
     # pylint: disable=arguments-differ
     def from_dataclass(dataclass: Type[LakeMapper]) -> "TempTable":
-        temp_table = TempTable(dataclass.get_lake_table_name())
-        temp_table._dataclass = dataclass
-        return temp_table
+        table = TempTable(dataclass.get_lake_table_name())
+        table._dataclass = dataclass
+        return table
 
 
-class ETLTable(NamedTable):
-    def __init__(self, table_name: str):
-        super().__init__(table_name, TableType.ETL)
-
-    @staticmethod
-    # type: ignore[override]
-    # pylint: disable=arguments-differ
-    def from_dataclass(dataclass: Type[LakeMapper]) -> "ETLTable":
-        etl_table = ETLTable(dataclass.get_lake_table_name())
-        etl_table._dataclass = dataclass
-        return etl_table
-
-
-class UpdateTable(NamedTable):
-    def __init__(self, table_name: str):
-        super().__init__(table_name, TableType.UPDATE)
-
-    @staticmethod
-    # type: ignore[override]
-    # pylint: disable=arguments-differ
-    def from_dataclass(dataclass: Type[LakeMapper]) -> "UpdateTable":
-        update_table = UpdateTable(dataclass.get_lake_table_name())
-        update_table._dataclass = dataclass
-        return update_table
-
-class TempUpdateTable(NamedTable):
+class TempUpdateTable(Table):
     def __init__(self, table_name: str):
         super().__init__(table_name, TableType.TEMP_UPDATE)
 
@@ -201,6 +200,6 @@ class TempUpdateTable(NamedTable):
     # type: ignore[override]
     # pylint: disable=arguments-differ
     def from_dataclass(dataclass: Type[LakeMapper]) -> "TempUpdateTable":
-        temp_update_table = TempUpdateTable(dataclass.get_lake_table_name())
-        temp_update_table._dataclass = dataclass
-        return temp_update_table
+        table = TempUpdateTable(dataclass.get_lake_table_name())
+        table._dataclass = dataclass
+        return table

@@ -6,7 +6,7 @@ from polars import Boolean, Float64, Int64, Utf8
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.table import NamedTable
+from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import mock_ppss
 
 
@@ -92,7 +92,7 @@ def test_csv_data_store(
     )
 
     # Initialize Table, fill with data, validate
-    table = NamedTable.from_dataclass(Prediction)
+    table = Table.from_dataclass(Prediction)
     table._append_to_csv(_gql_datafactory_first_predictions_df, ppss)
 
     assert CSVDataStore.from_table(table, ppss).has_data()
@@ -191,7 +191,7 @@ def test_append_to_db(caplog):
         fin_timestr=fin_timestr,
     )
 
-    table = NamedTable.from_dataclass(Prediction)
+    table = Table.from_dataclass(Prediction)
     data = pl.DataFrame([mocked_object], Prediction.get_lake_schema())
     table._append_to_db(data, ppss)
 
