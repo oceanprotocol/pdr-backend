@@ -395,6 +395,7 @@ class SimEngine:
         gql_data_factory = GQLDataFactory(ppss)
         etl = ETL(ppss, gql_data_factory)
         etl.do_etl()
+        time.sleep(3)
 
         # check if required data exists in the data base
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
