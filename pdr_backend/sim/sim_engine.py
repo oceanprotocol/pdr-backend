@@ -163,7 +163,6 @@ class SimEngine:
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
 
         # predict price direction
-        print("worked here")
         if self.ppss.sim_ss.use_own_model is not False:
             prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
         else:
@@ -177,7 +176,6 @@ class SimEngine:
             else:
                 return
 
-        print("prob_up--->", prob_up)
         prob_down: Optional[float] = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
         conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
@@ -327,13 +325,11 @@ class SimEngine:
                 AND ID LIKE '{contract_to_use[0]}%'
         """
 
-        print("self.ppss.lake_ss.lake_dir--->", self.ppss.lake_ss.lake_dir)
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         df: pl.DataFrame = db.query_data(query)
 
         result_dict = {}
 
-        print(df)
         for i in range(len(df)):
             if df["probUp"][i] is not None:
                 result_dict[df["slot"][i]] = df["probUp"][i]
