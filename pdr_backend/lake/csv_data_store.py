@@ -286,6 +286,7 @@ class CSVDataStore:
             pl.DataFrame - data read from the csv file
         """
         data = self.read_all(schema=schema)
+        
         # if the data is empty, return
         if len(data) == 0:
             return data

@@ -118,24 +118,26 @@ class GQLDataFactory:
         if (db_last_timestamp is None) or (
             db_last_timestamp['max("timestamp")'][0] is None
         ):
-            print("  Table not yet created. Insert all %s csv data", table.table_name)
-            logger.info(
-                "  Table not yet created. Insert all %s csv data", table.table_name
+            logger.info(f"Table {table.table_name} not yet created. Insert pending csv data")
+            data = CSVDataStore.from_table(table, self.ppss).read(
+                st_ut,
+                fin_ut,
+                schema
             )
-            data = CSVDataStore.from_table(table, self.ppss).read_all(schema)
+            
             new_events_table._append_to_db(data, self.ppss)
             return
 
         if db_last_timestamp['max("timestamp")'][0] and (
             csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]
         ):
-            print("  Table exists. Insert pending %s csv data", table.table_name)
-            logger.info("  Table exists. Insert pending %s csv data", table.table_name)
+            logger.info(f"Table {table.table_name} exists. Insert pending csv data")
             data = CSVDataStore.from_table(table, self.ppss).read(
                 st_ut,
                 fin_ut,
                 schema,
             )
+
             new_events_table._append_to_db(data, self.ppss)
 
     @enforce_types
