@@ -18,9 +18,9 @@ def get_avg_stake_and_accuracy_for_feed(feed: ArgFeed) -> Optional[tuple]:
 
     data = req.json()
 
-    for feed in data:
-        if feed["alias"] == feed_timeframe:
-            for _, value in feed["statistics"].items():
+    for feed_data in data:
+        if feed_data["alias"] == feed_timeframe:
+            for _, value in feed_data["statistics"].items():
                 if value["token_name"] == feed_name:
                     return value["average_accuracy"], Eth(value["total_staked_today"])
 

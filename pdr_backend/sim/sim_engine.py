@@ -4,9 +4,6 @@ import uuid
 from typing import Optional
 
 import numpy as np
-from pdr_backend.analytics.feed_avg_stake_and_accuracy import (
-    get_avg_stake_and_accuracy_for_feed,
-)
 import polars as pl
 from enforce_typing import enforce_types
 from sklearn.metrics import log_loss, precision_recall_fscore_support
@@ -16,6 +13,9 @@ from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.analytics.feed_avg_stake_and_accuracy import (
+    get_avg_stake_and_accuracy_for_feed,
+)
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
@@ -227,9 +227,6 @@ class SimEngine:
         others_stake_correct = self.others_stake * self.others_accuracy
         if true_up:
             tot_stake_correct = others_stake_correct + stake_up
-            import pdb
-
-            pdb.set_trace()
             percent_to_me = stake_up / tot_stake_correct
             acct_up_profit += (revenue + tot_stake) * percent_to_me
         else:
