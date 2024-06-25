@@ -52,5 +52,5 @@ def _do_sql_predictions(
     )
     db.execute_sql(query)
 
-    df = db.query_data(f"SELECT * FROM {new_events_bronze_prediction_table.table_name}")
-    df.write_csv(f"{new_events_bronze_prediction_table.table_name}.csv")
+    # df = db.query_data(f"SELECT * FROM {new_events_bronze_prediction_table.table_name}")
+    # df.write_csv(f"{new_events_bronze_prediction_table.table_name}.csv")

@@ -60,5 +60,5 @@ def _do_sql_payouts(db: DuckDBDataStore, st_ms: UnixTimeMs, fin_ms: UnixTimeMs) 
     )
     db.execute_sql(query)
 
-    df = db.query_data(f"SELECT * FROM {payout_table.table_name}")
-    df.write_csv(f"{payout_table.table_name}.csv")
+    # df = db.query_data(f"SELECT * FROM {payout_table.table_name}")
+    # df.write_csv(f"{payout_table.table_name}.csv")

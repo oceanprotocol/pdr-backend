@@ -173,11 +173,11 @@ def test_do_lake_raw_drop(tmpdir, caplog):
 
     assert "drop table _temp_test1 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
-    assert "rows after: 2" in caplog.text
+    assert "rows after: 3" in caplog.text
     assert "drop table test2 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
     assert "rows after: 3" in caplog.text
-    assert "truncated 5 rows from 2 tables" in caplog.text
+    assert "truncated 8 rows from 3 tables" in caplog.text
 
 
 @enforce_types
@@ -193,8 +193,8 @@ def test_do_lake_etl_drop(tmpdir, caplog):
 
     db = DuckDBDataStore(str(tmpdir))
     _make_and_fill_timestamps(db, "_temp_bronze_test1", ts - 3 * one_day)
-    _make_and_fill_timestamps(db, "_etl_silver_test2", ts - 2 * one_day)
-    _make_and_fill_timestamps(db, "_etl_test_raw", ts - 2 * one_day)
+    _make_and_fill_timestamps(db, "_new_events_silver_test2", ts - 2 * one_day)
+    _make_and_fill_timestamps(db, "_unknown_test_raw", ts - 2 * one_day)
 
     mock_ppss = Mock()
 
@@ -203,11 +203,13 @@ def test_do_lake_etl_drop(tmpdir, caplog):
 
     assert "drop table _temp_bronze_test1 starting at 1609459200000" in caplog.text
     assert "rows before: 5" in caplog.text
-    assert "rows after: 2" in caplog.text
-    assert "drop table _etl_silver_test2 starting at 1609459200000" in caplog.text
+    assert "rows after: 3" in caplog.text
+    assert (
+        "drop table _new_events_silver_test2 starting at 1609459200000" in caplog.text
+    )
     assert "rows before: 5" in caplog.text
     assert "rows after: 3" in caplog.text
-    assert "skipping non-etl table _etl_test_raw" in caplog.text
+    assert "skipping non-etl table _unknown_test_raw" in caplog.text
     assert "truncated 5 rows from 2 tables" in caplog.text
 
 

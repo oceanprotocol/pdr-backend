@@ -29,13 +29,13 @@ def _do_sql_bronze_predictions(
         BronzePrediction
     )
 
-    df = db.query_data(f"SELECT * FROM {new_events_bronze_prediction_table.table_name}")
-    df.write_csv("pre_query_new_events_bronze_prediction_table.csv")
+    # df = db.query_data(f"SELECT * FROM {new_events_bronze_prediction_table.table_name}")
+    # df.write_csv("pre_query_new_events_bronze_prediction_table.csv")
 
-    df = db.query_data(
-        f"SELECT * FROM {update_events_bronze_prediction_table.table_name}"
-    )
-    df.write_csv("pre_query_update_events_bronze_prediction_table.csv")
+    # df = db.query_data(
+    #     f"SELECT * FROM {update_events_bronze_prediction_table.table_name}"
+    # )
+    # df.write_csv("pre_query_update_events_bronze_prediction_table.csv")
 
     query = f"""
     -- Consider that trueval + payout events can happen within seconds from each other
