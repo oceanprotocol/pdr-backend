@@ -4,7 +4,9 @@ import uuid
 from typing import Optional
 
 import numpy as np
-from pdr_backend.analytics.feed_avg_stake_and_accuracy import get_avg_stake_and_accuracy_for_feed
+from pdr_backend.analytics.feed_avg_stake_and_accuracy import (
+    get_avg_stake_and_accuracy_for_feed,
+)
 import polars as pl
 from enforce_typing import enforce_types
 from sklearn.metrics import log_loss, precision_recall_fscore_support
@@ -67,14 +69,15 @@ class SimEngine:
                 self.others_accuracy, self.others_stake = data
                 self.others_stake = self.others_stake.amt_eth
             else:
-                logger.error("Error getting live values, using others_stake and others_accuracy")
+                logger.error(
+                    "Error getting live values, using others_stake and others_accuracy"
+                )
         else:
             data = None
 
         if not use_live_data or data is None:
             self.others_accuracy = self.ppss.predictoor_ss.others_accuracy
             self.others_stake = self.ppss.predictoor_ss.others_stake.amt_eth
-
 
         self.model: Optional[Aimodel] = None
 
@@ -224,7 +227,9 @@ class SimEngine:
         others_stake_correct = self.others_stake * self.others_accuracy
         if true_up:
             tot_stake_correct = others_stake_correct + stake_up
-            import pdb; pdb.set_trace()
+            import pdb
+
+            pdb.set_trace()
             percent_to_me = stake_up / tot_stake_correct
             acct_up_profit += (revenue + tot_stake) * percent_to_me
         else:
