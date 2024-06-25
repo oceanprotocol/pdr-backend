@@ -10,7 +10,7 @@ from polars import Boolean, Float64, Int64, Utf8
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.lake_mapper import LakeMapper
-from pdr_backend.lake.table import NamedTable, TempTable
+from pdr_backend.lake.table import Table, TempTable
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("lake")
@@ -60,12 +60,12 @@ def get_bronze_pdr_predictions_data_with_SQL(
     @description
         Get the bronze pdr predictions data
     """
-    pdr_predictions_table_name = NamedTable("pdr_predictions").fullname
-    pdr_truevals_table_name = NamedTable("pdr_truevals").fullname
-    pdr_payouts_table_name = NamedTable("pdr_payouts").fullname
+    pdr_predictions_table_name = Table("pdr_predictions").table_name
+    pdr_truevals_table_name = Table("pdr_truevals").table_name
+    pdr_payouts_table_name = Table("pdr_payouts").table_name
     temp_bronze_pdr_predictions_table_name = TempTable.from_dataclass(
         BronzePrediction
-    ).fullname
+    ).table_name
 
     db = DuckDBDataStore(path)
     logger.info("duckDB tables %s", db.get_table_names())

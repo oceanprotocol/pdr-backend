@@ -241,7 +241,9 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             raise e
 
     @enforce_types
-    def get_query_drop_records_from_table_by_id(self, drop_table_name: str, ref_table_name: str):
+    def get_query_drop_records_from_table_by_id(
+        self, drop_table_name: str, ref_table_name: str
+    ):
         """
         Builds the query string to perform the operation and returns it
         @arguments:
@@ -258,7 +260,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             SELECT DISTINCT ID 
             FROM {ref_table_name}
         );
-        """;
+        """
 
     @enforce_types
     def drop_records_from_table_by_id(self, drop_table_name: str, ref_table_name: str):
@@ -270,8 +272,10 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         @example:
             drop_records_from_table_by_id("bronze_pdr_slots", "update_pdr_slots")
         """
-        query = self.get_query_drop_records_from_table_by_id(drop_table_name, ref_table_name)
-        self.execute_sql(query);
+        query = self.get_query_drop_records_from_table_by_id(
+            drop_table_name, ref_table_name
+        )
+        self.execute_sql(query)
 
     @enforce_types
     def get_query_move_table_data(self, from_table, to_table):
@@ -286,14 +290,18 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
 
         # Check if the table exists
         table_names = self.get_table_names()
-        assert from_table.fullname in table_names, f"Table {from_table.fullname} is "
+        assert (
+            from_table.table_name in table_names
+        ), f"Table {from_table.table_name} is "
 
         # check if the permanent table exists
-        if to_table.fullname not in table_names:
-            return f"CREATE TABLE {to_table.fullname} AS SELECT * FROM {from_table.fullname};"
+        if to_table.table_name not in table_names:
+            return f"CREATE TABLE {to_table.table_name} AS SELECT * FROM {from_table.table_name};"
 
         # Move the data from the temporary table to the permanent table
-        return f"INSERT INTO {to_table.fullname} SELECT * FROM {from_table.fullname};"
+        return (
+            f"INSERT INTO {to_table.table_name} SELECT * FROM {from_table.table_name};"
+        )
 
     @enforce_types
     def move_table_data(self, from_table, to_table):

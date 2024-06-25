@@ -1,38 +1,38 @@
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.table import NamedTable, UpdateTable
+from pdr_backend.lake.table import Table, UpdateEventsTable
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
-def _do_sql_payouts(
-        db: DuckDBDataStore, 
-        st_ms: UnixTimeMs,
-        fin_ms: UnixTimeMs ) -> None:
-    
-    payout_table = NamedTable.from_dataclass(Payout)
-    update_bronze_prediction_table = UpdateTable.from_dataclass(BronzePrediction)
+
+def _do_sql_payouts(db: DuckDBDataStore, st_ms: UnixTimeMs, fin_ms: UnixTimeMs) -> None:
+
+    payout_table = Table.from_dataclass(Payout)
+    update_events_bronze_prediction_table = UpdateEventsTable.from_dataclass(
+        BronzePrediction
+    )
 
     query = f"""
     -- Define a CTE to select data once and use it multiple times
     WITH _payout AS (
     SELECT
-        {payout_table.fullname}.ID,
-        {payout_table.fullname}.slot,
-        {payout_table.fullname}.user,
-        {payout_table.fullname}.stake,
-        {payout_table.fullname}.predvalue,
-        {payout_table.fullname}.payout,
-        {payout_table.fullname}.timestamp,
+        {payout_table.table_name}.ID,
+        {payout_table.table_name}.slot,
+        {payout_table.table_name}.user,
+        {payout_table.table_name}.stake,
+        {payout_table.table_name}.predvalue,
+        {payout_table.table_name}.payout,
+        {payout_table.table_name}.timestamp,
     from
-        {payout_table.fullname}
+        {payout_table.table_name}
     where
-        {payout_table.fullname}.timestamp >= {st_ms}
-        and {payout_table.fullname}.timestamp <= {fin_ms}
+        {payout_table.table_name}.timestamp >= {st_ms}
+        and {payout_table.table_name}.timestamp <= {fin_ms}
     )
 
     -- We track data we need from payout into _update_prediction_predctions table
     -- All other params are null.
-    INSERT INTO {update_bronze_prediction_table.fullname}
+    INSERT INTO {update_events_bronze_prediction_table.table_name}
     SELECT 
         p.ID,
         SPLIT_PART(p.ID, '-', 1)
@@ -54,8 +54,11 @@ def _do_sql_payouts(
     FROM _payout as p;
     """
 
-    db.create_table_if_not_exists(update_bronze_prediction_table.fullname, BronzePrediction.get_lake_schema())
+    db.create_table_if_not_exists(
+        update_events_bronze_prediction_table.table_name,
+        BronzePrediction.get_lake_schema(),
+    )
     db.execute_sql(query)
 
-    # df = db.query_data(f"SELECT * FROM {payout_table.fullname}")
-    # df.write_csv(f"{payout_table.fullname}.csv")
+    df = db.query_data(f"SELECT * FROM {payout_table.table_name}")
+    df.write_csv(f"{payout_table.table_name}.csv")
