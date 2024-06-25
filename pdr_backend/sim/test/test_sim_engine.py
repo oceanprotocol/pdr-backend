@@ -1,6 +1,6 @@
 import os
-import pytest
 import shutil
+import pytest
 from dash import Dash
 from enforce_typing import enforce_types
 from selenium.common.exceptions import NoSuchElementException  # type: ignore[import-untyped]
@@ -105,7 +105,7 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
 def test_get_past_predictions_from_chain(tmpdir):
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
-    path = os.path.join(tmpdir, "lake_data")
+    path = str(tmpdir)
 
     d["lake_ss"]["lake_dir"] = path
     d["lake_ss"]["st_timestr"] = "2 hours ago"
@@ -123,8 +123,10 @@ def test_get_past_predictions_from_chain(tmpdir):
     if os.path.exists(path):
         shutil.rmtree(path)
 
+    print(d["lake_ss"])
     d["sim_ss"]["test_n"] = 20
     ppss = PPSS(d=d, network="sapphire-mainnet")
+    print(ppss.lake_ss)
 
     sim_engine = SimEngine(ppss, feedsets[0])
     resp = sim_engine._get_past_predictions_from_chain(ppss)
