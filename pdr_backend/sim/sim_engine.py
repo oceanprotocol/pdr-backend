@@ -4,6 +4,7 @@ import uuid
 from typing import Optional
 
 import numpy as np
+from pdr_backend.analytics.feed_avg_stake_and_accuracy import get_avg_stake_and_accuracy_for_feed
 import polars as pl
 from enforce_typing import enforce_types
 from sklearn.metrics import log_loss, precision_recall_fscore_support
@@ -58,6 +59,23 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
 
+        use_live_data = self.ppss.predictoor_ss.use_live_stake_and_accuracy
+
+        if use_live_data:
+            data = get_avg_stake_and_accuracy_for_feed(self.predict_feed)
+            if data:
+                self.others_accuracy, self.others_stake = data
+                self.others_stake = self.others_stake.amt_eth
+            else:
+                logger.error("Error getting live values, using others_stake and others_accuracy")
+        else:
+            data = None
+
+        if not use_live_data or data is None:
+            self.others_accuracy = self.ppss.predictoor_ss.others_accuracy
+            self.others_stake = self.ppss.predictoor_ss.others_stake.amt_eth
+
+
         self.model: Optional[Aimodel] = None
 
     @property
@@ -96,7 +114,6 @@ class SimEngine:
         ppss, pdr_ss, st = self.ppss, self.ppss.predictoor_ss, self.st
         transform = pdr_ss.aimodel_data_ss.transform
         stake_amt = pdr_ss.stake_amount.amt_eth
-        others_stake = pdr_ss.others_stake.amt_eth
         revenue = pdr_ss.revenue.amt_eth
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
@@ -203,10 +220,11 @@ class SimEngine:
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
         # track predictoor profit
-        tot_stake = others_stake + stake_amt
-        others_stake_correct = others_stake * pdr_ss.others_accuracy
+        tot_stake = self.others_stake + stake_amt
+        others_stake_correct = self.others_stake * self.others_accuracy
         if true_up:
             tot_stake_correct = others_stake_correct + stake_up
+            import pdb; pdb.set_trace()
             percent_to_me = stake_up / tot_stake_correct
             acct_up_profit += (revenue + tot_stake) * percent_to_me
         else:
