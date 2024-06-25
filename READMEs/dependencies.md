@@ -43,4 +43,28 @@ Use this approach for any other missing types, naming the section `[mypy-<packag
 
 ## For new dependencies/upgrade/removal: Check for warnings
 
-TODO
+When installing a new package, upgrading, or removing a package, check for warnings.
+Currently the CIs fail if there are any warnings in the tests. This is to ensure that the codebase is clean and maintainable.
+
+However, we do supress some errors in `pytest.ini`.
+
+### "Permanent" suppressions: no need to check
+- `ignore::pytest.PytestUnhandledThreadExceptionWarning`
+- `ignore:.*This process \(pid=.*\) is multi-threaded, use of fork\(\) may lead to deadlocks in the child.*:DeprecationWarning`
+
+### "Temporary" suppressions: check and remove
+
+#### Warnings related to selenium/dash-testing
+- `ignore:.*HTTPResponse.getheader\(\) is deprecated.*` -> due to usage of getheader in selenium
+
+If you upgrade selenium or dash[testing], you should check if these warnings are still present and remove the ignore statement in `pytest.ini` if they are not.
+
+#### Warnings related to plotly
+- `ignore:.*setDaemon\(\) is deprecated, set the daemon attribute instead.*:DeprecationWarning` -> due to usage of `kaleido` and `plotly`
+
+If you upgrade plotly, you should check if these warnings are still present and remove the ignore statement in `pytest.ini` if they are not.
+
+## Updating this document
+
+If dependency upgrades fix some issues, or if policies change and this document needs to be updated, please do so.
+Happy coding :)
