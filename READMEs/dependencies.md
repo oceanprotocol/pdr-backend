@@ -50,7 +50,10 @@ However, we do supress some errors in `pytest.ini`.
 
 ### "Permanent" suppressions: no need to check
 - `ignore::pytest.PytestUnhandledThreadExceptionWarning`
+- `ignore::pytest.PytestUnraisableExceptionWarning`
 - `ignore:.*This process \(pid=.*\) is multi-threaded, use of fork\(\) may lead to deadlocks in the child.*:DeprecationWarning`
+
+These are due to the nature of the pytest tests and are not expected to be resolved.
 
 ### "Temporary" suppressions: check and remove
 
