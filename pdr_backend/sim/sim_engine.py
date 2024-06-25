@@ -417,7 +417,7 @@ class SimEngine:
             )
             return False
         start_timestamp = data["timestamp"][0] / 1000
-        end_timestamp = data["timestamp"][1] / 1000
+        # end_timestamp = data["timestamp"][1] / 1000
 
         if start_timestamp > start_date:
             logger.info(
@@ -427,10 +427,6 @@ class SimEngine:
                 ),
                 time.strftime("%Y-%m-%d", time.localtime(start_date)),
             )
-            return False
-
-        if (end_timestamp + timeframe.s) < time.time():
-            logger.info("Lake data is not up to date.")
             return False
 
         return True
