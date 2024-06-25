@@ -1,5 +1,6 @@
 import os
 import pytest
+import shutil
 from dash import Dash
 from enforce_typing import enforce_types
 from selenium.common.exceptions import NoSuchElementException  # type: ignore[import-untyped]
@@ -104,8 +105,9 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
 def test_get_past_predictions_from_chain(tmpdir):
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
+    path = os.path.join(tmpdir, "lake_data")
 
-    d["lake_ss"]["lake_dir"] = os.path.join(tmpdir, "lake_data")
+    d["lake_ss"]["lake_dir"] = path
     d["lake_ss"]["st_timestr"] = "2 hours ago"
     d["trader_ss"]["feed.timeframe"] = "5m"
     d["sim_ss"]["test_n"] = 1000
@@ -118,6 +120,9 @@ def test_get_past_predictions_from_chain(tmpdir):
     assert resp is False
 
     # run with right ppss lake config
+    if os.path.exists(path):
+        shutil.rmtree(path)
+
     d["sim_ss"]["test_n"] = 20
     ppss = PPSS(d=d, network="sapphire-mainnet")
 
