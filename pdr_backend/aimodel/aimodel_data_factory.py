@@ -204,6 +204,17 @@ class AimodelDataFactory:
         # return
         return X, ytran, yraw, x_df, xrecent
 
+    def get_highlow(
+        self, mergedohlcv_df: pl.DataFrame, feed: ArgFeed, testshift: int
+    ) -> tuple:
+        shifted_mergedohlcv_df = mergedohlcv_df[-testshift - 2]
+        high_col = f"{feed.exchange}:{feed.pair}:high"
+        low_col = f"{feed.exchange}:{feed.pair}:low"
+        cur_high = shifted_mergedohlcv_df[high_col].to_numpy()[0]
+        cur_low = shifted_mergedohlcv_df[low_col].to_numpy()[0]
+
+        return (cur_high, cur_low)
+
 
 @enforce_types
 def hist_col_name(feed: ArgFeed) -> str:

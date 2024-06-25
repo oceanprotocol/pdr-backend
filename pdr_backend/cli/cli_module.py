@@ -83,7 +83,7 @@ def _do_main():
 def do_sim(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
-        network="development",
+        network=args.NETWORK,
         nested_override_args=nested_args,
     )
     feedset = ppss.predictoor_ss.predict_train_feedsets[0]

@@ -53,9 +53,9 @@ trader_ss:
     buy_amt: 1000 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee
     confidence_threshold: 0.02 # skip trade if confidence < this
-    init_holdings:
-      - 100000 USDT
-      - 2 BTC
+    stop_loss_percent: 1.0 # sell if price drops by this %, . 1.0 = disabled
+    take_profit_percent: 100.0 # sell if price rises by this %, . 100.0 = disabled
+
   bot_only:
     min_buffer: 30 # in s. only trade if there's > this time left
     max_tries: 10 # max no. attempts to process a feed
@@ -65,6 +65,7 @@ sim_ss: # sim only
   log_dir: logs
   test_n: 5000 # number of epochs to simulate
   tradetype: histmock # histmock | livemock | livereal
+  use_own_model: True # use own model predictions signals if true, else use chain signals
 
 multisim_ss:
   approach: SimpleSweep # SimpleSweep | FastSweep (future) | ..

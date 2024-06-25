@@ -1,7 +1,7 @@
-import copy
 import logging
 import os
 import uuid
+import time
 from typing import Optional, Dict
 
 import numpy as np
@@ -17,16 +17,18 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
-from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_logger import SimLogLine
 from pdr_backend.sim.sim_plotter import SimPlotter
+from pdr_backend.sim.sim_trader import SimTrader
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
+from pdr_backend.lake.etl import ETL
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 logger = logging.getLogger("sim_engine")
 
@@ -42,27 +44,19 @@ class SimEngine:
     ):
         self.predict_train_feedset = predict_train_feedset
         assert isinstance(self.predict_feed, ArgFeed)
-        assert isinstance(self.tokcoin, str)
-        assert isinstance(self.usdcoin, str)
-
+        assert self.predict_feed.signal == "close", "only operates on close predictions"
         self.ppss = ppss
 
         # can be disabled by calling disable_realtime_state()
         self.do_state_updates = True
 
-        self.st = SimState(
-            copy.copy(self.ppss.trader_ss.init_holdings),
-        )
+        self.st = SimState()
+
+        self.trader = SimTrader(ppss, self.predict_feed)
 
         self.sim_plotter = SimPlotter()
 
         self.logfile = ""
-
-        mock = self.ppss.sim_ss.tradetype in ["histmock"]
-        exchange_mgr = ExchangeMgr(self.ppss.exchange_mgr_ss)
-        self.exchange = exchange_mgr.exchange(
-            "mock" if mock else ppss.predictoor_ss.exchange_str,
-        )
 
         if multi_id:
             self.multi_id = multi_id
@@ -71,20 +65,11 @@ class SimEngine:
 
         self.crt_trained_model: Optional[Aimodel] = None
         self.prediction_dataset: Optional[Dict[int, float]] = None
+        self.model: Optional[Aimodel] = None
 
     @property
     def predict_feed(self) -> ArgFeed:
         return self.predict_train_feedset.predict
-
-    @property
-    def tokcoin(self) -> str:
-        """Return e.g. 'ETH'"""
-        return self.predict_feed.pair.base_str
-
-    @property
-    def usdcoin(self) -> str:
-        """Return e.g. 'USDT'"""
-        return self.predict_feed.pair.quote_str
 
     @enforce_types
     def _init_loop_attributes(self):
@@ -108,12 +93,15 @@ class SimEngine:
         f = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = f.get_mergedohlcv_df()
 
-        use_own_model = False
+        # fetch predictions data
+        if not self.ppss.sim_ss.use_own_model:
+            chain_prediction_data = self._get_past_predictions_from_chain(self.ppss)
+            if not chain_prediction_data:
+                return
 
-        if use_own_model is False:
             self.prediction_dataset = self._get_prediction_dataset(
                 UnixTimeMs(self.ppss.lake_ss.st_timestamp).to_seconds(),
-                UnixTimeMs(self.ppss.lake_ss.fin_timestamp).to_seconds()
+                UnixTimeMs(self.ppss.lake_ss.fin_timestamp).to_seconds(),
             )
 
         for test_i in range(self.ppss.sim_ss.test_n):
@@ -125,10 +113,10 @@ class SimEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         ppss, pdr_ss, st = self.ppss, self.ppss.predictoor_ss, self.st
+        transform = pdr_ss.aimodel_data_ss.transform
         stake_amt = pdr_ss.stake_amount.amt_eth
         others_stake = pdr_ss.others_stake.amt_eth
         revenue = pdr_ss.revenue.amt_eth
-        trade_amt = ppss.trader_ss.buy_amt_usd.amt_eth
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
 
@@ -149,23 +137,25 @@ class SimEngine:
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
 
-        curprice = yraw[-2]
-        trueprice = yraw[-1]
+        cur_high, cur_low = data_f.get_highlow(mergedohlcv_df, predict_feed, testshift)
 
-        if pdr_ss.aimodel_data_ss.transform == "None":
-            y_thr = curprice
+        cur_close = yraw[-2]
+        next_close = yraw[-1]
+
+        if transform == "None":
+            y_thr = cur_close
         else:  # transform = "RelDiff"
             y_thr = 0.0
         ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
+
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
-        if self.st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0:
+        if (
+            self.model is None
+            or self.st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0
+        ):
             model_f = AimodelFactory(pdr_ss.aimodel_ss)
-            model = model_f.build(X_train, ytrue_train, ytran_train, y_thr)
-            self.crt_trained_model = model
-        else:
-            assert self.crt_trained_model is not None
-            model = self.crt_trained_model
+            self.model = model_f.build(X_train, ytrue_train, ytran_train, y_thr)
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
@@ -173,19 +163,21 @@ class SimEngine:
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
 
         # predict price direction
-        use_own_model = False
         print("worked here")
-        if use_own_model is not False:
-            prob_up: float = model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+        if self.ppss.sim_ss.use_own_model is not False:
+            prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
         else:
             ut_seconds = ut.to_seconds()
-            if self.prediction_dataset is not None and ut_seconds in self.prediction_dataset:
+            if (
+                self.prediction_dataset is not None
+                and ut_seconds in self.prediction_dataset
+            ):
                 # check if the current slot is in the keys
                 prob_up = self.prediction_dataset[ut_seconds]
             else:
                 return
 
-        print("prob_up--->", prob_up)   
+        print("prob_up--->", prob_up)
         prob_down: Optional[float] = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
         conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
@@ -201,19 +193,20 @@ class SimEngine:
         acct_up_profit -= stake_up
         acct_down_profit -= stake_down
 
-        # trader: enter the trading position
-        usdcoin_holdings_before = st.holdings[self.usdcoin]
-        if pred_up:  # buy; exit later by selling
-            usdcoin_amt_send = trade_amt * conf_up
-            tokcoin_amt_recd = self._buy(curprice, usdcoin_amt_send)
-        elif pred_down:  # sell; exit later by buying
-            target_usdcoin_amt_recd = trade_amt * conf_down
-            p = self.ppss.trader_ss.fee_percent
-            tokcoin_amt_send = target_usdcoin_amt_recd / curprice / (1 - p)
-            self._sell(curprice, tokcoin_amt_send)
+        profit = self.trader.trade_iter(
+            cur_close,
+            pred_up,
+            pred_down,
+            conf_up,
+            conf_down,
+            cur_high,
+            cur_low,
+        )
+
+        st.trader_profits_USD.append(profit)
 
         # observe true price
-        true_up = trueprice > curprice
+        true_up = next_close > cur_close
         st.ytrues.append(true_up)
 
         # update classifier metrics
@@ -232,24 +225,16 @@ class SimEngine:
         else:
             loss = log_loss(st.ytrues, st.probs_up)
         yerr = 0.0
-        if model.do_regr:
-            relchange = model.predict_ycont(X_test)[0]
-            predprice = curprice + relchange * curprice
-            yerr = trueprice - predprice
-        st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
+        if self.model.do_regr:
+            pred_ycont = self.model.predict_ycont(X_test)[0]
+            if transform == "None":
+                pred_next_close = pred_ycont
+            else:  # transform = "RelDiff"
+                relchange = pred_ycont
+                pred_next_close = cur_close + relchange * cur_close
+            yerr = next_close - pred_next_close
 
-        # trader: exit the trading position
-        if pred_up:
-            # we'd bought; so now sell
-            self._sell(trueprice, tokcoin_amt_recd)
-        elif pred_down:
-            # we'd sold, so buy back the same # tokcoins as we sold
-            # (do *not* buy back the same # usdcoins! Not the same thing!)
-            target_tokcoin_amt_recd = tokcoin_amt_send
-            p = self.ppss.trader_ss.fee_percent
-            usdcoin_amt_send = target_tokcoin_amt_recd * trueprice / (1 - p)
-            tokcoin_amt_recd = self._buy(trueprice, usdcoin_amt_send)
-        usdcoin_holdings_after = st.holdings[self.usdcoin]
+        st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
         # track predictoor profit
         tot_stake = others_stake + stake_amt
@@ -265,10 +250,6 @@ class SimEngine:
         pdr_profit_OCEAN = acct_up_profit + acct_down_profit
         st.pdr_profits_OCEAN.append(pdr_profit_OCEAN)
 
-        # track trading profit
-        trader_profit_USD = usdcoin_holdings_after - usdcoin_holdings_before
-        st.trader_profits_USD.append(trader_profit_USD)
-
         SimLogLine(ppss, st, test_i, ut, acct_up_profit, acct_down_profit).log_line()
 
         save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
@@ -278,7 +259,7 @@ class SimEngine:
             most_recent_x = X[-1, :]
             slicing_x = most_recent_x  # plot about the most recent x
             d = AimodelPlotdata(
-                model,
+                self.model,
                 X_train,
                 ytrue_train,
                 ytran_train,
@@ -288,79 +269,6 @@ class SimEngine:
             )
             self.st.iter_number = test_i
             self.sim_plotter.save_state(self.st, d, is_final_state)
-
-    @enforce_types
-    def _buy(self, price: float, usdcoin_amt_send: float) -> float:
-        """
-        @description
-          Buy tokcoin with usdcoin. That is, swap usdcoin for tokcoin.
-
-        @arguments
-          price -- amt of usdcoin per token
-          usdcoin_amt_send -- # usdcoins to send. It sends less if have less
-        @return
-          tokcoin_amt_recd -- # tokcoins received.
-        """
-        usdcoin_amt_send = min(usdcoin_amt_send, self.st.holdings[self.usdcoin])
-        self.st.holdings[self.usdcoin] -= usdcoin_amt_send
-
-        p = self.ppss.trader_ss.fee_percent
-        usdcoin_amt_fee = usdcoin_amt_send * p
-        tokcoin_amt_recd = usdcoin_amt_send * (1 - p) / price
-        self.st.holdings[self.tokcoin] += tokcoin_amt_recd
-
-        self.exchange.create_market_buy_order(
-            str(self.predict_feed.pair), tokcoin_amt_recd
-        )
-
-        logger.info(
-            "TX: BUY : send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
-            usdcoin_amt_send,
-            self.usdcoin,
-            tokcoin_amt_recd,
-            self.tokcoin,
-            usdcoin_amt_fee,
-            self.usdcoin,
-        )
-
-        return tokcoin_amt_recd
-
-    @enforce_types
-    def _sell(self, price: float, tokcoin_amt_send: float) -> float:
-        """
-        @description
-          Sell tokcoin for usdcoin. That is, swap tokcoin for usdcoin.
-
-        @arguments
-          price -- amt of usdcoin per token
-          tokcoin_amt_send -- # tokcoins to send. It sends less if have less
-
-        @return
-          usdcoin_amt_recd -- # usdcoins received
-        """
-        tokcoin_amt_send = min(tokcoin_amt_send, self.st.holdings[self.tokcoin])
-        self.st.holdings[self.tokcoin] -= tokcoin_amt_send
-
-        p = self.ppss.trader_ss.fee_percent
-        usdcoin_amt_fee = tokcoin_amt_send * p * price
-        usdcoin_amt_recd = tokcoin_amt_send * (1 - p) * price
-        self.st.holdings[self.usdcoin] += usdcoin_amt_recd
-
-        self.exchange.create_market_sell_order(
-            str(self.predict_feed.pair), tokcoin_amt_send
-        )
-
-        logger.info(
-            "TX: SELL: send %8.2f %s, receive %8.2f %s, fee = %8.4f %s",
-            tokcoin_amt_send,
-            self.tokcoin,
-            usdcoin_amt_recd,
-            self.usdcoin,
-            usdcoin_amt_fee,
-            self.usdcoin,
-        )
-
-        return usdcoin_amt_recd
 
     def disable_realtime_state(self):
         self.do_state_updates = False
@@ -385,7 +293,9 @@ class SimEngine:
         return True, False
 
     @enforce_types
-    def _get_prediction_dataset(self, start_slot: int, end_slot: int) -> Dict[int, Optional[float]]:
+    def _get_prediction_dataset(
+        self, start_slot: int, end_slot: int
+    ) -> Dict[int, Optional[float]]:
         contracts = query_feed_contracts(
             self.ppss.web3_pp.subgraph_url,
             self.ppss.web3_pp.owner_addrs,
@@ -396,10 +306,11 @@ class SimEngine:
         contract_to_use = [
             addr
             for addr, feed in contracts.items()
-            if feed.symbol == f"{self.tokcoin}/{self.usdcoin}"
+            if feed.symbol
+            == f"{self.predict_feed.pair.base_str}/{self.predict_feed.pair.quote_str}"
             and feed.seconds_per_epoch == sPE
         ]
-        
+
         query = f"""
             SELECT
                 slot,
@@ -419,7 +330,7 @@ class SimEngine:
         print("self.ppss.lake_ss.lake_dir--->", self.ppss.lake_ss.lake_dir)
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         df: pl.DataFrame = db.query_data(query)
-        
+
         result_dict = {}
 
         print(df)
@@ -428,3 +339,66 @@ class SimEngine:
                 result_dict[df["slot"][i]] = df["probUp"][i]
 
         return result_dict
+
+    def _get_past_predictions_from_chain(self, ppss: PPSS):
+        # calculate needed data start date
+        current_time_s = int(time.time())
+        timeframe = ppss.trader_ss.feed.timeframe
+        number_of_data_points = ppss.sim_ss.test_n
+        start_date = current_time_s - (timeframe.s * number_of_data_points)
+
+        # check if ppss is correctly configured for data ferching
+        # if start_date < int(
+        #    UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr) / 1000
+        # ):
+        #    logger.info(
+        #        (
+        #            "Lake dates configuration doesn't meet the requirements. "
+        #            "Make sure you set start date before %s"
+        #        ),
+        #        time.strftime("%Y-%m-%d", time.localtime(start_date)),
+        #    )
+        #    return False
+
+        # fetch data from subgraph
+        gql_data_factory = GQLDataFactory(ppss)
+        gql_data_factory._update()
+        time.sleep(3)
+
+        # check if required data exists in the data base
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        query = """
+        (SELECT timestamp
+            FROM pdr_payouts
+            ORDER BY timestamp ASC
+            LIMIT 1)
+            UNION ALL
+            (SELECT timestamp
+            FROM pdr_payouts
+            ORDER BY timestamp DESC
+            LIMIT 1);
+        """
+        data = db.query_data(query)
+        if len(data["timestamp"]) < 2:
+            logger.info(
+                "No prediction data found in database at %s", self.ppss.lake_ss.lake_dir
+            )
+            return False
+        start_timestamp = data["timestamp"][0] / 1000
+        # end_timestamp = data["timestamp"][1] / 1000
+
+        if start_timestamp > start_date:
+            logger.info(
+                (
+                    "Not enough predictions data in the lake. "
+                    "Make sure you fetch data starting from %s up to today"
+                ),
+                time.strftime("%Y-%m-%d", time.localtime(start_date)),
+            )
+            return False
+
+        # if (end_timestamp + timeframe.s) < time.time():
+        #    logger.info("Lake data is not up to date.")
+        #    return False
+
+        return True

@@ -9,9 +9,9 @@ from setuptools import find_packages, setup
 # Installed by pip install pdr-backend
 # or pip install -e .
 install_requirements = [
-    "black==24.3.0",
+    "black==24.4.2",
     "bumpversion",
-    "ccxt==4.3.46",
+    "ccxt==4.3.50",
     "coverage",
     "dash[testing]==2.17.1",
     "dash_bootstrap_components==1.6.0",
@@ -20,7 +20,7 @@ install_requirements = [
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.5.1",
-    "eth-typing==4.3.0",
+    "eth-typing==4.3.1",
     "flask==3.0.3",
     "freezegun==1.5.1",
     "imblearn",
@@ -44,10 +44,10 @@ install_requirements = [
     "requests-mock==1.12.1",
     "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
-    "typeguard==4.2.1",
+    "typeguard==4.3.0",
     "types-pytz==2024.1.0.20240417",
     "types-pyYAML==6.0.12.20240311",
-    "xgboost==2.0.3",
+    "xgboost==2.1.0",
     "dash_bootstrap_components==1.6.0",
     "web3==6.19.0",
     "sapphire.py==0.2.3",
