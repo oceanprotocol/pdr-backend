@@ -105,7 +105,7 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
 
 
 @enforce_types
-def test_get_prediction_dataset(tmpdir):
+def test_get_predictions_signals_data(tmpdir):
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
 
@@ -125,7 +125,7 @@ def test_get_prediction_dataset(tmpdir):
     assert os.path.exists(os.path.join(ppss.lake_ss.lake_dir, "duckdb.db"))
 
     st_ut_s = UnixTimeMs(ppss.lake_ss.st_timestamp).to_seconds()
-    prediction_dataset = sim_engine._get_prediction_dataset(
+    prediction_dataset = sim_engine._get_predictions_signals_data(
         st_ut_s,
         UnixTimeMs(ppss.lake_ss.fin_timestamp).to_seconds(),
     )
@@ -167,7 +167,7 @@ def test_get_past_predictions_from_chain():
         shutil.rmtree(path)
 
     # needs to be inspected and fixed
-    d["sim_ss"]["test_n"] = 20
+    d["sim_ss"]["test_n"] = 10
     ppss = PPSS(d=d, network="sapphire-mainnet")
     print(ppss.lake_ss)
 

@@ -99,7 +99,7 @@ class SimEngine:
             if not chain_prediction_data:
                 return
 
-            self.prediction_dataset = self._get_prediction_dataset(
+            self.prediction_dataset = self._get_predictions_signals_data(
                 UnixTimeMs(self.ppss.lake_ss.st_timestamp).to_seconds(),
                 UnixTimeMs(self.ppss.lake_ss.fin_timestamp).to_seconds(),
             )
@@ -291,7 +291,7 @@ class SimEngine:
         return True, False
 
     @enforce_types
-    def _get_prediction_dataset(
+    def _get_predictions_signals_data(
         self, start_slot: int, end_slot: int
     ) -> Dict[int, Optional[float]]:
         contracts = query_feed_contracts(
@@ -304,8 +304,7 @@ class SimEngine:
         contract_to_use = [
             addr
             for addr, feed in contracts.items()
-            if feed.symbol
-            == f"{self.predict_feed.pair.base_str}/{self.predict_feed.pair.quote_str}"
+            if feed.symbol == f"{self.predict_feed.pair.pair_str}"
             and feed.seconds_per_epoch == sPE
         ]
 
@@ -314,7 +313,6 @@ class SimEngine:
                 slot,
                 CASE
                     WHEN roundSumStakes = 0.0 THEN NULL
-                    WHEN roundSumStakesUp = 0.0 THEN NULL
                     ELSE roundSumStakesUp / roundSumStakes
                 END AS probUp
             FROM
