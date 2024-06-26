@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+import polars as pl
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.gql_data_factory import (
     _GQLDF_REGISTERED_LAKE_TABLES,
@@ -75,6 +76,7 @@ def test_update_end_to_end(
 
 
 def test_update_partial_then_resume(
+    _gql_datafactory_etl_predictions_df,
     _mock_fetch_gql_predictions,
     _mock_fetch_gql_subscriptions,
     _mock_fetch_gql_truevals,
@@ -107,6 +109,11 @@ def test_update_partial_then_resume(
         Slot: _mock_fetch_gql_slots,
     }
 
+    work_1_expected_predictions = _gql_datafactory_etl_predictions_df.filter(
+        pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr)
+    ).filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
+    assert len(work_1_expected_predictions) == 2, "Expected 2 records"
+
     gql_data_factory = GQLDataFactory(ppss)
     with patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._do_swap_to_prod"):
         for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:
@@ -122,10 +129,9 @@ def test_update_partial_then_resume(
         )
 
         assert len(target_records) == 2
+        assert len(target_records) == len(work_1_expected_predictions)
         assert target_records["pair"].to_list() == ["ADA/USDT", "BNB/USDT"]
         assert target_records["timestamp"].to_list() == [1699038000000, 1699124400000]
-
-        print(">>>>>>>>>> Work 1 done")
 
     # Work 2: apply simulated error, update ppss "poorly", and verify it works as expected
     # Inject error by dropping db tables
@@ -150,10 +156,9 @@ def test_update_partial_then_resume(
     st_timestr = "2023-11-03"
     fin_timestr = "2023-11-07"
 
-    mock_predictions = mock_daily_predictions()
     work_2_expected_predictions = [
         x
-        for x in mock_predictions
+        for x in mock_daily_predictions()
         if UnixTimeMs.from_timestr(st_timestr)
         <= x.timestamp * 1000
         <= UnixTimeMs.from_timestr(fin_timestr)
@@ -163,7 +168,15 @@ def test_update_partial_then_resume(
     # manipulate ppss poorly and run gql_data_factory again
     gql_data_factory.ppss.lake_ss.d["st_timestr"] = st_timestr
     gql_data_factory.ppss.lake_ss.d["fin_timestr"] = fin_timestr
-    gql_data_factory._update()
+
+    # patch GQL to pre-process predictions that should already exist in CSV
+    with patch(
+        "pdr_backend.lake.gql_data_factory.GQLDataFactory._prepare_subgraph_fetch",
+        return_value=None,
+    ):
+        new_events_table = NewEventsTable.from_dataclass(Prediction)
+        new_events_table._append_to_db(work_1_expected_predictions, ppss)
+        gql_data_factory._update()
 
     # Verify expected records were written to db
     target_table = Table.from_dataclass(Prediction)
@@ -179,9 +192,10 @@ def test_update_partial_then_resume(
         "ETH/USDT",
         "ETH/USDT",
     ]
+
     assert target_records["timestamp"].to_list() == [
-        1699038000000,
-        1699124400000,
+        1699037900000,
+        1699124300000,
         1699214400000,
         1699300800000,
     ]
@@ -324,7 +338,16 @@ def test_do_subgraph_fetch_stop_loop_when_restarting_fetch(
     assert "Fetched" in caplog.text
 
 
-def test_prepare_subgraph_fetch_empty_prod(tmpdir):
+def test_prepare_subgraph_fetch_empty_prod(
+    _gql_datafactory_etl_predictions_df,
+    _mock_fetch_gql_predictions,
+    _mock_fetch_gql_subscriptions,
+    _mock_fetch_gql_truevals,
+    _mock_fetch_gql_payouts,
+    _mock_fetch_gql_slots,
+    _get_test_DuckDB,
+    tmpdir,
+):
     """
     Test that validates:
     1. after production table is created
@@ -346,51 +369,45 @@ def test_prepare_subgraph_fetch_empty_prod(tmpdir):
     gql_data_factory = GQLDataFactory(ppss)
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
 
+    fns = {
+        Prediction: _mock_fetch_gql_predictions,
+        Subscription: _mock_fetch_gql_subscriptions,
+        Trueval: _mock_fetch_gql_truevals,
+        Payout: _mock_fetch_gql_payouts,
+        Slot: _mock_fetch_gql_slots,
+    }
+    gql_data_factory = GQLDataFactory(ppss)
+
     # Work 1: We're going to validate that the expected data is processed
     # From: Subgraph
     # To: CSV + DB Prod tables
-    # validate what will be returned from overriden function
-    initial_response = mock_daily_predictions()
-    assert len(initial_response) == 6
-
-    # assert what we expect will be processed
-    assert (
-        len(
-            [
-                x
-                for x in initial_response
-                if UnixTimeMs.from_timestr(st_timestr)
-                <= x.timestamp * 1000
-                <= UnixTimeMs.from_timestr(fin_timestr)
-            ]
-        )
-        == 2
-    )
-
-    # setup mock function
-    mocked_function = MagicMock()
-    mocked_function.return_value = initial_response
-    Prediction.get_fetch_function = MagicMock(return_value=mocked_function)
-
     # patch GQL to only process predictions (all daa)
-    with patch(
-        "pdr_backend.lake.gql_data_factory._GQLDF_REGISTERED_LAKE_TABLES", [Prediction]
-    ):
+    work_1_expected_predictions = _gql_datafactory_etl_predictions_df.filter(
+        pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr)
+    ).filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
+    assert len(work_1_expected_predictions) == 2, "Expected 2 records"
 
-        # use update so that the st_timestr and fin_timestr are used
+    work_1_data = None
+    with patch("pdr_backend.lake.gql_data_factory.GQLDataFactory._do_swap_to_prod"):
+        for dataclass in _GQLDF_REGISTERED_LAKE_TABLES:
+            dataclass.get_fetch_function = MagicMock(return_value=fns[dataclass])
         gql_data_factory._update()
 
-    # assert that only the data we were looking for was processed
-    # we're going to verify against this in Work 2
-    table = Table.from_dataclass(Prediction)
-    work_1_data = db.query_data(f"SELECT * FROM {table.table_name}")
-    assert len(work_1_data) == 2
+        db = _get_test_DuckDB(ppss.lake_ss.lake_dir)
+        target_table = NewEventsTable.from_dataclass(Prediction)
+        work_1_data = db.query_data("SELECT * FROM {}".format(target_table.table_name))
+
+        assert len(work_1_data) == 2
+        assert len(work_1_data) == len(work_1_expected_predictions)
+
+        assert work_1_data["pair"].to_list() == ["ADA/USDT", "BNB/USDT"]
+        assert work_1_data["timestamp"].to_list() == [1699038000000, 1699124400000]
 
     # Work 2: We're going to drop records from prod
     # We're going to assert that the data will be correctly loaded from CSV
     # We'll then verify that everything resumes and is processed correctly
     # Drop any tables
-    db.drop_table(table.table_name)
+    db.drop_table(Table.from_dataclass(Prediction).table_name)
     db.drop_table(NewEventsTable.from_dataclass(Prediction).table_name)
     db.drop_table(UpdateEventsTable.from_dataclass(Prediction).table_name)
 
@@ -412,27 +429,31 @@ def test_prepare_subgraph_fetch_empty_prod(tmpdir):
     # This time, we'll adjust the end date so we should have data from csvs + subgraph
     # From the CSV + the rest from the mock_daily_predictions
     # Drop any tables
-    db.drop_table(table.table_name)
+    db.drop_table(Table.from_dataclass(Prediction).table_name)
     db.drop_table(NewEventsTable.from_dataclass(Prediction).table_name)
     db.drop_table(UpdateEventsTable.from_dataclass(Prediction).table_name)
 
     fin_timestr = "2023-11-07"
-    work_3_expected_data = [
-        x
-        for x in initial_response
-        if UnixTimeMs.from_timestr(st_timestr)
-        <= x.timestamp * 1000
-        <= UnixTimeMs.from_timestr(fin_timestr)
-    ]
-    assert len(work_3_expected_data) == 4
+    work_3_expected_data = _gql_datafactory_etl_predictions_df.filter(
+        pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr)
+    ).filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
+    assert len(work_3_expected_data) == 4, "Expected 4 records"
 
     # verify that subgraph prepares everything correctly
-    gql_data_factory.ppss.lake_ss.d["fin_timestr"] = "2023-11-07"
+    gql_data_factory.ppss.lake_ss.d["fin_timestr"] = fin_timestr
+
     # patch GQL to only process predictions (all daa)
     with patch(
-        "pdr_backend.lake.gql_data_factory._GQLDF_REGISTERED_LAKE_TABLES", [Prediction]
+        "pdr_backend.lake.gql_data_factory.GQLDataFactory._prepare_subgraph_fetch",
+        return_value=None,
     ):
-        gql_data_factory._update()
+        with patch(
+            "pdr_backend.lake.gql_data_factory._GQLDF_REGISTERED_LAKE_TABLES",
+            [Prediction],
+        ):
+            new_events_table = NewEventsTable.from_dataclass(Prediction)
+            new_events_table._append_to_db(work_1_data, ppss)
+            gql_data_factory._update()
 
     # assert that the data was loaded from CSV to the temp table
     work_3_data = db.query_data(
