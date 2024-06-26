@@ -35,7 +35,6 @@ install_requirements = [
     "pyarrow==16.1.0",
     "pylint==3.2.3",
     "pytest",
-    # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
     "pytest-asyncio==0.21.1",
     "pytest-env",
     "pytz==2024.1",
@@ -45,8 +44,6 @@ install_requirements = [
     "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
     "typeguard==4.3.0",
-    "types-pytz==2024.1.0.20240417",
-    "types-pyYAML==6.0.12.20240311",
     "xgboost==2.1.0",
     "dash_bootstrap_components==1.6.0",
     "web3==6.19.0",
