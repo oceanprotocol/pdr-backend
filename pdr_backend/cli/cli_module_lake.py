@@ -3,13 +3,11 @@ import logging
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS, LakeArgParser
-
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.lake_info import LakeInfo
-from pdr_backend.lake.lake_validate import LakeValidate
-from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import drop_tables_from_st
+from pdr_backend.lake_info.lake_info import LakeInfo
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -55,8 +53,8 @@ def do_lake_describe(args, ppss):
 
 @enforce_types
 def do_lake_validate(_, ppss):
-    lake_validate = LakeValidate(ppss)
-    lake_validate.run()
+    lake_info = LakeInfo(ppss)
+    lake_info.run_validation()
 
 
 @enforce_types
