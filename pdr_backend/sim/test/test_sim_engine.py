@@ -140,6 +140,7 @@ def test_get_predictions_signals_data(tmpdir):
             LIMIT 1"""
 
     df = db.query_data(test_query)
+    assert df is not None
     assert isinstance(prediction_dataset, dict)
 
     # assert df["slot"][0] in prediction_dataset

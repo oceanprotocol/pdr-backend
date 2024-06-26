@@ -354,8 +354,12 @@ class SimEngine:
             return False
 
         # fetch data from subgraph
-        gql_data_factory = GQLDataFactory(ppss)
-        gql_data_factory._update()
+        try:
+            gql_data_factory = GQLDataFactory(ppss)
+            gql_data_factory._update()
+        except Exception as e:
+            logger.error("Fetching chain data failed. %s", e)
+            return False
         time.sleep(3)
 
         # check if required data exists in the data base
