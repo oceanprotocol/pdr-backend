@@ -30,6 +30,7 @@ predictoor_ss:
   aimodel_data_ss: # used by AimodelDataFactory
     max_n_train: 1000 # no. epochs to train model on
     autoregressive_n: 2 # no. epochs that model looks back, to predict next
+    class_thr: 0.002 # 0.05 = 5%. UP class needs > this, DOWN < this
     transform: None # None -> raw value of signal; RelDiff -> rel % diff
     
   aimodel_ss: # used by AimodelFactory

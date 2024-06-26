@@ -70,6 +70,10 @@ class AimodelDataFactory:
         ybool = np.array([ycont_val >= y_thr for ycont_val in ycont])
         return ybool
 
+    @staticmethod
+    def testshift(self, test_n: int, test_i: int) -> int:
+        return test_n - test_i - 1
+
     def create_xy(
         self,
         mergedohlcv_df: pl.DataFrame,

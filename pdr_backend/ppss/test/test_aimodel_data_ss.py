@@ -15,6 +15,7 @@ def test_aimodel_data_ss__default_values():
 
     assert ss.max_n_train == d["max_n_train"] == 7
     assert ss.autoregressive_n == d["autoregressive_n"] == 3
+    assert ss.class_thr == d["class_thr"] == 0.002
     assert ss.transform == d["transform"] == "None"
 
     # str
@@ -32,6 +33,15 @@ def test_aimodel_data_ss__nondefault_values():
 
     ss = AimodelDataSS(aimodel_data_ss_test_dict(autoregressive_n=13))
     assert ss.autoregressive_n == 13
+    
+    ss = AimodelDataSS(aimodel_data_ss_test_dict(class_thr=0.06))
+    assert ss.class_thr = 0.06
+    
+    ss = AimodelDataSS(aimodel_data_ss_test_dict(class_thr=0.0))
+    assert ss.class_thr = 0.0
+    
+    ss = AimodelDataSS(aimodel_data_ss_test_dict(class_thr=1.0))
+    assert ss.class_thr = 1.0
 
     ss = AimodelDataSS(aimodel_data_ss_test_dict(transform="RelDiff"))
     assert ss.transform == "RelDiff"
@@ -44,6 +54,18 @@ def test_aimodel_data_ss__bad_inputs():
 
     with pytest.raises(TypeError):
         AimodelDataSS(aimodel_data_ss_test_dict(max_n_train=3.1))
+
+    with pytest.raises(ValueError):
+        AimodelDataSS(aimodel_data_ss_test_dict(class_thr=-0.1))
+        
+    with pytest.raises(ValueError):
+        AimodelDataSS(aimodel_data_ss_test_dict(class_thr=1.1))
+        
+    with pytest.raises(TypeError): # floats only, for simplicity
+        AimodelDataSS(aimodel_data_ss_test_dict(class_thr=0))
+        
+    with pytest.raises(TypeError): # floats only, for simplicity
+        AimodelDataSS(aimodel_data_ss_test_dict(class_thr=1))
 
     with pytest.raises(ValueError):
         AimodelDataSS(aimodel_data_ss_test_dict(autoregressive_n=0))

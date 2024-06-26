@@ -57,12 +57,9 @@ class SimTrader:
     def trade_iter(
         self,
         cur_close: float,
-        pred_up,
-        pred_down,
-        conf_up: float,
-        conf_down: float,
         high: float,
         low: float,
+        p: SimModelPrediction,
     ) -> float:
         """
         @description
@@ -74,17 +71,21 @@ class SimTrader:
 
         @arguments
             cur_close -- current price of the token
-            pred_up -- prediction that the price will go up
-            pred_down -- prediction that the price will go down
-            conf_up -- confidence in the prediction that the price will go up
-            conf_down -- confidence in the prediction that the price will go down
-            high -- highest price reached during the period
-            low -- lowest price reached during the period
+            high -- highest price reached during the previous period
+            low -- lowest price reached during the previous period
+            p -- SimModelPrediction. Includes attributes:
+              pred_up -- prediction that the price will go up
+              pred_down -- prediction that the price will go down
+              conf_up -- confidence in the prediction that the price will go up
+              conf_down -- confidence in the prediction that the price will go down
 
 
         @return
             profit -- profit made by the trader in this iteration
         """
+        pred_up, pred_down, conf_up, conf_down = \
+            p.pred_up, p.pred_down, p.conf_up, p.conf_down
+        
         trade_amt = self.ppss.trader_ss.buy_amt_usd.amt_eth
         if self.position_open == "":
             if pred_up:

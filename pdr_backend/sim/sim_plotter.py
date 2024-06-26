@@ -31,7 +31,7 @@ class SimPlotter:
         self,
     ):
         self.st = None
-        self.aimodel_plotdata = None
+        self.aimodel_plotdata_ = None
         self.multi_id = None
 
     @staticmethod
@@ -103,9 +103,7 @@ class SimPlotter:
 
         os.makedirs(f"sim_state/{multi_id}")
 
-    def save_state(
-        self, sim_state, aimodel_plotdata: AimodelPlotdata, is_final: bool = False
-    ):
+    def save_state(self, sim_state, aimodel_plotdata, is_final: bool = False):
         root_path = f"sim_state/{self.multi_id}"
         ts = (
             datetime.now().strftime("%Y%m%d_%H%M%S.%f")[:-3]
@@ -141,7 +139,7 @@ class SimPlotter:
 
     @enforce_types
     def plot_pdr_profit_vs_time(self):
-        y = list(np.cumsum(self.st.pdr_profits_OCEAN))
+        y = list(np.cumsum(self.st.profits.pdr_profits_OCEAN))
         ylabel = "predictoor profit (OCEAN)"
         title = f"Predictoor profit vs time. Current: {y[-1]:.2f} OCEAN"
         fig = make_subplots(rows=1, cols=1, subplot_titles=(title,))
@@ -150,7 +148,7 @@ class SimPlotter:
 
     @enforce_types
     def plot_trader_profit_vs_time(self):
-        y = list(np.cumsum(self.st.trader_profits_USD))
+        y = list(np.cumsum(self.st.profits.trader_profits_USD))
         ylabel = "trader profit (USD)"
         title = f"Trader profit vs time. Current: ${y[-1]:.2f}"
         fig = make_subplots(rows=1, cols=1, subplot_titles=(title,))
@@ -159,8 +157,8 @@ class SimPlotter:
 
     @enforce_types
     def plot_pdr_profit_vs_ptrue(self):
-        x = self.st.probs_up_MERGED
-        y = self.st.pdr_profits_OCEAN
+        x = self.st.classif_base.UP.probs_up
+        y = self.st.profits.pdr_profits_OCEAN
         fig = go.Figure(
             go.Scatter(
                 x=x,
@@ -179,8 +177,8 @@ class SimPlotter:
 
     @enforce_types
     def plot_trader_profit_vs_ptrue(self):
-        x = self.st.probs_up_MERGED
-        y = self.st.trader_profits_USD
+        x = self.st.classif_base.UP.probs_up
+        y = self.st.profits.trader_profits_USD
         fig = go.Figure(
             go.Scatter(
                 x=x,
@@ -200,15 +198,15 @@ class SimPlotter:
     @enforce_types
     def plot_model_performance_vs_time(self):
         # set titles
-        aim = self.st.aim
-        s1 = f"accuracy = {aim.acc_ests[-1]*100:.2f}% "
-        s1 += f"[{aim.acc_ls[-1]*100:.2f}%, {aim.acc_us[-1]*100:.2f}%]"
+        metrics = self.st.metrics.UP
+        s1 = f"accuracy = {metrics.acc_ests[-1]*100:.2f}% "
+        s1 += f"[{metrics.acc_ls[-1]*100:.2f}%, {metrics.acc_us[-1]*100:.2f}%]"
 
-        s2 = f"f1={aim.f1s[-1]:.4f}"
-        s2 += f" [recall={aim.recalls[-1]:.4f}"
-        s2 += f", precision={aim.precisions[-1]:.4f}]"
+        s2 = f"f1={metrics.f1s[-1]:.4f}"
+        s2 += f" [recall={metrics.recalls[-1]:.4f}"
+        s2 += f", precision={metrics.precisions[-1]:.4f}]"
 
-        s3 = f"log loss = {aim.losses[-1]:.4f}"
+        s3 = f"log loss = {metrics.losses[-1]:.4f}"
 
         # make subplots
         fig = make_subplots(
@@ -246,12 +244,12 @@ class SimPlotter:
 
     @enforce_types
     def _add_subplot_accuracy_vs_time(self, fig, row):
-        aim = self.st.aim
-        acc_ests = [100 * a for a in aim.acc_ests]
+        metrics = self.st.metrics.UP
+        acc_ests = [100 * a for a in metrics.acc_ests]
         df = pd.DataFrame(acc_ests, columns=["accuracy"])
-        df["acc_ls"] = [100 * a for a in aim.acc_ls]
-        df["acc_us"] = [100 * a for a in aim.acc_us]
-        df["time"] = range(len(aim.acc_ests))
+        df["acc_ls"] = [100 * a for a in metrics.acc_ls]
+        df["acc_us"] = [100 * a for a in metrics.acc_us]
+        df["time"] = range(len(metrics.acc_ests))
 
         fig.add_traces(
             [
@@ -296,11 +294,11 @@ class SimPlotter:
 
     @enforce_types
     def _add_subplot_f1_precision_recall_vs_time(self, fig, row):
-        aim = self.st.aim
-        df = pd.DataFrame(aim.f1s, columns=["f1"])
-        df["precisions"] = aim.precisions
-        df["recalls"] = aim.recalls
-        df["time"] = range(len(aim.f1s))
+        metrics = self.st.metrics.UP
+        df = pd.DataFrame(metrics.f1s, columns=["f1"])
+        df["precisions"] = metrics.precisions
+        df["recalls"] = metrics.recalls
+        df["time"] = range(len(metrics.f1s))
 
         fig.add_traces(
             [
@@ -344,9 +342,9 @@ class SimPlotter:
 
     @enforce_types
     def _add_subplot_log_loss_vs_time(self, fig, row):
-        aim = self.st.aim
-        df = pd.DataFrame(aim.losses, columns=["log loss"])
-        df["time"] = range(len(aim.losses))
+        metrics = self.st.metrics.UP
+        df = pd.DataFrame(metrics.losses, columns=["log loss"])
+        df["time"] = range(len(metrics.losses))
 
         fig.add_trace(
             go.Scatter(x=df["time"], y=df["log loss"], mode="lines", name="log loss"),
@@ -356,111 +354,10 @@ class SimPlotter:
         fig.update_yaxes(title_text="log loss", row=3, col=1)
 
     @enforce_types
-    def plot_prediction_residuals_dist(self):
-        if _model_is_classif(self.st):
-            return _empty_fig("(Nothing to show because model is a classifier.)")
+    def plot_prediction_residuals_dist(self):    
+        return _empty_fig("(Nothing to show because model is a classifier.)")
+    
 
-        # calc data
-        d = DistPlotdataFactory.build(self.st.aim.yerrs)
-
-        # initialize subplots
-        s1, s2, s3 = "Residuals distribution", "", ""
-        fig = make_subplots(
-            rows=3,
-            cols=1,
-            subplot_titles=(s1, s2, s3),
-            vertical_spacing=0.02,
-            shared_xaxes=True,
-        )
-
-        # fill in subplots
-        add_pdf(fig, d, row=1, col=1)
-        add_cdf(fig, d, row=2, col=1)
-        add_nq(fig, d, row=3, col=1)
-
-        # global: set minor ticks
-        minor = {"ticks": "inside", "showgrid": True}
-        fig.update_yaxes(minor=minor, row=1, col=1)
-        for row in [2, 3, 4, 5]:
-            fig.update_yaxes(minor=minor, row=row, col=1)
-            fig.update_xaxes(minor=minor, row=row, col=1)
-
-        return fig
-
-    @enforce_types
-    def plot_prediction_residuals_other(self):
-        if _model_is_classif(self.st):
-            return _empty_fig()
-
-        # calc data
-        nlags = 10  # magic number alert # FIX ME: have spinner, like ARIMA feeds
-        d = AutocorrelationPlotdataFactory.build(self.st.aim.yerrs, nlags=nlags)
-
-        # initialize subplots
-        s1 = "Residuals vs time"
-        s2 = "Residuals correlogram"
-        fig = make_subplots(
-            rows=2,
-            cols=1,
-            subplot_titles=(s1, s2),
-            vertical_spacing=0.12,
-        )
-
-        # fill in subplots
-        self._add_subplot_residual_vs_time(fig, row=1, col=1)
-        add_corr_traces(
-            fig,
-            d.acf_results,
-            row=2,
-            col=1,
-            ylabel="autocorrelation (ACF)",
-        )
-
-        return fig
-
-    @enforce_types
-    def _add_subplot_residual_vs_time(self, fig, row, col):
-        y = self.st.aim.yerrs
-        self._add_subplot_y_vs_time(fig, y, "residual", "markers", row, col)
-
-    @enforce_types
-    def _add_subplot_y_vs_time(self, fig, y, ylabel, mode, row, col):
-        assert mode in ["markers", "lines"], mode
-        line, marker = None, None
-        if mode == "markers":
-            marker = {"color": "black", "size": 2}
-        elif mode == "lines":
-            line = {"color": "#636EFA"}
-
-        x = list(range(len(y)))
-
-        fig.add_traces(
-            [
-                # points: y vs time
-                go.Scatter(
-                    x=x,
-                    y=y,
-                    mode=mode,
-                    marker=marker,
-                    line=line,
-                    showlegend=False,
-                ),
-                # line: horizontal error = 0
-                go.Scatter(
-                    x=[min(x), max(x)],
-                    y=[0.0, 0.0],
-                    mode="lines",
-                    line={"color": "grey", "dash": "dot"},
-                    showlegend=False,
-                ),
-            ],
-            rows=[row] * 2,
-            cols=[col] * 2,
-        )
-        fig.update_xaxes(title="time", row=row, col=col)
-        fig.update_yaxes(title=ylabel, row=row, col=col)
-
-        return fig
 
 
 @enforce_types
@@ -471,7 +368,7 @@ def file_age_in_seconds(pathname):
 
 @enforce_types
 def _model_is_classif(sim_state) -> bool:
-    yerrs = sim_state.aim.yerrs
+    yerrs = sim_state.metrics.yerrs
     return min(yerrs) == max(yerrs) == 0.0
 
 

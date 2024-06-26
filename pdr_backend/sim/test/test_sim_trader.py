@@ -2,9 +2,7 @@
 
 from unittest.mock import Mock
 
-
 import pytest
-
 
 from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
 from pdr_backend.sim.sim_trader import SimTrader

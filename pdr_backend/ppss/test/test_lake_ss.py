@@ -125,3 +125,17 @@ def test_lake_ss_test_dict_2_specify_feeds(tmpdir):
     d = lake_ss_test_dict(lake_dir, feeds)
     assert d["lake_dir"] == lake_dir
     assert d["feeds"] == feeds
+
+
+@enforce_types
+def test_lake_ss_test_dict_3_nondefault_time_settings(tmpdir):
+    lake_dir = os.path.join(tmpdir, "lake_data")
+    d = lake_ss_test_dict(
+        lake_dir,
+        st_timestr="2023-01-20",
+        fin_timestr="2023-01-21",
+        timeframe="1h",
+    )
+    assert d["st_timestr"] == "2023-01-20"
+    assert d["fin_timesetr"] == "2023-01-21"
+    assert d["timeframe"] == "1h"

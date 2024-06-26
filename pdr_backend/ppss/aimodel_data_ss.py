@@ -24,6 +24,8 @@ class AimodelDataSS(StrMixin):
             raise ValueError(self.max_n_train)
         if not 0 < self.autoregressive_n < np.inf:
             raise ValueError(self.autoregressive_n)
+        if not 0 < self.class_thr <= 1.0:
+            raise ValueError(self.class_thr)
         if self.transform not in TRANSFORM_OPTIONS:
             raise ValueError(self.transform)
 
@@ -44,6 +46,11 @@ class AimodelDataSS(StrMixin):
         For diff=2, add to model_inputs (z[t-1]-z[t-2]) - (z[t-2]-z[t-3]), ..
         """
         return self.d["autoregressive_n"]
+    
+    @property
+    def class_thr(self) -> float:
+        """eg 0.05 = 5%. UP class needs > this, DOWN < this"""
+        return self.d["class_thr1"]
 
     @property
     def transform(self) -> int:
@@ -59,12 +66,14 @@ class AimodelDataSS(StrMixin):
 def aimodel_data_ss_test_dict(
     max_n_train: Optional[int] = None,
     autoregressive_n: Optional[int] = None,
+    class_thr: Optional[float] = None,
     transform: Optional[str] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct AimodelDataSS(d)"""
     d = {
         "max_n_train": 7 if max_n_train is None else max_n_train,
         "autoregressive_n": 3 if autoregressive_n is None else autoregressive_n,
+        "class_thr": 0.002 if class_thr is None else class_thr,
         "transform": transform or "None",
     }
     return d

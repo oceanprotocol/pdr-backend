@@ -95,14 +95,19 @@ class LakeSS(MultiFeedMixin):
 
 
 @enforce_types
-def lake_ss_test_dict(lake_dir: str, feeds: Optional[list] = None):
+def lake_ss_test_dict(
+    lake_dir: str,
+    feeds: Optional[list] = None,
+    st_timestr: Optional[str] = None,
+    fin_timestr: Optional[str] = None,
+    timeframe: Optional[str] = None,
+):
     """Use this function's return dict 'd' to construct LakeSS(d)"""
-    feeds = feeds or ["binance BTC/USDT c 5m"]
     d = {
-        "feeds": feeds,
+        "feeds": feeds or ["binance BTC/USDT c 5m"],
         "lake_dir": lake_dir,
-        "st_timestr": "2023-06-18",
-        "fin_timestr": "2023-06-30",
-        "timeframe": "5m",
+        "st_timestr": st_timestr or "2023-06-18",
+        "fin_timestr": fin_timestr or "2023-06-30",
+        "timeframe": timeframe or "5m",
     }
     return d
