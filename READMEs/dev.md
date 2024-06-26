@@ -2,7 +2,6 @@
 Copyright 2024 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
-
 # Usage for Backend Devs
 
 This is for core devs to improve pdr-backend repo itself.
@@ -125,3 +124,13 @@ pdr trader ppss.yaml sapphire-mainnet
 
 ## Dependencies
 See [dependencies.md](dependencies.md) for more details.
+
+
+## Run licenseheaders
+Run this once a year to update the license headers.
+Since this is not something we do everyday, do not include the dependency in setup.py. Instead, install it manually using pip:
+
+```console
+pip install licenseheaders
+licenseheaders -cy -t ./copyright_template.tmpl -x venv/**.py
+```
