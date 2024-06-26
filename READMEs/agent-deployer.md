@@ -1,3 +1,7 @@
+<!--
+Copyright 2024 Ocean Protocol Foundation
+SPDX-License-Identifier: Apache-2.0
+-->
 # Agent Deployment Tool
 
 `deployer` is a streamlined command-line utility designed for efficiently generating and managing Predictoor agent deployments.
