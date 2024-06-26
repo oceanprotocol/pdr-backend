@@ -118,8 +118,7 @@ class GQLDataFactory:
             db_last_timestamp['max("timestamp")'][0] is None
         ):
             logger.info(
-                "Table %s not yet created. Insert pending csv data",
-                table.table_name
+                "Table %s not yet created. Insert pending csv data", table.table_name
             )
             data = CSVDataStore.from_table(table, self.ppss).read(st_ut, fin_ut, schema)
 
@@ -129,10 +128,7 @@ class GQLDataFactory:
         if db_last_timestamp['max("timestamp")'][0] and (
             csv_last_timestamp > db_last_timestamp['max("timestamp")'][0]
         ):
-            logger.info(
-                "Table %s exists. Insert pending csv data",
-                table.table_name
-            )
+            logger.info("Table %s exists. Insert pending csv data", table.table_name)
             data = CSVDataStore.from_table(table, self.ppss).read(
                 st_ut,
                 fin_ut,
