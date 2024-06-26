@@ -133,6 +133,7 @@ class UnixTimeMs(int):
 
 
 @enforce_types
+<<<<<<< HEAD
 def _tz_offset_from_utc(delta_hours: int):
     """
     Return a timezone that's offset from UTC by the specified # hours.
@@ -169,3 +170,9 @@ def _tz_offset_from_utc(delta_hours: int):
 def dt_now_UTC() -> datetime:
     """Returns the time now, with a guarantee that it's UTC timezone"""
     return datetime.now(UTC)
+=======
+def _dt_now_UTC() -> datetime:
+    dt = datetime.utcnow()
+    dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
+    return dt
+>>>>>>> 9dff3eb (updating tests to improve coverage/tests/validations)
