@@ -1,4 +1,8 @@
 # pylint: disable=redefined-outer-name
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import pytest
 from pdr_backend.deployer.util.models.DeployConfig import DeployConfig
 from pdr_backend.deployer.util.models.AgentDeployConfig import AgentsDeployConfig
