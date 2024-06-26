@@ -27,7 +27,6 @@ from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
-from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 logger = logging.getLogger("sim_engine")
@@ -176,7 +175,7 @@ class SimEngine:
             else:
                 return
 
-        prob_down: Optional[float] = 1.0 - prob_up
+        prob_down: float = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
         conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
         conf_threshold = self.ppss.trader_ss.sim_confidence_threshold
