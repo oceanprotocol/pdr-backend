@@ -14,6 +14,8 @@ from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
 from pdr_backend.sim.dash_plots.callbacks import get_callbacks
 from pdr_backend.sim.dash_plots.view_elements import get_layout
 from pdr_backend.sim.sim_engine import SimEngine
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 @enforce_types
@@ -102,6 +104,48 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
             dash_duo.find_element(f"#{figure_name}")
 
 
+@enforce_types
+def test_get_predictions_signals_data(tmpdir):
+    s = os.path.abspath("ppss.yaml")
+    d = PPSS.constructor_dict(s)
+
+    d["lake_ss"]["lake_dir"] = os.path.join(tmpdir, "lake_data")
+    d["lake_ss"]["st_timestr"] = "2 hours ago"
+    d["trader_ss"]["feed.timeframe"] = "5m"
+    d["sim_ss"]["test_n"] = 20
+    ppss = PPSS(d=d, network="sapphire-mainnet")
+    feedsets = ppss.predictoor_ss.predict_train_feedsets
+    sim_engine = SimEngine(ppss, feedsets[0])
+
+    # Getting prediction dataset
+    sim_engine._get_past_predictions_from_chain(ppss)
+
+    # check the duckdb file exists in the lake directory
+    assert os.path.exists(ppss.lake_ss.lake_dir)
+    assert os.path.exists(os.path.join(ppss.lake_ss.lake_dir, "duckdb.db"))
+
+    st_ut_s = UnixTimeMs(ppss.lake_ss.st_timestamp).to_seconds()
+    prediction_dataset = sim_engine._get_predictions_signals_data(
+        st_ut_s,
+        UnixTimeMs(ppss.lake_ss.fin_timestamp).to_seconds(),
+    )
+
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir)
+    test_query = f"""
+            SELECT 
+                slot
+            FROM pdr_payouts
+            WHERE
+                slot > {st_ut_s}
+            LIMIT 1"""
+
+    df = db.query_data(test_query)
+    assert df is not None
+    assert isinstance(prediction_dataset, dict)
+
+    # assert df["slot"][0] in prediction_dataset
+
+
 def test_get_past_predictions_from_chain():
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
@@ -124,10 +168,10 @@ def test_get_past_predictions_from_chain():
         shutil.rmtree(path)
 
     # needs to be inspected and fixed
-    # d["sim_ss"]["test_n"] = 20
-    # ppss = PPSS(d=d, network="sapphire-mainnet")
-    # print(ppss.lake_ss)
+    d["sim_ss"]["test_n"] = 10
+    ppss = PPSS(d=d, network="sapphire-mainnet")
+    print(ppss.lake_ss)
 
-    # sim_engine = SimEngine(ppss, feedsets[0])
-    # resp = sim_engine._get_past_predictions_from_chain(ppss)
+    sim_engine = SimEngine(ppss, feedsets[0])
+    resp = sim_engine._get_past_predictions_from_chain(ppss)
     # assert resp is True

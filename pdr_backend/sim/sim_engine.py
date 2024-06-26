@@ -2,7 +2,7 @@ import logging
 import os
 import uuid
 import time
-from typing import Optional
+from typing import Optional, Dict
 
 import numpy as np
 import polars as pl
@@ -25,9 +25,9 @@ from pdr_backend.sim.sim_trader import SimTrader
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
+from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 logger = logging.getLogger("sim_engine")
 
@@ -62,6 +62,8 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
 
+        self.crt_trained_model: Optional[Aimodel] = None
+        self.prediction_dataset: Optional[Dict[int, float]] = None
         self.model: Optional[Aimodel] = None
 
     @property
@@ -96,6 +98,10 @@ class SimEngine:
             if not chain_prediction_data:
                 return
 
+            self.prediction_dataset = self._get_predictions_signals_data(
+                UnixTimeMs(self.ppss.lake_ss.st_timestamp).to_seconds(),
+                UnixTimeMs(self.ppss.lake_ss.fin_timestamp).to_seconds(),
+            )
 
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
@@ -112,6 +118,7 @@ class SimEngine:
         revenue = pdr_ss.revenue.amt_eth
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
+
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
         predict_feed = self.predict_train_feedset.predict
         train_feeds = self.predict_train_feedset.train_on
@@ -155,7 +162,19 @@ class SimEngine:
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
 
         # predict price direction
-        prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+        if self.ppss.sim_ss.use_own_model is not False:
+            prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+        else:
+            ut_seconds = ut.to_seconds()
+            if (
+                self.prediction_dataset is not None
+                and ut_seconds in self.prediction_dataset
+            ):
+                # check if the current slot is in the keys
+                prob_up = self.prediction_dataset[ut_seconds]
+            else:
+                return
+
         prob_down: float = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
         conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
@@ -271,6 +290,49 @@ class SimEngine:
         return True, False
 
     @enforce_types
+    def _get_predictions_signals_data(
+        self, start_slot: int, end_slot: int
+    ) -> Dict[int, Optional[float]]:
+        contracts = query_feed_contracts(
+            self.ppss.web3_pp.subgraph_url,
+            self.ppss.web3_pp.owner_addrs,
+        )
+
+        sPE = 300 if self.predict_feed.timeframe == "5m" else 3600
+        # Filter contracts with the correct token pair and timeframe
+        contract_to_use = [
+            addr
+            for addr, feed in contracts.items()
+            if feed.symbol == f"{self.predict_feed.pair.pair_str}"
+            and feed.seconds_per_epoch == sPE
+        ]
+
+        query = f"""
+            SELECT
+                slot,
+                CASE
+                    WHEN roundSumStakes = 0.0 THEN NULL
+                    ELSE roundSumStakesUp / roundSumStakes
+                END AS probUp
+            FROM
+                pdr_payouts
+            WHERE
+                slot > {start_slot}
+                AND slot < {end_slot}
+                AND ID LIKE '{contract_to_use[0]}%'
+        """
+
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        df: pl.DataFrame = db.query_data(query)
+
+        result_dict = {}
+
+        for i in range(len(df)):
+            if df["probUp"][i] is not None:
+                result_dict[df["slot"][i]] = df["probUp"][i]
+
+        return result_dict
+
     def _get_past_predictions_from_chain(self, ppss: PPSS):
         # calculate needed data start date
         current_time_s = int(time.time())
@@ -292,9 +354,12 @@ class SimEngine:
             return False
 
         # fetch data from subgraph
-        gql_data_factory = GQLDataFactory(ppss)
-        etl = ETL(ppss, gql_data_factory)
-        etl.do_etl()
+        try:
+            gql_data_factory = GQLDataFactory(ppss)
+            gql_data_factory._update()
+        except Exception as e:
+            logger.error("Fetching chain data failed. %s", e)
+            return False
         time.sleep(3)
 
         # check if required data exists in the data base
