@@ -122,3 +122,6 @@ pdr trader ppss.yaml sapphire-testnet
 # or, run on mainnet
 pdr trader ppss.yaml sapphire-mainnet
 ```
+
+## Dependencies
+See [dependencies.md](dependencies.md) for more details.
