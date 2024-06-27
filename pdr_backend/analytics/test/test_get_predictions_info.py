@@ -32,6 +32,7 @@ def test_get_predictions_info_main_mainnet(
     )
     predictions_df = _gql_datafactory_first_predictions_df
     predictions_table = NamedTable.from_dataclass(Prediction)
+    predictions_table.make_writable(ppss)
     predictions_table.append_to_storage(predictions_df)
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
@@ -97,6 +98,7 @@ def test_get_predictions_info_bad_date_range(
 
     predictions_df = _gql_datafactory_first_predictions_df
     predictions_table = NamedTable.from_dataclass(Prediction)
+    predictions_table.make_writable(ppss)
     predictions_table.append_to_storage(predictions_df)
 
     feed_addr = "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152"
@@ -152,6 +154,7 @@ def test_get_predictions_info_bad_feed(
 
     predictions_df = _gql_datafactory_first_predictions_df
     predictions_table = NamedTable.from_dataclass(Prediction)
+    predictions_table.make_writable(ppss)
     predictions_table.append_to_storage(predictions_df)
 
     feed_addr = "0x8e0we267779d27c2b3ed5408408ff15d9f3a3152"
@@ -194,6 +197,7 @@ def test_get_predictions_info_empty(_gql_datafactory_first_predictions_df, tmpdi
     )
 
     predictions_table = NamedTable.from_dataclass(Prediction)
+    predictions_table.make_writable(ppss)
     predictions_table.append_to_storage(
         pl.DataFrame([], schema=Prediction.get_lake_schema())
     )

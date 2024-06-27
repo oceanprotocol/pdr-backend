@@ -93,6 +93,7 @@ def test_csv_data_store(
 
     # Initialize Table, fill with data, validate
     table = NamedTable.from_dataclass(Prediction)
+    table.make_writable(ppss)
     table._append_to_csv(_gql_datafactory_first_predictions_df)
 
     assert CSVDataStore.from_table(table, ppss).has_data()
@@ -185,7 +186,6 @@ def test_append_to_db(caplog):
     fin_timestr = "2023-12-05"
 
     # ppss automatically retrieved from locals in NamedTable.from_dataclass
-    # pylint: disable=unused-variable
     ppss = mock_ppss(
         [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
@@ -195,6 +195,7 @@ def test_append_to_db(caplog):
     )
 
     table = NamedTable.from_dataclass(Prediction)
+    table.make_writable(ppss)
     data = pl.DataFrame([mocked_object], Prediction.get_lake_schema())
     table._append_to_db(data)
 

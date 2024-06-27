@@ -79,6 +79,7 @@ class GQLDataFactory:
         """
         table = NamedTable.from_dataclass(dataclass)
         temp_table = TempTable.from_dataclass(dataclass)
+        temp_table.make_writable(self.ppss)
         schema = dataclass.get_lake_schema()
         csv_last_timestamp = CSVDataStore.from_table(
             table, self.ppss
@@ -154,6 +155,7 @@ class GQLDataFactory:
         """
         table = NamedTable.from_dataclass(dataclass)
         temp_table = TempTable.from_dataclass(dataclass)
+        temp_table.make_writable(self.ppss)
 
         logger.info("Fetching data for %s", table.fullname)
         network = get_sapphire_postfix(network)

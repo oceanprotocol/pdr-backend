@@ -67,6 +67,7 @@ class ETL:
             logger.info("move table %s to live", table_name)
             temp_table = TempTable(table_name)
             permanent_table = NamedTable(table_name)
+            permanent_table.make_writable(self.ppss)
 
             if db.table_exists(temp_table.fullname):
                 db.move_table_data(temp_table, permanent_table)
