@@ -148,8 +148,8 @@ def test_etl_do_incremental_bronze_step(_sample_raw_data, _sample_etl):
         # predictions -> 1283
 
         # override ppss timestamps
-        etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_00:40"
-        etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_01:20"
+        etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_00:40:01"
+        etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_01:20:00"
 
         # sim gql_data_factory saving data to storage so it can be processed
         _sample_predictions = (
@@ -222,8 +222,8 @@ def test_etl_do_incremental_bronze_step(_sample_raw_data, _sample_etl):
     def _step3():
         # Step 3: 01:20 - 02:00
         # override ppss timestamps
-        etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_01:20"
-        etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_02:00"
+        etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_01:20:01"
+        etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_02:00:00"
 
         # sim gql_data_factory saving data to storage so it can be processed
         _sample_predictions = (
@@ -417,7 +417,7 @@ def test_etl_do_incremental_broken_date_bronze_step(_sample_etl):
             GROUP BY table_name
         """
         duplicate_records = db.query_data(query_duplicate_summary)
-        assert len(duplicate_records) == 1
+        assert len(duplicate_records) == 0
 
     _step1()
     _step2_introduce_error_in_date()
@@ -429,5 +429,5 @@ def test_etl_do_incremental_broken_date_bronze_step(_sample_etl):
     prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
     prod_valid_payouts = bronze_pdr_predictions_records["payout"].is_not_null().sum()
 
-    assert prod_null_payouts == 198
+    assert prod_null_payouts == 178
     assert prod_valid_payouts == 307
