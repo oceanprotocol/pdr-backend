@@ -66,8 +66,9 @@ class SimEngine:
         if use_live_data:
             data = get_avg_stake_and_accuracy_for_feed(self.predict_feed)
             if data:
-                self.others_accuracy, self.others_stake = data
-                self.others_stake = self.others_stake.amt_eth
+                self.others_accuracy, daily_stake_amt = data
+                epochs_per_day = 288 if self.predict_feed.timeframe == "5m" else 24
+                self.others_stake = daily_stake_amt.amt_eth / epochs_per_day
             else:
                 logger.error(
                     "Error getting live values, using others_stake and others_accuracy"
