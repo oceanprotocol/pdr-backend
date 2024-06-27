@@ -1,9 +1,11 @@
 import os
 import shutil
 import pytest
+import polars as pl
 from dash import Dash
 from enforce_typing import enforce_types
 from selenium.common.exceptions import NoSuchElementException  # type: ignore[import-untyped]
+from unittest.mock import patch, MagicMock
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
@@ -104,7 +106,60 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
             dash_duo.find_element(f"#{figure_name}")
 
 
+def _clear_test_db(ppss):
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir)
+    db.drop_table("pdr_payouts")
+    db.drop_table("pdr_predictions")
+
+
+# Define a mock constructor method
+def mock_gql_update(self, *args, **kwargs):
+    # Your custom logic here, e.g., inserting data into the database
+
+    ppss = self.ppss
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir)
+    slots = [
+        UnixTimeMs.from_natural_language("1 hour ago").to_seconds(),
+        UnixTimeMs.from_natural_language("55 minutes ago").to_seconds(),
+        UnixTimeMs.from_natural_language("50 minutes ago").to_seconds(),
+        UnixTimeMs.from_natural_language("45 minutes ago").to_seconds(),
+    ]
+
+    contract_address = "0xecefd19314ee798921b053694a23974e406da47b"
+    # IDS id = {contract address}-{slot}-{user}
+    IDS = [f"{contract_address}-{slot}-0x00" for slot in slots]
+
+    # timestamps are in ms according to slots
+    timestamps = [slot * 1000 for slot in slots]
+
+    db.insert_to_table(
+        pl.DataFrame(
+            {
+                "ID": IDS,
+                "slot": slots,
+                "payout": [1, 2, 3, 4],
+                "roundSumStakes": [1, 2, 3, 4],
+                "roundSumStakesUp": [1, 2, 3, 4],
+                "timestamp": timestamps,
+            }
+        ),
+        "pdr_payouts",
+    )
+
+    db.insert_to_table(
+        pl.DataFrame(
+            {
+                "timeframe": ["5m"],
+                "contract": [contract_address],
+                "pair": ["BTC/USDT"],
+            }
+        ),
+        "pdr_predictions",
+    )
+
+
 @enforce_types
+@patch("pdr_backend.sim.sim_engine.GQLDataFactory._update", new=mock_gql_update)
 def test_get_predictions_signals_data(tmpdir):
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
@@ -143,9 +198,12 @@ def test_get_predictions_signals_data(tmpdir):
     assert df is not None
     assert isinstance(prediction_dataset, dict)
 
-    # assert df["slot"][0] in prediction_dataset
+    assert df["slot"][0] in prediction_dataset
+
+    _clear_test_db(ppss)
 
 
+@patch("pdr_backend.sim.sim_engine.GQLDataFactory._update", new=mock_gql_update)
 def test_get_past_predictions_from_chain():
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
@@ -174,4 +232,5 @@ def test_get_past_predictions_from_chain():
 
     sim_engine = SimEngine(ppss, feedsets[0])
     resp = sim_engine._get_past_predictions_from_chain(ppss)
-    # assert resp is True
+    assert resp is True
+    _clear_test_db(ppss)

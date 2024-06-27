@@ -118,6 +118,8 @@ class DuckDBDataStore(BaseDataStore):
             })
             insert_to_table(df, "people")
         """
+
+        print(f"insert_to_table table_name = {table_name}")
         # Check if the table exists
         table_names = self.get_table_names()
 
