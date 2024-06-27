@@ -113,11 +113,16 @@ def _clear_test_db(ppss):
     db.drop_table("pdr_predictions")
 
 
-# Define a mock constructor method
-def mock_gql_update(self, *_args, **_kwargs):
-    # Your custom logic here, e.g., inserting data into the database
+def mock_gql_init(self, *args):
+    # assign args.ppss to self.ppss
+    self.ppss = args[0]
 
+    self._update = lambda: mock_gql_update(self)  # Assign the mock update method
+
+
+def mock_gql_update(self):
     ppss = self.ppss
+    print("mock_gql_update--->", ppss.lake_ss.lake_dir)
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
     slots = [
         UnixTimeMs.from_natural_language("1 hour ago").to_seconds(),
@@ -160,7 +165,7 @@ def mock_gql_update(self, *_args, **_kwargs):
 
 
 @enforce_types
-@patch("pdr_backend.sim.sim_engine.GQLDataFactory._update", new=mock_gql_update)
+@patch("pdr_backend.sim.sim_engine.GQLDataFactory.__init__", new=mock_gql_init)
 def test_get_predictions_signals_data(tmpdir):
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
@@ -201,10 +206,8 @@ def test_get_predictions_signals_data(tmpdir):
 
     assert df["slot"][0] in prediction_dataset
 
-    _clear_test_db(ppss)
 
-
-@patch("pdr_backend.sim.sim_engine.GQLDataFactory._update", new=mock_gql_update)
+@patch("pdr_backend.sim.sim_engine.GQLDataFactory.__init__", new=mock_gql_init)
 def test_get_past_predictions_from_chain():
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
