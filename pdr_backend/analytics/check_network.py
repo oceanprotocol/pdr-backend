@@ -129,7 +129,7 @@ def do_query_network(subgraph_url: str, lookback_hours: int):
                         }
                         expireTime
                     }
-                    slots(where:{slot_lt:%s, slot_gt:%s} orderBy: slot orderDirection:desc first:1000){
+                    slots(where:{slot_lt:%s, slot_gt:%s} orderBy: slot orderDirection:desc first:900){
                         slot
                         roundSumStakesUp
                         roundSumStakes
