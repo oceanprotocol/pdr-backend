@@ -12,7 +12,7 @@ from pdr_backend.util.currency_types import Eth
 def get_avg_stake_and_accuracy_for_feed(feed: ArgFeed) -> Optional[tuple]:
     """
     Returns a tuple of:
-        average accuracy (1 week average for 5m and 4 weeks for 1h feeds) 
+        average accuracy (1 week average for 5m and 4 weeks for 1h feeds)
         total staked tokens in a day for the given feed.
     """
     feed_name = feed.pair.pair_str
