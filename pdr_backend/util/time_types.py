@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 from typing import Union
 
 import dateparser
-import pytz
 from enforce_typing import enforce_types
 from numpy import int64
 
@@ -63,7 +62,7 @@ class UnixTimeMs(int):
     def from_natural_language(nat_lang: str) -> "UnixTimeMs":
         try:
             dt = dateparser.parse(nat_lang, settings={"RETURN_AS_TIMEZONE_AWARE": True})
-            dt = dt.astimezone(pytz.utc)
+            dt = dt.astimezone(timezone.utc)
 
             return UnixTimeMs.from_dt(dt)
         except AttributeError as e:
