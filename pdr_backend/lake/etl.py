@@ -308,10 +308,12 @@ class ETL:
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
 
         # if st_ts or fin_ts != ppss, then we must have records somewhere
-        is_first_run: bool = (
-            st_timestamp != self.ppss.lake_ss.st_timestamp
-            or self.ppss.lake_ss.st_timestamp is None
+        is_first_run: bool = self._clamp_checkpoints_to_ppss is True or (
+            st_timestamp == self.ppss.lake_ss.st_timestamp
+            and fin_timestamp == self.ppss.lake_ss.fin_timestamp
         )
+
+        print(">>>> is_first_run", is_first_run)
 
         for etl_query in _ETL_REGISTERED_QUERIES:
             etl_query(
