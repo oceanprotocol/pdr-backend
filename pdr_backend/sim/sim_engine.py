@@ -26,7 +26,6 @@ from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.subgraph.subgraph_feed_contracts import query_feed_contracts
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 logger = logging.getLogger("sim_engine")
@@ -293,19 +292,22 @@ class SimEngine:
     def _get_predictions_signals_data(
         self, start_slot: int, end_slot: int
     ) -> Dict[int, Optional[float]]:
-        contracts = query_feed_contracts(
-            self.ppss.web3_pp.subgraph_url,
-            self.ppss.web3_pp.owner_addrs,
-        )
-
-        sPE = 300 if self.predict_feed.timeframe == "5m" else 3600
-        # Filter contracts with the correct token pair and timeframe
-        contract_to_use = [
-            addr
-            for addr, feed in contracts.items()
-            if feed.symbol == f"{self.predict_feed.pair.pair_str}"
-            and feed.seconds_per_epoch == sPE
-        ]
+        result_dict: Dict[int, Optional[float]] = {}
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        query_cont = f"""
+            SELECT
+                contract
+            FROM
+                pdr_predictions
+            WHERE
+                timeframe = '{self.predict_feed.timeframe}'
+                AND pair = '{self.predict_feed.pair.pair_str}'
+            LIMIT 1
+        """
+        feed_contract_addr = db.query_data(query_cont)
+        if len(feed_contract_addr) == 0:
+            logger.error("Contract address for the given feed not found in database")
+            return result_dict
 
         query = f"""
             SELECT
@@ -319,13 +321,10 @@ class SimEngine:
             WHERE
                 slot > {start_slot}
                 AND slot < {end_slot}
-                AND ID LIKE '{contract_to_use[0]}%'
+                AND ID LIKE '{feed_contract_addr.row(0)[0]}%'
         """
 
-        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
         df: pl.DataFrame = db.query_data(query)
-
-        result_dict = {}
 
         for i in range(len(df)):
             if df["probUp"][i] is not None:
@@ -359,8 +358,6 @@ class SimEngine:
             gql_data_factory._update()
         except Exception as e:
             logger.error("Fetching chain data failed. %s", e)
-            return False
-        time.sleep(3)
 
         # check if required data exists in the data base
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
@@ -376,7 +373,8 @@ class SimEngine:
             LIMIT 1);
         """
         data = db.query_data(query)
-        if len(data["timestamp"]) < 2:
+
+        if (data is not None) and (len(data["timestamp"]) < 2):
             logger.info(
                 "No prediction data found in database at %s", self.ppss.lake_ss.lake_dir
             )
