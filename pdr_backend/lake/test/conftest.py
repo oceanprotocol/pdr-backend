@@ -611,9 +611,13 @@ def setup_data(
         "pdr_slots": NamedTable.from_dataclass(Slot),
     }
 
+    gql_tables["pdr_predictions"].make_writable(ppss)
     gql_tables["pdr_predictions"].append_to_storage(preds)
+    gql_tables["pdr_truevals"].make_writable(ppss)
     gql_tables["pdr_truevals"].append_to_storage(truevals)
+    gql_tables["pdr_payouts"].make_writable(ppss)
     gql_tables["pdr_payouts"].append_to_storage(payouts)
+    gql_tables["pdr_slots"].make_writable(ppss)
     gql_tables["pdr_slots"].append_to_storage(slots)
 
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)

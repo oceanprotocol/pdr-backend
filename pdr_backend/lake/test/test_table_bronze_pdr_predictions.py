@@ -43,8 +43,11 @@ def test_table_bronze_pdr_predictions(
     }
 
     # Work 1: Append all data onto bronze_table
+    gql_tables["pdr_predictions"].make_writable(ppss)
     gql_tables["pdr_predictions"].append_to_storage(_gql_datafactory_etl_predictions_df)
+    gql_tables["pdr_truevals"].make_writable(ppss)
     gql_tables["pdr_truevals"].append_to_storage(_gql_datafactory_etl_truevals_df)
+    gql_tables["pdr_payouts"].make_writable(ppss)
     gql_tables["pdr_payouts"].append_to_storage(_gql_datafactory_etl_payouts_df)
 
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
