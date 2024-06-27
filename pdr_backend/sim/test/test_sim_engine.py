@@ -1,11 +1,12 @@
 import os
 import shutil
+from unittest.mock import patch
+
 import pytest
 import polars as pl
 from dash import Dash
 from enforce_typing import enforce_types
 from selenium.common.exceptions import NoSuchElementException  # type: ignore[import-untyped]
-from unittest.mock import patch, MagicMock
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
@@ -113,7 +114,7 @@ def _clear_test_db(ppss):
 
 
 # Define a mock constructor method
-def mock_gql_update(self, *args, **kwargs):
+def mock_gql_update(self, *_args, **_kwargs):
     # Your custom logic here, e.g., inserting data into the database
 
     ppss = self.ppss
