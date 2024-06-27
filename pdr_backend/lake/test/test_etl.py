@@ -5,6 +5,8 @@
 import pytest
 from enforce_typing import enforce_types
 
+import polars as pl
+
 from pdr_backend.lake.table import Table, NewEventsTable
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.payout import Payout
@@ -87,8 +89,8 @@ def test_etl_do_bronze_step(_sample_etl):
 @pytest.mark.parametrize(
     "_sample_etl", [("2024-05-05_00:00", "2024-05-05_00:40")], indirect=True
 )
-def test_etl_do_incremental_bronze_step(_sample_etl):
-    etl, db, _ = _sample_etl
+def test_etl_do_incremental_bronze_step(_sample_raw_data, _sample_etl):
+    etl, db, gql_tables = _sample_etl
 
     # We are gonna operate the ETL manually in 3 steps
     etl._clamp_checkpoints_to_ppss = True
@@ -126,19 +128,12 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
             and {bronze_prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
         """
         bronze_pdr_predictions_records = db.query_data(query)
-        # bronze_pdr_predictions_records.write_csv('step_1_bronze_pdr_predictions_records.csv')
 
         # get count of null and valid prediction.payouts
         prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
         prod_valid_payouts = (
             bronze_pdr_predictions_records["payout"].is_not_null().sum()
         )
-
-        # df = bronze_pdr_predictions_records.filter(pl.col("payout").is_null())
-        # df.write_csv('step_1_bronze_pdr_predictions_records_null.csv')
-
-        # df = bronze_pdr_predictions_records.filter(pl.col("payout").is_not_null())
-        # df.write_csv('step_1_bronze_pdr_predictions_records_not_null.csv')
 
         # assert those numbers so we can track progress
         assert prod_null_payouts == 178
@@ -155,6 +150,32 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         # override ppss timestamps
         etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_00:40"
         etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_01:20"
+
+        # sim gql_data_factory saving data to storage so it can be processed
+        _sample_predictions = (
+            _sample_raw_data["pdr_predictions"]
+            .filter(pl.col("timestamp") >= etl.ppss.lake_ss.st_timestamp)
+            .filter(pl.col("timestamp") <= etl.ppss.lake_ss.fin_timestamp)
+        )
+
+        _sample_payouts = (
+            _sample_raw_data["pdr_payouts"]
+            .filter(pl.col("timestamp") >= etl.ppss.lake_ss.st_timestamp)
+            .filter(pl.col("timestamp") <= etl.ppss.lake_ss.fin_timestamp)
+        )
+
+        def _transform_columns(df, dtype_mapping):
+            for column, dtype in dtype_mapping.items():
+                df = df.with_columns(df[column].cast(dtype).alias(column))
+            return df
+
+        _sample_predictions = _transform_columns(
+            _sample_predictions, Prediction.get_lake_schema()
+        )
+        _sample_payouts = _transform_columns(_sample_payouts, Payout.get_lake_schema())
+
+        gql_tables["pdr_predictions"].append_to_storage(_sample_predictions, etl.ppss)
+        gql_tables["pdr_payouts"].append_to_storage(_sample_payouts, etl.ppss)
 
         # get all predictions we expect to end up in bronze table
         prediction_table = Table.from_dataclass(Prediction).table_name
@@ -184,19 +205,12 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
             and {bronze_prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
         """
         bronze_pdr_predictions_records = db.query_data(query)
-        # bronze_pdr_predictions_records.write_csv('step_2_bronze_pdr_predictions_records.csv')
 
         # get count of null and valid prediction.payouts
         prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
         prod_valid_payouts = (
             bronze_pdr_predictions_records["payout"].is_not_null().sum()
         )
-
-        # df = bronze_pdr_predictions_records.filter(pl.col("payout").is_null())
-        # df.write_csv('step_2_bronze_pdr_predictions_records_null.csv')
-
-        # df = bronze_pdr_predictions_records.filter(pl.col("payout").is_not_null())
-        # df.write_csv('step_2_bronze_pdr_predictions_records_not_null.csv')
 
         # assert those numbers so we can track progress
         assert prod_null_payouts == 290
@@ -210,6 +224,32 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         # override ppss timestamps
         etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_01:20"
         etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_02:00"
+
+        # sim gql_data_factory saving data to storage so it can be processed
+        _sample_predictions = (
+            _sample_raw_data["pdr_predictions"]
+            .filter(pl.col("timestamp") >= etl.ppss.lake_ss.st_timestamp)
+            .filter(pl.col("timestamp") <= etl.ppss.lake_ss.fin_timestamp)
+        )
+
+        _sample_payouts = (
+            _sample_raw_data["pdr_payouts"]
+            .filter(pl.col("timestamp") >= etl.ppss.lake_ss.st_timestamp)
+            .filter(pl.col("timestamp") <= etl.ppss.lake_ss.fin_timestamp)
+        )
+
+        def _transform_columns(df, dtype_mapping):
+            for column, dtype in dtype_mapping.items():
+                df = df.with_columns(df[column].cast(dtype).alias(column))
+            return df
+
+        _sample_predictions = _transform_columns(
+            _sample_predictions, Prediction.get_lake_schema()
+        )
+        _sample_payouts = _transform_columns(_sample_payouts, Payout.get_lake_schema())
+
+        gql_tables["pdr_predictions"].append_to_storage(_sample_predictions, etl.ppss)
+        gql_tables["pdr_payouts"].append_to_storage(_sample_payouts, etl.ppss)
 
         # get all predictions we expect to end up in bronze table
         prediction_table = Table.from_dataclass(Prediction).table_name
@@ -239,19 +279,12 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
             and {bronze_prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
         """
         bronze_pdr_predictions_records = db.query_data(query)
-        # bronze_pdr_predictions_records.write_csv('step_3_bsronze_pdr_predictions_records.csv')
 
         # get count of null and valid prediction.payouts
         prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
         prod_valid_payouts = (
             bronze_pdr_predictions_records["payout"].is_not_null().sum()
         )
-
-        # df = bronze_pdr_predictions_records.filter(pl.col("payout").is_null())
-        # df.write_csv('step_3_bronze_pdr_predictions_records_null.csv')
-
-        # df = bronze_pdr_predictions_records.filter(pl.col("payout").is_not_null())
-        # df.write_csv('step_3_bronze_pdr_predictions_records_not_null.csv')
 
         # assert those numbers so we can track progress
         assert prod_null_payouts == 247
@@ -282,3 +315,119 @@ def test_etl_do_incremental_bronze_step(_sample_etl):
         prod_null_payouts + prod_valid_payouts
         == bronze_pdr_predictions_records.shape[0]
     )
+
+
+# pylint: disable=too-many-statements
+@enforce_types
+@pytest.mark.parametrize(
+    "_sample_etl", [("2024-05-05_00:00", "2024-05-05_00:40")], indirect=True
+)
+def test_etl_do_incremental_broken_date_bronze_step(_sample_etl):
+    etl, db, _ = _sample_etl
+
+    # We are gonna operate the ETL manually in 3 steps
+    etl._clamp_checkpoints_to_ppss = True
+    prediction_table = Table.from_dataclass(Prediction).table_name
+    bronze_prediction_table = Table.from_dataclass(BronzePrediction).table_name
+
+    def _step1():
+        print(">>>>>> _step1")
+        # Step 1: 00:00 - 00:40
+        # payouts -> 361
+        # predictions -> 544
+
+        # get all predictions we expect to end up in bronze table
+        query = f"""
+        SELECT 
+            * 
+        FROM {prediction_table}
+        where
+            {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
+        """
+        expected_rows = db.query_data(query)
+        assert len(expected_rows) == 485
+
+        # execute the ETL
+        etl.do_bronze_step()
+        etl._do_bronze_swap_to_prod_atomic()
+
+        # get all bronze_pdr_predictions for this period
+        bronze_prediction_table = Table.from_dataclass(BronzePrediction).table_name
+        query = f"""
+        SELECT 
+            * 
+        FROM {bronze_prediction_table}
+        where
+            {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {bronze_prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
+        """
+        bronze_pdr_predictions_records = db.query_data(query)
+
+        # get count of null and valid prediction.payouts
+        prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
+        prod_valid_payouts = (
+            bronze_pdr_predictions_records["payout"].is_not_null().sum()
+        )
+
+        # assert those numbers so we can track progress
+        assert prod_null_payouts == 178
+        assert prod_valid_payouts == 307
+
+        # validate that rows are equal to what we expected
+        assert prod_null_payouts + prod_valid_payouts == len(expected_rows)
+
+    def _step2_introduce_error_in_date():
+        print(">>>>>> _step2_introduce_error_in_date")
+        # Step 2: 00:00 - 00:35
+        # new_payouts -> 0
+        # new_predictions -> 0
+        # new bronze_pdr_predictions -> 0
+
+        # disable clamp so checkpoint algo runs
+        etl._clamp_checkpoints_to_ppss = False
+
+        # override ppss timestamps to a date we aleady processed
+        # this introduces room for errors and duplicates
+        etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_00:00"
+        etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_00:35"
+
+        # execute the ETL
+        etl.do_bronze_step()
+
+        # do the final swap
+        etl._do_bronze_swap_to_prod_atomic()
+
+        # get all bronze_pdr_predictions for this period
+        bronze_prediction_table = Table.from_dataclass(BronzePrediction).table_name
+
+        # validate we have 0 duplicates
+        query_duplicate_summary = f"""
+            SELECT
+                '{bronze_prediction_table}' as table_name,
+                COUNT(*) as incident_count
+            FROM (
+                SELECT
+                    ID as ID,
+                    timestamp,
+                FROM {bronze_prediction_table}
+                GROUP BY ID, timestamp
+                HAVING COUNT(*) > 1
+            ) as inner_query
+            GROUP BY table_name
+        """
+        duplicate_records = db.query_data(query_duplicate_summary)
+        assert len(duplicate_records) == 1
+
+    _step1()
+    _step2_introduce_error_in_date()
+
+    # get count of final prod table
+    bronze_pdr_predictions_records = db.query_data(
+        f"SELECT * FROM {bronze_prediction_table}"
+    )
+    prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
+    prod_valid_payouts = bronze_pdr_predictions_records["payout"].is_not_null().sum()
+
+    assert prod_null_payouts == 198
+    assert prod_valid_payouts == 307

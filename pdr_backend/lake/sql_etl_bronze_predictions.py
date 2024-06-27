@@ -11,7 +11,7 @@ from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 # pylint: disable=unused-argument
 def _do_sql_bronze_predictions(
-    db: DuckDBDataStore, st_ms: UnixTimeMs, fin_ms: UnixTimeMs
+    db: DuckDBDataStore, st_ms: UnixTimeMs, fin_ms: UnixTimeMs, first_run: bool = False
 ) -> None:
     # historical prediction events
     bronze_prediction_table = Table.from_dataclass(BronzePrediction)
@@ -28,14 +28,6 @@ def _do_sql_bronze_predictions(
     temp_update_bronze_prediction_table = TempUpdateTable.from_dataclass(
         BronzePrediction
     )
-
-    # df = db.query_data(f"SELECT * FROM {new_events_bronze_prediction_table.table_name}")
-    # df.write_csv("pre_query_new_events_bronze_prediction_table.csv")
-
-    # df = db.query_data(
-    #     f"SELECT * FROM {update_events_bronze_prediction_table.table_name}"
-    # )
-    # df.write_csv("pre_query_update_events_bronze_prediction_table.csv")
 
     query = f"""
     -- Consider that trueval + payout events can happen within seconds from each other
@@ -121,9 +113,3 @@ def _do_sql_bronze_predictions(
         BronzePrediction.get_lake_schema(),
     )
     db.execute_sql(query)
-
-    # df = db.query_data(f"SELECT * FROM {temp_bronze_prediction_table.table_name}")
-    # df.write_csv("post_query_temp_bronze_prediction_table.csv")
-
-    # df = db.query_data(f"SELECT * FROM {temp_update_bronze_prediction_table.table_name}")
-    # df.write_csv("post_query_temp_update_bronze_prediction_table.csv")

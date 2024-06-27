@@ -4,6 +4,7 @@
 #
 import os
 from typing import List
+from unittest.mock import patch
 
 import polars as pl
 import pytest
@@ -422,6 +423,7 @@ def _gql_datafactory_etl_slots_df():
     _slots = mock_etl_slots()
     slots_df = _object_list_to_df(_slots)
     slots_df = slots_df.with_columns([pl.col("timestamp").mul(1000).alias("timestamp")])
+    print("_gql_datafactory_etl_slots_df", slots_df)
     return slots_df
 
 
@@ -667,6 +669,15 @@ def _sample_raw_data(request):
     predictions_df = pl.read_csv(os.path.join(test_dir, "pdr_predictions.csv"))
     payouts_df = pl.read_csv(os.path.join(test_dir, "pdr_payouts.csv"))
 
+    predictions_schema_order = list(Prediction.get_lake_schema().keys())
+    payouts_schema_order = list(Payout.get_lake_schema().keys())
+
+    predictions_df = predictions_df[predictions_schema_order]
+    payouts_df = payouts_df[payouts_schema_order]
+
+    print(">>>>> _sample_raw_data predictions_df", predictions_df.dtypes)
+    print(">>>>> _sample_raw_data payouts_df", payouts_df.dtypes)
+
     return {"pdr_predictions": predictions_df, "pdr_payouts": payouts_df}
 
 
@@ -681,22 +692,41 @@ def _sample_etl(
     st_timestr = request.param[0]
     fin_timestr = request.param[1]
 
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
+    ppss = None
+    gql_data_factory = None
+
+    with patch(
+        "pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner",
+        return_value=[],
+    ):
+        ppss, gql_data_factory = _gql_data_factory(
+            tmpdir,
+            "binanceus ETH/USDT h 5m",
+            st_timestr,
+            fin_timestr,
+        )
 
     gql_tables = {
         "pdr_predictions": Table.from_dataclass(Prediction),
         "pdr_payouts": Table.from_dataclass(Payout),
     }
 
-    gql_tables["pdr_predictions"].append_to_storage(
-        _sample_raw_data["pdr_predictions"], ppss
+    # only add to storage the data that falls within the time range
+    # everything else should be sim-fetched via gql_data_factory or another patch
+    _sample_predictions = (
+        _sample_raw_data["pdr_predictions"]
+        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
+        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
     )
-    gql_tables["pdr_payouts"].append_to_storage(_sample_raw_data["pdr_payouts"], ppss)
+
+    _sample_payouts = (
+        _sample_raw_data["pdr_payouts"]
+        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
+        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
+    )
+
+    gql_tables["pdr_predictions"].append_to_storage(_sample_predictions, ppss)
+    gql_tables["pdr_payouts"].append_to_storage(_sample_payouts, ppss)
 
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)

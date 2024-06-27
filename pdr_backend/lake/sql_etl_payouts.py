@@ -5,12 +5,15 @@ from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 
-def _do_sql_payouts(db: DuckDBDataStore, st_ms: UnixTimeMs, fin_ms: UnixTimeMs) -> None:
-
+def _do_sql_payouts(
+    db: DuckDBDataStore, st_ms: UnixTimeMs, fin_ms: UnixTimeMs, first_run: bool = False
+) -> None:
     payout_table = Table.from_dataclass(Payout)
     update_events_bronze_prediction_table = UpdateEventsTable.from_dataclass(
         BronzePrediction
     )
+
+    st_ms_conditional_check = ">=" if first_run else ">"
 
     query = f"""
     -- Define a CTE to select data once and use it multiple times
@@ -26,7 +29,7 @@ def _do_sql_payouts(db: DuckDBDataStore, st_ms: UnixTimeMs, fin_ms: UnixTimeMs) 
     from
         {payout_table.table_name}
     where
-        {payout_table.table_name}.timestamp >= {st_ms}
+        {payout_table.table_name}.timestamp {st_ms_conditional_check} {st_ms}
         and {payout_table.table_name}.timestamp <= {fin_ms}
     )
 
@@ -59,6 +62,3 @@ def _do_sql_payouts(db: DuckDBDataStore, st_ms: UnixTimeMs, fin_ms: UnixTimeMs) 
         BronzePrediction.get_lake_schema(),
     )
     db.execute_sql(query)
-
-    # df = db.query_data(f"SELECT * FROM {payout_table.table_name}")
-    # df.write_csv(f"{payout_table.table_name}.csv")

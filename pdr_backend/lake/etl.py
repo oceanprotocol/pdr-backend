@@ -300,29 +300,6 @@ class ETL:
 
         return from_timestamp, to_timestamp
 
-    def update_bronze_pdr(self):
-        """
-        @description
-            Update bronze tables
-        """
-        logger.info(">>>> REQUIRED ETL - Update bronze tables.")
-
-        # st_timestamp and fin_timestamp should be valid UnixTimeMS
-        st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
-
-        for dataclass in _ETL_REGISTERED_LAKE_TABLES:
-            etl_func = dataclass.get_fetch_function()
-            etl_func(
-                path=self.ppss.lake_ss.lake_dir,
-                st_ms=st_timestamp,
-                fin_ms=fin_timestamp,
-            )
-
-            logger.info(
-                "update_bronze_pdr - Inserting data into %s",
-                dataclass.get_lake_table_name(),
-            )
-
     def do_bronze_queries(self):
         """
         @description
@@ -334,11 +311,15 @@ class ETL:
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
 
+        # if st_ts or fin_ts != ppss, then we must have records somewhere
+        is_first_run: bool = (
+            st_timestamp != self.ppss.lake_ss.st_timestamp
+            or self.ppss.lake_ss.st_timestamp is None
+        )
+
         for etl_query in _ETL_REGISTERED_QUERIES:
             etl_query(
-                db,
-                st_ms=st_timestamp,
-                fin_ms=fin_timestamp,
+                db=db, st_ms=st_timestamp, fin_ms=fin_timestamp, first_run=is_first_run
             )
 
             logger.info(
