@@ -62,6 +62,31 @@ def test_from_timestr():
 
 
 @enforce_types
+def test_from_natural_language():
+    def calculate_ago_time_from_now(dayCount=1) -> int:
+        # calculate the time in ms
+        now = datetime.datetime.now()
+        delta = datetime.timedelta(days=dayCount)
+        ago = now - delta
+        return int(ago.timestamp() * 1000)
+
+    now_value_dt = datetime.datetime.now().timestamp() * 1000
+    t = UnixTimeMs.from_natural_language("now")
+    assert t >= now_value_dt
+
+    # ensure it returns an int
+    assert isinstance(UnixTimeMs.from_natural_language("now"), int)
+
+    two_days_ago = calculate_ago_time_from_now(2)
+    assert isinstance(UnixTimeMs.from_natural_language("2 days ago"), int)
+    assert UnixTimeMs.from_natural_language("2 days ago") >= two_days_ago
+
+    # test error
+    with pytest.raises(ValueError):
+        UnixTimeMs.from_natural_language("::::::::")
+
+
+@enforce_types
 def test_from_iso_timestr():
     t_iso_str = "2024-04-16T03:35:00.000Z"
     t_UnixTimeMs = UnixTimeMs.from_iso_timestr(t_iso_str)
