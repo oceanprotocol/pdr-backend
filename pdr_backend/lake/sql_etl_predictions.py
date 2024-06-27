@@ -6,11 +6,12 @@ from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 
 def _do_sql_predictions(
-    db: DuckDBDataStore, st_ms: UnixTimeMs, fin_ms: UnixTimeMs
+    db: DuckDBDataStore, st_ms: UnixTimeMs, fin_ms: UnixTimeMs, first_run: bool = False
 ) -> None:
-
     prediction_table = Table.from_dataclass(Prediction)
     new_events_bronze_prediction_table = NewEventsTable.from_dataclass(BronzePrediction)
+
+    st_ms_conditional_check = ">=" if first_run else ">"
 
     query = f"""
     -- Define a CTE to select data once and use it multiple times
@@ -36,7 +37,7 @@ def _do_sql_predictions(
     from
         {prediction_table.table_name}
     where
-        {prediction_table.table_name}.timestamp >= {st_ms}
+        {prediction_table.table_name}.timestamp {st_ms_conditional_check} {st_ms}
         and {prediction_table.table_name}.timestamp <= {fin_ms}
     )
 
@@ -51,6 +52,3 @@ def _do_sql_predictions(
         BronzePrediction.get_lake_schema(),
     )
     db.execute_sql(query)
-
-    # df = db.query_data(f"SELECT * FROM {new_events_bronze_prediction_table.table_name}")
-    # df.write_csv(f"{new_events_bronze_prediction_table.table_name}.csv")
