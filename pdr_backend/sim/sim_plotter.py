@@ -70,17 +70,14 @@ class SimPlotter:
             raise Exception("No state files found. Please run the simulation first.")
 
         if not os.path.exists(f"{root_path}/st_final.pkl"):
-            # plot previous state to avoid using a pickle that hasn't finished
-            all_state_files = glob.glob(f"{root_path}/st_*.pkl")
-            all_state_files.sort()
-            latest_file = all_state_files[-1]
-            with open(latest_file, "rb") as f:
+            latest_st_file, latest_aimodel_file = _get_latest_usable_state(root_path)
+            with open(latest_st_file, "rb") as f:
                 self.st = pickle.load(f)
 
-            with open(latest_file.replace("st_", "aimodel_plotdata_"), "rb") as f:
+            with open(latest_aimodel_file, "rb") as f:
                 self.aimodel_plotdata = pickle.load(f)
 
-            return self.st, latest_file.replace(f"{root_path}/st_", "").replace(
+            return self.st, latest_st_file.replace(f"{root_path}/st_", "").replace(
                 ".pkl", ""
             )
 
@@ -487,3 +484,31 @@ def _empty_fig(title=""):
     fig.update_xaxes(visible=False, showgrid=False, gridcolor=w, zerolinecolor=w)
     fig.update_yaxes(visible=False, showgrid=False, gridcolor=w, zerolinecolor=w)
     return fig
+
+
+@enforce_types
+def _get_latest_usable_state(root_path: str):
+    all_state_files = glob.glob(f"{root_path}/st_*.pkl")
+    all_state_files.sort()
+    latest_file = all_state_files[-1]
+
+    aimodel_filename = latest_file.replace("st_", "aimodel_plotdata_")
+
+    if os.path.exists(aimodel_filename):
+        return latest_file, aimodel_filename
+
+    # if the process was interrupted on aimodel filename creation,
+    # the pair is invalid ==> use next to last state if exists
+
+    if len(all_state_files) < 1:
+        raise Exception("No valid state files found. Please run the simulation first.")
+
+    latest_file = all_state_files[-2]
+    aimodel_filename = latest_file.replace("st_", "aimodel_plotdata_")
+
+    if not os.path.exists(aimodel_filename):
+        raise Exception(
+            "No valid aimodel_plotdata file found. Please run the simulation again."
+        )
+
+    return latest_file, aimodel_filename
