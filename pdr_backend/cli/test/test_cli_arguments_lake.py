@@ -4,7 +4,6 @@
 #
 import os
 from unittest.mock import patch
-import pytest
 
 from enforce_typing import enforce_types
 
