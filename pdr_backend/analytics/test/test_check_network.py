@@ -172,6 +172,6 @@ def test_check_network_without_mock(  # pylint: disable=unused-argument
         "sapphire-mainnet",
         str(tmpdir),
     )
-    print(ppss)
-    # check_network_main(ppss, lookback_hours=1)
-    # assert mock_check_dfbuyer.call_count == 1
+
+    check_network_main(ppss, lookback_hours=1)
+    assert mock_check_dfbuyer.call_count == 1
