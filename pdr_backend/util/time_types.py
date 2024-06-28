@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from datetime import datetime, timezone
 from typing import Union
 
@@ -59,7 +63,7 @@ class UnixTimeMs(int):
     def from_natural_language(nat_lang: str) -> "UnixTimeMs":
         try:
             dt = dateparser.parse(nat_lang, settings={"RETURN_AS_TIMEZONE_AWARE": True})
-            dt = dt.astimezone(pytz.utc)
+            dt = dt.astimezone(timezone.utc)
 
             return UnixTimeMs.from_dt(dt)
         except AttributeError as e:

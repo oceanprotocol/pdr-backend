@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import logging
 from typing import Dict, List
 
@@ -175,7 +179,12 @@ class LakeInfo:
             (
                 counts_per_timedelta.group_by(["pair", "timeframe"])
                 .agg([(pl.sum("total_count").alias("sum_total_count"))])
-                .join(counts_per_timedelta, on=["pair", "timeframe"], how="left")
+                .join(
+                    counts_per_timedelta,
+                    on=["pair", "timeframe"],
+                    how="left",
+                    coalesce=True,
+                )
                 .with_columns(
                     [
                         (pl.col("total_count") / pl.col("sum_total_count") * 100).alias(
@@ -281,8 +290,5 @@ class LakeInfo:
 
         logger.info("Duplicate Summary\n%s", duplicate_summary)
         logger.info("Duplicate Rows:\n%s", duplicate_rows)
-
-        # to write out and debug:
-        # duplicate_rows.write_csv("validate_duplicate_rows.csv")
 
         return violations

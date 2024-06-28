@@ -1,6 +1,11 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from unittest.mock import MagicMock, patch
 
 import polars as pl
+
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.gql_data_factory import (
     _GQLDF_REGISTERED_LAKE_TABLES,

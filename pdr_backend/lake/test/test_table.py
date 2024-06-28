@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import os
 
 import polars as pl
@@ -45,6 +49,14 @@ def mock_fetch_function(
 def get_table_df(network, st_ut, fin_ut, config):
     print(network, st_ut, fin_ut, config)
     return pl.DataFrame([mocked_object], table_df_schema)
+
+
+def _get_lake_dir(ppss):
+    # if ppss.lake_ss has an attribute lake_dir, return it
+    if hasattr(ppss.lake_ss, "lake_dir"):
+        return ppss.lake_ss.lake_dir
+    # otherwise, return the default lake_dir
+    return ppss.lake_ss.parquet_dir
 
 
 table_df_schema = {

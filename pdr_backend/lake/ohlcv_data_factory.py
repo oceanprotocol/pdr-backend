@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import logging
 import os
 from typing import Dict
@@ -121,8 +125,6 @@ class OhlcvDataFactory:
         df = initialize_rawohlcv_df()
         while True:
             limit = 1000
-            if exch_str == "dydx":
-                limit = 100
             logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
             raw_tohlcv_data = fetch_ohlcv(
                 exchange_str=exch_str,

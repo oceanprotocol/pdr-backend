@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2023 Ocean Protocol Foundation
+# Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
 from setuptools import find_packages, setup
@@ -11,43 +11,42 @@ from setuptools import find_packages, setup
 install_requirements = [
     "black==24.2.0",
     "bumpversion",
-    "ccxt==4.3.21",
+    "ccxt==4.3.52",
     "coverage",
+    "dash[testing]==2.17.1",
+    "dash_bootstrap_components==1.6.0",
     "dateparser==1.2.0",
-    "duckdb==0.10.1",
-    "dash==2.17.0",
-    "dash-bootstrap-components==1.6.0",
+    "duckdb==1.0.0",
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.5.1",
-    "eth-typing==4.2.3",
+    "eth-typing==4.3.1",
     "flask==3.0.3",
     "freezegun==1.5.1",
     "imblearn",
     "kaleido==0.2.1",
-    "mypy==1.10.0",
-    "numpy==1.26.4",
+    "mypy==1.10.1",
+    "numpy==2.0.0",
     "pandas==2.2.2",
     "pathlib",
     "plotly==5.22.0",
-    "polars==0.20.23",
+    "polars==0.20.31",
     "polars[timezone]",
-    "pyarrow==16.0.0",
-    "pylint==3.1.0",
+    "pyarrow==16.1.0",
+    "pylint==3.2.4",
     "pytest",
-    # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
     "pytest-asyncio==0.21.1",
     "pytest-env",
     "pyyaml",
-    "requests==2.31.0",
+    "requests==2.32.3",
     "requests-mock==1.12.1",
-    "scikit-learn==1.4.2",
+    "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
-    "types-pyYAML==6.0.12.20240311",
-    "types-requests==2.31.0.20240406",
-    "web3==6.17.2",
+    "typeguard==4.3.0",
+    "xgboost==2.1.0",
+    "dash_bootstrap_components==1.6.0",
+    "web3==6.19.0",
     "sapphire.py==0.2.3",
-    "typeguard==4.2.1",
     "ocean-contracts==2.0.4",  # install this last
 ]
 

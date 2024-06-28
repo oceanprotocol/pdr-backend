@@ -15,6 +15,7 @@ ignore=
   build/,
   logs/,
   venv,
+  new_venv,
   */__pycache__,
   */*/__pycache__,
   .pytest_cache,
@@ -29,7 +30,8 @@ ignore=
   LICENSE,
   Dockerfile,
   entrypoint.sh,
-  pdr_backend.egg-info
+  pdr_backend.egg-info,
+  copyright_template.tmpl
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.

@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import asyncio
 import copy
 import csv
@@ -6,6 +10,7 @@ import os
 import uuid
 from typing import List, Union
 
+import numpy as np
 import pandas as pd
 from enforce_typing import enforce_types
 
@@ -68,11 +73,27 @@ class MultisimEngine:
         feedset = ppss.predictoor_ss.predict_train_feedsets[0]
         multi_id = str(uuid.uuid4())
         sim_engine = SimEngine(ppss, feedset, multi_id)
+        sim_engine.disable_realtime_state()
         sim_engine.run()
-        run_metrics = list(sim_engine.st.recent_metrics().values())
+        st = sim_engine.st
+        recent_metrics = st.recent_metrics()
 
+        # below, the "[1:]" is to avoid the first sample, which may be off
+        run_metrics = {
+            "acc_est": recent_metrics["acc_est"],
+            "acc_l": recent_metrics["acc_l"],
+            "acc_u": recent_metrics["acc_u"],
+            "f1": np.mean(st.aim.f1s),
+            "precision": np.mean(st.aim.precisions[1:]),
+            "recall": np.mean(st.aim.recalls[1:]),
+            "loss": np.mean(st.aim.losses[1:]),
+            "yerr": np.mean(st.aim.yerrs[1:]),
+            "pdr_profit_OCEAN": np.sum(st.pdr_profits_OCEAN),
+            "trader_profit_USD": np.sum(st.trader_profits_USD),
+        }
+        run_metrics_list = list(run_metrics.values())
         async with lock:
-            self.update_csv(run_i, run_metrics, point_i)
+            self.update_csv(run_i, run_metrics_list, point_i)
             logger.info("Multisim run_i=%s: done", run_i)
 
         logger.info("Multisim engine: done. Output file: %s", self.csv_file)

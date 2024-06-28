@@ -1,4 +1,9 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from typing import List, Union
+import warnings
 
 import polars as pl
 from enforce_typing import enforce_types
@@ -73,7 +78,9 @@ def _add_df_col(
     if merged_df is None:
         merged_df = newraw_df
     else:
-        merged_df = merged_df.join(newraw_df, on="timestamp", how="outer")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            merged_df = merged_df.join(newraw_df, on="timestamp", how="outer")
         merged_df = merge_cols(merged_df, "timestamp", "timestamp_right")
 
     # re-order merged_df's columns

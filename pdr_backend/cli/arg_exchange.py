@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from typing import List, Union
 
 import ccxt
@@ -11,7 +15,7 @@ class ArgExchange:
         if not exchange_str:
             raise ValueError(exchange_str)
 
-        if not (exchange_str == "dydx" or hasattr(ccxt, exchange_str)):
+        if not hasattr(ccxt, exchange_str):
             raise ValueError(exchange_str)
 
         self.exchange_str = exchange_str

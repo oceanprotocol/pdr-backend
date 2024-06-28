@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import logging
 import time
 from typing import Dict, List, Optional, Tuple
@@ -137,7 +141,7 @@ class ETL:
         """
 
         st_ts = time.time_ns() / 1e9
-        logger.info(">>>> REQUIRED ETL - do_etl - Start ETL.")
+        logger.info("do_etl - Start ETL.")
 
         try:
             # Drop any build tables if they already exist
@@ -169,7 +173,7 @@ class ETL:
             Now, let's build the bronze tables
             key tables: [bronze_pdr_predictions]
         """
-        logger.info(">>>> REQUIRED ETL - do_bronze_step - Build bronze tables.")
+        logger.info("do_bronze_step - Build bronze tables.")
 
         # Update bronze tables
         # let's keep track of time passed so we can log how long it takes for this step to complete
@@ -226,6 +230,8 @@ class ETL:
 
         final_query = " UNION ALL ".join(queries)
         result = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
+
+        logger.info("_get_max_timestamp_values_from - result: %s", result)
 
         if result is None:
             return none_values

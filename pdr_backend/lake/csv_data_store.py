@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import os
 from typing import Optional, Union
 
@@ -231,7 +235,6 @@ class CSVDataStore:
 
         remaining_data = data.slice(0, remaining_rows)
         last_file_path = self._get_last_file_path()
-
         last_file_data = pl.read_csv(last_file_path, schema=schema)
         last_file_data = last_file_data.vstack(remaining_data).rechunk()
 
@@ -287,7 +290,6 @@ class CSVDataStore:
             pl.DataFrame - data read from the csv file
         """
         data = self.read_all(schema=schema)
-
         # if the data is empty, return
         if len(data) == 0:
             return data

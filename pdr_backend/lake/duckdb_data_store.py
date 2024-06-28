@@ -1,3 +1,8 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
+
 # The DuckDBDataStore class is a subclass of the Base
 import glob
 import logging
@@ -27,6 +32,7 @@ class DuckDBDataStore(BaseDataStore):
             base_path - The base directory to store the persistent data.
         """
         super().__init__(base_path, read_only)
+        print(f"base_path = {base_path}")
 
         self.duckdb_conn = duckdb.connect(
             database=f"{self.base_path}/duckdb.db", read_only=read_only
@@ -121,10 +127,13 @@ class DuckDBDataStore(BaseDataStore):
         table_names = self.get_table_names()
 
         if table_name in table_names:
+            logger.info("insert_to_table table_name = %s", table_name)
+            logger.info("insert_to_table DF = %s", df)
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
             return
 
         logger.info("create_and_fill_table = %s", table_name)
+        logger.info("%s", df)
         self._create_and_fill_table(df, table_name)
 
     @enforce_types
@@ -303,7 +312,6 @@ class DuckDBDataStore(BaseDataStore):
         @example:
             execute_sql("SELECT * FROM table_name")
         """
-
         self.duckdb_conn.execute("BEGIN TRANSACTION")
         self.duckdb_conn.execute(query)
         self.duckdb_conn.execute("COMMIT")

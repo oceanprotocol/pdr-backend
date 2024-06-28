@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import logging
 from typing import List, Union
 
@@ -5,7 +9,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.exchange.fetch_ohlcv_ccxt import fetch_ohlcv_ccxt
-from pdr_backend.exchange.fetch_ohlcv_dydx import fetch_ohlcv_dydx
 
 logger = logging.getLogger("fetch_ohlcv")
 
@@ -21,13 +24,13 @@ def fetch_ohlcv(
     """
     @description
       Top-level switch:
-      Get ohlcv data from dydx exchange, or an exchange supported by ccxt.
+      Get ohlcv data from an exchange supported by ccxt, or others in future.
 
       If there's an error it emits a warning and returns None,
       vs crashing everything
 
     @arguments
-      exchange_str -- eg "dydx", "binance", "kraken"
+      exchange_str -- eg "binance", "kraken"
       pair_str -- eg "BTC/USDT". NOT "BTC-USDT"
       timeframe -- eg "1h", "1m"
       since -- timestamp of first candle. In unix time (in ms)
@@ -38,6 +41,6 @@ def fetch_ohlcv(
         where row 0 is oldest
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
-    if exchange_str == "dydx":
-        return fetch_ohlcv_dydx(pair_str, timeframe, since, limit)
+    # currently only ccxt is here. In the future, this is where we'd
+    # have a switch to other exchanges too
     return fetch_ohlcv_ccxt(exchange_str, pair_str, timeframe, since, limit)

@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import pytest
 from enforce_typing import enforce_types
 
@@ -70,6 +74,8 @@ def test_etl_do_bronze_step(_sample_etl):
         "SELECT * FROM {}".format(table_name)
     )
     assert bronze_pdr_predictions_records is not None
+
+    print(">>>>> bronze_pdr_predictions_records", bronze_pdr_predictions_records)
 
     # verify final production table
     prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()

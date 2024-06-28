@@ -1,3 +1,7 @@
+<!--
+Copyright 2024 Ocean Protocol Foundation
+SPDX-License-Identifier: Apache-2.0
+-->
 # Get Tokens
 
 Sapphire accounts and wallets follow EVM standard.
