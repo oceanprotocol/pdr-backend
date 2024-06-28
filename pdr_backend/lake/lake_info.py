@@ -14,6 +14,8 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.renderers.cli import CliRenderer
 from pdr_backend.lake.renderers.html import HtmlRenderer
+from pdr_backend.lake.table import Table
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.ppss.ppss import PPSS
 
@@ -41,6 +43,7 @@ class LakeInfo:
             "validate_no_views_in_lake": self.validate_expected_view_names,
             "validate_no_gaps_in_bronze_predictions": self.validate_lake_bronze_predictions_gaps,
             "validate_no_duplicate_rows_in_lake": self.validate_lake_tables_no_duplicates,
+            "validate_no_unmatched_payouts": self.validate_no_unmatched_payouts,
         }
         self.validation_results: Dict[str, List[str]] = {}
 
@@ -291,4 +294,50 @@ class LakeInfo:
         logger.info("Duplicate Summary\n%s", duplicate_summary)
         logger.info("Duplicate Rows:\n%s", duplicate_rows)
 
+        return violations
+
+    @enforce_types
+    def validate_no_unmatched_payouts(self) -> List[str]:
+        """
+        @description
+            validates that all payouts have been able to match with a prediction
+        """
+        violations = []
+        
+        # get all payouts
+        # we want to select all payouts
+        # we want to then join with predictions, and then filter for unmatched payouts
+        # as long as their timestamp is within first/last prediction['timestamp] rows
+        query_unmatched_payouts = f"""
+            WITH payouts AS (
+                SELECT
+                    ID,
+                    timestamp
+                FROM {Table.from_dataclass(Payout).table_name}
+            ), bronze_predictions AS (
+                SELECT
+                    ID,
+                    timestamp
+                FROM {Table.from_dataclass(BronzePrediction).table_name}
+            ),
+            unmatched_payouts AS (
+                SELECT
+                    payouts.ID,
+                    payouts.timestamp
+                FROM payouts
+                LEFT JOIN predictions
+                ON payouts.ID = predictions.ID
+                WHERE predictions.ID IS NULL
+                AND payouts.timestamp BETWEEN MIN(predictions.timestamp) AND MAX(predictions.timestamp)
+            )
+            select * from unmatched_payouts;
+        """
+
+        rows_df: pl.DataFrame = self.db.query_data(query_unmatched_payouts)
+
+        if rows_df is None or rows_df.shape[0] == 0:
+            logger.info("No unmatched payouts found in the lake.")
+            return violations
+        
+        logger.info("Unmatched Payouts:\n%s", rows_df)
         return violations
