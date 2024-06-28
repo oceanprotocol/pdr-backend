@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from polars import Int64, Float64, Utf8, Boolean
 
 payouts_table_name = "pdr_payouts"
