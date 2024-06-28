@@ -16,6 +16,7 @@ from pdr_backend.lake.renderers.cli import CliRenderer
 from pdr_backend.lake.renderers.html import HtmlRenderer
 from pdr_backend.lake.table import Table
 from pdr_backend.lake.payout import Payout
+from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.ppss.ppss import PPSS
 
@@ -302,8 +303,8 @@ class LakeInfo:
         @description
             validates that all payouts have been able to match with a prediction
         """
-        violations = []
-        
+        violations: list[str] = []
+
         # get all payouts
         # we want to select all payouts
         # we want to then join with predictions, and then filter for unmatched payouts
@@ -318,7 +319,7 @@ class LakeInfo:
                 SELECT
                     ID,
                     timestamp
-                FROM {Table.from_dataclass(BronzePrediction).table_name}
+                FROM {Table.from_dataclass(Prediction).table_name}
             ),
             unmatched_payouts AS (
                 SELECT
@@ -338,6 +339,6 @@ class LakeInfo:
         if rows_df is None or rows_df.shape[0] == 0:
             logger.info("No unmatched payouts found in the lake.")
             return violations
-        
+
         logger.info("Unmatched Payouts:\n%s", rows_df)
         return violations
