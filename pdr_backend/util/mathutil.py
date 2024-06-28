@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from math import floor, log10
 from typing import Union
 
@@ -55,11 +59,11 @@ def has_nan(
         return has_None or np.isnan(np.min(x))
 
     if isinstance(x, pl.Series):
-        has_None = x.has_validity()
+        has_None = x.is_null().any()
         return has_None or sum(x.is_nan()) > 0  # type: ignore[union-attr]
 
     if isinstance(x, pl.DataFrame):
-        has_None = any(col.has_validity() for col in x)
+        has_None = any(col.is_null().any() for col in x)
         return has_None or sum(sum(x).is_nan()) > 0  # type: ignore[union-attr]
 
     # pd.Series or pd.DataFrame
@@ -97,14 +101,6 @@ def fill_nans(
         interpolate_df = pl.from_pandas(interpolate_df)
 
     return interpolate_df
-
-
-@enforce_types
-def classif_acc(ytrue_hat, ytrue) -> float:
-    ytrue_hat, ytrue = np.array(ytrue_hat), np.array(ytrue)
-    n_correct = sum(ytrue_hat == ytrue)
-    acc = n_correct / len(ytrue)
-    return acc
 
 
 @enforce_types

@@ -1,5 +1,5 @@
 <!--
-Copyright 2023 Ocean Protocol Foundation
+Copyright 2024 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -23,14 +23,14 @@ In a new console:
 git clone https://github.com/oceanprotocol/pdr-backend
 cd pdr-backend
 
-# Create & activate virtualenv
+# create & activate virtualenv
 python -m venv venv
 source venv/bin/activate
 
-# Install modules in the environment
+# install modules in the environment
 pip install -r requirements.txt
 
-#add pwd to bash path
+# add pwd to bash path
 export PATH=$PATH:.
 ```
 
@@ -78,6 +78,7 @@ Let's visualize results. Open a separate console, and:
 ```console
 cd ~/code/pdr-backend # or wherever your pdr-backend dir is
 source venv/bin/activate
+export PATH=$PATH:.
 
 #start the plots server
 pdr sim_plots

@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 MAX_UINT = 2**256 - 1
 

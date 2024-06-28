@@ -1,4 +1,8 @@
 # pylint: disable=redefined-outer-name
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from web3.types import RPCEndpoint
 
 from pdr_backend.conftest_ganache import *  # pylint: disable=wildcard-import
@@ -138,7 +142,7 @@ def test_submit_prediction_and_payout(
     current_epoch = feed_contract1.get_current_epoch_ts()
 
     # set prediction epoch
-    prediction_epoch = UnixTimeS(current_epoch + S_PER_EPOCH * 2)
+    prediction_epoch = UnixTimeS(current_epoch + S_PER_EPOCH * 3)
 
     # get the OCEAN balance of the owner before submitting
     bal_before = OCEAN.balanceOf(web3_config.owner)
@@ -170,7 +174,7 @@ def test_submit_prediction_and_payout(
 
     # fast forward time to get payout
     web3_config.w3.provider.make_request(
-        RPCEndpoint("evm_increaseTime"), [S_PER_EPOCH * 4]
+        RPCEndpoint("evm_increaseTime"), [S_PER_EPOCH * 5]
     )
     web3_config.w3.provider.make_request(RPCEndpoint("evm_mine"), [])
 

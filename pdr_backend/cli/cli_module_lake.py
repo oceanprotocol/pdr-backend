@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import logging
 
 from enforce_typing import enforce_types
@@ -68,6 +72,7 @@ def do_lake_query(args, ppss):
     try:
         df = db.query_data(args.QUERY)
         print(df)
+        print("Rows:", len(df))
     except Exception as e:
         logger.error("Error querying lake: %s", e)
         print(e)

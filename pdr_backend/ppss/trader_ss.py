@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from typing import Dict, List, Union
 
 from enforce_typing import enforce_types
@@ -39,6 +43,18 @@ class TraderSS(SingleFeedMixin, StrMixin):
     @property
     def allowed_tradetypes(self) -> List[str]:
         return ["livemock", "livereal"]
+
+    @property
+    def sim_confidence_threshold(self) -> float:
+        return self.d["sim_only"].get("confidence_threshold", 0.0)
+
+    @property
+    def stop_loss_percent(self) -> float:
+        return self.d["sim_only"].get("stop_loss_percent", 1.0)
+
+    @property
+    def take_profit_percent(self) -> float:
+        return self.d["sim_only"].get("take_profit_percent", 100.0)
 
     # feed defined in base
 

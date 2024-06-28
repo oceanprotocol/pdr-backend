@@ -1,9 +1,23 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import random
 
+from enforce_typing import enforce_types
+
 from pdr_backend.util import mathutil
-from pdr_backend.util.strutil import StrMixin, compactSmallNum, dictStr, prettyBigNum
+from pdr_backend.util.strutil import (
+    compactSmallNum,
+    dictStr,
+    prettyBigNum,
+    separate_string_number,
+    shift_one_earlier,
+    StrMixin,
+)
 
 
+@enforce_types
 def testStrMixin1():
     class Foo(StrMixin):
         def __init__(self):
@@ -33,12 +47,13 @@ def testStrMixin1():
     s3 = f.longstr()
     assert s3 == s
 
-    f.__class__.__STR_GIVES_NEWLinearLogisticE__ = True
+    f.__class__.__STR_GIVES_NEWClassifLinearRidgeE__ = True
     s4 = f.longstr()
     assert "\n" in s4
-    f.__class__.__STR_GIVES_NEWLinearLogisticE__ = False
+    f.__class__.__STR_GIVES_NEWClassifLinearRidgeE__ = False
 
 
+@enforce_types
 def testStrMixin2():
     class Foo(StrMixin):
         __STR_OBJDIR__ = ["x", "y"]
@@ -57,6 +72,7 @@ def testStrMixin2():
     assert "z=3" not in s2
 
 
+@enforce_types
 def testDictStr():
     d = {"a": 3, "b": 4}
     s = dictStr(d)
@@ -70,12 +86,14 @@ def testDictStr():
     assert "\n" in s
 
 
+@enforce_types
 def testEmptyDictStr():
     d = {}
     s = dictStr(d)
     assert s == ("{}")
 
 
+@enforce_types
 def testPrettyBigNum1_DoRemoveZeros_decimalsNeeded():
     assert prettyBigNum(1.23456e13) == "1.23e13"
     assert prettyBigNum(1.23456e12) == "1.23e12"
@@ -97,6 +115,7 @@ def testPrettyBigNum1_DoRemoveZeros_decimalsNeeded():
     assert prettyBigNum(1.23456e-10) == "1.23e-10"
 
 
+@enforce_types
 def testPrettyBigNum1_DoRemoveZeros_decimalsNotNeeded():
     assert prettyBigNum(1e13) == "1e13"
     assert prettyBigNum(1e12) == "1e12"
@@ -118,6 +137,7 @@ def testPrettyBigNum1_DoRemoveZeros_decimalsNotNeeded():
     assert prettyBigNum(1e-10) == "1e-10"
 
 
+@enforce_types
 def testPrettyBigNum1_DoRemoveZeros_catchRoundoff():
     assert prettyBigNum(57.02e10) == "570B"
     assert prettyBigNum(57.02e9) == "57B"
@@ -131,11 +151,13 @@ def testPrettyBigNum1_DoRemoveZeros_catchRoundoff():
     assert prettyBigNum(27.02) == "27"
 
 
+@enforce_types
 def testPrettyBigNum1_DoRemoveZeros_zero():
     assert prettyBigNum(0) == "0"
     assert prettyBigNum(0.0) == "0"
 
 
+@enforce_types
 def testPrettyBigNum1_DoRemoveZeros_negative():
     assert prettyBigNum(-1.23456e13) == "-1.23e13"
     assert prettyBigNum(-1.23456e11) == "-123B"
@@ -154,6 +176,7 @@ def testPrettyBigNum1_DoRemoveZeros_negative():
     assert prettyBigNum(-1e-10) == "-1e-10"
 
 
+@enforce_types
 def generatePairsForPrettyBigNum2_Random_DoRemoveZeroes():
     for _ in range(100):
         power = random.choice(list(range(-4, 14)))
@@ -165,6 +188,7 @@ def generatePairsForPrettyBigNum2_Random_DoRemoveZeroes():
         print(f"            ({x:s}, '{s:s}')," % (x, s))
 
 
+@enforce_types
 def testPrettyBigNum2_Random_DoRemoveZeroes():
     # these are generated via method above, then manually fixed as needed
     x_s_pairs = [
@@ -252,6 +276,7 @@ def testPrettyBigNum2_Random_DoRemoveZeroes():
         assert prettyBigNum(x) == target_s
 
 
+@enforce_types
 def testPrettyBigNum3_Random_DontRemoveZeros():
     # these are generated via method above, then manually fixed as needed
     x_s_pairs = [
@@ -338,13 +363,55 @@ def testPrettyBigNum3_Random_DontRemoveZeros():
         assert prettyBigNum(x, False) == target_s
 
 
+@enforce_types
 def test_compactSmallNum():
     pairs = [
         (0, "0"),
         (0.5, "0.50"),
         (0.333333, "0.33"),
         (0.003333333, "3.33e-3"),
+        (-0.5, "-0.50"),
+        (-0.333333, "-0.33"),
+        (-0.003333333, "-3.33e-3"),
     ]
 
     for x, target_s in pairs:
         assert compactSmallNum(x) == target_s
+
+
+@enforce_types
+def test_separate_string_number():
+    pairs = [
+        ("1", ["1"]),
+        ("12", ["12"]),
+        ("123", ["123"]),
+        ("a", ["a"]),
+        ("ab", ["ab"]),
+        ("12ab34", ["12", "ab", "34"]),
+        ("10in!20ft10400:bg", ["10", "in!", "20", "ft", "10400", ":bg"]),
+    ]
+
+    for input_s, target_list in pairs:
+        assert separate_string_number(input_s) == target_list
+
+
+@enforce_types
+def test_shift_one_earlier():
+    pairs = [
+        ("binance:BTC/USDT:close:z(t-3)", "binance:BTC/USDT:close:z(t-2)"),
+        (
+            "binanceus:ETH/USDT:close:z(t-4)-z(t-5)",
+            "binanceus:ETH/USDT:close:z(t-3)-z(t-4)",
+        ),
+        (
+            "binanceus:ETH/USDT:close:(z(t-3)-z(t-4))-(z(t-4)-z(t-5))",
+            "binanceus:ETH/USDT:close:(z(t-2)-z(t-3))-(z(t-3)-z(t-4))",
+        ),
+        (
+            "binanceus:ETH/USDT:close:(z(t-123)-z(t-124))-(z(t-124)-z(t-125))",
+            "binanceus:ETH/USDT:close:(z(t-122)-z(t-123))-(z(t-123)-z(t-124))",
+        ),
+    ]
+
+    for input_s, target_s in pairs:
+        assert shift_one_earlier(input_s) == target_s

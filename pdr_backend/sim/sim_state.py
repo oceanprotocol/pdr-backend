@@ -1,12 +1,16 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from typing import Dict, List, Optional, Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.currency_types import Eth
-
 
 @enforce_types
-class ClassifierMetrics:
+class AimodelMetrics:
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self):
         # 'i' is iteration number i
         self.acc_ests: List[float] = []  # [i] : %-correct
@@ -19,7 +23,9 @@ class ClassifierMetrics:
 
         self.losses: List[float] = []  # [i] : log-loss
 
-    def update(self, acc_est, acc_l, acc_u, f1, precision, recall, loss):
+        self.yerrs: List[float] = []  # [i] : regressor pred'n errs, w/ sign
+
+    def update(self, acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr):
         self.acc_ests.append(acc_est)
         self.acc_ls.append(acc_l)
         self.acc_us.append(acc_u)
@@ -30,14 +36,25 @@ class ClassifierMetrics:
 
         self.losses.append(loss)
 
+        self.yerrs.append(yerr)
+
     @staticmethod
     def recent_metrics_names() -> List[str]:
-        return ["acc_est", "acc_l", "acc_u", "f1", "precision", "recall", "loss"]
+        return [
+            "acc_est",
+            "acc_l",
+            "acc_u",
+            "f1",
+            "precision",
+            "recall",
+            "loss",
+            "yerr",
+        ]
 
     def recent_metrics(self) -> Dict[str, Union[int, float, None]]:
-        """Return most recent classifier metrics"""
+        """Return most recent aimodel metrics"""
         if not self.acc_ests:
-            return {key: None for key in ClassifierMetrics.recent_metrics_names()}
+            return {key: None for key in AimodelMetrics.recent_metrics_names()}
 
         return {
             "acc_est": self.acc_ests[-1],
@@ -47,16 +64,14 @@ class ClassifierMetrics:
             "precision": self.precisions[-1],
             "recall": self.recalls[-1],
             "loss": self.losses[-1],
+            "yerr": self.yerrs[-1],
         }
 
 
 # pylint: disable=too-many-instance-attributes
 @enforce_types
 class SimState:
-    def __init__(self, init_holdings: Dict[str, Eth]):
-        self.holdings: Dict[str, float] = {
-            tok: float(amt.amt_eth) for tok, amt in init_holdings.items()
-        }
+    def __init__(self):
         self.init_loop_attributes()
         self.iter_number = 0
 
@@ -67,8 +82,8 @@ class SimState:
         self.ytrues: List[bool] = []  # [i] : was-truly-up
         self.probs_up: List[float] = []  # [i] : predicted-prob-up
 
-        # classifier metrics
-        self.clm = ClassifierMetrics()
+        # aimodel metrics
+        self.aim = AimodelMetrics()
 
         # profits
         self.pdr_profits_OCEAN: List[float] = []  # [i] : predictoor-profit
@@ -76,7 +91,7 @@ class SimState:
 
     @staticmethod
     def recent_metrics_names() -> List[str]:
-        return ClassifierMetrics.recent_metrics_names() + [
+        return AimodelMetrics.recent_metrics_names() + [
             "pdr_profit_OCEAN",
             "trader_profit_USD",
         ]
@@ -84,8 +99,8 @@ class SimState:
     def recent_metrics(
         self, extras: Optional[List[str]] = None
     ) -> List[Union[int, float]]:
-        """Return most recent classifier metrics + profit metrics"""
-        rm = self.clm.recent_metrics().copy()
+        """Return most recent aimodel metrics + profit metrics"""
+        rm = self.aim.recent_metrics().copy()
         rm.update(
             {
                 "pdr_profit_OCEAN": self.pdr_profits_OCEAN[-1],

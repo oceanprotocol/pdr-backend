@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import logging
 from typing import Dict, List
 
@@ -10,6 +14,9 @@ from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.renderers.cli import CliRenderer
 from pdr_backend.lake.renderers.html import HtmlRenderer
+from pdr_backend.lake.table import Table
+from pdr_backend.lake.payout import Payout
+from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.ppss.ppss import PPSS
 
@@ -37,6 +44,7 @@ class LakeInfo:
             "validate_no_views_in_lake": self.validate_expected_view_names,
             "validate_no_gaps_in_bronze_predictions": self.validate_lake_bronze_predictions_gaps,
             "validate_no_duplicate_rows_in_lake": self.validate_lake_tables_no_duplicates,
+            "validate_no_unmatched_payouts": self.validate_no_unmatched_payouts,
         }
         self.validation_results: Dict[str, List[str]] = {}
 
@@ -175,7 +183,12 @@ class LakeInfo:
             (
                 counts_per_timedelta.group_by(["pair", "timeframe"])
                 .agg([(pl.sum("total_count").alias("sum_total_count"))])
-                .join(counts_per_timedelta, on=["pair", "timeframe"], how="left")
+                .join(
+                    counts_per_timedelta,
+                    on=["pair", "timeframe"],
+                    how="left",
+                    coalesce=True,
+                )
                 .with_columns(
                     [
                         (pl.col("total_count") / pl.col("sum_total_count") * 100).alias(
@@ -255,8 +268,8 @@ class LakeInfo:
                 query_duplicate_rows = """
                     SELECT
                         'target_table' as table_name,
-                        target_table.ID,
-                        target_table.timestamp
+                        known_duplicates.ID,
+                        known_duplicates.timestamp
                     FROM (
                         SELECT
                             ID as ID,
@@ -265,8 +278,7 @@ class LakeInfo:
                         GROUP BY ID, timestamp
                         HAVING COUNT(*) > 1
                     ) as known_duplicates
-                    LEFT JOIN target_table
-                    ON known_duplicates.ID = target_table.ID
+                    GROUP BY table_name, ID, timestamp
                 """
 
                 query = query_duplicate_rows.replace("target_table", table_name)
@@ -283,7 +295,50 @@ class LakeInfo:
         logger.info("Duplicate Summary\n%s", duplicate_summary)
         logger.info("Duplicate Rows:\n%s", duplicate_rows)
 
-        # to write out and debug:
-        # duplicate_rows.write_csv("validate_duplicate_rows.csv")
+        return violations
 
+    @enforce_types
+    def validate_no_unmatched_payouts(self) -> List[str]:
+        """
+        @description
+            validates that all payouts have been able to match with a prediction
+        """
+        violations: list[str] = []
+
+        # get all payouts
+        # we want to select all payouts
+        # we want to then join with predictions, and then filter for unmatched payouts
+        # as long as their timestamp is within first/last prediction['timestamp] rows
+        query_unmatched_payouts = f"""
+            WITH payouts AS (
+                SELECT
+                    ID,
+                    timestamp
+                FROM {Table.from_dataclass(Payout).table_name}
+            ), bronze_predictions AS (
+                SELECT
+                    ID,
+                    timestamp
+                FROM {Table.from_dataclass(Prediction).table_name}
+            ),
+            unmatched_payouts AS (
+                SELECT
+                    payouts.ID,
+                    payouts.timestamp
+                FROM payouts
+                LEFT JOIN predictions
+                ON payouts.ID = predictions.ID
+                WHERE predictions.ID IS NULL
+                AND payouts.timestamp BETWEEN MIN(predictions.timestamp) AND MAX(predictions.timestamp)
+            )
+            select * from unmatched_payouts;
+        """
+
+        rows_df: pl.DataFrame = self.db.query_data(query_unmatched_payouts)
+
+        if rows_df is None or rows_df.shape[0] == 0:
+            logger.info("No unmatched payouts found in the lake.")
+            return violations
+
+        logger.info("Unmatched Payouts:\n%s", rows_df)
         return violations

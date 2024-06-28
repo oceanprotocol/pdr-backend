@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from typing import Dict, List, Optional
 
 from enforce_typing import enforce_types
@@ -6,7 +10,14 @@ from pdr_backend.cli.predict_train_feedsets import (
     PredictTrainFeedset,
     PredictTrainFeedsets,
 )
-from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
+from pdr_backend.ppss.aimodel_data_ss import (
+    AimodelDataSS,
+    aimodel_data_ss_test_dict,
+)
+from pdr_backend.ppss.aimodel_ss import (
+    AimodelSS,
+    aimodel_ss_test_dict,
+)
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.strutil import StrMixin
@@ -24,6 +35,7 @@ class PredictoorSS(StrMixin):
     @enforce_types
     def __init__(self, d: dict):
         self.d = d
+        self.aimodel_data_ss = AimodelDataSS(d["aimodel_data_ss"])
         self.aimodel_ss = AimodelSS(d["aimodel_ss"])
 
         if self.approach not in CAND_APPROACHES:
@@ -89,6 +101,14 @@ class PredictoorSS(StrMixin):
     @property
     def pred_submitter_mgr(self) -> str:
         return self.d["bot_only"]["pred_submitter_mgr"]
+
+    @property
+    def payout_batch_size(self) -> int:
+        return self.d["bot_only"].get("payout_batch_size", 8)
+
+    @property
+    def min_payout_slots(self) -> int:
+        return self.d["bot_only"].get("min_payout_slots", 0)
 
     # --------------------------------
     # setters (add as needed)
@@ -173,6 +193,8 @@ def feedset_test_list() -> list:
 def predictoor_ss_test_dict(
     feedset_list: Optional[List] = None,
     pred_submitter_mgr="",
+    aimodel_data_ss_dict: Optional[dict] = None,
+    aimodel_ss_dict: Optional[dict] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
     feedset_list = feedset_list or feedset_test_list()
@@ -190,6 +212,7 @@ def predictoor_ss_test_dict(
             "s_until_epoch_end": 60,
             "s_start_payouts": 0,
         },
-        "aimodel_ss": aimodel_ss_test_dict(),
+        "aimodel_data_ss": aimodel_data_ss_dict or aimodel_data_ss_test_dict(),
+        "aimodel_ss": aimodel_ss_dict or aimodel_ss_test_dict(),
     }
     return d

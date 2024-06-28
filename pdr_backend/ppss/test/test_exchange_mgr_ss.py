@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from enforce_typing import enforce_types
 import numpy as np
 import pytest
@@ -16,14 +20,12 @@ def test_exchange_mgr_ss_basic():
             "createMarketBuyOrderRequiresPrice": False,
             "defaultType": "spot",
         },
-        "dydx_params": {},
     }
     ss = ExchangeMgrSS(d)
 
     # yaml properties
     assert ss.timeout == 30
     assert ss.ccxt_params == d["ccxt_params"]
-    assert ss.dydx_params == d["dydx_params"]
 
     # str
     assert "ExchangeMgrSS" in str(ss)
@@ -36,23 +38,19 @@ def test_exchange_mgr_ss_test_dict__defaults():
     assert isinstance(ss.timeout, (int, float))
     assert 0 < ss.timeout < np.inf
     assert isinstance(ss.ccxt_params, dict)
-    assert isinstance(ss.dydx_params, dict)
 
 
 @enforce_types
 def test_exchange_mgr_ss_test_dict__specify_values():
     timeout = 123.456
     ccxt_params = {"foo": 2}
-    dydx_params = {"bar": {"baz": "qux"}}
     d = exchange_mgr_ss_test_dict(
         timeout=timeout,
         ccxt_params=ccxt_params,
-        dydx_params=dydx_params,
     )
     ss = ExchangeMgrSS(d)
     assert ss.timeout == timeout
     assert ss.ccxt_params == ccxt_params
-    assert ss.dydx_params == dydx_params
 
 
 @enforce_types
@@ -86,16 +84,11 @@ def test_exchange_mgr_ss_timeout():
 
 @enforce_types
 def test_exchange_mgr_ss_ccxt_params():
-    _test_exchange_mtr_dict_params("ccxt_params")
+    _test_exchange_mgr_dict_params("ccxt_params")
 
 
 @enforce_types
-def test_exchange_mgr_ss_dydx_params():
-    _test_exchange_mtr_dict_params("dydx_params")
-
-
-@enforce_types
-def _test_exchange_mtr_dict_params(params_name: str):
+def _test_exchange_mgr_dict_params(params_name: str):
     # good: dict of str:any
     d = exchange_mgr_ss_test_dict()
     d[params_name] = {"foo": 7, "bar": "baz", "bah": None}
@@ -105,7 +98,6 @@ def _test_exchange_mtr_dict_params(params_name: str):
     # bad: non-dict
     bads = ["foo", 3]
     if params_name == "ccxt_params":
-        # dydx_params can be None, will be replaced with {}
         bads.append(None)
 
     for non_dict in bads:

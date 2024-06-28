@@ -1,30 +1,49 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import copy
+import logging
+from typing import Optional
 import warnings
 
 import numpy as np
 from enforce_typing import enforce_types
 from imblearn.over_sampling import SMOTE, RandomOverSampler  # type: ignore[import-untyped]
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.dummy import DummyClassifier
-from sklearn.inspection import permutation_importance
-from sklearn.linear_model import LogisticRegression
+from sklearn.dummy import DummyClassifier, DummyRegressor
+from sklearn.gaussian_process import (
+    GaussianProcessClassifier,
+    GaussianProcessRegressor,
+)
+from sklearn.linear_model import (
+    ElasticNet,
+    Lasso,
+    LinearRegression,
+    LogisticRegression,
+    Ridge,
+)
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+from xgboost import XGBClassifier, XGBRegressor
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.ppss.aimodel_ss import AimodelSS
+
+logger = logging.getLogger("aimodel_factory")
 
 
 @enforce_types
 class AimodelFactory:
     def __init__(self, aimodel_ss: AimodelSS):
-        self.aimodel_ss = aimodel_ss
+        self.ss = aimodel_ss
 
-    # pylint: disable=too-many-statements
     def build(
         self,
         X: np.ndarray,
-        ytrue: np.ndarray,
+        ytrue: Optional[np.ndarray] = None,
+        ycont: Optional[np.ndarray] = None,
+        y_thr: Optional[float] = None,
         show_warnings: bool = True,
     ) -> Aimodel:
         """
@@ -33,45 +52,131 @@ class AimodelFactory:
 
         @arguments
           X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
+
           ytrue -- 1d array of [sample_i]:bool_value -- classifier model outputs
+          <or>
+          ycont -- 1d array of [sample_i]:float_value -- regressor model outputs
+          y_thr -- threshold value for True vs False
+
           show_warnings -- show warnings when building model?
 
         @return
           model -- Aimodel
         """
-        ss = self.aimodel_ss
+        # regressor, wrapped by classifier
+        if self.ss.do_regr:
+            return self._build_wrapped_regr(X, ycont, y_thr, show_warnings)  # type: ignore
+
+        # direct classifier
+        return self._build_direct_classif(X, ytrue, show_warnings)  # type: ignore
+
+    def _build_wrapped_regr(
+        self,
+        X: np.ndarray,
+        ycont: np.ndarray,
+        y_thr: float,
+        show_warnings: bool = True,
+    ) -> Aimodel:
+        ss = self.ss
+        assert ss.do_regr
+        assert ycont is not None
+        do_constant = min(ycont) == max(ycont) or ss.approach == "RegrConstant"
+
+        # weight newest sample 10x, and 2nd-newest sample 5x
+        # - assumes that newest sample is at index -1, and 2nd-newest at -2
+        n_repeat1, n_repeat2 = ss.weight_recent_n
+        if do_constant or n_repeat1 == 0:
+            pass
+        else:
+            xrecent1, xrecent2 = X[-1, :], X[-2, :]
+            X = np.append(X, np.repeat(xrecent1[None], n_repeat1, axis=0), axis=0)
+            X = np.append(X, np.repeat(xrecent2[None], n_repeat2, axis=0), axis=0)
+            yrecent1, yrecent2 = ycont[-1], ycont[-2]
+            ycont = np.append(ycont, [yrecent1] * n_repeat1)
+            ycont = np.append(ycont, [yrecent2] * n_repeat2)
+
+        # balance data
+        if ss.balance_classes != "None":
+            logger.warning("In regression, non-None balance_classes is useless")
+
+        # scale inputs
+        scaler = StandardScaler()
+        scaler.fit(X)
+        X_tr = scaler.transform(X)
+
+        # in-place fit model
+        if do_constant:
+            sk_regr = DummyRegressor(strategy="constant", constant=ycont[0])
+            _fit(sk_regr, X_tr, ycont, show_warnings)
+            sk_regrs = [sk_regr]
+        else:
+            sk_regrs = []
+            n_regrs = 10  # magic number
+            for _ in range(n_regrs):
+                N = len(ycont)
+                I = np.random.choice(a=N, size=N, replace=True)
+                X_tr_I, ycont_I = X_tr[I, :], ycont[I]
+                sk_regr = _approach_to_skm(ss.approach)
+                _fit(sk_regr, X_tr_I, ycont_I, show_warnings)
+                sk_regrs.append(sk_regr)
+
+        # model
+        model = Aimodel(scaler, sk_regrs, y_thr, None)
+
+        if ss.calibrate_regr == "CurrentYval":
+            current_yval = ycont[-1]
+            current_yvalhat = model.predict_ycont(X)[-1]
+            ycont_offset = current_yval - current_yvalhat
+            model.set_ycont_offset(ycont_offset)
+
+        # variable importances
+        if self.ss.calc_imps:
+            model.set_importance_per_var(X, ycont)
+
+        # return
+        return model
+
+    # pylint: disable=too-many-statements
+    def _build_direct_classif(
+        self,
+        X: np.ndarray,
+        ytrue: np.ndarray,
+        show_warnings: bool = True,
+    ) -> Aimodel:
+        ss = self.ss
+        assert not ss.do_regr
         n_True, n_False = sum(ytrue), sum(np.invert(ytrue))
         smallest_n = min(n_True, n_False)
-        do_constant = (smallest_n == 0) or ss.approach == "Constant"
+        do_constant = (smallest_n == 0) or ss.approach == "ClassifConstant"
 
-        # initialize skm (sklearn model)
+        # initialize sk_classif (sklearn model)
         if do_constant:
-            # force two classes in skm
+            # force two classes in sk_classif
             ytrue = copy.copy(ytrue)
             ytrue[0], ytrue[1] = True, False
-            skm = DummyClassifier(strategy="most_frequent")
-        elif ss.approach == "LinearLogistic":
-            skm = LogisticRegression(max_iter=1000)
-        elif ss.approach == "LinearLogistic_Balanced":
-            skm = LogisticRegression(max_iter=1000, class_weight="balanced")
-        elif ss.approach == "LinearSVC":
-            skm = SVC(kernel="linear", probability=True, C=0.025)
+            sk_classif = DummyClassifier(strategy="most_frequent")
         else:
+            sk_classif = _approach_to_skm(ss.approach)
+        if sk_classif is None:
             raise ValueError(ss.approach)
 
         # weight newest sample 10x, and 2nd-newest sample 5x
         # - assumes that newest sample is at index -1, and 2nd-newest at -2
-        if do_constant or ss.weight_recent == "None":
+        n_repeat1, n_repeat2 = ss.weight_recent_n
+        if do_constant or n_repeat1 == 0:
             pass
-        elif ss.weight_recent == "10x_5x":
-            n_repeat1, xrecent1, yrecent1 = 10, X[-1, :], ytrue[-1]
-            n_repeat2, xrecent2, yrecent2 = 5, X[-2, :], ytrue[-2]
+        else:
+            xrecent1, xrecent2 = X[-1, :], X[-2, :]
             X = np.append(X, np.repeat(xrecent1[None], n_repeat1, axis=0), axis=0)
             X = np.append(X, np.repeat(xrecent2[None], n_repeat2, axis=0), axis=0)
+            yrecent1, yrecent2 = ytrue[-1], ytrue[-2]
             ytrue = np.append(ytrue, [yrecent1] * n_repeat1)
             ytrue = np.append(ytrue, [yrecent2] * n_repeat2)
-        else:
-            raise ValueError(ss.weight_recent)
+
+        # scale inputs
+        scaler = StandardScaler()
+        scaler.fit(X)
+        X = scaler.transform(X)
 
         # balance data
         if do_constant or ss.balance_classes == "None":
@@ -86,11 +191,6 @@ class AimodelFactory:
         else:
             raise ValueError(ss.balance_classes)
 
-        # scale inputs
-        scaler = StandardScaler()
-        scaler.fit(X)
-        X = scaler.transform(X)
-
         # calibrate output probabilities
         if do_constant or ss.calibrate_probs == "None":
             pass
@@ -100,10 +200,11 @@ class AimodelFactory:
         ]:
             N = X.shape[0]
             method = ss.calibrate_probs_skmethod(N)  # 'sigmoid' or 'isotonic'
-            cv = min(smallest_n, 5)
+            cv = 5  # number of cv folds. magic number
+            cv = min(smallest_n, cv)
             if cv > 1:
-                skm = CalibratedClassifierCV(
-                    skm,
+                sk_classif = CalibratedClassifierCV(
+                    sk_classif,
                     method=method,
                     cv=cv,
                     ensemble=True,
@@ -112,64 +213,92 @@ class AimodelFactory:
         else:
             raise ValueError(ss.calibrate_probs)
 
-        # fit model
-        if show_warnings:  # show ConvergenceWarning, more
-            skm.fit(X, ytrue)
-        else:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                skm.fit(X, ytrue)
+        # in-place fit model
+        _fit(sk_classif, X, ytrue, show_warnings)
 
-        # calc variable importances
-        imps_tup = self._calc_var_importances(do_constant, skm, X, ytrue)
+        # model
+        model = Aimodel(scaler, None, None, sk_classif)
+
+        # variable importances
+        if self.ss.calc_imps:
+            model.set_importance_per_var(X, ytrue)
 
         # return
-        model = Aimodel(skm, scaler, imps_tup)
         return model
 
-    def _calc_var_importances(self, do_constant: bool, skm, X, ytrue) -> tuple:
-        """
-        @return
-          imps_avg - 1d array of [var_i]: rel_importance_float
-          imps_stddev -- array [var_i]: rel_stddev_float
-        """
-        n = X.shape[1]
-        flat_imps_avg = np.ones((n,), dtype=float) / n
-        flat_imps_stddev = np.ones((n,), dtype=float) / n
 
-        if do_constant:
-            return flat_imps_avg, flat_imps_stddev
+@enforce_types
+def _fit(skm, X, y, show_warnings: bool):
+    """
+    @description
+      In-place fit a regressor or a classifier model
 
-        imps_bunch = permutation_importance(
-            skm,
-            X,
-            ytrue,
-            n_repeats=30,
-            scoring="accuracy",
+    @arguments
+      skm -- sk_regr or sk_classif scikit-learn model
+      X -- 2d array - model training inputs
+      y -- ycont (if regr) or true (if classif) - model training outputs
+      show_warnings -- show ConvergenceWarning etc?
+    """
+    if show_warnings:
+        skm.fit(X, y)
+        return
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        skm.fit(X, y)
+
+
+@enforce_types
+def _approach_to_skm(approach: str):
+    # pylint: disable=too-many-return-statements
+    if approach in ["ClassifConstant", "RegrConstant"]:
+        raise ValueError("should have handled constants before this")
+
+    # regressor approaches
+    if approach == "RegrLinearLS":
+        return LinearRegression()
+    if approach == "RegrLinearLasso":
+        return Lasso()
+    if approach == "RegrLinearRidge":
+        return Ridge()
+    if approach == "RegrLinearElasticNet":
+        return ElasticNet()
+    if approach == "RegrGaussianProcess":
+        return GaussianProcessRegressor()
+    if approach == "RegrXgboost":
+        return XGBRegressor()
+
+    # classifier approaches
+    if approach == "ClassifLinearLasso":
+        return LogisticRegression(penalty="l1", solver="liblinear", max_iter=1000)
+    if approach == "ClassifLinearLasso_Balanced":
+        return LogisticRegression(
+            penalty="l1", solver="liblinear", max_iter=1000, class_weight="balanced"
         )
-        imps_avg = imps_bunch.importances_mean
+    if approach == "ClassifLinearRidge":
+        return LogisticRegression(penalty="l2", solver="lbfgs", max_iter=1000)
+    if approach == "ClassifLinearRidge_Balanced":
+        return LogisticRegression(
+            penalty="l2", solver="lbfgs", max_iter=1000, class_weight="balanced"
+        )
+    if approach == "ClassifLinearElasticNet":
+        return LogisticRegression(
+            penalty="elasticnet", l1_ratio=0.5, solver="saga", max_iter=1000
+        )
+    if approach == "ClassifLinearElasticNet_Balanced":
+        return LogisticRegression(
+            penalty="elasticnet",
+            l1_ratio=0.5,
+            solver="saga",
+            max_iter=1000,
+            class_weight="balanced",
+        )
+    if approach == "ClassifLinearSVM":
+        return SVC(kernel="linear", probability=True, C=0.025)
+    if approach == "ClassifGaussianProcess":
+        return GaussianProcessClassifier()
+    if approach == "ClassifXgboost":
+        return XGBClassifier()
 
-        if max(imps_avg) <= 0:  # all vars have negligible importance
-            return flat_imps_avg, flat_imps_stddev
-
-        imps_avg[imps_avg < 0.0] = 0.0  # some vars have negligible importance
-        assert max(imps_avg) > 0.0, "should have some vars with imp > 0"
-
-        imps_stddev = imps_bunch.importances_std
-
-        # normalize
-        _sum = sum(imps_avg)
-        imps_avg = np.array(imps_avg) / _sum
-        imps_stddev = np.array(imps_stddev) / _sum
-
-        # postconditions
-        assert imps_avg.shape == (n,)
-        assert imps_stddev.shape == (n,)
-        assert 1.0 - 1e-6 <= sum(imps_avg) <= 1.0 + 1e-6
-        assert min(imps_avg) >= 0.0
-        assert max(imps_avg) > 0
-        assert min(imps_stddev) >= 0.0
-
-        # return
-        imps_tup = (imps_avg, imps_stddev)
-        return imps_tup
+    # unidentified
+    return None

@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import pytest
 from enforce_typing import enforce_types
 
@@ -19,8 +23,6 @@ def test_arg_exchange__happy_path():
 
     arg_exchange3 = ArgExchange("kraken")
     assert arg_exchange1 != arg_exchange3
-
-    _ = ArgExchange("dydx")
 
 
 @enforce_types
@@ -73,7 +75,6 @@ def test_arg_exchanges__bad_path():
 def test_verify_exchange_str__happy_path():
     verify_exchange_str("binance")
     verify_exchange_str("kraken")
-    verify_exchange_str("dydx")
 
 
 @enforce_types

@@ -1,3 +1,8 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
+
 # The DuckDBDataStore class is a subclass of the Base
 import glob
 import logging
@@ -177,37 +182,82 @@ class DuckDBDataStore(BaseDataStore):
         self.execute_sql(f"DROP VIEW IF EXISTS {view_name}")
 
     @enforce_types
-    def move_table_data(self, temp_table, permanent_table):
+    def get_query_drop_records_from_table_by_id(
+        self, drop_table_name: str, ref_table_name: str
+    ):
         """
-        Move the table data from the temporary storage to the permanent storage.
+        Builds the query string to perform the operation and returns it
         @arguments:
-            temp_table - The temporary table object
-            permanent_table_name - The name of the permanent table.
+            drop_table_name - The table to drop records from.
+            ref_table_name - The table to reference for the IDs to drop.
+        @example:
+            get_query_drop_records_from_table_by_id("bronze_pdr_slots", "update_pdr_slots")
+        """
+
+        # Return the query string
+        return f"""
+        DELETE FROM {drop_table_name} 
+        WHERE ID IN (
+            SELECT DISTINCT ID 
+            FROM {ref_table_name}
+        );
+        """
+
+    @enforce_types
+    def drop_records_from_table_by_id(self, drop_table_name: str, ref_table_name: str):
+        """
+        Drop the records from the table by the provided IDs.
+        @arguments:
+            table_name - A unique name for the table.
+            ids - The list of IDs to drop.
+        @example:
+            drop_records_from_table_by_id("bronze_pdr_slots", "update_pdr_slots")
+        """
+        query = self.get_query_drop_records_from_table_by_id(
+            drop_table_name, ref_table_name
+        )
+        self.execute_sql(query)
+
+    @enforce_types
+    def get_query_move_table_data(self, from_table, to_table):
+        """
+        Builds the query string to perform the operation and returns it
+        @arguments:
+            from_table - where we'll be taking data from
+            to_table - wehere we'll be inserting data
         @example:
             move_table_data("temp_people", "people")
         """
 
         # Check if the table exists
         table_names = self.get_table_names()
+        assert (
+            from_table.table_name in table_names
+        ), f"Table {from_table.table_name} is "
 
-        if temp_table.fullname not in table_names:
-            logger.info(
-                "move_table_data - Table %s does not exist", temp_table.fullname
-            )
-
-        permanent_table_name = permanent_table.fullname
         # check if the permanent table exists
-        if permanent_table_name not in table_names:
-            # create table if it does not exist
-            self.execute_sql(
-                f"CREATE TABLE {permanent_table_name} AS SELECT * FROM {temp_table.fullname}"
-            )
-            return
+        if to_table.table_name not in table_names:
+            return f"CREATE TABLE {to_table.table_name} AS SELECT * FROM {from_table.table_name};"
 
         # Move the data from the temporary table to the permanent table
-        self.execute_sql(
-            f"INSERT INTO {permanent_table_name} SELECT * FROM {temp_table.fullname}"
+        return (
+            f"INSERT INTO {to_table.table_name} SELECT * FROM {from_table.table_name};"
         )
+
+    @enforce_types
+    def move_table_data(self, from_table, to_table):
+        """
+        Move the table data from the temporary storage to the permanent storage.
+        @arguments:
+            from_table - where we'll be taking data from
+            to_table - wehere we'll be inserting data
+        @example:
+            move_table_data("temp_people", "people")
+        """
+
+        # Check if the table exists
+        move_table_query = self.get_query_move_table_data(from_table, to_table)
+        self.execute_sql(move_table_query)
 
     @enforce_types
     def fill_table_from_csv(self, table_name: str, csv_folder_path: str):
@@ -262,11 +312,6 @@ class DuckDBDataStore(BaseDataStore):
         @example:
             execute_sql("SELECT * FROM table_name")
         """
-
-        # self._connect()
-
-        # if self.duckdb_conn is None:
-        #     raise Exception("DuckDB connection is not established")
         self.duckdb_conn.execute("BEGIN TRANSACTION")
         self.duckdb_conn.execute(query)
         self.duckdb_conn.execute("COMMIT")

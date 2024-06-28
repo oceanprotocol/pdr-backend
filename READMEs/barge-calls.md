@@ -1,3 +1,7 @@
+<!--
+Copyright 2024 Ocean Protocol Foundation
+SPDX-License-Identifier: Apache-2.0
+-->
 # Barge flow of calls
 
 From getting barge going, here's how it calls specific pdr-backend components and passes arguments.

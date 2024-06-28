@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import os
 
 import polars as pl
@@ -6,7 +10,7 @@ from polars import Boolean, Float64, Int64, Utf8
 from pdr_backend.lake.csv_data_store import CSVDataStore
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.table import NamedTable
+from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import mock_ppss
 
 
@@ -45,6 +49,14 @@ def mock_fetch_function(
 def get_table_df(network, st_ut, fin_ut, config):
     print(network, st_ut, fin_ut, config)
     return pl.DataFrame([mocked_object], table_df_schema)
+
+
+def _get_lake_dir(ppss):
+    # if ppss.lake_ss has an attribute lake_dir, return it
+    if hasattr(ppss.lake_ss, "lake_dir"):
+        return ppss.lake_ss.lake_dir
+    # otherwise, return the default lake_dir
+    return ppss.lake_ss.parquet_dir
 
 
 table_df_schema = {
@@ -92,7 +104,7 @@ def test_csv_data_store(
     )
 
     # Initialize Table, fill with data, validate
-    table = NamedTable.from_dataclass(Prediction)
+    table = Table.from_dataclass(Prediction)
     table._append_to_csv(_gql_datafactory_first_predictions_df, ppss)
 
     assert CSVDataStore.from_table(table, ppss).has_data()
@@ -191,7 +203,7 @@ def test_append_to_db(caplog):
         fin_timestr=fin_timestr,
     )
 
-    table = NamedTable.from_dataclass(Prediction)
+    table = Table.from_dataclass(Prediction)
     data = pl.DataFrame([mocked_object], Prediction.get_lake_schema())
     table._append_to_db(data, ppss)
 

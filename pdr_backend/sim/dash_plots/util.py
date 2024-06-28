@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from pdr_backend.aimodel import aimodel_plotter
 from pdr_backend.sim.dash_plots.view_elements import figure_names
 from pdr_backend.sim.sim_plotter import SimPlotter

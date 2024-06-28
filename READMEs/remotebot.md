@@ -1,3 +1,7 @@
+<!--
+Copyright 2024 Ocean Protocol Foundation
+SPDX-License-Identifier: Apache-2.0
+-->
 # Run Remote Predictoor/Trader Bot, Remote Network
 
 This README describes:

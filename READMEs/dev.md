@@ -1,8 +1,7 @@
 <!--
-Copyright 2023 Ocean Protocol Foundation
+Copyright 2024 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
-
 # Usage for Backend Devs
 
 This is for core devs to improve pdr-backend repo itself.
@@ -40,7 +39,7 @@ export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2
 
 All other settings are in [`ppss.yaml`](../ppss.yaml). Some of these are used in unit tests. Whereas most READMEs make a copy `my_ppss.yaml`, for development we typically want to operate directly on `ppss.yaml`.
 
-### Local Usage: Testing & linting
+### Local Usage: Testing
 
 In work console, run tests:
 
@@ -61,21 +60,24 @@ pytest pdr_backend/util/test_ganache/test_contract.py::test_get_contract_filenam
 pytest
 ```
 
-In work console, run linting checks:
+### Local Usage: Linting
+
+In work console, run linting checks.
 
 ```console
-# mypy does static type-checking and more. Configure it via mypy.ini
-mypy ./
-
-# run linting on code style. Configure it via .pylintrc.
-pylint *
-
-# auto-fix some pylint complaints like whitespace
+# auto-fix some pylint complaints like whitespace. CI doesn't modify files; we do
 black ./
+
+# run linting on code style. Use same setup as CI
+pylint --rcfile .pylintrc * pdr_backend/*
+
+# mypy does static type-checking and more. Use same setup as CI
+mypy --config-file mypy.ini ./
 ```
 
-=======
-Check code coverage:
+### Local Usage: Check code coverage
+
+In work console:
 
 ```console
 coverage run --omit="*test*" -m pytest # Run all. For subset, add eg: pdr_backend/lake
@@ -118,4 +120,17 @@ pdr trader ppss.yaml sapphire-testnet
 
 # or, run on mainnet
 pdr trader ppss.yaml sapphire-mainnet
+```
+
+## Dependencies
+See [dependencies.md](dependencies.md) for more details.
+
+
+## Run licenseheaders
+Run this once a year to update the license headers.
+Since this is not something we do everyday, do not include the dependency in setup.py. Instead, install it manually using pip:
+
+```console
+pip install licenseheaders
+licenseheaders -cy -t ./copyright_template.tmpl -x venv/**.py
 ```

@@ -1,7 +1,10 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import ccxt
 from enforce_typing import enforce_types
 
-from pdr_backend.exchange.dydx_exchange import DydxExchange
 from pdr_backend.exchange.mock_exchange import MockExchange
 from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
 
@@ -15,7 +18,6 @@ class ExchangeMgr:
     This class wraps interfaces of exchanges:
     - ccxt
     - Mock exchange, for testing
-    - dydx (soon)
     """
 
     def __init__(self, ss: ExchangeMgrSS):
@@ -27,7 +29,7 @@ class ExchangeMgr:
           Return an exchange object, determined by its name and whether mocking
 
         @arguments
-          exchange_str -- eg "mock", "binance", "binanceus", "kraken", "dydx"
+          exchange_str -- eg "mock", "binance", "binanceus", "kraken"
 
         @return
           <one of: MockExchange, ccxt.binance.binance, ..>
@@ -46,9 +48,6 @@ class ExchangeMgr:
             # ccxt has a "sandbox mode" but that requires more API keys.
             # It's easier to just have our own simple mock.
             return MockExchange()
-
-        if exchange_str == "dydx":
-            return DydxExchange(self.ss)
 
         exchange_class = getattr(ccxt, exchange_str)  # eg ccxt.binance
         exchange = exchange_class(self.ss.ccxt_params)  # eg ccxt.binance(params)
