@@ -48,9 +48,7 @@ Power tools:
   pdr arima_plots PPSS_FILE [--debug_mode False]
   pdr deployer (for >1 predictoor bots)
   pdr lake raw|etl update PPSS_FILE NETWORK
-  pdr lake raw|etl drop PPSS_FILE NETWORK ST
   pdr lake describe --HTML PPSS_FILE NETWORK
-  pdr lake validate PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
 
 Utilities:
