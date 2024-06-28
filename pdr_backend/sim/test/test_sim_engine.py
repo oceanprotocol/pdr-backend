@@ -122,7 +122,7 @@ def mock_gql_init(self, *args):
 
 def mock_gql_update(self):
     ppss = self.ppss
-    print("mock_gql_update--->", ppss.lake_ss.lake_dir)
+
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
     slots = [
         UnixTimeMs.from_natural_language("1 hour ago").to_seconds(),
@@ -205,6 +205,7 @@ def test_get_predictions_signals_data(tmpdir):
     assert isinstance(prediction_dataset, dict)
 
     assert df["slot"][0] in prediction_dataset
+    _clear_test_db(ppss)
 
 
 @patch("pdr_backend.sim.sim_engine.GQLDataFactory.__init__", new=mock_gql_init)

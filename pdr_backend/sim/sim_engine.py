@@ -374,7 +374,6 @@ class SimEngine:
         """
         data = db.query_data(query)
 
-        print("data-->", data)
         if (data is not None) and (len(data["timestamp"]) < 2):
             logger.info(
                 "No prediction data found in database at %s", self.ppss.lake_ss.lake_dir
