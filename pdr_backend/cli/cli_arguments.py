@@ -55,9 +55,7 @@ Power tools:
   pdr arima_plots PPSS_FILE [--debug_mode False]
   pdr deployer (for >1 predictoor bots)
   pdr lake raw|etl update PPSS_FILE NETWORK
-  pdr lake raw|etl drop PPSS_FILE NETWORK ST
   pdr lake describe --HTML PPSS_FILE NETWORK
-  pdr lake validate PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
 
 Utilities:
@@ -71,12 +69,9 @@ Utilities:
   pdr deploy_pred_submitter_mgr PPSS_FILE NETWORK
 
 Inspect and manage lake:
-  pdr lake describe PPSS_FILE NETWORK --HTML
+  pdr lake validate PPSS_FILE NETWORK
   pdr lake query PPSS_FILE NETWORK "SQL QUERY ..."
-  pdr lake raw drop PPSS_FILE NETWORK ST
-  pdr lake raw update PPSS_FILE NETWORK
-  pdr lake etl drop PPSS_FILE NETWORK ST
-  pdr lake etl update PPSS_FILE NETWORK
+  pdr lake raw|etl drop PPSS_FILE NETWORK ST
 
 Tools for core team:
   pdr trueval PPSS_FILE NETWORK
