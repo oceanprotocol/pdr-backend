@@ -45,7 +45,7 @@ install_requirements = [
     "typeguard==4.3.0",
     "xgboost==2.1.0",
     "dash_bootstrap_components==1.6.0",
-    "web3==6.19.0",
+    "web3==6.20.0",
     "sapphire.py==0.2.3",
     "ocean-contracts==2.0.4",  # install this last
 ]
