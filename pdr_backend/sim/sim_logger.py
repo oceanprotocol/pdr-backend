@@ -9,11 +9,9 @@ logger = logging.getLogger("sim_engine")
 
 
 @enforce_types
-# pylint: disable=too-many-instance-attributes
 class SimLogLine:
     def __init__(self, ppss, st, test_i, ut):
         self.st = st
-
         self.test_n = ppss.sim_ss.test_n
         self.test_i = test_i
         self.ut = ut
@@ -24,7 +22,7 @@ class SimLogLine:
         s += f" dt={self.ut.to_timestr()[:-7]}"
         s += " ║"
 
-        s += f"pdr_profit = {compactSmallNum(self.st.pdr_profits_OCEAN[-1])} OCEAN"
+        s += f"pdr_profit={compactSmallNum(self.st.pdr_profits_OCEAN[-1])} OCEAN"
         s += f" (cumul {compactSmallNum(sum(self.st.pdr_profits_OCEAN))} OCEAN)"
         s += " ║"
 

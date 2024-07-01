@@ -1,31 +1,45 @@
+from typing import Optional
 
-@enforce_types
+from enforce_typing import enforce_types
+
+from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.sim.constants import UP, DOWN
+from pdr_backend.sim.sim_model import SimModel
+from pdr_backend.sim.sim_model_data import SimModelData
+
 class SimModelFactory:    
-    def __init__(self, aimodel_ss: AimodelSS):
-        self.aimodel_ss = aimodel_ss
+    @enforce_types
+    def __init__(self, ppss: PPSS):
+        self.ppss = ppss
+
+    @property
+    def aimodel_ss(self):
+        return self.ppss.predictoor_ss.aimodel_ss
       
+    @enforce_types
     def do_build(self, prev_model: Optional[SimModel], test_i: int) -> bool:
         """Update/train model?"""
-        return prev_model is None or \
-            test_i % self.aimodel_ss.train_every_n_epochs == 0
+        n = self.aimodel_ss.train_every_n_epochs
+        return prev_model is None or test_i % n == 0
       
-    def build(self, sim_model_data: SimModelData) -> SimModel:
-        d = sim_model_data
+    @enforce_types
+    def build(self, data: SimModelData) -> SimModel:
         model_f = AimodelFactory(self.aimodel_ss)
         
         model_UP = model_f.build(
-            d.UP.X_train,
-            d.UP.ytrue_train,
+            data[UP].X_train,
+            data[UP].ytrue_train,
             None,
             None,
         )
         
         model_DOWN = model_f.build(
-            d.DOWN.X_train,
-            d.DOWN.ytrue_train,
+            data[DOWN].X_train,
+            data[DOWN].ytrue_train,
             None,
             None,
         )
         
-        sim_model = SimModel(model_UP, model_DOWN)
+        sim_model = SimModel(self.ppss, model_UP, model_DOWN)
         return sim_model

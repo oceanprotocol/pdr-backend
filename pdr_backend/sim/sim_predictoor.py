@@ -1,6 +1,9 @@
+from typing import Tuple
+
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
+from pdr_backend.sim.sim_model_prediction import SimModelPrediction
 
 class SimPredictoor:
     @enforce_types
@@ -19,11 +22,11 @@ class SimPredictoor:
             stake_down = 0
         elif p.prob_up_UP >= p.prob_down_DOWN:
             stake_amt = self.max_stake_amt * p.conf_up
-            stake_up = stake_amt * prob_up_MERGED
+            stake_up = stake_amt * p.prob_up_MERGED
             stake_down = stake_amt * (1.0 - p.prob_up_MERGED)
         else: # p.prob_down_DOWN > p.prob_up_UP
             stake_amt = self.max_stake_amt * p.conf_down
-            stake_up = stake_amt * prob_up_MERGED
+            stake_up = stake_amt * p.prob_up_MERGED
             stake_down = stake_amt * (1.0 - p.prob_up_MERGED)
 
         return (stake_up, stake_down)

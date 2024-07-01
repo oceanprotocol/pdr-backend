@@ -4,12 +4,17 @@ from numpy.testing import assert_array_equal
 
 from pdr_backend.sim.constants import Dirn, UP, DOWN
 from pdr_backend.sim.sim_model_data import SimModelData, SimModelData1Dir
+from pdr_backend.sim.test.resources import get_Xy_UP, get_Xy_DOWN
 
 @enforce_types
 def test_sim_model_data_1dir():
     # build data
-    X_UP = np.array([[1.,2.,3.,4.],[5.,6.,7.,8.]]) # 4 x 2
-    ytrue_UP = np.array([True, True, False, True]) # 4
+    (X_UP, ytrue_UP) = get_Xy_UP()
+        
+    assert X_UP.shape == (4,2)
+    assert ytrue_UP.shape == (4,)
+    ytrue_UP_train = ytrue_UP[:3]
+    data_UP = SimModelData1Dir(X_UP, ytrue_UP)
     
     # basic tests
     assert_array_equal(X_UP, data_UP.X)
@@ -20,23 +25,21 @@ def test_sim_model_data_1dir():
     assert data_UP.fin == (4 - 1) == 3
     assert_array_equal(data_UP.X_train, X_UP[0:3,:])
     assert_array_equal(data_UP.X_test, X_UP[3:3+1,:])
-    assert_array_equal(data_UP.ytrue_train, ytrue_train[0:3])
+    assert_array_equal(data_UP.ytrue_train, ytrue_UP_train)
                        
 @enforce_types
 def test_sim_model_data_both_dirs():
     # build data
-    X_UP = np.array([[1.,2.,3.,4.],[5.,6.,7.,8.]])
-    ytrue_UP = np.array([True, True, False, True])
-    
-    X_DOWN = np.array([[11.,12.,13.,14.],[15.,16.,17.,18.]])
-    ytrue_DOWN = np.array([False, True, False, True])
+    (X_UP, ytrue_UP) = get_Xy_UP()
+    (X_DOWN, ytrue_DOWN) = get_Xy_DOWN()
 
     data_UP = SimModelData1Dir(X_UP, ytrue_UP)
     data_DOWN = SimModelData1Dir(X_DOWN, ytrue_DOWN)
     data = SimModelData(data_UP, data_DOWN)
 
     # basic tests
-    assert sorted(data.keys()) == sorted([UP, DOWN])
+    assert UP in data
+    assert DOWN in data
     for key in data:
         assert isinstance(key, Dirn)
     assert isinstance(data[UP], SimModelData1Dir)

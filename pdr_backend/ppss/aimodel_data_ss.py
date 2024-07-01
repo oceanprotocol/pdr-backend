@@ -20,15 +20,33 @@ class AimodelDataSS(StrMixin):
         self.d = d
 
         # test inputs
-        if not 0 < self.max_n_train:
-            raise ValueError(self.max_n_train)
-        if not 0 < self.autoregressive_n < np.inf:
-            raise ValueError(self.autoregressive_n)
-        if not 0 < self.class_thr <= 1.0:
-            raise ValueError(self.class_thr)
-        if self.transform not in TRANSFORM_OPTIONS:
-            raise ValueError(self.transform)
-
+        self.validate_max_n_train(self.max_n_train)
+        self.validate_autoregressive_n(self.autoregressive_n)
+        self.validate_class_thr(self.class_thr)
+        self.validate_transform(self.transform)
+    
+    # --------------------------------
+    # validators
+    @staticmethod
+    def validate_max_n_train(max_n_train: int):
+        if not 0 < max_n_train:
+            raise ValueError(max_n_train)
+        
+    @staticmethod
+    def validate_autoregressive_n(autoregressive_n: int):
+        if not (0 < autoregressive_n < np.inf):
+            raise ValueError(autoregressive_n)
+        
+    @staticmethod
+    def validate_class_thr(class_thr: float):
+        if not 0 <= class_thr <= 1.0:
+            raise ValueError(class_thr)
+        
+    @staticmethod
+    def validate_transform(transform: str):
+        if transform not in TRANSFORM_OPTIONS:
+            raise ValueError(transform)
+        
     # --------------------------------
     # yaml properties
 
@@ -50,13 +68,31 @@ class AimodelDataSS(StrMixin):
     @property
     def class_thr(self) -> float:
         """eg 0.05 = 5%. UP class needs > this, DOWN < this"""
-        return self.d["class_thr1"]
+        return self.d["class_thr"]
 
     @property
     def transform(self) -> int:
         """eg 'RelDiff'"""
         return self.d["transform"]
-
+    
+    # --------------------------------
+    # setters
+    def set_max_n_train(self, max_n_train:int):
+        self.validate_max_n_train(max_n_train)
+        self.d["max_n_train"] = max_n_train
+        
+    def set_autoregressive_n(self, autoregressive_n:int):
+        self.validate_autoregressive_n(autoregressive_n)
+        self.d["autoregressive_n"] = autoregressive_n
+        
+    def set_class_thr(self, class_thr:float):
+        self.validate_class_thr(class_thr)
+        self.d["class_thr"] = class_thr
+        
+    def set_transform(self, transform:str):
+        self.validate_transform(transform)
+        self.d["transform"] = transform
+        
 
 # =========================================================================
 # utilities for testing

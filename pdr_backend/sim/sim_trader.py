@@ -1,7 +1,9 @@
 import logging
-from enforce_typing import enforce_types
-from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 
+from enforce_typing import enforce_types
+
+from pdr_backend.exchange.exchange_mgr import ExchangeMgr
+from pdr_backend.sim.sim_model_prediction import SimModelPrediction
 
 logger = logging.getLogger("sim_trader")
 
@@ -52,14 +54,27 @@ class SimTrader:
         self.position_open = ""
         profit = self.position_worth - usdcoin_amt_send
         return profit
-
-    # pylint: disable = too-many-return-statements
+    
     def trade_iter(
         self,
         cur_close: float,
         high: float,
         low: float,
         p: SimModelPrediction,
+    ) -> float:
+        return self._trade_iter(
+            cur_close, p.pred_up, p.pred_down, p.conf_up, p.conf_down, high, low,
+            )
+            
+    def _trade_iter(
+        self,
+        cur_close: float,
+        pred_up,
+        pred_down,
+        conf_up: float,
+        conf_down: float,
+        high: float,
+        low: float,
     ) -> float:
         """
         @description
@@ -73,19 +88,14 @@ class SimTrader:
             cur_close -- current price of the token
             high -- highest price reached during the previous period
             low -- lowest price reached during the previous period
-            p -- SimModelPrediction. Includes attributes:
-              pred_up -- prediction that the price will go up
-              pred_down -- prediction that the price will go down
-              conf_up -- confidence in the prediction that the price will go up
-              conf_down -- confidence in the prediction that the price will go down
-
+            pred_up -- prediction that the price will go up
+            pred_down -- prediction that the price will go down
+            conf_up -- confidence in the prediction that the price will go up
+            conf_down -- confidence in the prediction that the price will go down
 
         @return
             profit -- profit made by the trader in this iteration
         """
-        pred_up, pred_down, conf_up, conf_down = \
-            p.pred_up, p.pred_down, p.conf_up, p.conf_down
-        
         trade_amt = self.ppss.trader_ss.buy_amt_usd.amt_eth
         if self.position_open == "":
             if pred_up:

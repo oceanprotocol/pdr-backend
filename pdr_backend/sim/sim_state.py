@@ -1,7 +1,74 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from enforce_typing import enforce_types
+
 from pdr_backend.sim.constants import Dirn, UP, DOWN
+from pdr_backend.sim.sim_model_prediction import SimModelPrediction
+
+@enforce_types
+class ClassifBaseData(dict):
+    def __init__(self):
+        self[UP] = ClassifBaseData1Dir()
+        self[DOWN] = ClassifBaseData1Dir()
+
+    def update(self, true_up_UP, prob_up_UP, sim_model_p: SimModelPrediction):
+        self[UP].update(true_up_UP, sim_model_p.prob_up_UP)
+        self[DOWN].update(true_up_DOWN, sim_model_p.prob_up_DOWN)
+    
+class ClassifBaseData1Dir:
+    @enforce_types
+    def __init__(self):
+        # 'i' is iteration number i
+        self.ytrues: List[bool] = []  # [i] : true value
+        self.probs_up: List[float] = []  # [i] : model's pred. prob.
+
+    @enforce_types
+    def update(self, true_up: float, prob_up: float):
+        self.ytrues.append(true_up)
+        self.probs_up.append(prob_up)
+
+    @property
+    def ytrues_hat(self) -> List[bool]:
+        """@return [i] : model pred. value"""
+        return [p > 0.5 for p in self.probs_up]
+
+    @property
+    def n_correct(self) -> int:
+        return sum(t == t_hat for t, t_hat in zip(self.ytrues, self.ytrues_hat))
+
+    @property
+    def n_trials(self) -> int:
+        return len(self.ytrues)
+
+    @enforce_types
+    def accuracy(self) -> Tuple[float, float, float]:
+        n_correct, n_trials = self.n_correct, self.n_trials
+        acc_est = n_correct / n_trials
+        acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
+        return (acc_est, acc_l, acc_u)
+
+    @enforce_types
+    def precision_recall_f1(self) -> Tuple[float, float, float]:
+        (precision, recall, f1, _) = precision_recall_fscore_support(
+            self.ytrues,
+            self.ytrues_hat,
+            average="binary",
+            zero_division=0.0,
+        )
+        return (precision, recall, f1)
+
+    @enforce_types
+    def log_loss(self) -> float:
+        if min(ytrues) == max(ytrues):
+            return 3.0 # magic number
+        return log_loss(self.ytrues, self.probs_up)
+
+    @enforce_types
+    def metrics(self) -> List[float]:
+        return \
+            list(self.accuracy()) + \
+            list(precision_recall_f1) + \
+            [self.log_loss()]
 
 
 @enforce_types
@@ -86,71 +153,6 @@ class ClassifMetrics1Dir:
             f"recall_{dirn}": self.recalls[-1],
             f"loss_{dirn}": self.losses[-1],
         }
-
-@enforce_types
-class ClassifBaseData(dict):
-    def __init__(self):
-        self[UP] = ClassifBaseData1Dir()
-        self[DOWN] = ClassifBaseData1Dir()
-
-    def update(self, true_up_UP, prob_up_UP, sim_model_p: SimModelPrediction):
-        self[UP].update(true_up_UP, sim_model_p.prob_up_UP)
-        self[DOWN].update(true_up_DOWN, sim_model_p.prob_up_DOWN)
-    
-class ClassifBaseData1Dir:
-    @enforce_types
-    def __init__(self):
-        # 'i' is iteration number i
-        self.ytrues: List[bool] = []  # [i] : true value
-        self.probs_up: List[float] = []  # [i] : model's pred. prob.
-
-    @enforce_types
-    def update(self, true_up: float, prob_up: float):
-        self.ytrues.append(true_up)
-        self.probs_up.append(prob_up)
-
-    @property
-    def ytrues_hat(self) -> List[bool]:
-        """@return [i] : model pred. value"""
-        return [p > 0.5 for p in self.probs_up]
-
-    @property
-    def n_correct(self) -> int:
-        return sum(t == t_hat for t, t_hat in zip(self.ytrues, self.ytrues_hat))
-
-    @property
-    def n_trials(self) -> int:
-        return len(self.ytrues)
-
-    @enforce_types
-    def accuracy(self) -> Tuple[float, float, float]:
-        n_correct, n_trials = self.n_correct, self.n_trials
-        acc_est = n_correct / n_trials
-        acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
-        return (acc_est, acc_l, acc_u)
-
-    @enforce_types
-    def precision_recall_f1(self) -> Tuple[float, float, float]:
-        (precision, recall, f1, _) = precision_recall_fscore_support(
-            self.ytrues,
-            self.ytrues_hat,
-            average="binary",
-            zero_division=0.0,
-        )
-        return (precision, recall, f1)
-
-    @enforce_types
-    def log_loss(self) -> float:
-        if min(ytrues) == max(ytrues):
-            return 3.0 # magic number
-        return log_loss(self.ytrues, self.probs_up)
-
-    @enforce_types
-    def metrics(self) -> List[float]:
-        return \
-            list(self.accuracy()) + \
-            list(precision_recall_f1) + \
-            [self.log_loss()]
 
 
 @enforce_types

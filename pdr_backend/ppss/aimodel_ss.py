@@ -56,6 +56,13 @@ class AimodelSS(StrMixin):
             raise ValueError(self.calibrate_probs)
         if self.calibrate_regr not in CALIBRATE_REGR_OPTIONS:
             raise ValueError(self.calibrate_regr)
+        self.validate_train_every_n_epochs(self.train_every_n_epochs)
+        
+    # --------------------------------
+    # validators -- add as needed, when setters are added
+    def validate_train_every_n_epochs(self, n: int):
+        if n <= 0:
+            raise ValueError(n)
 
     # --------------------------------
     # yaml properties
@@ -130,6 +137,12 @@ class AimodelSS(StrMixin):
         if self.weight_recent == "10000x":
             return 10000, 0
         raise ValueError(self.weight_recent)
+    
+    # --------------------------------
+    # setters (only add as needed)
+    def set_train_every_n_epochs(self, n: int):
+        self.validate_train_every_n_epochs(n)
+        self.d["train_every_n_epochs"] = n
 
 
 # =========================================================================
@@ -143,14 +156,15 @@ def aimodel_ss_test_dict(
     balance_classes: Optional[str] = None,
     calibrate_probs: Optional[str] = None,
     calibrate_regr: Optional[str] = None,
+    train_every_n_epochs: Optional[int] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct AimodelSS(d)"""
     d = {
         "approach": approach or "ClassifLinearRidge",
         "weight_recent": weight_recent or "10x_5x",
         "balance_classes": balance_classes or "SMOTE",
-        "train_every_n_epochs": 1,
         "calibrate_probs": calibrate_probs or "CalibratedClassifierCV_Sigmoid",
         "calibrate_regr": calibrate_regr or "None",
+        "train_every_n_epochs": 1 if train_every_n_epochs is None else train_every_n_epochs
     }
     return d

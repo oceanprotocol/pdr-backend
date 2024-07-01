@@ -1,7 +1,7 @@
 import logging
 import os
 import uuid
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 import polars as pl
@@ -17,7 +17,9 @@ from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
+from pdr_backend.ppss.aimodel_ss import AimodelSS
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.sim.constants import Dirn, UP, DOWN
 from pdr_backend.sim.sim_logger import SimLogLine
 from pdr_backend.sim.sim_model import SimModel
@@ -75,7 +77,7 @@ class SimEngine:
         return self.predict_feed.timeframe
 
     @property
-    def pdr_ss(self) -> PredictorSS:
+    def pdr_ss(self) -> PredictoorSS:
         return self.ppss.predictoor_ss
     
     @property

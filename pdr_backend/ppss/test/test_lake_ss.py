@@ -137,5 +137,5 @@ def test_lake_ss_test_dict_3_nondefault_time_settings(tmpdir):
         timeframe="1h",
     )
     assert d["st_timestr"] == "2023-01-20"
-    assert d["fin_timesetr"] == "2023-01-21"
+    assert d["fin_timestr"] == "2023-01-21"
     assert d["timeframe"] == "1h"

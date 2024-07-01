@@ -1,38 +1,45 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
+from pdr_backend.sim.sim_model_prediction import SimModelPrediction
 from pdr_backend.sim.sim_predictoor import SimPredictoor
 
 @enforce_types
-def test_sim_pdr__attributes():
+def test_sim_predictoor__attributes():
     sim_pdr = _sim_pdr()
     assert isinstance(sim_pdr.pdr_ss, PredictoorSS)
 
     
 @enforce_types
-def test_sim_pdr__properties():
+def test_sim_predictoor__properties():
     sim_pdr = _sim_pdr()
-    max_stake_amt = cls.pdr_ss.stake_amount.amt_eth
-    assert isinstance(max_stake_amt, float)
+    max_stake_amt = sim_pdr.pdr_ss.stake_amount.amt_eth
+    assert isinstance(max_stake_amt, float | int)
     assert max_stake_amt > 0.0
 
     
 @enforce_types
-def test_sim_pdr__predict_iter():
+def test_sim_predictoor__predict_iter():
     # base data
     sim_pdr = _sim_pdr()
 
     # case 1: don't trust models
-    stake_up, stake_down = sim_pdr.predict_iter(False, False, 0.4, 0.6)
+    p = SimModelPrediction(conf_thr=0.9, prob_up_UP=0.4, prob_up_DOWN=0.4)
+    assert not p.do_trust_models()
+    stake_up, stake_down = sim_pdr.predict_iter(p)
     assert stake_up == stake_down == 0.0
 
     # case 2: UP dominates
-    stake_up, stake_down = sim_pdr.predict_iter(True, False, 0.6, 0.4)
+    p = SimModelPrediction(conf_thr=0.1, prob_up_UP=0.6, prob_up_DOWN=0.6)
+    assert p.do_trust_models()
+    stake_up, stake_down = sim_pdr.predict_iter(p)
     assert 0.0 < stake_down < stake_up < 1.0
     assert (stake_up + stake_down) <= sim_pdr.max_stake_amt
     
     # case 3: DOWN dominates
-    stake_up, stake_down = sim_pdr.predict_iter(False, True, 0.4, 0.6)
+    p = SimModelPrediction(conf_thr=0.1, prob_up_UP=0.4, prob_up_DOWN=0.4)
+    assert p.do_trust_models()
+    stake_up, stake_down = sim_pdr.predict_iter(p)
     assert 0.0 < stake_up < stake_down < 1.0
     assert (stake_up + stake_down) <= sim_pdr.max_stake_amt
     

@@ -10,8 +10,8 @@ def test_sim_constants():
     assert UP in Dirn 
     assert DOWN in Dirn
 
-    assert UP == 1
-    assert DOWN == 2
+    assert 1 in Dirn
+    assert 2 in Dirn
     assert 0 not in Dirn
     assert 3 not in Dirn
     assert "up" not in Dirn

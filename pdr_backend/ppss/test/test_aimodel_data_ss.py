@@ -35,13 +35,13 @@ def test_aimodel_data_ss__nondefault_values():
     assert ss.autoregressive_n == 13
     
     ss = AimodelDataSS(aimodel_data_ss_test_dict(class_thr=0.06))
-    assert ss.class_thr = 0.06
+    assert ss.class_thr == 0.06
     
     ss = AimodelDataSS(aimodel_data_ss_test_dict(class_thr=0.0))
-    assert ss.class_thr = 0.0
+    assert ss.class_thr == 0.0
     
     ss = AimodelDataSS(aimodel_data_ss_test_dict(class_thr=1.0))
-    assert ss.class_thr = 1.0
+    assert ss.class_thr == 1.0
 
     ss = AimodelDataSS(aimodel_data_ss_test_dict(transform="RelDiff"))
     assert ss.transform == "RelDiff"
@@ -81,3 +81,37 @@ def test_aimodel_data_ss__bad_inputs():
 
     with pytest.raises(TypeError):
         AimodelDataSS(aimodel_data_ss_test_dict(transform=3.1))
+
+@enforce_types
+def test_aimodel_data_ss__setters():
+    d = aimodel_data_ss_test_dict()
+    ss = AimodelDataSS(d)
+
+    # max_n_train
+    ss.set_max_n_train(32)
+    assert ss.max_n_train == 32
+    with pytest.raises(ValueError):
+        ss.set_max_n_train(0)
+    with pytest.raises(ValueError):
+        ss.set_max_n_train(-5)
+        
+    # autoregressive_n
+    ss.set_autoregressive_n(12)
+    assert ss.autoregressive_n == 12
+    with pytest.raises(ValueError):
+        ss.set_autoregressive_n(0)
+    with pytest.raises(ValueError):
+        ss.set_autoregressive_n(-5)
+        
+    # class_thr
+    ss.set_class_thr(0.34)
+    assert ss.class_thr == 0.34
+    with pytest.raises(ValueError):
+        ss.set_class_thr(-0.1)
+        
+    # transform
+    ss.set_transform("RelDiff")
+    assert ss.transform == "RelDiff"
+    with pytest.raises(ValueError):
+        ss.set_transform("foo")
+    

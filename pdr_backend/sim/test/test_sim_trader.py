@@ -6,6 +6,7 @@ import pytest
 
 from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
 from pdr_backend.sim.sim_trader import SimTrader
+from pdr_backend.sim.sim_model_prediction import SimModelPrediction
 
 FEE_PERCENT = 0.01
 
@@ -66,7 +67,7 @@ def test_close_short_position(sim_trader):
 
 def test_trade_iter_open_long(sim_trader):
     sim_trader._buy = Mock(return_value=10)
-    sim_trader.trade_iter(100, True, False, 0.5, 0, 110, 90)
+    sim_trader._trade_iter(100, True, False, 0.5, 0, 110, 90)
     assert sim_trader.position_open == "long"
     assert sim_trader.position_worth == 1500
     assert sim_trader.position_size == 10
@@ -74,7 +75,7 @@ def test_trade_iter_open_long(sim_trader):
 
 def test_trade_iter_open_short(sim_trader):
     sim_trader._sell = Mock(return_value=1500)
-    sim_trader.trade_iter(100, False, True, 0, 0.5, 110, 90)
+    sim_trader._trade_iter(100, False, True, 0, 0.5, 110, 90)
     assert sim_trader.position_open == "short"
     assert sim_trader.position_worth == 1500
     assert sim_trader.position_size == 15
@@ -86,7 +87,7 @@ def test_trade_iter_close_long_take_profit_percent(sim_trader):
     sim_trader.position_worth = 1000
     sim_trader.tp = 110
     sim_trader._sell = Mock(return_value=1100)
-    profit = sim_trader.trade_iter(100, False, False, 0, 0, 110, 90)
+    profit = sim_trader._trade_iter(100, False, False, 0, 0, 110, 90)
     assert profit == 100  # 1100 - 1000
     assert sim_trader.position_open == ""
 
@@ -97,7 +98,7 @@ def test_trade_iter_close_short_stop_loss_percent(sim_trader):
     sim_trader.position_worth = 1000
     sim_trader.sl = 110
     sim_trader._buy = Mock()
-    profit = sim_trader.trade_iter(100, False, False, 0, 0, 110, 90)
+    profit = sim_trader._trade_iter(100, False, False, 0, 0, 110, 90)
     assert profit == -100  # 1100 - 1000
     assert sim_trader.position_open == ""
 

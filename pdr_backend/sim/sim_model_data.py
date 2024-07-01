@@ -1,22 +1,18 @@
+from typing import List, Union
+
 from enforce_typing import enforce_types
 import numpy as np
 
 from pdr_backend.sim.constants import UP, DOWN
 
-@enforce_types
-class SimModelData(dict):
-    def __init__(
-        self,
-        data_UP: SimModelData1Dir,
-        data_DOWN: SimModelData1Dir,
-    ):
-        self[UP] = data_UP
-        self[DOWN] = data_DOWN
-
 class SimModelData1Dir:
     
     @enforce_types
-    def __init__(self, X: np.ndarray, ytrue: np.ndarray):        
+    def __init__(self, X: np.ndarray, ytrue: np.ndarray):
+        assert len(X.shape) == 2
+        assert len(ytrue.shape) == 1
+        assert X.shape[0] == ytrue.shape[0], (X.shape[0], ytrue.shape[0])
+        
         self.X: np.ndarray = X
         self.ytrue: np.ndarray = ytrue
         
@@ -37,6 +33,15 @@ class SimModelData1Dir:
         return self.X[self.fin : self.fin + 1, :]
     
     @property
-    def ytrue_train(self) -> List[bool]:
+    def ytrue_train(self) -> np.ndarray:
         return self.ytrue[self.st:self.fin]
     
+@enforce_types
+class SimModelData(dict):
+    def __init__(
+        self,
+        data_UP: SimModelData1Dir,
+        data_DOWN: SimModelData1Dir,
+    ):
+        self[UP] = data_UP
+        self[DOWN] = data_DOWN
