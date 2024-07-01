@@ -17,7 +17,7 @@ def test_compact_num(tmpdir, caplog):
     ppss = PPSS(yaml_str=s, network="development")
 
     log_dir = os.path.join(tmpdir, "logs")
-    d = sim_ss_test_dict(log_dir, True, test_n=5)
+    d = sim_ss_test_dict(log_dir, use_own_model=True, test_n=5)
     ppss.sim_ss = SimSS(d)
 
     st = Mock(spec=SimState)

@@ -136,8 +136,8 @@ def mock_gql_update(self):
     ]
 
     contract_address = "0xecefd19314ee798921b053694a23974e406da47b"
-    # IDS id = {contract address}-{slot}-{user}
-    IDS = [f"{contract_address}-{slot}-0x00" for slot in slots]
+    # payout_ids id = {contract address}-{slot}-{user}
+    payout_ids = [f"{contract_address}-{slot}-0x00" for slot in slots]
 
     # timestamps are in ms according to slots
     timestamps = [slot * 1000 for slot in slots]
@@ -145,7 +145,7 @@ def mock_gql_update(self):
     db.insert_to_table(
         pl.DataFrame(
             {
-                "ID": IDS,
+                "ID": payout_ids,
                 "slot": slots,
                 "payout": [1, 2, 3, 4],
                 "roundSumStakes": [1, 2, 3, 4],

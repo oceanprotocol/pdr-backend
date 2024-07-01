@@ -28,7 +28,7 @@ from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_trader import SimTrader
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.strutil import shift_one_earlier
-from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
@@ -99,6 +99,9 @@ class SimEngine:
         if not self.ppss.sim_ss.use_own_model:
             chain_prediction_data = self._get_past_predictions_from_chain(self.ppss)
             if not chain_prediction_data:
+                logger.error(
+                    "Could not get the required prediction data to run the simulations"
+                )
                 return
 
             self.prediction_dataset = self._get_predictions_signals_data(
@@ -163,20 +166,20 @@ class SimEngine:
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
         timeframe: ArgTimeframe = predict_feed.timeframe  # type: ignore
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
+        ut_seconds = ut.to_seconds()
 
         # predict price direction
         if self.ppss.sim_ss.use_own_model is not False:
             prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+        elif (
+            self.prediction_dataset is not None
+            and ut_seconds in self.prediction_dataset
+        ):
+            # check if the current slot is in the keys
+            prob_up = self.prediction_dataset[ut_seconds]
         else:
-            ut_seconds = ut.to_seconds()
-            if (
-                self.prediction_dataset is not None
-                and ut_seconds in self.prediction_dataset
-            ):
-                # check if the current slot is in the keys
-                prob_up = self.prediction_dataset[ut_seconds]
-            else:
-                return
+            logger.error("No prediction found at time %s", ut_seconds)
+            return
 
         prob_down: float = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
@@ -330,9 +333,9 @@ class SimEngine:
 
         df: pl.DataFrame = db.query_data(query)
 
-        for i in range(len(df)):
-            if df["probUp"][i] is not None:
-                result_dict[df["slot"][i]] = df["probUp"][i]
+        for row in df.to_dicts():
+            if row["probUp"] is not None:
+                result_dict[row["slot"]] = row["probUp"]
 
         return result_dict
 
@@ -344,8 +347,9 @@ class SimEngine:
         start_date = current_time_s - (timeframe.s * number_of_data_points)
 
         # check if ppss is correctly configured for data ferching
-        if start_date < int(
-            UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr) / 1000
+        if (
+            UnixTimeS(start_date)
+            < UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr).to_seconds()
         ):
             logger.info(
                 (
@@ -376,15 +380,17 @@ class SimEngine:
             ORDER BY timestamp DESC
             LIMIT 1);
         """
-        data = db.query_data(query)
+        data: pl.DataFrame = db.query_data(query)
 
-        if (data is not None) and (len(data["timestamp"]) < 2):
+        if data.shape[0] > 0 and len(data["timestamp"]) < 2:
             logger.info(
                 "No prediction data found in database at %s", self.ppss.lake_ss.lake_dir
             )
             return False
-        start_timestamp = data["timestamp"][0] / 1000
+        start_timestamp = UnixTimeMs(data["timestamp"][0]).to_seconds()
         # end_timestamp = data["timestamp"][1] / 1000
+
+        print(start_timestamp, start_date)
 
         if start_timestamp > start_date:
             logger.info(
@@ -395,9 +401,5 @@ class SimEngine:
                 time.strftime("%Y-%m-%d", time.localtime(start_date)),
             )
             return False
-
-        # if (end_timestamp + timeframe.s) < time.time():
-        #    logger.info("Lake data is not up to date.")
-        #    return False
 
         return True

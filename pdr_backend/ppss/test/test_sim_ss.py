@@ -16,7 +16,7 @@ from pdr_backend.ppss.sim_ss import (
 
 @enforce_types
 def test_sim_ss_defaults(tmpdir):
-    d = sim_ss_test_dict(_logdir(tmpdir), True)
+    d = sim_ss_test_dict(log_dir=_logdir(tmpdir), use_own_model=True)
     ss = SimSS(d)
 
     # yaml properties
@@ -66,12 +66,12 @@ def test_sim_ss_test_n_badpaths(tmpdir):
     with pytest.raises(ValueError):
         _ = SimSS(d)
 
-    d = sim_ss_test_dict(_logdir(tmpdir), True)
+    d = sim_ss_test_dict(log_dir=_logdir(tmpdir), use_own_model=True)
     d["test_n"] = "not_an_int"
     with pytest.raises(TypeError):
         _ = SimSS(d)
 
-    d = sim_ss_test_dict(_logdir(tmpdir), True)
+    d = sim_ss_test_dict(log_dir=_logdir(tmpdir), use_own_model=True)
     d["test_n"] = 3.2
     with pytest.raises(TypeError):
         _ = SimSS(d)
@@ -87,7 +87,7 @@ def test_sim_ss_tradetype_happypaths(tmpdir):
 
 @enforce_types
 def test_sim_ss_tradetype_badpaths(tmpdir):
-    d = sim_ss_test_dict(_logdir(tmpdir), True)
+    d = sim_ss_test_dict(log_dir=_logdir(tmpdir), use_own_model=True)
     d["tradetype"] = 3.2
     with pytest.raises(TypeError):
         _ = SimSS(d)
