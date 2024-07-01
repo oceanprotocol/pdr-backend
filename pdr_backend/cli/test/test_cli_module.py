@@ -62,12 +62,12 @@ class _PPSS:
 class _PPSS_OBJ:
     PPSS = PPSSClass(
         yaml_filename=os.path.abspath("ppss.yaml"),
-        network="development",
+        network="sapphire-testnet",
     )
 
 
 class _NETWORK:
-    NETWORK = "development"
+    NETWORK = "sapphire-testnet"
 
 
 class _LOOKBACK:
@@ -233,7 +233,7 @@ def test_do_sim(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.SimEngine.run", mock_f)
 
-    do_sim(MockArgParser_PPSS().parse_args())
+    do_sim(MockArgParser_PPSS_NETWORK().parse_args())
 
     mock_f.assert_called()
 

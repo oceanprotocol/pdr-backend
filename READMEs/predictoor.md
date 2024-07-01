@@ -69,7 +69,7 @@ cp ppss.yaml my_ppss.yaml
 
 Let's run the simulation engine. In console:
 ```console
-pdr sim my_ppss.yaml
+pdr sim my_ppss.yaml sapphire-mainnet
 ```
 
 What the engine does does:

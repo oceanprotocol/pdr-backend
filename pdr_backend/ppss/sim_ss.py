@@ -62,6 +62,10 @@ class SimSS(StrMixin):
     def tradetype(self) -> str:
         return self.d.get("tradetype", "histmock")
 
+    @property
+    def use_own_model(self) -> bool:
+        return self.d["use_own_model"]
+
     # --------------------------------
     # derived methods
     def is_final_iter(self, iter_i: int) -> bool:
@@ -78,11 +82,13 @@ class SimSS(StrMixin):
 @enforce_types
 def sim_ss_test_dict(
     log_dir: str,
+    use_own_model: bool,
     test_n: Optional[int] = None,
     tradetype: Optional[str] = None,
 ) -> dict:
     d = {
         "log_dir": log_dir,
+        "use_own_model": use_own_model,
         "test_n": test_n or 10,
         "tradetype": tradetype or "histmock",
     }
