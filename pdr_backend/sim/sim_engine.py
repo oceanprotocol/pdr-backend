@@ -17,6 +17,9 @@ from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.analytics.feed_avg_stake_and_accuracy import (
+    get_avg_stake_and_accuracy_for_feed,
+)
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
@@ -62,6 +65,25 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
 
+        use_live_data = self.ppss.predictoor_ss.use_live_stake_and_accuracy
+
+        if use_live_data:
+            data = get_avg_stake_and_accuracy_for_feed(self.predict_feed)
+            if data:
+                self.others_accuracy, daily_stake_amt = data
+                epochs_per_day = 288 if self.predict_feed.timeframe == "5m" else 24
+                self.others_stake = daily_stake_amt.amt_eth / epochs_per_day
+            else:
+                logger.error(
+                    "Error getting live values, using others_stake and others_accuracy"
+                )
+        else:
+            data = None
+
+        if not use_live_data or data is None:
+            self.others_accuracy = self.ppss.predictoor_ss.others_accuracy
+            self.others_stake = self.ppss.predictoor_ss.others_stake.amt_eth
+
         self.model: Optional[Aimodel] = None
 
     @property
@@ -100,7 +122,6 @@ class SimEngine:
         ppss, pdr_ss, st = self.ppss, self.ppss.predictoor_ss, self.st
         transform = pdr_ss.aimodel_data_ss.transform
         stake_amt = pdr_ss.stake_amount.amt_eth
-        others_stake = pdr_ss.others_stake.amt_eth
         revenue = pdr_ss.revenue.amt_eth
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
@@ -207,8 +228,8 @@ class SimEngine:
         st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
 
         # track predictoor profit
-        tot_stake = others_stake + stake_amt
-        others_stake_correct = others_stake * pdr_ss.others_accuracy
+        tot_stake = self.others_stake + stake_amt
+        others_stake_correct = self.others_stake * self.others_accuracy
         if true_up:
             tot_stake_correct = others_stake_correct + stake_up
             percent_to_me = stake_up / tot_stake_correct
