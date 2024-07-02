@@ -10,7 +10,7 @@ def get_input_column():
         ],
         style={
             "height": "100%",
-            "width": "50%",
+            "width": "30%",
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "space-around",
@@ -20,10 +20,13 @@ def get_input_column():
 
 def get_graphs_column():
     return html.Div(
+        [
+            html.Div(id="accuracy_chart", style={"height": "50%"}),
+        ],
         id="graphs_container",
         style={
             "height": "100%",
-            "width": "50%",
+            "width": "65%",
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "space-around",
@@ -37,6 +40,7 @@ def get_layout():
             dcc.Store(id="data-folder"),
             dcc.Store(id="feeds-data"),
             dcc.Store(id="predictoors-data"),
+            dcc.Store(id="payouts-data"),
             html.H1(
                 "Predictoor dashboard",
                 id="page_title",
@@ -46,16 +50,26 @@ def get_layout():
             dcc.Loading(
                 id="loading",
                 type="default",
-                children=[get_input_column(), get_graphs_column()],
+                children=get_main_container(),
                 style={
                     "height": "100%",
                     "width": "100%",
-                    "display": "flex",
-                    "alignItems": "flexStart",
                 },
                 custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
             ),
         ]
+    )
+
+
+def get_main_container():
+    return html.Div(
+        [get_input_column(), get_graphs_column()],
+        style={
+            "height": "100%",
+            "width": "100%",
+            "display": "flex",
+            "justifyContent": "space-between",
+        },
     )
 
 
@@ -81,3 +95,7 @@ def get_table(table_id, table_name, columns, data):
         ],
         style={"marginBottom": "40px"},
     )
+
+
+def get_graph(figure):
+    return dcc.Graph(figure=figure, style={"width": "100%"})
