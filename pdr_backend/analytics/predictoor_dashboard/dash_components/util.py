@@ -19,3 +19,22 @@ def get_feeds_data_from_db(lake_dir):
     except Exception as e:
         print(e)
     return feed_data
+
+
+def get_predictoors_data_from_db(lake_dir):
+    predictoor_data = {}
+    db = DuckDBDataStore(lake_dir, read_only=True)
+    try:
+        df = db.query_data(
+            f"""
+                SELECT user FROM {predictions_table_name}
+                GROUP BY user
+            """
+        )
+
+        if len(df) == 0:
+            return predictoor_data
+        predictoor_data = df.to_dicts()
+    except Exception as e:
+        print(e)
+    return predictoor_data
