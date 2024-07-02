@@ -61,6 +61,7 @@ Power tools:
   pdr analytics PPSS_FILE NETWORK
 
 Utilities:
+  pdr predictoor_dashboard PPSS_FILE NETWORK
   pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
   pdr get_predictions_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
   pdr get_traction_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
@@ -638,6 +639,19 @@ class ArimaPlotsArgParser(CustomArgParser, PPSS_Mixin, DEBUG_Mixin):
         )
 
 
+class PredictoorDashboardArgParser(
+    CustomArgParser, PPSS_Mixin, NETWORK_Mixin, DEBUG_Mixin
+):
+    # pylint: disable=unused-argument
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+
+        self.add_arguments_bulk(
+            command_name,
+            ["PPSS", "NETWORK", "DEBUG"],
+        )
+
+
 # below, list each entry in defined_parsers in same order as HELP_LONG
 defined_parsers = {
     # main tools
@@ -684,6 +698,9 @@ defined_parsers = {
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
     "do_sim_plots": SimPlotsArgParser("Visualize simulation data", "sim_plots"),
     "do_arima_plots": ArimaPlotsArgParser("Visualize ARIMA data", "arima_plots"),
+    "do_predictoor_dashboard": PredictoorDashboardArgParser(
+        "Visualize Predictoor data", "predictoor_dashboard"
+    ),
 }
 
 
