@@ -1,12 +1,17 @@
-from dash import Input, Output
+from dash import Input, Output, State
 import dash
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_feeds_data_from_db,
     get_predictoors_data_from_db,
+    get_payouts_from_db,
     get_predictoors_stake_data_from_db,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
     get_table,
+    get_graph,
+)
+from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
+    get_accuracy_chart,
     get_predictoors_stake_graph,
 )
 
@@ -19,11 +24,43 @@ def get_callbacks(app):
         Output("predictoors-stake-data", "data"),
         Input("data-folder", "data"),
     )
-    def get_data_from_db(files_dir):
+    def get_input_data_from_db(files_dir):
         feeds_data = get_feeds_data_from_db(files_dir)
         predictoors_data = get_predictoors_data_from_db(files_dir)
-        predictoors_stake_Data = get_predictoors_stake_data_from_db(files_dir)
-        return feeds_data, predictoors_data, predictoors_stake_Data
+        predictoors_stake_data = get_predictoors_stake_data_from_db(files_dir)
+        return feeds_data, predictoors_data, predictoors_stake_data
+
+    @app.callback(
+        Output("payouts-data", "data"),
+        [
+            Input("feeds_table", "selected_rows"),
+            Input("predictoors_table", "selected_rows"),
+        ],
+        State("feeds-data", "data"),
+        State("predictoors-data", "data"),
+        State("data-folder", "data"),
+    )
+    def get_display_data_from_db(
+        feeds_table_selected_rows,
+        predictoors_table_selected_rows,
+        feeds_data,
+        predictoors_data,
+        lake_dir,
+    ):
+        feeds_addrs = []
+        predictoors_addrs = []
+        if len(feeds_table_selected_rows) == 0:
+            return dash.no_update
+
+        for i in feeds_table_selected_rows:
+            feeds_addrs.append(feeds_data[i]["contract"])
+
+        for i in predictoors_table_selected_rows:
+            predictoors_addrs.append(predictoors_data[i]["user"])
+
+        payouts = get_payouts_from_db(feeds_addrs, predictoors_addrs, lake_dir)
+
+        return payouts
 
     @app.callback(Output("feeds_container", "children"), Input("feeds-data", "data"))
     def create_feeds_table(feeds_data):
@@ -53,27 +90,58 @@ def get_callbacks(app):
         return table
 
     @app.callback(
-        Output("predictoors_stake_container", "children"),
-        Input("feeds_table", "selected_rows"),
-        Input("feeds_table", "data"),
+        Output("predictoors_stake_chart", "children"),
         Input("predictoors-stake-data", "data"),
+        Input("feeds_table", "selected_rows"),
+        Input("predictoors_table", "selected_rows"),
+        State("feeds-data", "data"),
+        State("predictoors-data", "data"),
     )
-    def create_predictoors_stake_graph(
-        selected_feeds, feeds_table_data, predictoors_stake_data):
+    def create_predictoors_stake_chart(
+        predictoors_stake_data,
+        feeds_table_selected_rows,
+        predictoors_table_selected_rows,
+        feeds_data,
+        predictoors_data,
+    ):
         if not predictoors_stake_data:
             return dash.no_update
 
-        selected_sources = [row["source"] for row in feeds_table_data]
-        selected_timeframes = [row["timeframe"] for row in feeds_table_data]
-        selected_pairs = [row["pair"] for row in feeds_table_data]
+        feeds = []
+        predictoors_addrs = []
+        for i in feeds_table_selected_rows:
+            feeds.append(feeds_data[i])
 
-        if selected_feeds:
-            predictoors_stake_data = [
-                row for row in predictoors_stake_data 
-                if row["source"] in selected_sources and
-                row["timeframe"] in selected_timeframes and
-                row["pair"] in selected_pairs
-            ]
+        for i in predictoors_table_selected_rows:
+            predictoors_addrs.append(predictoors_data[i]["user"])
 
-        fig = get_predictoors_stake_graph(predictoors_stake_data)
-        return fig
+        chart = get_predictoors_stake_graph(
+            predictoors_stake_data, feeds, predictoors_addrs
+        )
+        return get_graph(chart)
+
+    @app.callback(
+        Output("accuracy_chart", "children"),
+        Input("payouts-data", "data"),
+        Input("feeds_table", "selected_rows"),
+        Input("predictoors_table", "selected_rows"),
+        State("feeds-data", "data"),
+        State("predictoors-data", "data"),
+    )
+    def create_accuracy_chart(
+        payouts_data,
+        feeds_table_selected_rows,
+        predictoors_table_selected_rows,
+        feeds_data,
+        predictoors_data,
+    ):
+        feeds_addrs = []
+        predictoors_addrs = []
+        for i in feeds_table_selected_rows:
+            feeds_addrs.append(feeds_data[i]["contract"])
+
+        for i in predictoors_table_selected_rows:
+            predictoors_addrs.append(predictoors_data[i]["user"])
+
+        chart = get_accuracy_chart(payouts_data, feeds_addrs, predictoors_addrs)
+        return get_graph(chart)
