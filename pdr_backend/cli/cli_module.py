@@ -33,6 +33,7 @@ from pdr_backend.sim.multisim_engine import MultisimEngine
 from pdr_backend.sim.sim_dash import sim_dash
 from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.statutil.arima_dash import arima_dash
+from pdr_backend.analytics.predictoor_dashboard.predictoor_dash import predictoor_dash
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
@@ -301,3 +302,14 @@ def do_arima_plots(args, nested_args=None):
         nested_override_args=nested_args,
     )
     arima_dash(ppss, args.debug_mode)
+
+
+@enforce_types
+# pylint: disable=unused-argument
+def do_predictoor_dashboard(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network=args.NETWORK,
+        nested_override_args=nested_args,
+    )
+    predictoor_dash(ppss, args.debug_mode)
