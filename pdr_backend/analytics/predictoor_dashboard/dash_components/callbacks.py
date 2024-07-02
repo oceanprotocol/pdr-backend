@@ -4,14 +4,13 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_feeds_data_from_db,
     get_predictoors_data_from_db,
     get_payouts_from_db,
-    get_predictoors_stake_data_from_db,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
     get_table,
     get_graph,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
-    get_accuracy_chart,
+    get_figures,
     get_predictoors_stake_graph,
 )
 
@@ -21,14 +20,12 @@ def get_callbacks(app):
     @app.callback(
         Output("feeds-data", "data"),
         Output("predictoors-data", "data"),
-        Output("predictoors-stake-data", "data"),
         Input("data-folder", "data"),
     )
     def get_input_data_from_db(files_dir):
         feeds_data = get_feeds_data_from_db(files_dir)
         predictoors_data = get_predictoors_data_from_db(files_dir)
-        predictoors_stake_data = get_predictoors_stake_data_from_db(files_dir)
-        return feeds_data, predictoors_data, predictoors_stake_data
+        return feeds_data, predictoors_data
 
     @app.callback(
         Output("payouts-data", "data"),
@@ -91,44 +88,45 @@ def get_callbacks(app):
 
     @app.callback(
         Output("predictoors_stake_chart", "children"),
-        Input("predictoors-stake-data", "data"),
-        Input("feeds_table", "selected_rows"),
-        Input("predictoors_table", "selected_rows"),
-        State("feeds-data", "data"),
-        State("predictoors-data", "data"),
-    )
-    def create_predictoors_stake_chart(
-        predictoors_stake_data,
-        feeds_table_selected_rows,
-        predictoors_table_selected_rows,
-        feeds_data,
-        predictoors_data,
-    ):
-        if not predictoors_stake_data:
-            return dash.no_update
-
-        feeds = []
-        predictoors_addrs = []
-        for i in feeds_table_selected_rows:
-            feeds.append(feeds_data[i])
-
-        for i in predictoors_table_selected_rows:
-            predictoors_addrs.append(predictoors_data[i]["user"])
-
-        chart = get_predictoors_stake_graph(
-            predictoors_stake_data, feeds, predictoors_addrs
-        )
-        return get_graph(chart)
-
-    @app.callback(
-        Output("accuracy_chart", "children"),
         Input("payouts-data", "data"),
         Input("feeds_table", "selected_rows"),
         Input("predictoors_table", "selected_rows"),
         State("feeds-data", "data"),
         State("predictoors-data", "data"),
     )
-    def create_accuracy_chart(
+    def create_predictoors_stake_chart(
+        payouts_data,
+        feeds_table_selected_rows,
+        predictoors_table_selected_rows,
+        feeds_data,
+        predictoors_data,
+    ):
+        if not payouts_data:
+            return dash.no_update
+
+        feeds_addrs = []
+        predictoors_addrs = []
+        for i in feeds_table_selected_rows:
+            feeds_addrs.append(feeds_data[i]["contract"])
+
+        for i in predictoors_table_selected_rows:
+            predictoors_addrs.append(predictoors_data[i]["user"])
+
+        chart = get_predictoors_stake_graph(
+            payouts_data, feeds_addrs, predictoors_addrs
+        )
+        return get_graph(chart)
+
+    @app.callback(
+        Output("accuracy_chart", "children"),
+        Output("profit_chart", "children"),
+        Input("payouts-data", "data"),
+        Input("feeds_table", "selected_rows"),
+        Input("predictoors_table", "selected_rows"),
+        State("feeds-data", "data"),
+        State("predictoors-data", "data"),
+    )
+    def create_charts(
         payouts_data,
         feeds_table_selected_rows,
         predictoors_table_selected_rows,
@@ -143,5 +141,7 @@ def get_callbacks(app):
         for i in predictoors_table_selected_rows:
             predictoors_addrs.append(predictoors_data[i]["user"])
 
-        chart = get_accuracy_chart(payouts_data, feeds_addrs, predictoors_addrs)
-        return get_graph(chart)
+        accuracy_fig, profit_fig = get_figures(
+            payouts_data, feeds_addrs, predictoors_addrs
+        )
+        return get_graph(accuracy_fig), get_graph(profit_fig)

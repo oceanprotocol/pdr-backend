@@ -24,8 +24,9 @@ def get_input_column():
 def get_graphs_column():
     return html.Div(
         [
-            html.Div(id="accuracy_chart", style={"height": "50%"}),
-            html.Div(id="predictoors_stake_chart", style={"height": "50%"}),
+            html.Div(id="accuracy_chart", style={"height": "30%"}),
+            html.Div(id="profit_chart", style={"height": "30%"}),
+            html.Div(id="predictoors_stake_chart", style={"height": "30%"}),
         ],
         id="graphs_container",
         style={
@@ -104,4 +105,4 @@ def get_table(table_id, table_name, columns, data):
 
 
 def get_graph(figure):
-    return dcc.Graph(figure=figure, style={"width": "100%"})
+    return dcc.Graph(figure=figure, style={"width": "100%", "height": "45vh"})
