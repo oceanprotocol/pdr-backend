@@ -9,9 +9,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
     get_table,
     get_graph,
 )
-from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
-    get_accuracy_chart,
-)
+from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import get_figures
 
 
 # pylint: disable=too-many-statements
@@ -87,13 +85,14 @@ def get_callbacks(app):
 
     @app.callback(
         Output("accuracy_chart", "children"),
+        Output("profit_chart", "children"),
         Input("payouts-data", "data"),
         Input("feeds_table", "selected_rows"),
         Input("predictoors_table", "selected_rows"),
         State("feeds-data", "data"),
         State("predictoors-data", "data"),
     )
-    def create_accuracy_chart(
+    def create_charts(
         payouts_data,
         feeds_table_selected_rows,
         predictoors_table_selected_rows,
@@ -108,5 +107,7 @@ def get_callbacks(app):
         for i in predictoors_table_selected_rows:
             predictoors_addrs.append(predictoors_data[i]["user"])
 
-        chart = get_accuracy_chart(payouts_data, feeds_addrs, predictoors_addrs)
-        return get_graph(chart)
+        accuracy_fig, profit_fig = get_figures(
+            payouts_data, feeds_addrs, predictoors_addrs
+        )
+        return get_graph(accuracy_fig), get_graph(profit_fig)

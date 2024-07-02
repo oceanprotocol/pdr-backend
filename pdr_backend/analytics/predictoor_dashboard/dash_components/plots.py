@@ -1,15 +1,17 @@
 import plotly.graph_objects as go
 
 
-def get_accuracy_chart(payouts, feeds, predictoors):
+def get_figures(payouts, feeds, predictoors):
     slots = []
     accuracys = []
-    scatters = []
+    profits = []
+    accuracy_scatters = []
+    profit_scatters = []
     if payouts:
         for predictoor in predictoors:
             for feed in feeds:
                 slots = []
-                accuracys = []
+                profit = 0
                 predictions = 0
                 correct_predictions = 0
                 for p in payouts:
@@ -17,11 +19,15 @@ def get_accuracy_chart(payouts, feeds, predictoors):
                         predictions += 1
                         if p["payout"] > 0:
                             correct_predictions += 1
+                            profit += p["payout"] - p["stake"]
+                        else:
+                            profit -= p["stake"]
 
                         slots.append(p["slot"] / 1000)
                         accuracys.append((correct_predictions / predictions) * 100)
+                        profits.append(profit)
                 if len(slots) > 0:
-                    scatters.append(
+                    accuracy_scatters.append(
                         go.Scatter(
                             x=slots,
                             y=accuracys,
@@ -30,8 +36,17 @@ def get_accuracy_chart(payouts, feeds, predictoors):
                             name=f"{predictoor[:5]} - {feed[:5]}",
                         ),
                     )
+                    profit_scatters.append(
+                        go.Scatter(
+                            x=slots,
+                            y=profits,
+                            mode="lines",
+                            fill=None,
+                            name=f"{predictoor[:5]} - {feed[:5]}",
+                        ),
+                    )
     else:
-        scatters.append(
+        accuracy_scatters.append(
             go.Scatter(
                 x=slots,
                 y=accuracys,
@@ -40,8 +55,22 @@ def get_accuracy_chart(payouts, feeds, predictoors):
                 name="accuracy upper bound",
             ),
         )
-    fig = go.Figure()
-    fig.add_traces(scatters)
-    fig.update_layout(title="Accuracy")
-    fig.update_layout(margin={"l": 20, "r": 0, "t": 50, "b": 0})
-    return fig
+        profit_scatters.append(
+            go.Scatter(
+                x=slots,
+                y=profits,
+                mode="lines",
+                fill=None,
+                name="accuracy upper bound",
+            ),
+        )
+    fig_accuracy = go.Figure()
+    fig_accuracy.add_traces(accuracy_scatters)
+    fig_accuracy.update_layout(title="Accuracy")
+    fig_accuracy.update_layout(margin={"l": 20, "r": 0, "t": 50, "b": 0})
+
+    fig_profit = go.Figure()
+    fig_profit.add_traces(profit_scatters)
+    fig_profit.update_layout(title="Profit")
+    fig_profit.update_layout(margin={"l": 20, "r": 0, "t": 50, "b": 0})
+    return fig_accuracy, fig_profit
