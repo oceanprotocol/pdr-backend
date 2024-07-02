@@ -16,8 +16,8 @@ class SimModel(dict):
 
     def predict_next(self, d: SimModelData) -> SimModelPrediction:
         conf_thr = self.ppss.trader_ss.sim_confidence_threshold
-        prob_up_UP = self[UP].predict_ptrue(d[UP].X_test)[0]
-        prob_up_DOWN = self[DOWN].predict_ptrue(d[DOWN].X_test)[0]
+        prob_UP = self[UP].predict_ptrue(d[UP].X_test)[0]
+        prob_DOWN = self[DOWN].predict_ptrue(d[DOWN].X_test)[0]
 
-        return SimModelPrediction(conf_thr, prob_up_UP, prob_up_DOWN)
+        return SimModelPrediction(conf_thr, prob_UP, prob_DOWN)
     

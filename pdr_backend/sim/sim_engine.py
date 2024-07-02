@@ -152,11 +152,11 @@ class SimEngine:
 
         # observe true price change
         true_up_close = next_close > cur_close
-        true_up_UP = next_high > y_thr_UP    # did next high go > prev close+% ?
-        true_up_DOWN = next_low < y_thr_DOWN # did next low  go < prev close-% ?
+        true_UP = next_high > y_thr_UP    # did next high go > prev close+% ?
+        true_DOWN = next_low < y_thr_DOWN # did next low  go < prev close-% ?
 
         # update state - classifier data
-        st.classif_base.update(true_up_UP, true_up_DOWN, sim_model_p)
+        st.classif_base.update(true_UP, true_DOWN, sim_model_p)
         st.classif_metrics.update(st.classif_base)
 
         # update predictoor profit
