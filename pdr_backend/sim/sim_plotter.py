@@ -22,7 +22,7 @@ class SimPlotter:
         self,
     ):
         self.st = None
-        self.aimodel_plotdata_ = None
+        self.aimodel_plotdata = None
         self.multi_id = None
 
     @staticmethod
