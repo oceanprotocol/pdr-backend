@@ -1,5 +1,5 @@
 from typing import Union, List, Tuple, Optional
-
+from datetime import datetime
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
 
@@ -30,7 +30,7 @@ def create_bar(name: str, x_data: List[float], y_data: List[int]) -> go.Bar:
     Returns:
         go.Bar: Bar plot trace.
     """
-    return go.Bar(x=x_data, y=y_data, name=name)
+    return go.Bar(x=x_data, y=y_data, name=name, width=5)
 
 
 @enforce_types
@@ -54,11 +54,14 @@ def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
             profit += profit_change
             correct_predictions += p["payout"] > 0
 
-            slots.append(p["slot"] / 1000)
+            slots.append(p["slot"])
             accuracies.append((correct_predictions / predictions) * 100)
             profits.append(profit)
             stakes.append(p["stake"])
-    return slots, accuracies, profits, stakes
+    slot_in_date_format = [
+        datetime.utcfromtimestamp(ts).strftime("%m-%d %H:%M") for ts in slots
+    ]
+    return slot_in_date_format, accuracies, profits, stakes
 
 
 @enforce_types
@@ -84,6 +87,7 @@ def create_figure(
         yaxis_title=yaxis_title,
         margin={"l": 20, "r": 0, "t": 50, "b": 0},
         showlegend=show_legend,
+        xaxis_nticks=4,
         legend=(
             {
                 "orientation": "h",
