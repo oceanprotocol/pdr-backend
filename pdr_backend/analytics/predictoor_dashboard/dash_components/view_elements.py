@@ -50,7 +50,17 @@ def get_layout():
                 id="page_title",
                 style={"width": "100%", "textAlign": "center"},
             ),
-            html.Div(id="error-message"),
+            html.Div(
+                id="error-message",
+                style={
+                    "display": "flex",
+                    "width": "100%",
+                    "justifyContent": "center",
+                    "alignItems": "center",
+                    "textAlign": "center",
+                    "marginTop": "40px",
+                },
+            ),
             dcc.Loading(
                 id="loading",
                 type="default",

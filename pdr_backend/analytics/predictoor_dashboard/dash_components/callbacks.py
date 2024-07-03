@@ -19,12 +19,15 @@ def get_callbacks(app):
     @app.callback(
         Output("feeds-data", "data"),
         Output("predictoors-data", "data"),
+        Output("error-message", "children"),
         Input("data-folder", "data"),
     )
     def get_input_data_from_db(files_dir):
         feeds_data = get_feeds_data_from_db(files_dir)
         predictoors_data = get_predictoors_data_from_db(files_dir)
-        return feeds_data, predictoors_data
+        if isinstance(feeds_data, Exception):
+            return None, None, dash.html.H3(str(feeds_data))
+        return feeds_data, predictoors_data, None
 
     @app.callback(
         Output("payouts-data", "data"),

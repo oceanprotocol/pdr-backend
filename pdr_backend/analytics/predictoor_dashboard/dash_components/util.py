@@ -1,4 +1,4 @@
-from typing import List
+from typing import Union, List
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
@@ -7,7 +7,7 @@ from pdr_backend.lake.table_pdr_payouts import payouts_table_name
 
 
 @enforce_types
-def _query_db(lake_dir: str, query: str) -> dict:
+def _query_db(lake_dir: str, query: str) -> Union[dict, Exception]:
     """
     Query the database with the given query.
     Args:
@@ -24,8 +24,7 @@ def _query_db(lake_dir: str, query: str) -> dict:
             return {}
         return df.to_dicts()
     except Exception as e:
-        print(e)
-        return {}
+        return e
 
 
 @enforce_types
