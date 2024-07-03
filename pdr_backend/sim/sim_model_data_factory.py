@@ -5,7 +5,6 @@ import polars as pl
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
-from pdr_backend.cli.predict_train_feedset import PredictTrainFeedset
 from pdr_backend.ppss.aimodel_data_ss import AimodelDataSS
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
@@ -13,21 +12,20 @@ from pdr_backend.sim.sim_model_data import SimModelData, SimModelData1Dir
 
 class SimModelDataFactory:
     @enforce_types
-    def __init__(self, ppss: PPSS, predict_train_feedset: PredictTrainFeedset):
+    def __init__(self, ppss: PPSS):
         self.ppss = ppss
-        self.predict_train_feedset = predict_train_feedset
-
+    
     @property
     def pdr_ss(self) -> PredictoorSS:
         return self.ppss.predictoor_ss
-
-    @property
-    def aimodel_data_ss(self) -> AimodelDataSS:
-        return self.pdr_ss.aimodel_data_ss
     
     @property
     def class_thr(self) -> float:
-        return self.aimodel_data_ss.class_thr
+        return self.pdr_ss.aimodel_data_ss.class_thr
+    
+    @property
+    def predict_feed(self) -> ArgFeed:
+        return self.pdr_ss.predict_train_feedsets[0].predict
 
     @enforce_types
     def testshift(self, test_i: int) -> int:
@@ -41,7 +39,8 @@ class SimModelDataFactory:
         testshift = self.testshift(test_i) # eg [99, 98, .., 2, 1, 0]
         data_f = AimodelDataFactory(self.pdr_ss)
 
-        p: ArgFeed = self.predict_train_feedset.predict
+        p: ArgFeed = self.predict_feed
+        
         _, _, y_close, _, _ = data_f.create_xy(
             df, testshift, p.variant_close(), ArgFeeds([p.variant_close()]),
         )

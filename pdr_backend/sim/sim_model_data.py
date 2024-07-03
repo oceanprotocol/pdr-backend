@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Tuple, Union
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -36,8 +36,8 @@ class SimModelData1Dir:
     def ytrue_train(self) -> np.ndarray:
         return self.ytrue[self.st:self.fin]
     
-@enforce_types
 class SimModelData(dict):
+    @enforce_types
     def __init__(
         self,
         data_UP: SimModelData1Dir,
@@ -45,3 +45,7 @@ class SimModelData(dict):
     ):
         self[UP] = data_UP
         self[DOWN] = data_DOWN
+
+    @property
+    def X_test(self) -> Tuple[np.ndarray, np.ndarray]:
+        return {UP: self[UP].X_test, DOWN: self[DOWN].X_test}

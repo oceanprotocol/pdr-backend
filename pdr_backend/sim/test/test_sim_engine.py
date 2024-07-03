@@ -66,10 +66,13 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
     feedsets = ppss.predictoor_ss.predict_train_feedsets
     sim_engine = SimEngine(ppss, feedsets[0])
 
-    assert sim_engine.model is None
+    assert sim_engine.st.sim_model is None
     sim_engine.run()
-    assert isinstance(sim_engine.model, Aimodel)
 
+    # basic test that engine ran
+    assert isinstance(sim_engine.st.sim_model, SimModel)
+
+    # basic tests for plots
     app = Dash("pdr_backend.sim.sim_dash")
     app.config["suppress_callback_exceptions"] = True
     app.run_id = sim_engine.multi_id

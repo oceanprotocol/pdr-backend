@@ -20,11 +20,11 @@ class SimPredictoor:
         if not p.do_trust_models():
             stake_up = 0
             stake_down = 0
-        elif p.prob_up_UP >= p.prob_down_DOWN:
+        elif p.prob_UP >= p.prob_DOWN:
             stake_amt = self.max_stake_amt * p.conf_up
             stake_up = stake_amt * p.prob_up_MERGED
             stake_down = stake_amt * (1.0 - p.prob_up_MERGED)
-        else: # p.prob_down_DOWN > p.prob_up_UP
+        else: # p.prob_DOWN > p.prob_UP
             stake_amt = self.max_stake_amt * p.conf_down
             stake_up = stake_amt * p.prob_up_MERGED
             stake_down = stake_amt * (1.0 - p.prob_up_MERGED)

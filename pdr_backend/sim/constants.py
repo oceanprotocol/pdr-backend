@@ -1,10 +1,11 @@
-from enum import Enum
+from enum import IntEnum
 
 from enforce_typing import enforce_types
 
-class Dirn(Enum):
+class Dirn(IntEnum):
     UP = 1
     DOWN = 2
+        
 
 UP = Dirn.UP
 DOWN = Dirn.DOWN

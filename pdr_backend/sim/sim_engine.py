@@ -23,6 +23,9 @@ from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.sim.constants import Dirn, UP, DOWN
 from pdr_backend.sim.sim_logger import SimLogLine
 from pdr_backend.sim.sim_model import SimModel
+from pdr_backend.sim.sim_model_data_factory import SimModelDataFactory
+from pdr_backend.sim.sim_model_factory import SimModelFactory
+from pdr_backend.sim.sim_model_prediction import SimModelPrediction
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_predictoor import SimPredictoor
 from pdr_backend.sim.sim_state import SimState
@@ -81,12 +84,12 @@ class SimEngine:
         return self.ppss.predictoor_ss
     
     @property
-    def aimodel_ss_ss(self) -> AimodelSS:
+    def aimodel_ss(self) -> AimodelSS:
         return self.pdr_ss.aimodel_ss
     
     @property
     def transform(self) -> str:
-        return self.aimodel_ss.transform
+        return self.pdr_ss.aimodel_data_ss.transform
     
     @property
     def others_stake(self) -> float:
@@ -122,25 +125,25 @@ class SimEngine:
         mergedohlcv_df = f.get_mergedohlcv_df()
         
         # main loop!
-        for test_i in range(self.ppss.sim_ss.test_n):
-            self.run_one_iter(test_i, mergedohlcv_df)
+        for iter_i in range(self.ppss.sim_ss.test_n):
+            self.run_one_iter(iter_i, mergedohlcv_df)
 
         # done
         logger.info("Done all iters.")
 
     # pylint: disable=too-many-statements# pylint: disable=too-many-statements
     @enforce_types
-    def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
+    def run_one_iter(self, iter_i: int, mergedohlcv_df: pl.DataFrame):
         # build model
         st = self.st
-        data_f = SimModelDataFactory(self.ppss)
-        model_data: SimModelData = data_f.build(iter_i, mergdohlcv_df)
-        model_f = SimModelFactory(self.aimodel_ss)
-        if model_f.do_build(st.sim_model, test_i):
-            st.sim_model = model_f.train(test_i, model_data)
+        data_factory = SimModelDataFactory(self.ppss)
+        model_data: SimModelData = data_factory.build(iter_i, mergedohlcv_df)
+        model_factory = SimModelFactory(self.aimodel_ss)
+        if model_factory.do_build(st.sim_model, iter_i):
+            st.sim_model = model_factory.build(model_data)
 
         # make prediction
-        predprob = self.model.predict_next() # {UP: predprob_UP, DOWN: ..}
+        predprob = self.st.sim_model.predict_next(model_data.X_test)
 
         conf_thr = self.ppss.trader_ss.sim_confidence_threshold
         sim_model_p = SimModelPrediction(conf_thr, predprob[UP], predprob[DOWN])
@@ -170,15 +173,15 @@ class SimEngine:
 
         # log
         ut = self._calc_ut(mergedohlcv_df)
-        SimLogLine(ppss, st, test_i, ut).log()
+        SimLogLine(ppss, st, iter_i, ut).log()
 
         # plot
-        do_save_state, is_final_state = self._do_save_state(test_i)
+        do_save_state, is_final_state = self._do_save_state(iter_i)
         if do_save_state:
             d_UP = self._aimodel_plotdata_1dirn(UP)
             d_DOWN = self._aimodel_plotdata_1dirn(DOWN)
             d = {UP: d_UP, DOWN: d_DOWN}
-            st.iter_number = test_i
+            st.iter_number = iter_i
             self.sim_plotter.save_state(st, d, is_final_state)
 
     @enforce_types

@@ -21,11 +21,9 @@ def test_sim_model_data_factory__basic(tmpdir):
 
     # attributes
     assert isinstance(data_f.ppss, PPSS)
-    assert isinstance(data_f.predict_train_feedset, PredictTrainFeedset)
                           
     # properties
     assert isinstance(data_f.pdr_ss, PredictoorSS)
-    assert isinstance(data_f.aimodel_data_ss, AimodelDataSS)
     assert isinstance(data_f.class_thr, float)
     assert 0.0 < data_f.class_thr < 1.0
 
@@ -78,7 +76,6 @@ def test_sim_model_data_factory__build(tmpdir):
 @enforce_types
 def _factory(tmpdir) -> SimModelDataFactory:
     s = "binanceus ETH/USDT c 5m"
-    
     feedset_list = [{"predict": s, "train_on":s}]
     ppss = mock_ppss(feedset_list)
 
@@ -86,14 +83,8 @@ def _factory(tmpdir) -> SimModelDataFactory:
     ppss.predictoor_ss.aimodel_data_ss.set_max_n_train(4)
     ppss.predictoor_ss.aimodel_data_ss.set_autoregressive_n(1)
     ppss.sim_ss.set_test_n(2)
-    
-    predict_feed = ArgFeed.from_str(s)
-    train_feeds = ArgFeeds([predict_feed])
-    
-    predict_train_feedset = PredictTrainFeedset(
-        predict=predict_feed, train_on=train_feeds)
-    
-    data_f = SimModelDataFactory(ppss, predict_train_feedset)
+            
+    data_f = SimModelDataFactory(ppss)
     return data_f
 
 @enforce_types

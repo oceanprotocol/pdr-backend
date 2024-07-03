@@ -26,7 +26,8 @@ def test_sim_model_data_1dir():
     assert_array_equal(data_UP.X_train, X_UP[0:3,:])
     assert_array_equal(data_UP.X_test, X_UP[3:3+1,:])
     assert_array_equal(data_UP.ytrue_train, ytrue_UP_train)
-                       
+
+    
 @enforce_types
 def test_sim_model_data_both_dirs():
     # build data
@@ -50,5 +51,9 @@ def test_sim_model_data_both_dirs():
     
     assert_array_equal(X_DOWN, data[DOWN].X)
     assert_array_equal(ytrue_DOWN, data[DOWN].ytrue)
+
+    assert sorted(data.X_test.keys()) == [UP, DOWN]
+    assert_array_equal(data.X_test[UP], data[UP].X_test)
+    assert_array_equal(data.X_test[DOWN], data[DOWN].X_test)
 
     

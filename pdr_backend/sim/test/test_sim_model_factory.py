@@ -2,7 +2,6 @@ from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.ppss import fast_test_yaml_str, PPSS
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.sim.constants import Dirn, UP, DOWN
 from pdr_backend.sim.sim_model import SimModel
@@ -14,7 +13,7 @@ from pdr_backend.sim.test.resources import get_sim_model_data
 @enforce_types
 def test_sim_model_factory__attributes():
     f: SimModelFactory = _get_sim_model_factory()
-    assert isinstance(f.ppss, PPSS)
+    assert isinstance(f.aimodel_ss, AimodelSS)
     
 @enforce_types
 def test_sim_model_factory__do_build():
@@ -37,12 +36,11 @@ def test_sim_model_factory__build():
     model = f.build(data)
     assert isinstance(model, SimModel)
     
-    p = model.predict_next(data)
-    assert isinstance(p, SimModelPrediction)
+    p = model.predict_next(data.X_test)
+    assert p is not None # don't test further; leave that to test_sim_model.py
     
 @enforce_types
 def _get_sim_model_factory() -> SimModelFactory:
-    s = fast_test_yaml_str()
-    ppss = PPSS(yaml_str=s, network="development")
-    return SimModelFactory(ppss)
+    aimodel_ss = AimodelSS(aimodel_ss_test_dict())
+    return SimModelFactory(aimodel_ss)
     

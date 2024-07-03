@@ -24,20 +24,20 @@ def test_sim_predictoor__predict_iter():
     sim_pdr = _sim_pdr()
 
     # case 1: don't trust models
-    p = SimModelPrediction(conf_thr=0.9, prob_up_UP=0.4, prob_up_DOWN=0.4)
+    p = SimModelPrediction(conf_thr=0.9, prob_UP=0.4, prob_DOWN=0.4)
     assert not p.do_trust_models()
     stake_up, stake_down = sim_pdr.predict_iter(p)
     assert stake_up == stake_down == 0.0
 
     # case 2: UP dominates
-    p = SimModelPrediction(conf_thr=0.1, prob_up_UP=0.6, prob_up_DOWN=0.6)
+    p = SimModelPrediction(conf_thr=0.1, prob_UP=0.6, prob_DOWN=0.4)
     assert p.do_trust_models()
     stake_up, stake_down = sim_pdr.predict_iter(p)
     assert 0.0 < stake_down < stake_up < 1.0
     assert (stake_up + stake_down) <= sim_pdr.max_stake_amt
     
     # case 3: DOWN dominates
-    p = SimModelPrediction(conf_thr=0.1, prob_up_UP=0.4, prob_up_DOWN=0.4)
+    p = SimModelPrediction(conf_thr=0.1, prob_UP=0.4, prob_DOWN=0.6)
     assert p.do_trust_models()
     stake_up, stake_down = sim_pdr.predict_iter(p)
     assert 0.0 < stake_up < stake_down < 1.0

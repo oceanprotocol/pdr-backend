@@ -13,8 +13,21 @@ class SimModel(dict):
         self[UP] = model_UP
         self[DOWN] = model_DOWN
         
-    def predict_next(self, d: SimModelData) -> dict:
-        predprob_UP = self[UP].predict_ptrue(d[UP].X_test)[0]
-        predprob_DOWN = self[DOWN].predict_ptrue(d[DOWN].X_test)[0]
-        return {UP: predprob_UP, DOWN: predprob_DOWN}
+    def predict_next(self, X_test: dict) -> dict:
+        """
+        @arguments
+          X_test_dict -- dict of {UP: X_test_UP_array, DOWN: X_test_DOWN_arr.}
+            It expects each array to have exactly 1 row, to predict from
+        
+        @return
+          predprob -- dict of {UP: predprob_UP_float, DOWN: predprob_DOWN_float}
+        """
+        assert X_test[UP].shape[0] == 1
+        assert X_test[DOWN].shape[0] == 1
+        
+        predprob_UP = self[UP].predict_ptrue(X_test[UP])[0]
+        predprob_DOWN = self[DOWN].predict_ptrue(X_test[UP])[0]
+        predprob = {UP: predprob_UP, DOWN: predprob_DOWN}
+        
+        return predprob
     
