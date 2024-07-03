@@ -60,20 +60,20 @@ class SimModelDataFactory:
             ArgFeeds([p.variant_low()]),
         )
 
-        ytrue_UP = []
-        ytrue_DOWN = []
+        ytrue_UP_list = []
+        ytrue_DOWN_list = []
         for i, cur_close in enumerate(y_close[:-1]):
             # did the next high value go above the current close+% value?
             next_high = y_high[i + 1]
             thr_UP = self.thr_UP(cur_close)
-            ytrue_UP.append(next_high > thr_UP)
+            ytrue_UP_list.append(next_high > thr_UP)
 
             # did the next low value go below the current close-% value?
             next_low = y_low[i + 1]
             thr_DOWN = self.thr_DOWN(cur_close)
-            ytrue_DOWN.append(next_low < thr_DOWN)
+            ytrue_DOWN_list.append(next_low < thr_DOWN)
 
-        ytrue_UP, ytrue_DOWN = np.array(ytrue_UP), np.array(ytrue_DOWN)
+        ytrue_UP, ytrue_DOWN = np.array(ytrue_UP_list), np.array(ytrue_DOWN_list)
 
         colnames_UP = list(x_high_df.columns)
         colnames_DOWN = list(x_low_df.columns)

@@ -1,9 +1,9 @@
-from typing import List, Tuple
+from typing import Dict, List
 
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.sim.constants import UP, DOWN
+from pdr_backend.sim.constants import Dirn, UP, DOWN
 
 
 class SimModelData1Dir:
@@ -55,5 +55,5 @@ class SimModelData(dict):
         self[DOWN] = data_DOWN
 
     @property
-    def X_test(self) -> Tuple[np.ndarray, np.ndarray]:
+    def X_test(self) -> Dict[Dirn, np.ndarray]:
         return {UP: self[UP].X_test, DOWN: self[DOWN].X_test}

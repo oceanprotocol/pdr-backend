@@ -83,10 +83,10 @@ class HistPerfs:
             f"acc_est_{s}": self.acc_ests[-1],
             f"acc_l_{s}": self.acc_ls[-1],
             f"acc_u_{s}": self.acc_us[-1],
-            f"f1_{s}": np.mean(self.f1s),
-            f"precision_{s}": np.mean(self.precisions),
-            f"recall_{s}": np.mean(self.recalls),
-            f"loss_{s}": np.mean(self.losses),
+            f"f1_{s}": float(np.mean(self.f1s)),
+            f"precision_{s}": float(np.mean(self.precisions)),
+            f"recall_{s}": float(np.mean(self.recalls)),
+            f"loss_{s}": float(np.mean(self.losses)),
         }
 
     @enforce_types

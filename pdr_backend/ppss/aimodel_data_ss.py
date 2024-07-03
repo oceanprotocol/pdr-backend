@@ -71,7 +71,7 @@ class AimodelDataSS(StrMixin):
         return self.d["class_thr"]
 
     @property
-    def transform(self) -> int:
+    def transform(self) -> str:
         """eg 'RelDiff'"""
         return self.d["transform"]
 

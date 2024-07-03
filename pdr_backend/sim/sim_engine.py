@@ -16,7 +16,6 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.sim.constants import Dirn, UP, DOWN
 from pdr_backend.sim.sim_logger import SimLogLine
-from pdr_backend.sim.sim_model_data import SimModelData
 from pdr_backend.sim.sim_model_data_factory import SimModelDataFactory
 from pdr_backend.sim.sim_model_factory import SimModelFactory
 from pdr_backend.sim.sim_model_prediction import SimModelPrediction
@@ -71,6 +70,7 @@ class SimEngine:
 
     @property
     def timeframe(self) -> ArgTimeframe:
+        assert self.predict_feed.timeframe is not None
         return self.predict_feed.timeframe
 
     @property
@@ -135,7 +135,7 @@ class SimEngine:
 
         # build model
         model_factory = SimModelFactory(self.pdr_ss.aimodel_ss)
-        st.sim_model_data: SimModelData = sim_model_data_f.build(iter_i, df)
+        st.sim_model_data = sim_model_data_f.build(iter_i, df)
         if model_factory.do_build(st.sim_model, iter_i):
             st.sim_model = model_factory.build(st.sim_model_data)
 

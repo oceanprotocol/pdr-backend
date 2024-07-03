@@ -19,8 +19,8 @@ class SimPredictoor:
     def predict_iter(self, p: SimModelPrediction) -> Tuple[float, float]:
         """@return (stake_up, stake_down)"""
         if not p.do_trust_models():
-            stake_up = 0
-            stake_down = 0
+            stake_up = 0.0
+            stake_down = 0.0
         elif p.prob_UP >= p.prob_DOWN:
             stake_amt = self.max_stake_amt * p.conf_up
             stake_up = stake_amt * p.prob_up_MERGED
