@@ -17,7 +17,7 @@ from pdr_backend.lake_info.html_components import (
     simple_badge,
 )
 
-GRAPHABLE = {
+GRAPHABLE: dict[str, Tuple[str, List]] = {
     # for future implementation, if needed
     # "pdr_predictions": ("timestamp", ["stake", "payout"]),
 }
