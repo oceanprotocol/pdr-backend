@@ -290,3 +290,11 @@ class DuckDBDataStore(BaseDataStore):
         ).fetchone()[
             0
         ]  # type: ignore[index]
+
+    @enforce_types
+    def close(self):
+        """
+        Close the connection to DuckDB.
+        """
+        self.duckdb_conn.close()
+        self.delete_own_instance()

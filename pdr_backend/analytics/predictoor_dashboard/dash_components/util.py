@@ -16,10 +16,10 @@ def _query_db(lake_dir: str, query: str) -> dict:
     Returns:
         dict: Query result.
     """
-
     try:
         db = DuckDBDataStore(lake_dir, read_only=True)
         df = db.query_data(query)
+        db.close()
         if len(df) == 0:
             return {}
         return df.to_dicts()
@@ -51,16 +51,6 @@ def get_predictoors_data_from_db(lake_dir: str):
 
 
 @enforce_types
-def get_predictoors_stake_data_from_db(lake_dir: str):
-    return _query_db(
-        lake_dir,
-        f"""
-            SELECT user, stake, slot, pair, timeframe, source FROM {predictions_table_name}
-        """,
-    )
-
-
-@enforce_types
 def get_payouts_from_db(
     feed_addrs: List[str], predictoor_addrs: List[str], lake_dir: str
 ) -> List[dict]:
@@ -75,7 +65,6 @@ def get_payouts_from_db(
     """
 
     payouts_data: List[dict] = []
-    db = DuckDBDataStore(lake_dir, read_only=True)
 
     # Constructing the SQL query
     query = f"SELECT * FROM {payouts_table_name} WHERE ("
@@ -89,8 +78,9 @@ def get_payouts_from_db(
     query += ");"
 
     try:
+        db = DuckDBDataStore(lake_dir, read_only=True)
         df = db.query_data(query)
-
+        db.close()
         if len(df) == 0:
             return payouts_data
         payouts_data = df.to_dicts()
