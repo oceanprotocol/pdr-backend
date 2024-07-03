@@ -34,8 +34,9 @@ def test_sim_logger(tmpdir, caplog):
         "recall": 0.2,
         "loss": 0.3,
     }
-    st.pdr_profits_OCEAN = [1.0, 2.0, 3.0, 4.0, 5.0]
-    st.trader_profits_USD = [2.0, 3.0, 4.0, 5.0, 6.0]
+    st.hist_profits = Mock()
+    st.hist_profits.pdr_profits_OCEAN = [1.0, 2.0, 3.0, 4.0, 5.0]
+    st.hist_profits.trader_profits_USD = [2.0, 3.0, 4.0, 5.0, 6.0]
 
     ut = UnixTimeMs(1701634400000)
     log_line = SimLogLine(ppss, st, 1, ut)

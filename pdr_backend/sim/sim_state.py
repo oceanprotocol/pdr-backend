@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Tuple, Union
 
 from enforce_typing import enforce_types
+import numpy as np
 
 from pdr_backend.aimodel.true_vs_pred import PERF_NAMES, TrueVsPred
 from pdr_backend.sim.constants import Dirn, dirn_str, UP, DOWN
@@ -9,10 +10,10 @@ from pdr_backend.sim.constants import Dirn, dirn_str, UP, DOWN
 #=============================================================================
 # HistPerfs
 
-@enforce_types
 class HistPerfs:
     """Historical performances, for 1 model dir'n (eg UP)"""
     
+    @enforce_types
     def __init__(self, dirn: Dirn):
         self.dirn = dirn
         
@@ -27,6 +28,7 @@ class HistPerfs:
 
         self.losses: List[float] = []  # [i] : log-loss
         
+    @enforce_types
     def update(self, perfs_list: list):
         """perfs_list typically comes from TrueVsPred.perf_values()"""
         acc_est, acc_l, acc_u, f1, precision, recall, loss = perfs_list
@@ -40,16 +42,22 @@ class HistPerfs:
         self.recalls.append(recall)
 
         self.losses.append(loss)
-
-    def metrics_names(self) -> List[str]:
+        
+    @enforce_types
+    def metrics_names_instance(self) -> List[str]:
         """@return e.g. ['acc_est_UP', 'acc_l_UP', ..., 'loss_UP]"""
-        return [f"{name}_{dirn_str(self.dirn)}"
+        return HistPerfs.metrics_names_static(self.dirn)
+
+    @staticmethod
+    def metrics_names_static(dirn) -> List[str]:
+        """@return e.g. ['acc_est_UP', 'acc_l_UP', ..., 'loss_UP]"""
+        return [f"{name}_{dirn_str(dirn)}"
                 for name in PERF_NAMES]
     
-    def recent_metrics_values(self) -> Dict[str, Union[int, float, None]]:
-        """Return most recent aimodel metrics"""
-        if not self.acc_ests:
-            return {name: None for name in self.metrics_names()}
+    @enforce_types
+    def recent_metrics_values(self) -> Dict[str, float]:
+        """Return most recent metrics"""
+        assert self.have_data(), "only works for >0 entries"
 
         s = dirn_str(self.dirn)
         return {
@@ -62,12 +70,32 @@ class HistPerfs:
             f"loss_{s}": self.losses[-1],
         }
     
+    @enforce_types
+    def final_metrics_values(self) -> Dict[str, float]:
+        """Return *final* metrics, rather than most recent. """
+        assert self.have_data(), "only works for >0 entries"
+        
+        s = dirn_str(self.dirn)
+        return {
+            f"acc_est_{s}": self.acc_ests[-1],
+            f"acc_l_{s}": self.acc_ls[-1],
+            f"acc_u_{s}": self.acc_us[-1],
+            f"f1_{s}": np.mean(self.f1s),
+            f"precision_{s}": np.mean(self.precisions),
+            f"recall_{s}": np.mean(self.recalls),
+            f"loss_{s}": np.mean(self.losses),
+        }
+
+    @enforce_types
+    def have_data(self) -> bool:
+        return bool(self.acc_ests)
+
+    
 #=============================================================================
 # HistProfits
 
 PROFIT_NAMES = ["pdr_profit_OCEAN", "trader_profit_USD"]
 
-@enforce_types
 class HistProfits:
     def __init__(self):
         self.pdr_profits_OCEAN: List[float] = []  # [i] : predictoor-profit
@@ -102,30 +130,50 @@ class HistProfits:
         pdr_profit_OCEAN = amt_received - amt_sent
         return pdr_profit_OCEAN
 
+    @enforce_types
     def update(self, pdr_profit_OCEAN: float, trader_profit_USD: float):
         self.pdr_profits_OCEAN.append(pdr_profit_OCEAN)
         self.trader_profits_USD.append(trader_profit_USD)
         
-    def metrics_names(self) -> List[str]:
+    @staticmethod
+    def metrics_names() -> List[str]:
         return PROFIT_NAMES
     
+    @enforce_types
     def recent_metrics_values(self) -> Dict[str, float]:
-        if not self.pdr_profits_OCEAN:
-            return {name: None for name in self.metrics_names()}
+        """Return most recent metrics"""
+        assert self.have_data(), "only works for >0 entries"
         
         return {
             "pdr_profit_OCEAN" : self.pdr_profits_OCEAN[-1],
             "trader_profit_USD" : self.trader_profits_USD[-1],
         }
 
+    @enforce_types
+    def final_metrics_values(self) -> Dict[str, float]:
+        """Return *final* metrics, rather than most recent. """
+        assert self.have_data(), "only works for >0 entries"
+        
+        return {
+            "pdr_profit_OCEAN" : np.sum(self.pdr_profits_OCEAN),
+            "trader_profit_USD" : np.sum(self.trader_profits_USD),
+        }
+
+    @enforce_types
+    def have_data(self) -> bool:
+        return bool(self.pdr_profits_OCEAN)
+
+
+    
 #=============================================================================
 # SimState
 
-@enforce_types
 class SimState:
+    @enforce_types
     def __init__(self):
         self.init_loop_attributes()
 
+    @enforce_types
     def init_loop_attributes(self):
         self.iter_number = 0
         self.sim_model_data: Optional[SimModelData] = None
@@ -134,6 +182,7 @@ class SimState:
         self.hist_perfs = {UP: HistPerfs(UP), DOWN: HistPerfs(DOWN)}
         self.hist_profits = HistProfits()
 
+    @enforce_types
     def update(
         self,
         trueval: dict,
@@ -156,16 +205,32 @@ class SimState:
         
         self.hist_profits.update(pdr_profit_OCEAN, trader_profit_USD)
         
-    def metrics_names(self) -> List[str]:
-        return self.hist_perfs[UP].metrics_names() + \
-            self.hist_perfs[DOWN].metrics_names() + \
-            self.hist_profits.metrics_names()
+    @staticmethod
+    def metrics_names() -> List[str]:
+        return HistPerfs.metrics_names_static(UP) + \
+            HistPerfs.metrics_names_static(DOWN) + \
+            HistProfits.metrics_names()
 
-    def recent_metrics_values(self) -> List[Union[int, float]]:
+    @enforce_types
+    def recent_metrics_values(self) -> Dict[str, Union[int, float, None]]:
         """Return most recent aimodel metrics + profit metrics"""
         metrics = {}
         metrics.update(self.hist_perfs[UP].recent_metrics_values())
         metrics.update(self.hist_perfs[DOWN].recent_metrics_values())
         metrics.update(self.hist_profits.recent_metrics_values())
         return metrics
-    
+
+    @enforce_types
+    def final_metrics_values(self) -> Dict[str, Union[int, float, None]]:
+        """Return *final* metrics, rather than most recent. """
+        metrics = {}
+        metrics.update(self.hist_perfs[UP].final_metrics_values())
+        metrics.update(self.hist_perfs[DOWN].final_metrics_values())
+        metrics.update(self.hist_profits.final_metrics_values())
+        return metrics
+
+    @enforce_types
+    def have_data(self) -> bool:
+        return self.hist_perfs[UP].have_data() \
+            and self.hist_perfs[DOWN].have_data() \
+            and self.hist_profits().have_data()

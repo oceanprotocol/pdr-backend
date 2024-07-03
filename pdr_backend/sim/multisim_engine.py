@@ -66,30 +66,15 @@ class MultisimEngine:
         point_i = self.ss.point_i(run_i)
         logger.info("Multisim run_i=%s: start. Vals=%s", run_i, point_i)
         ppss = self.ppss_from_point(point_i)
-        feedset = ppss.predictoor_ss.predict_train_feedsets[0]
         multi_id = str(uuid.uuid4())
-        sim_engine = SimEngine(ppss, feedset, multi_id)
+        sim_engine = SimEngine(ppss, multi_id)
         sim_engine.disable_realtime_state()
         sim_engine.run()
         st = sim_engine.st
-        recent_metrics = st.recent_metrics()
-
-        # below, the "[1:]" is to avoid the first sample, which may be off
-        run_metrics = {
-            "acc_est": recent_metrics["acc_est"],
-            "acc_l": recent_metrics["acc_l"],
-            "acc_u": recent_metrics["acc_u"],
-            "f1": np.mean(st.aim.f1s),
-            "precision": np.mean(st.aim.precisions[1:]),
-            "recall": np.mean(st.aim.recalls[1:]),
-            "loss": np.mean(st.aim.losses[1:]),
-            "yerr": np.mean(st.aim.yerrs[1:]),
-            "pdr_profit_OCEAN": np.sum(st.pdr_profits_OCEAN),
-            "trader_profit_USD": np.sum(st.trader_profits_USD),
-        }
-        run_metrics_list = list(run_metrics.values())
+        metrics_values = st.final_metrics_values()
+        metrics_list = [metrics_values[name] for name in st.metrics_names()]
         async with lock:
-            self.update_csv(run_i, run_metrics_list, point_i)
+            self.update_csv(run_i, metrics_list, point_i)
             logger.info("Multisim run_i=%s: done", run_i)
 
         logger.info("Multisim engine: done. Output file: %s", self.csv_file)
@@ -113,7 +98,7 @@ class MultisimEngine:
         # put metrics first, because point_meta names/values can be superlong
         header = []
         header += ["run_number"]
-        header += SimState.recent_metrics_names()
+        header += SimState.metrics_names()
         header += list(self.ss.point_meta.keys())
         return header
 
@@ -122,7 +107,7 @@ class MultisimEngine:
         buf = 3
         spaces = []
         spaces += [len("run_number") + buf]
-        spaces += [max(len(name), 6) + buf for name in SimState.recent_metrics_names()]
+        spaces += [max(len(name), 6) + buf for name in SimState.metrics_names()]
 
         for var, cand_vals in self.ss.point_meta.items():
             var_len = len(var)
@@ -155,7 +140,7 @@ class MultisimEngine:
 
         @arguments
           run_i - it's run #i
-          run_metrics -- output of SimState.recent_metrics() for run #i
+          run_metrics -- output of SimState.recent_metrics_values() for run #i
           point_i -- value of each sweep param, for run #i
         """
         assert os.path.exists(self.csv_file), self.csv_file

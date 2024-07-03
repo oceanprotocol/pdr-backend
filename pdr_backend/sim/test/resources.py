@@ -20,8 +20,11 @@ def get_sim_model_data() -> SimModelData:
     (X_UP, ytrue_UP) = get_Xy_UP()
     (X_DOWN, ytrue_DOWN) = get_Xy_DOWN()
     
-    data_UP = SimModelData1Dir(X_UP, ytrue_UP)
-    data_DOWN = SimModelData1Dir(X_DOWN, ytrue_DOWN)
+    colnames_UP = ["x0_high", "x1_high"]
+    colnames_DOWN = ["x0_low", "x1_low"]
+    
+    data_UP = SimModelData1Dir(X_UP, ytrue_UP, colnames_UP)
+    data_DOWN = SimModelData1Dir(X_DOWN, ytrue_DOWN, colnames_DOWN)
     data = SimModelData(data_UP, data_DOWN)
 
     return data
