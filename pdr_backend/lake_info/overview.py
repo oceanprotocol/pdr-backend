@@ -1,37 +1,53 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import logging
 from typing import Dict, List
 
 import polars as pl
 from enforce_typing import enforce_types
 from polars.dataframe.frame import DataFrame
-
-from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.lake.renderers.cli import CliRenderer
-from pdr_backend.lake.renderers.html import HtmlRenderer
-
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
-from pdr_backend.ppss.ppss import PPSS
 
 pl.Config.set_tbl_hide_dataframe_shape(True)
 
 logger = logging.getLogger("LakeInfo")
 
 
-# pylint: disable=too-many-instance-attributes
-class LakeInfo:
-    def __init__(self, ppss: PPSS, use_html: bool = False):
-        self.db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=True)
-        self.gql_data_factory = GQLDataFactory(ppss)
-        self.etl = ETL(ppss, self.gql_data_factory)
+class TableViewsOverview:
+    def __init__(self, db):
+        self.db = db
 
-        self.all_table_names: List[str] = []
+        self.all_table_names = self.db.get_table_names(all_schemas=True)
+        self.all_view_names = self.db.get_view_names()
         self.table_info: Dict[str, DataFrame] = {}
-        self.all_view_names: List[str] = []
         self.view_info: Dict[str, DataFrame] = {}
 
-        self.html = use_html
+        for table_name in self.all_table_names:
+            self.table_info[table_name] = self.db.query_data(
+                "SELECT * FROM {}".format(table_name)
+            )
+
+        for view_name in self.all_view_names:
+            self.view_info[view_name] = self.db.query_data(
+                "SELECT * FROM {}".format(view_name)
+            )
+
+    def get_filtered_result(self, table_name: str, filter_value: str) -> DataFrame:
+        return self.db.query_data(
+            "SELECT * FROM {} WHERE user = '{}' LIMIT 100".format(
+                table_name, filter_value
+            )
+        )
+
+
+class ValidationOverview:
+    def __init__(self, db):
+        self.db = db
+
+        self.all_table_names = self.db.get_table_names(all_schemas=True)
+        self.all_view_names = self.db.get_view_names()
 
         self.validations = {
             "validate_tables_in_lake": self.validate_expected_table_names,
@@ -39,37 +55,11 @@ class LakeInfo:
             "validate_no_gaps_in_bronze_predictions": self.validate_lake_bronze_predictions_gaps,
             "validate_no_duplicate_rows_in_lake": self.validate_lake_tables_no_duplicates,
         }
+
         self.validation_results: Dict[str, List[str]] = {}
-
-    def generate(self):
-        self.all_table_names = self.db.get_table_names(all_schemas=True)
-
-        for table_name in self.all_table_names:
-            self.table_info[table_name] = self.db.query_data(
-                "SELECT * FROM {}".format(table_name)
-            )
-
-        self.all_view_names = self.db.get_view_names()
-
-        for view_name in self.all_view_names:
-            self.view_info[view_name] = self.db.query_data(
-                "SELECT * FROM {}".format(view_name)
-            )
-
         for key, value in self.validations.items():
             result = value()
             self.validation_results[key] = result
-
-    def run(self):
-        self.generate()
-
-        if self.html:
-            html_renderer = HtmlRenderer(self)
-            html_renderer.show()
-            return
-
-        cli_renderer = CliRenderer(self)
-        cli_renderer.show()
 
     def validate_expected_table_names(self) -> List[str]:
         violations: List[str] = []
@@ -89,8 +79,10 @@ class LakeInfo:
 
     def validate_expected_view_names(self) -> List[str]:
         violations: List[str] = []
-        if len(self.all_view_names) > 0:
-            violations.append("Lake has VIEWs. Please clean lake using CLI.")
+        violations = [
+            "Unexpected view: {}. Please clean using CLI.".format(view_name)
+            for view_name in self.all_view_names
+        ]
 
         return violations
 

@@ -1,3 +1,7 @@
+<!--
+Copyright 2024 Ocean Protocol Foundation
+SPDX-License-Identifier: Apache-2.0
+-->
 ## Pull Request Title
 
 The Title or Name should follow this pattern containing the reference to the issue number and a descriptive title:
