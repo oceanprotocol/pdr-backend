@@ -16,8 +16,8 @@ class AimodelPlotdata:
         model: Aimodel,
         X_train: np.ndarray,
         ytrue_train: np.ndarray,
-        ycont_train: np.ndarray,
-        y_thr: float,
+        ycont_train: Optional[np.ndarray],
+        y_thr: Optional[float],
         colnames: List[str],
         slicing_x: np.ndarray,
         sweep_vars: Optional[List[int]] = None,
@@ -41,7 +41,8 @@ class AimodelPlotdata:
         assert len(colnames) == n, (len(colnames), n)
         assert slicing_x.shape[0] == n, (slicing_x.shape[0], n)
         assert ytrue_train.shape[0] == N, (ytrue_train.shape[0], N)
-        assert ycont_train.shape[0] == N, (ycont_train.shape[0], N)
+        if ycont_train is not None:
+            assert ycont_train.shape[0] == N, (ycont_train.shape[0], N)
         assert sweep_vars is None or len(sweep_vars) in [1, 2]
 
         # set values

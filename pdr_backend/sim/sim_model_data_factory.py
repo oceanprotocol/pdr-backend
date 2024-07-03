@@ -44,10 +44,10 @@ class SimModelDataFactory:
         _, _, y_close, _, _ = data_f.create_xy(
             df, testshift, p.variant_close(), ArgFeeds([p.variant_close()]),
         )
-        X_high, _, y_high, _, _ = data_f.create_xy(
+        X_high, _, y_high, x_high_df, _ = data_f.create_xy(
             df, testshift, p.variant_high(), ArgFeeds([p.variant_high()]),
         )
-        X_low, _, y_low, _, _ = data_f.create_xy(
+        X_low, _, y_low, x_low_df, _ = data_f.create_xy(
             df, testshift, p.variant_low(), ArgFeeds([p.variant_low()]),
         )
 
@@ -65,8 +65,14 @@ class SimModelDataFactory:
             ytrue_DOWN.append(next_low < thr_DOWN)        
 
         ytrue_UP, ytrue_DOWN = np.array(ytrue_UP), np.array(ytrue_DOWN)
-        d_UP = SimModelData1Dir(X_high[1:,:], ytrue_UP) # or is it [:-1,:]
-        d_DOWN = SimModelData1Dir(X_low[1:,:], ytrue_DOWN) # ""
+
+        colnames_UP = list(x_high_df.columns)
+        colnames_DOWN = list(x_low_df.columns)
+
+        # Q: I used X[1:,:], but should it be X[:-1,:] ?
+        d_UP = SimModelData1Dir(X_high[1:,:], ytrue_UP, colnames_UP)
+        d_DOWN = SimModelData1Dir(X_low[1:,:], ytrue_DOWN, colnames_DOWN)
+        
         # note: alternatively, each input X could be h+l+c rather than just h or l
         d = SimModelData(d_UP, d_DOWN)
         

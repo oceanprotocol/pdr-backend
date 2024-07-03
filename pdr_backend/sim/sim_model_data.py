@@ -8,13 +8,19 @@ from pdr_backend.sim.constants import UP, DOWN
 class SimModelData1Dir:
     
     @enforce_types
-    def __init__(self, X: np.ndarray, ytrue: np.ndarray):
+    def __init__(
+        self,
+        X: np.ndarray,
+        ytrue: np.ndarray,
+        colnames:List[str],
+    ):
         assert len(X.shape) == 2
         assert len(ytrue.shape) == 1
         assert X.shape[0] == ytrue.shape[0], (X.shape[0], ytrue.shape[0])
         
         self.X: np.ndarray = X
         self.ytrue: np.ndarray = ytrue
+        self.colnames: List[str] = colnames
         
     @property
     def st(self) -> int:

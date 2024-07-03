@@ -14,11 +14,12 @@ def test_sim_model_data_1dir():
     assert X_UP.shape == (4,2)
     assert ytrue_UP.shape == (4,)
     ytrue_UP_train = ytrue_UP[:3]
-    data_UP = SimModelData1Dir(X_UP, ytrue_UP)
+    data_UP = SimModelData1Dir(X_UP, ytrue_UP, ["x0", "x1"])
     
     # basic tests
     assert_array_equal(X_UP, data_UP.X)
     assert_array_equal(ytrue_UP, data_UP.ytrue)
+    assert data_UP.colnames == ["x0", "x1"]
 
     # test properties
     assert data_UP.st == 0
@@ -33,9 +34,11 @@ def test_sim_model_data_both_dirs():
     # build data
     (X_UP, ytrue_UP) = get_Xy_UP()
     (X_DOWN, ytrue_DOWN) = get_Xy_DOWN()
+    colnames_UP = ["x0_high", "x1_high"]
+    colnames_DOWN = ["x0_low", "x1_low"]
 
-    data_UP = SimModelData1Dir(X_UP, ytrue_UP)
-    data_DOWN = SimModelData1Dir(X_DOWN, ytrue_DOWN)
+    data_UP = SimModelData1Dir(X_UP, ytrue_UP, colnames_UP)
+    data_DOWN = SimModelData1Dir(X_DOWN, ytrue_DOWN, colnames_DOWN)
     data = SimModelData(data_UP, data_DOWN)
 
     # basic tests

@@ -16,20 +16,12 @@ from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
 from pdr_backend.sim.dash_plots.callbacks import get_callbacks
 from pdr_backend.sim.dash_plots.view_elements import get_layout
 from pdr_backend.sim.sim_engine import SimEngine
+from pdr_backend.sim.sim_model import SimModel
+
 
 @enforce_types
 # pylint: disable=unused-argument
-def test_sim_engine_no_plot(tmpdir):
-    _test_sim_engine(tmpdir, None, None)
-    
-@enforce_types
-# pylint: disable=unused-argument
-def test_sim_engine_with_plot(tmpdir, check_chromedriver, dash_duo):
-    _test_sim_engine(tmpdir, check_chromedriver, dash_duo)
-
-@enforce_types
-# pylint: disable=unused-argument
-def _test_sim_engine(tmpdir, check_chromedriver, dash_duo):
+def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
 

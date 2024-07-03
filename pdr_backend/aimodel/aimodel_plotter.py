@@ -134,6 +134,8 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     # line plot: regressor response, training data
     if d.model.do_regr:
         assert mesh_ycont_hat is not None
+        assert y_thr is not None
+        assert ycont is not None
         fig.add_trace(
             go.Scatter(
                 x=mesh_chosen_x,

@@ -215,7 +215,7 @@ class SimEngine:
             model_data.ytrue_train,
             None,
             None,
-            colnames,
+            model_data.colnames,
             slicing_x,
         )
         return d
