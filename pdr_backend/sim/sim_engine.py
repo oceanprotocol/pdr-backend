@@ -134,38 +134,39 @@ class SimEngine:
         # build model
         st = self.st
         data_f = SimModelDataFactory(self.ppss)
-        model_d: SimModelData = data_f.build(iter_i, mergdohlcv_df)
+        model_data: SimModelData = data_f.build(iter_i, mergdohlcv_df)
         model_f = SimModelFactory(self.aimodel_ss)
         if model_f.do_build(st.sim_model, test_i):
-            st.sim_model = model_f.train(test_i, model_d)
+            st.sim_model = model_f.train(test_i, model_data)
 
         # make prediction
-        sim_model_p: SimModelPrediction = self.model.predict_next()
+        predprob = self.model.predict_next() # {UP: predprob_UP, DOWN: ..}
 
+        conf_thr = self.ppss.trader_ss.sim_confidence_threshold
+        sim_model_p = SimModelPrediction(conf_thr, predprob[UP], predprob[DOWN])
+        
         # predictoor takes action (stake)
         stake_up, stake_down = self.pdr.predict_iter(sim_model_p)
 
         # trader takes action (trade)
-        trader_profit = self.trader.trade_iter(
+        trader_profit_USD = self.trader.trade_iter(
             cur_close, cur_high, cur_low, sim_model_p,
         )
 
         # observe true price change
-        true_up_close = next_close > cur_close
-        true_UP = next_high > y_thr_UP    # did next high go > prev close+% ?
-        true_DOWN = next_low < y_thr_DOWN # did next low  go < prev close-% ?
+        trueval_up_close = next_close > cur_close
+        trueval = {
+            UP: next_high > y_thr_UP, # did next high go > prev close+% ?
+            DOWN: next_low < y_thr_DOWN, # did next low  go < prev close-% ?
+        }
 
-        # update state - classifier data
-        st.classif_base.update(true_UP, true_DOWN, sim_model_p)
-        st.classif_metrics.update(st.classif_base)
-
-        # update predictoor profit
-        st.profit.update_pdr_profit(
+        # calc predictoor profit
+        pdr_profit_OCEAN = HistProfits.calc_pdr_profit(
             others_stake, pdr_ss.others_stake_accuracy,
-            stake_up, stake_down, true_up_close)
+            stake_up, stake_down, trueval_up_close)
         
-        # update trader profit
-        self.profits.update_trader_profit(trader_profit)
+        # update state
+        st.update(trueval, predprob,  pdr_profit_OCEAN, trader_profit_USD)
 
         # log
         ut = self._calc_ut(mergedohlcv_df)
