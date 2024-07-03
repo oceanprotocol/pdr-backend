@@ -17,7 +17,10 @@ from pdr_backend.lake_info.html_components import (
     simple_badge,
 )
 
-GRAPHABLE = ["pdr_predictions", "_temp_pdr_predictions"]
+GRAPHABLE = {
+    # for future implementation, if needed
+    # "pdr_predictions": ("timestamp", ["stake", "payout"]),
+}
 
 
 class HtmlRenderer:
@@ -37,9 +40,8 @@ class HtmlRenderer:
         return result
 
     def get_graph_xy(self, table_name: str) -> Tuple[str, List[str]]:
-        # TODO: define graphable columns for each table, extend list of graphable tables
-        if table_name in ["pdr_predictions", "_temp_pdr_predictions"]:
-            return "timestamp", ["stake", "payout"]
+        if table_name in GRAPHABLE:
+            return GRAPHABLE[table_name]
 
         raise ValueError(
             f"Table {table_name} not supported for graphing but in GRAPHABLE!"
