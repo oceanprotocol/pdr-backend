@@ -7,12 +7,13 @@ from typing import Dict
 import polars as pl
 from polars.dataframe.frame import DataFrame
 
+from pdr_backend.lake_info.overview import TableViewsOverview
 from pdr_backend.util.time_types import UnixTimeMs
 
 
 class CliRenderer:
-    def __init__(self, lake_info):
-        self.lake_info = lake_info
+    def __init__(self, overview: TableViewsOverview):
+        self.overview = overview
 
     def print_table_info(self, source_name: str, source: Dict[str, DataFrame]):
         table_summary = DataFrame()
@@ -87,17 +88,17 @@ class CliRenderer:
             print(table_summary)
 
     def show(self):
-        if len(self.lake_info.all_table_names) == 0:
+        if len(self.overview.all_table_names) == 0:
             print("No Lake Tables")
         else:
             print("Lake Tables:")
-            print(self.lake_info.all_table_names)
-            self.print_table_info("tables", self.lake_info.table_info)
+            print(self.overview.all_table_names)
+            self.print_table_info("tables", self.overview.table_info)
 
-        if len(self.lake_info.all_view_names) == 0:
+        if len(self.overview.all_view_names) == 0:
             print("Great - No views in Lake.")
         else:
             print("=" * 80)
             print("Lake Views:")
-            print(self.lake_info.all_view_names)
+            print(self.overview.all_view_names)
             self.print_table_info("views", self.lake_info.view_info)
