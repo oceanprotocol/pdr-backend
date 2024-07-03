@@ -10,9 +10,8 @@ def get_input_column():
         ],
         style={
             "height": "100%",
-            "width": "30%",
+            "width": "20%",
             "display": "flex",
-            "flex": 1,
             "flexDirection": "column",
             "justifyContent": "space-around",
         },
@@ -29,9 +28,8 @@ def get_graphs_column():
         id="graphs_container",
         style={
             "height": "100%",
-            "width": "65%",
+            "width": "80%",
             "display": "flex",
-            "flex": 3,
             "flexDirection": "column",
             "justifyContent": "space-around",
             "paddingLeft": "40px",
@@ -82,7 +80,7 @@ def get_main_container():
 def get_table(table_id, table_name, columns, data):
     return html.Div(
         [
-            html.H3(table_name),
+            html.H5(table_name),
             dash_table.DataTable(
                 id=table_id,
                 columns=[{"name": col, "id": col} for col in columns],
@@ -91,7 +89,7 @@ def get_table(table_id, table_name, columns, data):
                 selected_rows=[],
                 style_cell={"textAlign": "left"},
                 style_table={
-                    "height": "35vh",
+                    "height": "38vh",
                     "width": "100%",
                     "overflow": "auto",
                     "marginTop": "5px",
