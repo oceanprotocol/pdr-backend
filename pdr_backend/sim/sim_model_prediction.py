@@ -6,16 +6,14 @@ class SimModelPrediction:
     def __init__(
         self,
         conf_thr: float,
-            
         # UP model's probability that next high will go > prev close+%
         prob_UP: float,
-            
         # DOWN model's probability that next low will go < prev close-%
         prob_DOWN: float,
     ):
         # ensure not np.float64. Why: applying ">" gives np.bool --> problems
         prob_UP, prob_DOWN = float(prob_UP), float(prob_DOWN)
-        
+
         # ppss.trader_ss.sim_confidence_threshold
         self.conf_thr = conf_thr
 
@@ -23,31 +21,34 @@ class SimModelPrediction:
         self.prob_UP = prob_UP
         self.prob_DOWN = prob_DOWN
 
-        # derived attributes        
+        # derived attributes
         if self.models_in_conflict():
             self.conf_up = 0.0
             self.conf_down = 0.0
             self.pred_up = False
             self.pred_down = False
             self.prob_up_MERGED = 0.5
-            
+
         elif self.prob_UP >= self.prob_DOWN:
             self.conf_up = (prob_UP - 0.5) * 2.0  # to range [0,1]
             self.conf_down = 0.0
             self.pred_up = self.conf_up > self.conf_thr
             self.pred_down = False
             self.prob_up_MERGED = self.prob_UP
-            
-        else: # prob_DOWN > prob_UP
+
+        else:  # prob_DOWN > prob_UP
             self.conf_up = 0.0
             self.conf_down = (self.prob_DOWN - 0.5) * 2.0
             self.pred_up = False
             self.pred_down = self.conf_down > self.conf_thr
             self.prob_up_MERGED = 1.0 - self.prob_DOWN
-    
+
     def do_trust_models(self) -> bool:
         do_trust = _do_trust_models(
-            self.pred_up, self.pred_down, self.prob_UP, self.prob_DOWN,
+            self.pred_up,
+            self.pred_down,
+            self.prob_UP,
+            self.prob_DOWN,
         )
         return do_trust
 
@@ -57,10 +58,10 @@ class SimModelPrediction:
 
 @enforce_types
 def _do_trust_models(
-    pred_up:bool,
-    pred_down:bool,
-    prob_UP:float,
-    prob_DOWN:float,
+    pred_up: bool,
+    pred_down: bool,
+    prob_UP: float,
+    prob_DOWN: float,
 ) -> bool:
     """Do we trust the models enough to take prediction / trading action?"""
     # preconditions
@@ -76,8 +77,8 @@ def _do_trust_models(
         raise ValueError("can't have pred_down=True with prob_UP dominant")
 
     # main test
-    return (pred_up or pred_down) \
-        and not _models_in_conflict(prob_UP, prob_DOWN)
+    return (pred_up or pred_down) and not _models_in_conflict(prob_UP, prob_DOWN)
+
 
 @enforce_types
 def _models_in_conflict(prob_UP: float, prob_DOWN: float) -> bool:
@@ -89,5 +90,4 @@ def _models_in_conflict(prob_UP: float, prob_DOWN: float) -> bool:
         raise ValueError(prob_DOWN)
 
     # main test
-    return (prob_UP > 0.5 and prob_DOWN > 0.5) or \
-        (prob_UP < 0.5 and prob_DOWN < 0.5)
+    return (prob_UP > 0.5 and prob_DOWN > 0.5) or (prob_UP < 0.5 and prob_DOWN < 0.5)

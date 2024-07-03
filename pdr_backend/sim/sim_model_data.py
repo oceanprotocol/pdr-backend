@@ -5,43 +5,45 @@ import numpy as np
 
 from pdr_backend.sim.constants import UP, DOWN
 
+
 class SimModelData1Dir:
-    
+
     @enforce_types
     def __init__(
         self,
         X: np.ndarray,
         ytrue: np.ndarray,
-        colnames:List[str],
+        colnames: List[str],
     ):
         assert len(X.shape) == 2
         assert len(ytrue.shape) == 1
         assert X.shape[0] == ytrue.shape[0], (X.shape[0], ytrue.shape[0])
-        
+
         self.X: np.ndarray = X
         self.ytrue: np.ndarray = ytrue
         self.colnames: List[str] = colnames
-        
+
     @property
     def st(self) -> int:
         return 0
-    
+
     @property
     def fin(self) -> int:
         return self.X.shape[0] - 1
 
     @property
     def X_train(self) -> np.ndarray:
-        return self.X[self.st:self.fin, :]
+        return self.X[self.st : self.fin, :]
 
     @property
     def X_test(self) -> np.ndarray:
         return self.X[self.fin : self.fin + 1, :]
-    
+
     @property
     def ytrue_train(self) -> np.ndarray:
-        return self.ytrue[self.st:self.fin]
-    
+        return self.ytrue[self.st : self.fin]
+
+
 class SimModelData(dict):
     @enforce_types
     def __init__(

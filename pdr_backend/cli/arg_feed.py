@@ -91,20 +91,21 @@ class ArgFeed:
 
     def variant_close(self) -> "ArgFeed":
         return self.variant_signal("close")
-    
+
     def variant_high(self) -> "ArgFeed":
         return self.variant_signal("high")
-    
+
     def variant_low(self) -> "ArgFeed":
         return self.variant_signal("low")
-    
+
     def variant_signal(self, signal_str: str) -> "ArgFeed":
         return ArgFeed(
-            self.exchange, 
+            self.exchange,
             signal_str,
             self.pair,
             self.timeframe,
-            )
+        )
+
 
 @enforce_types
 def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:

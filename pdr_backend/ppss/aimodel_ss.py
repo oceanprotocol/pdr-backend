@@ -57,7 +57,7 @@ class AimodelSS(StrMixin):
         if self.calibrate_regr not in CALIBRATE_REGR_OPTIONS:
             raise ValueError(self.calibrate_regr)
         self.validate_train_every_n_epochs(self.train_every_n_epochs)
-        
+
     # --------------------------------
     # validators -- add as needed, when setters are added
     def validate_train_every_n_epochs(self, n: int):
@@ -137,7 +137,7 @@ class AimodelSS(StrMixin):
         if self.weight_recent == "10000x":
             return 10000, 0
         raise ValueError(self.weight_recent)
-    
+
     # --------------------------------
     # setters (only add as needed)
     def set_train_every_n_epochs(self, n: int):
@@ -165,6 +165,8 @@ def aimodel_ss_test_dict(
         "balance_classes": balance_classes or "SMOTE",
         "calibrate_probs": calibrate_probs or "CalibratedClassifierCV_Sigmoid",
         "calibrate_regr": calibrate_regr or "None",
-        "train_every_n_epochs": 1 if train_every_n_epochs is None else train_every_n_epochs
+        "train_every_n_epochs": (
+            1 if train_every_n_epochs is None else train_every_n_epochs
+        ),
     }
     return d

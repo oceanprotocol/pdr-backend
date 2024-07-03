@@ -15,10 +15,10 @@ class SimTrader:
         self.ppss = ppss
 
         self.position_open: str = ""  # long, short, ""
-        self.position_size: float = 0.  # amount of tokens in position
-        self.position_worth: float = 0.  # amount of USD in position
-        self.tp: float = 0.  # take profit
-        self.sl: float = 0.  # stop loss
+        self.position_size: float = 0.0  # amount of tokens in position
+        self.position_worth: float = 0.0  # amount of USD in position
+        self.tp: float = 0.0  # take profit
+        self.sl: float = 0.0  # stop loss
         self.tp_percent: float = self.ppss.trader_ss.take_profit_percent
         self.sl_percent: float = self.ppss.trader_ss.stop_loss_percent
 
@@ -57,7 +57,7 @@ class SimTrader:
         self.position_open = ""
         profit = self.position_worth - usdcoin_amt_send
         return float(profit)
-    
+
     @enforce_types
     def trade_iter(
         self,
@@ -67,10 +67,16 @@ class SimTrader:
         p: SimModelPrediction,
     ) -> float:
         profit_USD = self._trade_iter(
-            cur_close, p.pred_up, p.pred_down, p.conf_up, p.conf_down, high, low,
-            )
+            cur_close,
+            p.pred_up,
+            p.pred_down,
+            p.conf_up,
+            p.conf_down,
+            high,
+            low,
+        )
         return float(profit_USD)
-            
+
     @enforce_types
     def _trade_iter(
         self,
@@ -123,7 +129,7 @@ class SimTrader:
                 self.position_size = tokcoin_amt_send
                 self.tp = cur_close - (cur_close * self.tp_percent)
                 self.sl = cur_close + (cur_close * self.sl_percent)
-            return 0.
+            return 0.0
 
         # Check for take profit or stop loss
         if self.position_open == "long":
@@ -146,7 +152,7 @@ class SimTrader:
             if not pred_down:
                 return self.close_short_position(cur_close)
 
-        return 0.
+        return 0.0
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:

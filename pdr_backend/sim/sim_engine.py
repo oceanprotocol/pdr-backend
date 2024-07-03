@@ -46,9 +46,8 @@ class SimEngine:
         multi_id: Optional[str] = None,
     ):
         self.ppss = ppss
-        
-        assert self.predict_feed.signal == "close", \
-            "only operates on close predictions"
+
+        assert self.predict_feed.signal == "close", "only operates on close predictions"
 
         # can be disabled by calling disable_realtime_state()
         self.do_state_updates = True
@@ -66,13 +65,13 @@ class SimEngine:
             self.multi_id = multi_id
         else:
             self.multi_id = str(uuid.uuid4())
-            
+
         assert self.pdr_ss.aimodel_data_ss.transform == "None"
 
     @property
     def pdr_ss(self) -> PredictoorSS:
         return self.ppss.predictoor_ss
-                
+
     @property
     def predict_feed(self) -> ArgFeed:
         return self.pdr_ss.predict_train_feedsets[0].predict
@@ -80,19 +79,19 @@ class SimEngine:
     @property
     def timeframe(self) -> ArgTimeframe:
         return self.predict_feed.timeframe
-    
+
     @property
     def others_stake(self) -> float:
         return self.pdr_ss.others_stake.amt_eth
-    
+
     @property
     def others_accuracy(self) -> float:
         return self.pdr_ss.others_accuracy
-    
+
     @property
     def revenue(self) -> float:
         return self.pdr_ss.revenue.amt_eth
-        
+
     @enforce_types
     def _init_loop_attributes(self):
         filebase = f"out_{UnixTimeMs.now()}.txt"
@@ -103,7 +102,7 @@ class SimEngine:
         logger.addHandler(fh)
 
         self.st.init_loop_attributes()
-        
+
         logger.info("Initialize plot data.")
         self.sim_plotter.init_state(self.multi_id)
 
@@ -117,7 +116,7 @@ class SimEngine:
         # ohclv data
         f = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = f.get_mergedohlcv_df()
-        
+
         # main loop!
         for iter_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(iter_i, mergedohlcv_df)
@@ -140,7 +139,7 @@ class SimEngine:
         cur_low = self._curval(df, testshift, "low")
         y_thr_UP = sim_model_data_f.thr_UP(cur_close)
         y_thr_DOWN = sim_model_data_f.thr_DOWN(cur_close)
-        
+
         # build model
         model_factory = SimModelFactory(self.pdr_ss.aimodel_ss)
         st.sim_model_data: SimModelData = sim_model_data_f.build(iter_i, df)
@@ -152,13 +151,16 @@ class SimEngine:
 
         conf_thr = self.ppss.trader_ss.sim_confidence_threshold
         sim_model_p = SimModelPrediction(conf_thr, predprob[UP], predprob[DOWN])
-        
+
         # predictoor takes action (stake)
         stake_up, stake_down = self.sim_predictoor.predict_iter(sim_model_p)
 
         # trader takes action (trade)
         trader_profit_USD = self.sim_trader.trade_iter(
-            cur_close, cur_high, cur_low, sim_model_p,
+            cur_close,
+            cur_high,
+            cur_low,
+            sim_model_p,
         )
 
         # observe next price values
@@ -169,17 +171,22 @@ class SimEngine:
         # observe price change prev -> next, and related changes for classifier
         trueval_up_close = next_close > cur_close
         trueval = {
-            UP: next_high > y_thr_UP, # did next high go > prev close+% ?
-            DOWN: next_low < y_thr_DOWN, # did next low  go < prev close-% ?
+            UP: next_high > y_thr_UP,  # did next high go > prev close+% ?
+            DOWN: next_low < y_thr_DOWN,  # did next low  go < prev close-% ?
         }
 
         # calc predictoor profit
         pdr_profit_OCEAN = HistProfits.calc_pdr_profit(
-            self.others_stake, self.others_accuracy,
-            stake_up, stake_down, self.revenue, trueval_up_close)
-        
+            self.others_stake,
+            self.others_accuracy,
+            stake_up,
+            stake_down,
+            self.revenue,
+            trueval_up_close,
+        )
+
         # update state
-        st.update(trueval, predprob,  pdr_profit_OCEAN, trader_profit_USD)
+        st.update(trueval, predprob, pdr_profit_OCEAN, trader_profit_USD)
 
         # log
         ut = self._calc_ut(df, testshift)
@@ -203,10 +210,10 @@ class SimEngine:
         st = self.st
         model = st.sim_model[dirn]
         model_data = st.sim_model_data[dirn]
-        
+
         colnames = model_data.colnames
         colnames = [shift_one_earlier(c) for c in colnames]
-        
+
         most_recent_x = model_data.X[-1, :]
         slicing_x = most_recent_x
         d = AimodelPlotdata(
@@ -224,22 +231,25 @@ class SimEngine:
     def _curval(self, df, testshift: int, signal_str: str) -> float:
         # float() so not np.float64, bc applying ">" gives np.bool -> problems
         return float(self._yraw(df, testshift, signal_str)[-2])
-    
+
     @enforce_types
     def _nextval(self, df, testshift: int, signal_str: str) -> float:
         # float() so not np.float64, bc applying ">" gives np.bool -> problems
         return float(self._yraw(df, testshift, signal_str)[-1])
-    
+
     @enforce_types
     def _yraw(self, mergedohlcv_df, testshift: int, signal_str: str):
         assert signal_str in ["close", "high", "low"]
         feed = self.predict_feed.variant_signal(signal_str)
         aimodel_data_f = AimodelDataFactory(self.pdr_ss)
         _, _, yraw, _, _ = aimodel_data_f.create_xy(
-            mergedohlcv_df, testshift, feed, ArgFeeds([feed]),
+            mergedohlcv_df,
+            testshift,
+            feed,
+            ArgFeeds([feed]),
         )
         return yraw
-    
+
     @enforce_types
     def _calc_ut(self, mergedohlcv_df, testshift: int) -> UnixTimeMs:
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
@@ -269,4 +279,3 @@ class SimEngine:
             return False, False
 
         return True, False
-

@@ -5,6 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.sim.sim_model_prediction import SimModelPrediction
 
+
 class SimPredictoor:
     @enforce_types
     def __init__(self, pdr_ss: PredictoorSS):
@@ -13,7 +14,7 @@ class SimPredictoor:
     @property
     def max_stake_amt(self) -> float:
         return self.pdr_ss.stake_amount.amt_eth
-    
+
     @enforce_types
     def predict_iter(self, p: SimModelPrediction) -> Tuple[float, float]:
         """@return (stake_up, stake_down)"""
@@ -24,10 +25,9 @@ class SimPredictoor:
             stake_amt = self.max_stake_amt * p.conf_up
             stake_up = stake_amt * p.prob_up_MERGED
             stake_down = stake_amt * (1.0 - p.prob_up_MERGED)
-        else: # p.prob_DOWN > p.prob_UP
+        else:  # p.prob_DOWN > p.prob_UP
             stake_amt = self.max_stake_amt * p.conf_down
             stake_up = stake_amt * p.prob_up_MERGED
             stake_down = stake_amt * (1.0 - p.prob_up_MERGED)
 
         return (stake_up, stake_down)
-            

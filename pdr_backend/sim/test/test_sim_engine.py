@@ -39,12 +39,12 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
     lake_d = lake_ss_test_dict(
         lake_dir,
         feeds=feedsets.feed_strs,
-        st_timestr = "2023-06-18",
-        fin_timestr = "2023-06-19",
+        st_timestr="2023-06-18",
+        fin_timestr="2023-06-19",
     )
     ppss.lake_ss = LakeSS(lake_d)
 
-    # predictoor ss    
+    # predictoor ss
     pdr_d = predictoor_ss_test_dict(
         feedset_list,
         aimodel_data_ss_dict=aimodel_data_ss_test_dict(

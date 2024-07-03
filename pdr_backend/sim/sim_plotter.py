@@ -354,7 +354,6 @@ class SimPlotter:
         fig.update_yaxes(title_text="log loss", row=3, col=1)
 
 
-
 @enforce_types
 def file_age_in_seconds(pathname):
     stat_result = os.stat(pathname)

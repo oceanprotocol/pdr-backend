@@ -14,7 +14,8 @@ from pdr_backend.sim.test.resources import get_sim_model_data
 def test_sim_model_factory__attributes():
     f: SimModelFactory = _get_sim_model_factory()
     assert isinstance(f.aimodel_ss, AimodelSS)
-    
+
+
 @enforce_types
 def test_sim_model_factory__do_build():
     f: SimModelFactory = _get_sim_model_factory()
@@ -25,22 +26,23 @@ def test_sim_model_factory__do_build():
 
     # case: have previous model; then on proper iter?
     prev_model = Mock(spec=SimModel)
-    assert f.do_build(prev_model, test_i=(13*4)) 
-    assert not f.do_build(prev_model, test_i=(13*4+1))
+    assert f.do_build(prev_model, test_i=(13 * 4))
+    assert not f.do_build(prev_model, test_i=(13 * 4 + 1))
+
 
 @enforce_types
 def test_sim_model_factory__build():
     f: SimModelFactory = _get_sim_model_factory()
-    
+
     data = get_sim_model_data()
     model = f.build(data)
     assert isinstance(model, SimModel)
-    
+
     p = model.predict_next(data.X_test)
-    assert p is not None # don't test further; leave that to test_sim_model.py
-    
+    assert p is not None  # don't test further; leave that to test_sim_model.py
+
+
 @enforce_types
 def _get_sim_model_factory() -> SimModelFactory:
     aimodel_ss = AimodelSS(aimodel_ss_test_dict())
     return SimModelFactory(aimodel_ss)
-    

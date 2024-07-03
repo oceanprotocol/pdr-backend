@@ -6,13 +6,14 @@ from sklearn.metrics import log_loss, precision_recall_fscore_support
 from statsmodels.stats.proportion import proportion_confint
 
 PERF_NAMES = ["acc_est", "acc_l", "acc_u", "f1", "precision", "recall", "loss"]
-    
+
+
 class TrueVsPred:
     """
     True vs pred vals for a single aimodel, or for a history of models,
     + the performances that derive from true vs pred value info
     """
-    
+
     @enforce_types
     def __init__(self):
         # 'i' is iteration number i
@@ -57,7 +58,7 @@ class TrueVsPred:
     @enforce_types
     def log_loss(self) -> float:
         if min(self.truevals) == max(self.truevals):
-            return 3.0 # magic number
+            return 3.0  # magic number
         return log_loss(self.truevals, self.predprobs)
 
     @enforce_types
@@ -66,9 +67,8 @@ class TrueVsPred:
 
     @enforce_types
     def perf_values(self) -> List[float]:
-        perfs_list = \
-            list(self.accuracy()) + \
-            list(self.precision_recall_f1()) + \
-            [self.log_loss()]
+        perfs_list = (
+            list(self.accuracy()) + list(self.precision_recall_f1()) + [self.log_loss()]
+        )
         assert len(perfs_list) == len(PERF_NAMES)
         return perfs_list

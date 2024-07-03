@@ -29,7 +29,7 @@ class SimSS(StrMixin):
         # validate data
         self.validate_test_n(self.test_n)
         self.validate_tradetype(self.tradetype)
-    
+
     # --------------------------------
     # validators
     @staticmethod
@@ -38,7 +38,7 @@ class SimSS(StrMixin):
             raise TypeError(test_n)
         if not 0 < test_n < np.inf:
             raise ValueError(test_n)
-        
+
     @staticmethod
     def validate_tradetype(tradetype: str):
         if not isinstance(tradetype, str):
@@ -72,17 +72,16 @@ class SimSS(StrMixin):
             raise ValueError(iter_i)
         return (iter_i + 1) == self.test_n
 
-
     # --------------------------------
     # setters
-    def set_test_n(self, test_n:int):
+    def set_test_n(self, test_n: int):
         self.validate_test_n(test_n)
         self.d["test_n"] = test_n
-                
-    def set_tradetype(self, tradetype:str):
+
+    def set_tradetype(self, tradetype: str):
         self.validate_tradetype(tradetype)
         self.d["tradetype"] = tradetype
-        
+
 
 # =========================================================================
 # utilities for testing

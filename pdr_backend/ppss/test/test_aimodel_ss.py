@@ -87,10 +87,10 @@ def test_aimodel_ss__bad_inputs():
 
     with pytest.raises(ValueError):
         AimodelSS(aimodel_ss_test_dict(calibrate_regr="foo"))
-        
+
     with pytest.raises(ValueError):
         AimodelSS(aimodel_ss_test_dict(train_every_n_epochs=0))
-        
+
     with pytest.raises(ValueError):
         AimodelSS(aimodel_ss_test_dict(train_every_n_epochs=-5))
 
@@ -107,6 +107,7 @@ def test_aimodel_ss__calibrate_probs_skmethod():
     assert ss.calibrate_probs_skmethod(100) == "sigmoid"  # because N is small
     assert ss.calibrate_probs_skmethod(1000) == "isotonic"
 
+
 @enforce_types
 def test_aimodel_ss__setters():
     d = aimodel_ss_test_dict()
@@ -119,4 +120,3 @@ def test_aimodel_ss__setters():
         ss.set_train_every_n_epochs(0)
     with pytest.raises(ValueError):
         ss.set_train_every_n_epochs(-5)
-        

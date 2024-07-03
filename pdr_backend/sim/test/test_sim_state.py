@@ -12,8 +12,9 @@ from pdr_backend.sim.sim_state import (
     SimState,
 )
 
-#=============================================================================
+# =============================================================================
 # test HistPerfs
+
 
 @enforce_types
 @pytest.mark.parametrize("dirn", [UP, DOWN])
@@ -41,7 +42,8 @@ def test_hist_perfs__basic_init(dirn):
         _ = hist_perfs.recent_metrics_values()
     with pytest.raises(AssertionError):
         _ = hist_perfs.final_metrics_values()
-    
+
+
 @enforce_types
 @pytest.mark.parametrize("dirn", [UP, DOWN])
 def test_hist_perfs__main(dirn):
@@ -50,8 +52,8 @@ def test_hist_perfs__main(dirn):
     target_names = [f"{name}_{dirn_s}" for name in PERF_NAMES]
     hist_perfs = HistPerfs(dirn)
 
-    perfs_list1 = list(np.arange(0.1, 7.1, 1.0)) # 0.1, 1.1, ..., 6.1
-    perfs_list2 = list(np.arange(0.2, 7.2, 1.0)) # 0.2, 1.2, ..., 6.2
+    perfs_list1 = list(np.arange(0.1, 7.1, 1.0))  # 0.1, 1.1, ..., 6.1
+    perfs_list2 = list(np.arange(0.2, 7.2, 1.0))  # 0.2, 1.2, ..., 6.2
     hist_perfs.update(perfs_list1)
     hist_perfs.update(perfs_list2)
 
@@ -81,7 +83,7 @@ def test_hist_perfs__main(dirn):
         f"recall_{dirn_s}": 5.2,
         f"loss_{dirn_s}": 6.2,
     }
-    
+
     # test *final* metrics
     values = hist_perfs.final_metrics_values()
     assert len(values) == 7
@@ -102,14 +104,16 @@ def test_hist_perfs__main(dirn):
 def _target_perfs_names(dirn_s: str):
     return [f"{name}_{dirn_s}" for name in PERF_NAMES]
 
-#=============================================================================
+
+# =============================================================================
 # test HistProfits
-    
+
+
 @enforce_types
 def test_hist_profits__basic_init():
     # set data
     hist_profits = HistProfits()
-    
+
     # test empty raw data
     assert hist_profits.pdr_profits_OCEAN == []
     assert hist_profits.trader_profits_USD == []
@@ -133,7 +137,7 @@ def test_hist_profits__update():
     hist_profits = HistProfits()
     hist_profits.update(2.1, 3.1)
     hist_profits.update(2.2, 3.2)
-    
+
     # test raw values
     assert hist_profits.pdr_profits_OCEAN == [2.1, 2.2]
     assert hist_profits.trader_profits_USD == [3.1, 3.2]
@@ -145,61 +149,63 @@ def test_hist_profits__update():
     target_names = PROFIT_NAMES
     values = hist_profits.recent_metrics_values()
     assert sorted(values.keys()) == sorted(target_names)
-    assert values == {"pdr_profit_OCEAN" : 2.2,
-                      "trader_profit_USD": 3.2}
-        
+    assert values == {"pdr_profit_OCEAN": 2.2, "trader_profit_USD": 3.2}
+
     # test *final* metrics
     values = hist_profits.final_metrics_values()
     assert sorted(values.keys()) == sorted(target_names)
-    assert values == {"pdr_profit_OCEAN" : np.sum([2.1, 2.2]),
-                      "trader_profit_USD": np.sum([3.1, 3.2])}
+    assert values == {
+        "pdr_profit_OCEAN": np.sum([2.1, 2.2]),
+        "trader_profit_USD": np.sum([3.1, 3.2]),
+    }
+
 
 @enforce_types
 def test_hist_profits__calc_pdr_profit():
     # true = up, guess = up (correct guess), others fully wrong
     profit = HistProfits.calc_pdr_profit(
-        others_stake = 2000.0,
-        others_accuracy = 0.0,
-        stake_up = 1000.0,
-        stake_down = 0.0,
-        revenue = 2.0,
-        true_up_close = True,
+        others_stake=2000.0,
+        others_accuracy=0.0,
+        stake_up=1000.0,
+        stake_down=0.0,
+        revenue=2.0,
+        true_up_close=True,
     )
     assert profit == 2002.0
-    
+
     # true = down, guess = down (correct guess), others fully wrong
     profit = HistProfits.calc_pdr_profit(
-        others_stake = 2000.0,
-        others_accuracy = 0.0,
-        stake_up = 0.0,
-        stake_down = 1000.0,
-        revenue = 2.0,
-        true_up_close = False,
+        others_stake=2000.0,
+        others_accuracy=0.0,
+        stake_up=0.0,
+        stake_down=1000.0,
+        revenue=2.0,
+        true_up_close=False,
     )
     assert profit == 2002.0
 
     # true = up, guess = down (incorrect guess), others fully right
     profit = HistProfits.calc_pdr_profit(
-        others_stake = 2000.0,
-        others_accuracy = 1.0,
-        stake_up = 0.0,
-        stake_down = 1000.0,
-        revenue = 2.0,
-        true_up_close = True,
+        others_stake=2000.0,
+        others_accuracy=1.0,
+        stake_up=0.0,
+        stake_down=1000.0,
+        revenue=2.0,
+        true_up_close=True,
     )
     assert profit == -1000.0
 
     # true = down, guess = up (incorrect guess), others fully right
     profit = HistProfits.calc_pdr_profit(
-        others_stake = 2000.0,
-        others_accuracy = 1.0,
-        stake_up = 1000.0,
-        stake_down = 0.0,
-        revenue = 2.0,
-        true_up_close = False,
+        others_stake=2000.0,
+        others_accuracy=1.0,
+        stake_up=1000.0,
+        stake_down=0.0,
+        revenue=2.0,
+        true_up_close=False,
     )
     assert profit == -1000.0
-    
+
     # true = up, guess = up AND down (half-correct), others fully wrong
     # summary: I should get back all my stake $, plus stake $ of others
     # calculations:
@@ -213,15 +219,15 @@ def test_hist_profits__calc_pdr_profit():
     #   = (2 + 3100) * 1.0 = 3102
     # - profit = received - sent = 2102 - 1100 = 1002
     profit = HistProfits.calc_pdr_profit(
-        others_stake = 1000.0,
-        others_accuracy = 0.00,
-        stake_up = 1000.0,
-        stake_down = 100.0,
-        revenue = 2.0,
-        true_up_close = True,
+        others_stake=1000.0,
+        others_accuracy=0.00,
+        stake_up=1000.0,
+        stake_down=100.0,
+        revenue=2.0,
+        true_up_close=True,
     )
     assert profit == 1002.0
-    
+
     # true = up, guess = lots up & some down, others 30% accurate
     # summary: <not simple, however I should come out ahead>
     # calculations:
@@ -237,16 +243,16 @@ def test_hist_profits__calc_pdr_profit():
     #   = (2 + 2100) * 0.769230 = 1616.9230769
     # - profit = received - sent = 1616.9230769 - 1100 = 516.923
     profit = HistProfits.calc_pdr_profit(
-        others_stake = 1000.0,
-        others_accuracy = 0.30,
-        stake_up = 1000.0,
-        stake_down = 100.0,
-        revenue = 2.0,
-        true_up_close = True,
+        others_stake=1000.0,
+        others_accuracy=0.30,
+        stake_up=1000.0,
+        stake_down=100.0,
+        revenue=2.0,
+        true_up_close=True,
     )
     assert profit == approx(516.923)
 
-    
+
 @enforce_types
 def test_hist_profits__calc_pdr_profit__unhappy_path():
     o_stake = 2000.0
@@ -258,43 +264,74 @@ def test_hist_profits__calc_pdr_profit__unhappy_path():
 
     with pytest.raises(AssertionError):
         HistProfits.calc_pdr_profit(
-            -0.1, o_accuracy, stake_up, stake_down, revenue, true_up_close,
+            -0.1,
+            o_accuracy,
+            stake_up,
+            stake_down,
+            revenue,
+            true_up_close,
         )
 
     with pytest.raises(AssertionError):
         HistProfits.calc_pdr_profit(
-            o_stake, -0.1, stake_up, stake_down, revenue, true_up_close,
-        )
-        
-    with pytest.raises(AssertionError):
-        HistProfits.calc_pdr_profit(
-            o_stake, +1.1, stake_up, stake_down, revenue, true_up_close,
-        )
-
-    with pytest.raises(AssertionError):
-        HistProfits.calc_pdr_profit(
-            o_stake, o_accuracy, -0.1, stake_down, revenue, true_up_close,
+            o_stake,
+            -0.1,
+            stake_up,
+            stake_down,
+            revenue,
+            true_up_close,
         )
 
     with pytest.raises(AssertionError):
         HistProfits.calc_pdr_profit(
-            o_stake, o_accuracy, stake_up, -0.1, revenue, true_up_close,
+            o_stake,
+            +1.1,
+            stake_up,
+            stake_down,
+            revenue,
+            true_up_close,
         )
 
     with pytest.raises(AssertionError):
         HistProfits.calc_pdr_profit(
-            o_stake, o_accuracy, stake_up, stake_down, -0.1, true_up_close,
+            o_stake,
+            o_accuracy,
+            -0.1,
+            stake_down,
+            revenue,
+            true_up_close,
         )
-        
 
-#=============================================================================
+    with pytest.raises(AssertionError):
+        HistProfits.calc_pdr_profit(
+            o_stake,
+            o_accuracy,
+            stake_up,
+            -0.1,
+            revenue,
+            true_up_close,
+        )
+
+    with pytest.raises(AssertionError):
+        HistProfits.calc_pdr_profit(
+            o_stake,
+            o_accuracy,
+            stake_up,
+            stake_down,
+            -0.1,
+            true_up_close,
+        )
+
+
+# =============================================================================
 # test SimState
+
 
 @enforce_types
 def test_sim_state__basic_init():
     # set data
     st = SimState()
-    
+
     # test empty raw state
     assert st.iter_number == 0
     assert st.sim_model_data is None
@@ -318,11 +355,12 @@ def test_sim_state__basic_init():
     with pytest.raises(AssertionError):
         _ = st.final_metrics_values()
 
+
 @enforce_types
 def test_sim_state__init_loop_attributes():
     # init
     st = SimState()
-    
+
     # change after init
     st.iter_number = 1
     st.sim_model = "foo"
@@ -334,19 +372,19 @@ def test_sim_state__init_loop_attributes():
     assert st.iter_number == 0
     assert st.sim_model is None
 
-    
+
 @enforce_types
 def test_sim_state__main():
     st = SimState()
     target_names = _target_state_names()
 
     # update
-    trueval = {UP:True, DOWN:False}
-    predprob = {UP:0.6, DOWN:0.3}
-    
+    trueval = {UP: True, DOWN: False}
+    predprob = {UP: 0.6, DOWN: 0.3}
+
     st.update(trueval, predprob, pdr_profit_OCEAN=1.4, trader_profit_USD=1.5)
     st.update(trueval, predprob, pdr_profit_OCEAN=2.4, trader_profit_USD=2.5)
-    
+
     # test raw state -- true_vs_pred
     assert st.true_vs_pred[UP].truevals == [True, True]
     assert st.true_vs_pred[UP].predprobs == [0.6, 0.6]
@@ -364,9 +402,9 @@ def test_sim_state__main():
             assert val == 2.5
         elif "loss" in name:
             assert 0.0 <= val <= 3.0
-        else: # hist_perfs value
+        else:  # hist_perfs value
             assert 0.0 <= val <= 1.0, (name, val)
-            
+
     # test *final* metrics
     values = st.final_metrics_values()
     assert sorted(values.keys()) == sorted(target_names)
@@ -377,11 +415,12 @@ def test_sim_state__main():
             assert val == np.sum([1.5, 2.5])
         elif "loss" in name:
             assert 0.0 <= val <= 3.0
-        else: # hist_perfs value
+        else:  # hist_perfs value
             assert 0.0 <= val <= 1.0, (name, val)
+
 
 @enforce_types
 def _target_state_names():
-    return [f"{name}_{dirn_str(dirn)}"
-            for dirn in [UP, DOWN]
-            for name in PERF_NAMES] + PROFIT_NAMES
+    return [
+        f"{name}_{dirn_str(dirn)}" for dirn in [UP, DOWN] for name in PERF_NAMES
+    ] + PROFIT_NAMES
