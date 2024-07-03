@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 install_requirements = [
     "black==24.4.2",
     "bumpversion",
-    "ccxt==4.3.52",
+    "ccxt==4.3.54",
     "coverage",
     "dash[testing]==2.17.1",
     "dash_bootstrap_components==1.6.0",
@@ -33,7 +33,7 @@ install_requirements = [
     "polars==0.20.31",
     "polars[timezone]",
     "pyarrow==16.1.0",
-    "pylint==3.2.4",
+    "pylint==3.2.5",
     "pytest",
     "pytest-asyncio==0.21.1",
     "pytest-env",
@@ -45,8 +45,9 @@ install_requirements = [
     "typeguard==4.3.0",
     "xgboost==2.1.0",
     "dash_bootstrap_components==1.6.0",
-    "web3==6.19.0",
+    "web3==6.20.0",
     "sapphire.py==0.2.3",
+    "stopit==1.1.2",
     "ocean-contracts==2.0.4",  # install this last
 ]
 
