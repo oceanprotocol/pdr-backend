@@ -2,6 +2,7 @@ import time
 
 from dash import Input, Output, State
 
+from pdr_backend.sim.constants import UP
 from pdr_backend.sim.dash_plots.util import get_figures_by_state
 from pdr_backend.sim.dash_plots.view_elements import (
     get_tabs,
@@ -74,7 +75,7 @@ def get_callbacks(app):
         header = get_header_elements(run_id, st, ts)
         elements = []
 
-        state_options = sim_plotter.aimodel_plotdata.colnames
+        state_options = sim_plotter.aimodel_plotdata[UP].colnames
         elements.append(selected_var_checklist(state_options, selected_vars_old))
 
         figures = get_figures_by_state(sim_plotter, selected_vars)

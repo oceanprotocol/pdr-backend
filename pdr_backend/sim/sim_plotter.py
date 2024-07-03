@@ -11,6 +11,8 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+from pdr_backend.sim.constants import UP
+
 HEIGHT = 7.5
 WIDTH = int(HEIGHT * 3.2)
 
@@ -133,7 +135,7 @@ class SimPlotter:
 
     @enforce_types
     def plot_pdr_profit_vs_time(self):
-        y = list(np.cumsum(self.st.profits.pdr_profits_OCEAN))
+        y = list(np.cumsum(self.st.hist_profits.pdr_profits_OCEAN))
         ylabel = "predictoor profit (OCEAN)"
         title = f"Predictoor profit vs time. Current: {y[-1]:.2f} OCEAN"
         fig = make_subplots(rows=1, cols=1, subplot_titles=(title,))
@@ -142,7 +144,7 @@ class SimPlotter:
 
     @enforce_types
     def plot_trader_profit_vs_time(self):
-        y = list(np.cumsum(self.st.profits.trader_profits_USD))
+        y = list(np.cumsum(self.st.hist_profits.trader_profits_USD))
         ylabel = "trader profit (USD)"
         title = f"Trader profit vs time. Current: ${y[-1]:.2f}"
         fig = make_subplots(rows=1, cols=1, subplot_titles=(title,))
@@ -150,9 +152,48 @@ class SimPlotter:
         return fig
 
     @enforce_types
+    def _add_subplot_y_vs_time(self, fig, y, ylabel, mode, row, col):
+        assert mode in ["markers", "lines"], mode
+        line, marker = None, None
+        if mode == "markers":
+            marker = {"color": "black", "size": 2}
+        elif mode == "lines":
+            line = {"color": "#636EFA"}
+
+        x = list(range(len(y)))
+
+        fig.add_traces(
+            [
+                # points: y vs time
+                go.Scatter(
+                    x=x,
+                    y=y,
+                    mode=mode,
+                    marker=marker,
+                    line=line,
+                    showlegend=False,
+                ),
+                # line: horizontal error = 0
+                go.Scatter(
+                    x=[min(x), max(x)],
+                    y=[0.0, 0.0],
+                    mode="lines",
+                    line={"color": "grey", "dash": "dot"},
+                    showlegend=False,
+                ),
+            ],
+            rows=[row] * 2,
+            cols=[col] * 2,
+        )
+        fig.update_xaxes(title="time", row=row, col=col)
+        fig.update_yaxes(title=ylabel, row=row, col=col)
+
+        return fig
+
+    @enforce_types
     def plot_pdr_profit_vs_ptrue(self):
-        x = self.st.classif_base.UP.probs_up
-        y = self.st.profits.pdr_profits_OCEAN
+        x = self.st.true_vs_pred[UP].predprobs
+        y = self.st.hist_profits.pdr_profits_OCEAN
         fig = go.Figure(
             go.Scatter(
                 x=x,
@@ -171,8 +212,8 @@ class SimPlotter:
 
     @enforce_types
     def plot_trader_profit_vs_ptrue(self):
-        x = self.st.classif_base.UP.probs_up
-        y = self.st.profits.trader_profits_USD
+        x = self.st.true_vs_pred[UP].predprobs
+        y = self.st.hist_profits.trader_profits_USD
         fig = go.Figure(
             go.Scatter(
                 x=x,
@@ -192,15 +233,15 @@ class SimPlotter:
     @enforce_types
     def plot_model_performance_vs_time(self):
         # set titles
-        metrics = self.st.metrics.UP
-        s1 = f"accuracy = {metrics.acc_ests[-1]*100:.2f}% "
-        s1 += f"[{metrics.acc_ls[-1]*100:.2f}%, {metrics.acc_us[-1]*100:.2f}%]"
+        hist_perfs = self.st.hist_perfs[UP]
+        s1 = f"accuracy = {hist_perfs.acc_ests[-1]*100:.2f}% "
+        s1 += f"[{hist_perfs.acc_ls[-1]*100:.2f}%, {hist_perfs.acc_us[-1]*100:.2f}%]"
 
-        s2 = f"f1={metrics.f1s[-1]:.4f}"
-        s2 += f" [recall={metrics.recalls[-1]:.4f}"
-        s2 += f", precision={metrics.precisions[-1]:.4f}]"
+        s2 = f"f1={hist_perfs.f1s[-1]:.4f}"
+        s2 += f" [recall={hist_perfs.recalls[-1]:.4f}"
+        s2 += f", precision={hist_perfs.precisions[-1]:.4f}]"
 
-        s3 = f"log loss = {metrics.losses[-1]:.4f}"
+        s3 = f"log loss = {hist_perfs.losses[-1]:.4f}"
 
         # make subplots
         fig = make_subplots(
@@ -238,12 +279,12 @@ class SimPlotter:
 
     @enforce_types
     def _add_subplot_accuracy_vs_time(self, fig, row):
-        metrics = self.st.metrics.UP
-        acc_ests = [100 * a for a in metrics.acc_ests]
+        hist_perfs = self.st.hist_perfs[UP]
+        acc_ests = [100 * a for a in hist_perfs.acc_ests]
         df = pd.DataFrame(acc_ests, columns=["accuracy"])
-        df["acc_ls"] = [100 * a for a in metrics.acc_ls]
-        df["acc_us"] = [100 * a for a in metrics.acc_us]
-        df["time"] = range(len(metrics.acc_ests))
+        df["acc_ls"] = [100 * a for a in hist_perfs.acc_ls]
+        df["acc_us"] = [100 * a for a in hist_perfs.acc_us]
+        df["time"] = range(len(hist_perfs.acc_ests))
 
         fig.add_traces(
             [
@@ -288,11 +329,11 @@ class SimPlotter:
 
     @enforce_types
     def _add_subplot_f1_precision_recall_vs_time(self, fig, row):
-        metrics = self.st.metrics.UP
-        df = pd.DataFrame(metrics.f1s, columns=["f1"])
-        df["precisions"] = metrics.precisions
-        df["recalls"] = metrics.recalls
-        df["time"] = range(len(metrics.f1s))
+        hist_perfs = self.st.hist_perfs[UP]
+        df = pd.DataFrame(hist_perfs.f1s, columns=["f1"])
+        df["precisions"] = hist_perfs.precisions
+        df["recalls"] = hist_perfs.recalls
+        df["time"] = range(len(hist_perfs.f1s))
 
         fig.add_traces(
             [
@@ -336,9 +377,9 @@ class SimPlotter:
 
     @enforce_types
     def _add_subplot_log_loss_vs_time(self, fig, row):
-        metrics = self.st.metrics.UP
-        df = pd.DataFrame(metrics.losses, columns=["log loss"])
-        df["time"] = range(len(metrics.losses))
+        hist_perfs = self.st.hist_perfs[UP]
+        df = pd.DataFrame(hist_perfs.losses, columns=["log loss"])
+        df["time"] = range(len(hist_perfs.losses))
 
         fig.add_trace(
             go.Scatter(x=df["time"], y=df["log loss"], mode="lines", name="log loss"),
@@ -352,12 +393,6 @@ class SimPlotter:
 def file_age_in_seconds(pathname):
     stat_result = os.stat(pathname)
     return time.time() - stat_result.st_mtime
-
-
-@enforce_types
-def _model_is_classif(sim_state) -> bool:
-    yerrs = sim_state.metrics.yerrs
-    return min(yerrs) == max(yerrs) == 0.0
 
 
 @enforce_types
