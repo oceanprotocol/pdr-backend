@@ -6,7 +6,6 @@ import os
 import uuid
 from typing import List, Union
 
-import numpy as np
 import pandas as pd
 from enforce_typing import enforce_types
 

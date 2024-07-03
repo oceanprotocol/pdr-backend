@@ -11,20 +11,11 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
-
-from pdr_backend.statutil.autocorrelation_plotdata import (
-    AutocorrelationPlotdataFactory,
-)
-from pdr_backend.statutil.autocorrelation_plotter import add_corr_traces
-from pdr_backend.statutil.dist_plotdata import DistPlotdataFactory
-from pdr_backend.statutil.dist_plotter import add_pdf, add_cdf, add_nq
-
 HEIGHT = 7.5
 WIDTH = int(HEIGHT * 3.2)
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes,attribute-defined-outside-init
 class SimPlotter:
     @enforce_types
     def __init__(
@@ -48,6 +39,7 @@ class SimPlotter:
         path = Path("sim_state").iterdir()
         return [str(p).replace("sim_state/", "") for p in path]
 
+    @enforce_types
     def load_state(self, multi_id):
         root_path = f"sim_state/{multi_id}"
 
@@ -93,6 +85,7 @@ class SimPlotter:
 
         return self.st, "final"
 
+    @enforce_types
     def init_state(self, multi_id):
         files = glob.glob("sim_state/{multi_id}/*")
 
@@ -103,6 +96,7 @@ class SimPlotter:
 
         os.makedirs(f"sim_state/{multi_id}")
 
+    @enforce_types
     def save_state(self, sim_state, aimodel_plotdata, is_final: bool = False):
         root_path = f"sim_state/{self.multi_id}"
         ts = (

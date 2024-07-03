@@ -3,27 +3,20 @@ import os
 import uuid
 from typing import Optional, Tuple
 
-import numpy as np
 import polars as pl
 from enforce_typing import enforce_types
-from sklearn.metrics import log_loss, precision_recall_fscore_support
-from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
-from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.ppss.aimodel_ss import AimodelSS
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.sim.constants import Dirn, UP, DOWN
 from pdr_backend.sim.sim_logger import SimLogLine
-from pdr_backend.sim.sim_model import SimModel
+from pdr_backend.sim.sim_model_data import SimModelData
 from pdr_backend.sim.sim_model_data_factory import SimModelDataFactory
 from pdr_backend.sim.sim_model_factory import SimModelFactory
 from pdr_backend.sim.sim_model_prediction import SimModelPrediction

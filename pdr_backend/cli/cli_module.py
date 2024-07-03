@@ -86,7 +86,6 @@ def do_sim(args, nested_args=None):
         network="development",
         nested_override_args=nested_args,
     )
-    feedset = ppss.predictoor_ss.predict_train_feedsets[0]
     if len(ppss.predictoor_ss.predict_train_feedsets) > 0:
         logger.warning("Multiple predict feeds provided, using the first one")
     sim_engine = SimEngine(ppss)

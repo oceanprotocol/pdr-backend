@@ -3,10 +3,8 @@ from unittest.mock import Mock
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
-from pdr_backend.sim.constants import Dirn, UP, DOWN
 from pdr_backend.sim.sim_model import SimModel
 from pdr_backend.sim.sim_model_factory import SimModelFactory
-from pdr_backend.sim.sim_model_prediction import SimModelPrediction
 from pdr_backend.sim.test.resources import get_sim_model_data
 
 
@@ -26,8 +24,8 @@ def test_sim_model_factory__do_build():
 
     # case: have previous model; then on proper iter?
     prev_model = Mock(spec=SimModel)
-    assert f.do_build(prev_model, test_i=(13 * 4))
-    assert not f.do_build(prev_model, test_i=(13 * 4 + 1))
+    assert f.do_build(prev_model, test_i=13 * 4)
+    assert not f.do_build(prev_model, test_i=13 * 4 + 1)
 
 
 @enforce_types

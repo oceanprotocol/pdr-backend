@@ -1,6 +1,5 @@
 import logging
 
-import numpy as np
 from enforce_typing import enforce_types
 
 from pdr_backend.util.strutil import compactSmallNum

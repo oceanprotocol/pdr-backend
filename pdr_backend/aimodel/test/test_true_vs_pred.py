@@ -4,6 +4,7 @@ from pytest import approx
 from pdr_backend.aimodel.true_vs_pred import PERF_NAMES, TrueVsPred
 
 
+# pylint: disable=too-many-statements
 @enforce_types
 def test_true_vs_pred():
     d = TrueVsPred()

@@ -2,11 +2,6 @@ from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
 
-from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
-from pdr_backend.cli.arg_feed import ArgFeed
-from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
-from pdr_backend.ppss.aimodel_data_ss import AimodelDataSS
 from pdr_backend.ppss.ppss import mock_ppss, PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.sim.constants import UP, DOWN
@@ -15,9 +10,9 @@ from pdr_backend.sim.sim_model_data_factory import SimModelDataFactory
 
 
 @enforce_types
-def test_sim_model_data_factory__basic(tmpdir):
+def test_sim_model_data_factory__basic():
     # base data
-    data_f = _factory(tmpdir)
+    data_f = _factory()
 
     # attributes
     assert isinstance(data_f.ppss, PPSS)
@@ -29,9 +24,9 @@ def test_sim_model_data_factory__basic(tmpdir):
 
 
 @enforce_types
-def test_sim_model_data_factory__testshift(tmpdir):
+def test_sim_model_data_factory__testshift():
     # base data
-    data_f = _factory(tmpdir)
+    data_f = _factory()
     test_i = 3
 
     # do work
@@ -42,9 +37,9 @@ def test_sim_model_data_factory__testshift(tmpdir):
 
 
 @enforce_types
-def test_sim_model_data_factory__thr_UP__thr_DOWN(tmpdir):
+def test_sim_model_data_factory__thr_UP__thr_DOWN():
     # base data
-    data_f = _factory(tmpdir)
+    data_f = _factory()
     cur_close = 8.0
     class_thr: float = data_f.ppss.predictoor_ss.aimodel_data_ss.class_thr
 
@@ -60,10 +55,10 @@ def test_sim_model_data_factory__thr_UP__thr_DOWN(tmpdir):
 
 
 @enforce_types
-def test_sim_model_data_factory__build(tmpdir):
+def test_sim_model_data_factory__build():
     # base data
     mergedohlcv_df = _merged_ohlcv_df()
-    data_f = _factory(tmpdir)
+    data_f = _factory()
     test_i = 0
 
     # do work
@@ -77,7 +72,7 @@ def test_sim_model_data_factory__build(tmpdir):
 
 
 @enforce_types
-def _factory(tmpdir) -> SimModelDataFactory:
+def _factory() -> SimModelDataFactory:
     s = "binanceus ETH/USDT c 5m"
     feedset_list = [{"predict": s, "train_on": s}]
     ppss = mock_ppss(feedset_list)

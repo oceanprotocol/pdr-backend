@@ -1,5 +1,4 @@
 from enforce_typing import enforce_types
-import numpy as np
 from numpy.testing import assert_array_equal
 
 from pdr_backend.sim.constants import Dirn, UP, DOWN

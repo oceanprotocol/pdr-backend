@@ -7,7 +7,6 @@ import pytest
 
 from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
 from pdr_backend.sim.sim_trader import SimTrader
-from pdr_backend.sim.sim_model_prediction import SimModelPrediction
 
 FEE_PERCENT = 0.01
 

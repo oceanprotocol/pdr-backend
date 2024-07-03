@@ -5,7 +5,6 @@ from dash import Dash
 from enforce_typing import enforce_types
 from selenium.common.exceptions import NoSuchElementException  # type: ignore[import-untyped]
 
-from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
 from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
 from pdr_backend.ppss.aimodel_ss import aimodel_ss_test_dict

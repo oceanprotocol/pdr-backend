@@ -77,6 +77,7 @@ class SimTrader:
         )
         return float(profit_USD)
 
+    # pylint: disable=too-many-return-statements
     @enforce_types
     def _trade_iter(
         self,

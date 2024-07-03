@@ -35,7 +35,7 @@ def test_sim_model_prediction_case2_up_dominates():
     assert p.prob_UP >= p.prob_DOWN
     assert p.conf_up == approx((0.6 - 0.5) * 2.0) == approx(0.1 * 2.0) == 0.2
     assert p.conf_down == 0.0
-    assert p.pred_up == (p.conf_up > p.conf_thr) == (0.2 > 0.1) == True
+    assert p.pred_up == (p.conf_up > p.conf_thr) == True  # 0.2 > 0.1
     assert not p.pred_down
     assert p.prob_up_MERGED == approx(0.6)
 
@@ -52,12 +52,11 @@ def test_sim_model_prediction_case3_down_dominates():
     assert p.prob_DOWN == 0.7
 
     assert not p.models_in_conflict()
-    assert not (p.prob_UP >= p.prob_DOWN)
     assert p.prob_DOWN > p.prob_UP
     assert p.conf_up == 0.0
     assert p.conf_down == approx((0.7 - 0.5) * 2.0) == approx(0.2 * 2.0) == 0.4
     assert not p.pred_up
-    assert p.pred_down == (p.conf_down > p.conf_thr) == (0.4 > 0.1) == True
+    assert p.pred_down == (p.conf_down > p.conf_thr) == True  # 0.4 > 0.1
     assert p.prob_up_MERGED == approx(1.0 - 0.7) == approx(0.3)
 
     # setup like above, but now with higher conf thr, which it can't exceed

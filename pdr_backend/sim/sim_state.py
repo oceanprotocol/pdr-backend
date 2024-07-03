@@ -1,16 +1,19 @@
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
 from enforce_typing import enforce_types
 import numpy as np
 
 from pdr_backend.aimodel.true_vs_pred import PERF_NAMES, TrueVsPred
 from pdr_backend.sim.constants import Dirn, dirn_str, UP, DOWN
+from pdr_backend.sim.sim_model import SimModel
+from pdr_backend.sim.sim_model_data import SimModelData
 
 
 # =============================================================================
 # HistPerfs
 
 
+# pylint: disable=too-many-instance-attributes
 class HistPerfs:
     """Historical performances, for 1 model dir'n (eg UP)"""
 
@@ -237,5 +240,5 @@ class SimState:
         return (
             self.hist_perfs[UP].have_data()
             and self.hist_perfs[DOWN].have_data()
-            and self.hist_profits().have_data()
+            and self.hist_profits.have_data()
         )

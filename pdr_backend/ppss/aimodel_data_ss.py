@@ -34,7 +34,7 @@ class AimodelDataSS(StrMixin):
 
     @staticmethod
     def validate_autoregressive_n(autoregressive_n: int):
-        if not (0 < autoregressive_n < np.inf):
+        if not 0 < autoregressive_n < np.inf:
             raise ValueError(autoregressive_n)
 
     @staticmethod

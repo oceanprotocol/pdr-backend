@@ -1,6 +1,7 @@
 from enforce_typing import enforce_types
 
 
+# pylint: disable=too-many-instance-attributes
 @enforce_types
 class SimModelPrediction:
     def __init__(
@@ -65,9 +66,9 @@ def _do_trust_models(
 ) -> bool:
     """Do we trust the models enough to take prediction / trading action?"""
     # preconditions
-    if not (0.0 <= prob_UP <= 1.0):
+    if not 0.0 <= prob_UP <= 1.0:
         raise ValueError(prob_UP)
-    if not (0.0 <= prob_DOWN <= 1.0):
+    if not 0.0 <= prob_DOWN <= 1.0:
         raise ValueError(prob_DOWN)
     if pred_up and pred_down:
         raise ValueError("can't have pred_up=True and pred_down=True")
@@ -84,9 +85,9 @@ def _do_trust_models(
 def _models_in_conflict(prob_UP: float, prob_DOWN: float) -> bool:
     """Does the UP model conflict with the DOWN model?"""
     # preconditions
-    if not (0.0 <= prob_UP <= 1.0):
+    if not 0.0 <= prob_UP <= 1.0:
         raise ValueError(prob_UP)
-    if not (0.0 <= prob_DOWN <= 1.0):
+    if not 0.0 <= prob_DOWN <= 1.0:
         raise ValueError(prob_DOWN)
 
     # main test

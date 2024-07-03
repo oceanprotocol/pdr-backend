@@ -4,7 +4,7 @@ import pytest
 from pytest import approx
 
 from pdr_backend.aimodel.true_vs_pred import PERF_NAMES, TrueVsPred
-from pdr_backend.sim.constants import Dirn, dirn_str, UP, DOWN
+from pdr_backend.sim.constants import dirn_str, UP, DOWN
 from pdr_backend.sim.sim_state import (
     HistPerfs,
     HistProfits,
@@ -73,7 +73,7 @@ def test_hist_perfs__main(dirn):
     values = hist_perfs.recent_metrics_values()
     assert len(values) == 7
     assert sorted(values.keys()) == sorted(target_names)
-    assert f"acc_est_{dirn_s}" in values.keys()
+    assert f"acc_est_{dirn_s}" in values
     assert values == {
         f"acc_est_{dirn_s}": 0.2,
         f"acc_l_{dirn_s}": 1.2,
@@ -88,7 +88,7 @@ def test_hist_perfs__main(dirn):
     values = hist_perfs.final_metrics_values()
     assert len(values) == 7
     assert sorted(values.keys()) == sorted(target_names)
-    assert f"acc_est_{dirn_s}" in values.keys()
+    assert f"acc_est_{dirn_s}" in values
     assert values == {
         f"acc_est_{dirn_s}": 0.2,
         f"acc_l_{dirn_s}": 1.2,
