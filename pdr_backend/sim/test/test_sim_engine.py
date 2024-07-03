@@ -101,7 +101,6 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
         "trader_profit_tab": ["trader_profit_vs_time", "trader_profit_vs_ptrue"],
         "model_performance_tab": ["model_performance_vs_time"],
         "model_response_tab": ["aimodel_response", "aimodel_varimps"],
-        "model_residuals_tab": ["prediction_residuals_other"],
     }
 
     for tab_name, figures in tabs.items():

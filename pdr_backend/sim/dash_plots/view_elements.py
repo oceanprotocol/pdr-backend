@@ -10,8 +10,6 @@ figure_names = [
     "model_performance_vs_time",
     "aimodel_varimps",
     "aimodel_response",
-    "prediction_residuals_dist",
-    "prediction_residuals_other",
 ]
 
 empty_selected_vars = dcc.Checklist([], [], id="selected_vars")
@@ -126,20 +124,6 @@ def get_tabs(figures):
                 )
             ],
             "className": "model_response_tab",
-        },
-        {
-            "name": "Model residuals",
-            "components": [
-                side_by_side_graphs(
-                    figures,
-                    name1="prediction_residuals_dist",
-                    name2="prediction_residuals_other",
-                    height="100%",
-                    width1="60%",
-                    width2="40%",
-                ),
-            ],
-            "className": "model_residuals_tab",
         },
     ]
 

@@ -353,11 +353,6 @@ class SimPlotter:
         )
         fig.update_yaxes(title_text="log loss", row=3, col=1)
 
-    @enforce_types
-    def plot_prediction_residuals_dist(self):    
-        return _empty_fig("(Nothing to show because model is a classifier.)")
-    
-
 
 
 @enforce_types
