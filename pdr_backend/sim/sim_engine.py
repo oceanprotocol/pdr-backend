@@ -346,7 +346,7 @@ class SimEngine:
         number_of_data_points = ppss.sim_ss.test_n
         start_date = current_time_s - (timeframe.s * number_of_data_points)
 
-        # check if ppss is correctly configured for data ferching
+        # check if ppss is correctly configured for data fetching
         if (
             UnixTimeS(start_date)
             < UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr).to_seconds()
@@ -388,9 +388,6 @@ class SimEngine:
             )
             return False
         start_timestamp = UnixTimeMs(data["timestamp"][0]).to_seconds()
-        # end_timestamp = data["timestamp"][1] / 1000
-
-        print(start_timestamp, start_date)
 
         if start_timestamp > start_date:
             logger.info(

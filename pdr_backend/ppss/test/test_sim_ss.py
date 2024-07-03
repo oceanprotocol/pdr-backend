@@ -53,7 +53,7 @@ def test_sim_ss_log_dir_relative_path():
     # it will work with the relative path
     expanded_path = os.path.abspath("mylogs")
     had_before = os.path.exists(expanded_path)
-    d = sim_ss_test_dict("mylogs", True)
+    d = sim_ss_test_dict(log_dir="mylogs", use_own_model=True)
     ss = SimSS(d)
     assert ss.log_dir == expanded_path
     if not had_before:
