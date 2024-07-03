@@ -10,7 +10,7 @@ logger = logging.getLogger("sim_trader")
 
 # pylint: disable=too-many-instance-attributes
 class SimTrader:
-    def __init__(self, ppss, predict_feed):
+    def __init__(self, ppss):
         self.ppss = ppss
 
         self.position_open = ""  # long, short, ""
@@ -27,7 +27,7 @@ class SimTrader:
             "mock" if mock else ppss.predictoor_ss.exchange_str,
         )
 
-        self.predict_feed = predict_feed
+        self.predict_feed = ppss.predictoor_ss.predict_train_feedsets[0].predict
         assert isinstance(self.tokcoin, str)
         assert isinstance(self.usdcoin, str)
 

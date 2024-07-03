@@ -21,20 +21,18 @@ def mock_ppss():
     ppss.sim_ss.tradetype = "histmock"
     ppss.exchange_mgr_ss = Mock(spec=ExchangeMgrSS)
     ppss.predictoor_ss.exchange_str = "mock"
-    return ppss
+    ppss.predictoor_ss.predict_train_feedsets = [Mock()]
 
-
-@pytest.fixture
-def mock_predict_feed():
     predict_feed = Mock()
     predict_feed.pair.base_str = "ETH"
     predict_feed.pair.quote_str = "USDT"
-    return predict_feed
-
+    ppss.predictoor_ss.predict_train_feedsets[0].predict = predict_feed
+    
+    return ppss
 
 @pytest.fixture
-def sim_trader(mock_ppss, mock_predict_feed):
-    return SimTrader(mock_ppss, mock_predict_feed)
+def sim_trader(mock_ppss):
+    return SimTrader(mock_ppss)
 
 
 def test_initial_state(sim_trader):

@@ -17,10 +17,19 @@ from pdr_backend.sim.dash_plots.callbacks import get_callbacks
 from pdr_backend.sim.dash_plots.view_elements import get_layout
 from pdr_backend.sim.sim_engine import SimEngine
 
+@enforce_types
+# pylint: disable=unused-argument
+def test_sim_engine_no_plot(tmpdir):
+    _test_sim_engine(tmpdir, None, None)
+    
+@enforce_types
+# pylint: disable=unused-argument
+def test_sim_engine_with_plot(tmpdir, check_chromedriver, dash_duo):
+    _test_sim_engine(tmpdir, check_chromedriver, dash_duo)
 
 @enforce_types
 # pylint: disable=unused-argument
-def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
+def _test_sim_engine(tmpdir, check_chromedriver, dash_duo):
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
 
@@ -63,8 +72,7 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
     ppss.sim_ss = SimSS(sim_d)
 
     # go
-    feedsets = ppss.predictoor_ss.predict_train_feedsets
-    sim_engine = SimEngine(ppss, feedsets[0])
+    sim_engine = SimEngine(ppss)
 
     assert sim_engine.st.sim_model is None
     sim_engine.run()
@@ -73,6 +81,8 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
     assert isinstance(sim_engine.st.sim_model, SimModel)
 
     # basic tests for plots
+    if check_chromedriver is None:
+        return
     app = Dash("pdr_backend.sim.sim_dash")
     app.config["suppress_callback_exceptions"] = True
     app.run_id = sim_engine.multi_id

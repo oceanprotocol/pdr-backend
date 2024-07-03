@@ -14,6 +14,7 @@ from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
@@ -28,7 +29,7 @@ from pdr_backend.sim.sim_model_factory import SimModelFactory
 from pdr_backend.sim.sim_model_prediction import SimModelPrediction
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_predictoor import SimPredictoor
-from pdr_backend.sim.sim_state import SimState
+from pdr_backend.sim.sim_state import HistProfits, SimState
 from pdr_backend.sim.sim_trader import SimTrader
 from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
@@ -42,23 +43,20 @@ class SimEngine:
     def __init__(
         self,
         ppss: PPSS,
-        predict_train_feedset: PredictTrainFeedset,
         multi_id: Optional[str] = None,
     ):
-        predict_feed = predict_train_feedset.predict
-        assert predict_feed.signal == "close", \
-            "only operates on close predictions"
-        
-        self.predict_train_feedset = predict_train_feedset
         self.ppss = ppss
+        
+        assert self.predict_feed.signal == "close", \
+            "only operates on close predictions"
 
         # can be disabled by calling disable_realtime_state()
         self.do_state_updates = True
 
         self.st = SimState()
 
-        self.pdr = SimPredictoor(ppss.predictoor_ss)
-        self.trader = SimTrader(ppss, predict_feed)
+        self.sim_predictoor = SimPredictoor(ppss.predictoor_ss)
+        self.sim_trader = SimTrader(ppss)
 
         self.sim_plotter = SimPlotter()
 
@@ -69,36 +67,32 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
             
-        assert self.transform == "None"
-
-    @property
-    def predict_feed(self) -> ArgFeed:
-        return self.predict_train_feedset.predict_feed
-
-    @property
-    def timeframe(self) -> ArgTimeframe:
-        return self.predict_feed.timeframe
+        assert self.pdr_ss.aimodel_data_ss.transform == "None"
 
     @property
     def pdr_ss(self) -> PredictoorSS:
         return self.ppss.predictoor_ss
-    
+                
     @property
-    def aimodel_ss(self) -> AimodelSS:
-        return self.pdr_ss.aimodel_ss
-    
+    def predict_feed(self) -> ArgFeed:
+        return self.pdr_ss.predict_train_feedsets[0].predict
+
     @property
-    def transform(self) -> str:
-        return self.pdr_ss.aimodel_data_ss.transform
+    def timeframe(self) -> ArgTimeframe:
+        return self.predict_feed.timeframe
     
     @property
     def others_stake(self) -> float:
-        return self.others_stale.amt_eth
+        return self.pdr_ss.others_stake.amt_eth
+    
+    @property
+    def others_accuracy(self) -> float:
+        return self.pdr_ss.others_accuracy
     
     @property
     def revenue(self) -> float:
         return self.pdr_ss.revenue.amt_eth
-
+        
     @enforce_types
     def _init_loop_attributes(self):
         filebase = f"out_{UnixTimeMs.now()}.txt"
@@ -134,29 +128,45 @@ class SimEngine:
     # pylint: disable=too-many-statements# pylint: disable=too-many-statements
     @enforce_types
     def run_one_iter(self, iter_i: int, mergedohlcv_df: pl.DataFrame):
-        # build model
+        # base data
         st = self.st
-        data_factory = SimModelDataFactory(self.ppss)
-        model_data: SimModelData = data_factory.build(iter_i, mergedohlcv_df)
-        model_factory = SimModelFactory(self.aimodel_ss)
+        df = mergedohlcv_df
+        sim_model_data_f = SimModelDataFactory(self.ppss)
+        testshift = sim_model_data_f.testshift(iter_i)
+
+        # observe current price value, and related thresholds for classifier
+        cur_close = self._curval(df, testshift, "close")
+        cur_high = self._curval(df, testshift, "high")
+        cur_low = self._curval(df, testshift, "low")
+        y_thr_UP = sim_model_data_f.thr_UP(cur_close)
+        y_thr_DOWN = sim_model_data_f.thr_DOWN(cur_close)
+        
+        # build model
+        model_factory = SimModelFactory(self.pdr_ss.aimodel_ss)
+        st.sim_model_data: SimModelData = sim_model_data_f.build(iter_i, df)
         if model_factory.do_build(st.sim_model, iter_i):
-            st.sim_model = model_factory.build(model_data)
+            st.sim_model = model_factory.build(st.sim_model_data)
 
         # make prediction
-        predprob = self.st.sim_model.predict_next(model_data.X_test)
+        predprob = self.st.sim_model.predict_next(st.sim_model_data.X_test)
 
         conf_thr = self.ppss.trader_ss.sim_confidence_threshold
         sim_model_p = SimModelPrediction(conf_thr, predprob[UP], predprob[DOWN])
         
         # predictoor takes action (stake)
-        stake_up, stake_down = self.pdr.predict_iter(sim_model_p)
+        stake_up, stake_down = self.sim_predictoor.predict_iter(sim_model_p)
 
         # trader takes action (trade)
-        trader_profit_USD = self.trader.trade_iter(
+        trader_profit_USD = self.sim_trader.trade_iter(
             cur_close, cur_high, cur_low, sim_model_p,
         )
 
-        # observe true price change
+        # observe next price values
+        next_close = self._nextval(df, testshift, "close")
+        next_high = self._nextval(df, testshift, "high")
+        next_low = self._nextval(df, testshift, "low")
+
+        # observe price change prev -> next, and related changes for classifier
         trueval_up_close = next_close > cur_close
         trueval = {
             UP: next_high > y_thr_UP, # did next high go > prev close+% ?
@@ -165,31 +175,38 @@ class SimEngine:
 
         # calc predictoor profit
         pdr_profit_OCEAN = HistProfits.calc_pdr_profit(
-            others_stake, pdr_ss.others_stake_accuracy,
-            stake_up, stake_down, trueval_up_close)
+            self.others_stake, self.others_accuracy,
+            stake_up, stake_down, self.revenue, trueval_up_close)
         
         # update state
         st.update(trueval, predprob,  pdr_profit_OCEAN, trader_profit_USD)
 
         # log
-        ut = self._calc_ut(mergedohlcv_df)
-        SimLogLine(ppss, st, iter_i, ut).log()
+        ut = self._calc_ut(df, testshift)
+        SimLogLine(self.ppss, self.st, iter_i, ut).log()
 
         # plot
         do_save_state, is_final_state = self._do_save_state(iter_i)
         if do_save_state:
-            d_UP = self._aimodel_plotdata_1dirn(UP)
-            d_DOWN = self._aimodel_plotdata_1dirn(DOWN)
-            d = {UP: d_UP, DOWN: d_DOWN}
+            d = self._aimodel_plotdata()
             st.iter_number = iter_i
             self.sim_plotter.save_state(st, d, is_final_state)
 
     @enforce_types
+    def _aimodel_plotdata(self) -> dict:
+        d_UP = self._aimodel_plotdata_1dir(UP)
+        d_DOWN = self._aimodel_plotdata_1dir(DOWN)
+        return {UP: d_UP, DOWN: d_DOWN}
+
+    @enforce_types
     def _aimodel_plotdata_1dir(self, dirn: Dirn) -> AimodelPlotdata:
         st = self.st
-        model, model_data = st.sim_model[dirn], st.sim_model_data[dirn]
+        model = st.sim_model[dirn]
+        model_data = st.sim_model_data[dirn]
+        
         colnames = model_data.colnames
         colnames = [shift_one_earlier(c) for c in colnames]
+        
         most_recent_x = model_data.X[-1, :]
         slicing_x = most_recent_x
         d = AimodelPlotdata(
@@ -204,20 +221,27 @@ class SimEngine:
         return d
 
     @enforce_types
-    def _recent_close(self, mergedohlcv_df, testshift: int) -> Tuple[float, float]:
-        """@return -- (cur_close, next_close)"""
-        p = self.predict_feed_trainset.predict_feed
-        _, _, yraw_close, _, _ = data_f.create_xy(
-            mergedohlcv_df,
-            testshift,
-            p.variant_close(),
-            [p.variant_close()],
-        )
-        cur_close, next_close = yraw_close[-2], yraw_close[-1]
-        return (cur_close, next_close)
+    def _curval(self, df, testshift: int, signal_str: str) -> float:
+        # float() so not np.float64, bc applying ">" gives np.bool -> problems
+        return float(self._yraw(df, testshift, signal_str)[-2])
     
     @enforce_types
-    def _calc_ut(self, mergedohlcv_df) -> UnixTimeMs:
+    def _nextval(self, df, testshift: int, signal_str: str) -> float:
+        # float() so not np.float64, bc applying ">" gives np.bool -> problems
+        return float(self._yraw(df, testshift, signal_str)[-1])
+    
+    @enforce_types
+    def _yraw(self, mergedohlcv_df, testshift: int, signal_str: str):
+        assert signal_str in ["close", "high", "low"]
+        feed = self.predict_feed.variant_signal(signal_str)
+        aimodel_data_f = AimodelDataFactory(self.pdr_ss)
+        _, _, yraw, _, _ = aimodel_data_f.create_xy(
+            mergedohlcv_df, testshift, feed, ArgFeeds([feed]),
+        )
+        return yraw
+    
+    @enforce_types
+    def _calc_ut(self, mergedohlcv_df, testshift: int) -> UnixTimeMs:
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
         ut = UnixTimeMs(recent_ut - testshift * self.timeframe.ms)
         return ut

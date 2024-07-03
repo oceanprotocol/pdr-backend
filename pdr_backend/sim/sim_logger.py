@@ -22,11 +22,13 @@ class SimLogLine:
         s += f" dt={self.ut.to_timestr()[:-7]}"
         s += " ║"
 
-        s += f"pdr_profit={compactSmallNum(self.st.pdr_profits_OCEAN[-1])} OCEAN"
-        s += f" (cumul {compactSmallNum(sum(self.st.pdr_profits_OCEAN))} OCEAN)"
+        pdr_profits = self.st.hist_profits.pdr_profits_OCEAN
+        s += f"pdr_profit={compactSmallNum(pdr_profits[-1])} OCEAN"
+        s += f" (cumul {compactSmallNum(sum(pdr_profits))} OCEAN)"
         s += " ║"
 
-        s += f" tdr_profit=${self.st.trader_profits_USD[-1]:6.2f}"
-        s += f" (cumul ${sum(self.st.trader_profits_USD):6.2f})"
+        trader_profits = self.st.hist_profits.trader_profits_USD
+        s += f" tdr_profit=${trader_profits[-1]:6.2f}"
+        s += f" (cumul ${sum(trader_profits):6.2f})"
 
         logger.info(s)

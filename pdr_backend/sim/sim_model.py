@@ -25,9 +25,12 @@ class SimModel(dict):
         assert X_test[UP].shape[0] == 1
         assert X_test[DOWN].shape[0] == 1
         
-        predprob_UP = self[UP].predict_ptrue(X_test[UP])[0]
-        predprob_DOWN = self[DOWN].predict_ptrue(X_test[UP])[0]
-        predprob = {UP: predprob_UP, DOWN: predprob_DOWN}
+        prob_UP = self[UP].predict_ptrue(X_test[UP])[0]
+        prob_DOWN = self[DOWN].predict_ptrue(X_test[UP])[0]
         
-        return predprob
+        # ensure not np.float64. Why: applying ">" gives np.bool --> problems
+        prob_UP, prob_DOWN = float(prob_UP), float(prob_DOWN)
+        
+        return {UP: prob_UP, DOWN: prob_DOWN}
+        
     

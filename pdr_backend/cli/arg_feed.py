@@ -90,15 +90,15 @@ class ArgFeed:
         return feed
 
     def variant_close(self) -> "ArgFeed":
-        return self._variant_signal("close")
+        return self.variant_signal("close")
     
     def variant_high(self) -> "ArgFeed":
-        return self._variant_signal("high")
+        return self.variant_signal("high")
     
     def variant_low(self) -> "ArgFeed":
-        return self._variant_signal("low")
+        return self.variant_signal("low")
     
-    def _variant_signal(self, signal_str: "str") -> "ArgFeed":
+    def variant_signal(self, signal_str: str) -> "ArgFeed":
         return ArgFeed(
             self.exchange, 
             signal_str,

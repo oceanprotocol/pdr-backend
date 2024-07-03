@@ -13,6 +13,9 @@ class SimModelPrediction:
         # DOWN model's probability that next low will go < prev close-%
         prob_DOWN: float,
     ):
+        # ensure not np.float64. Why: applying ">" gives np.bool --> problems
+        prob_UP, prob_DOWN = float(prob_UP), float(prob_DOWN)
+        
         # ppss.trader_ss.sim_confidence_threshold
         self.conf_thr = conf_thr
 
@@ -42,13 +45,12 @@ class SimModelPrediction:
             self.pred_down = self.conf_down > self.conf_thr
             self.prob_up_MERGED = 1.0 - self.prob_DOWN
     
-    @enforce_types
     def do_trust_models(self) -> bool:
-        return _do_trust_models(
+        do_trust = _do_trust_models(
             self.pred_up, self.pred_down, self.prob_UP, self.prob_DOWN,
         )
+        return do_trust
 
-    @enforce_types
     def models_in_conflict(self) -> bool:
         return _models_in_conflict(self.prob_UP, self.prob_DOWN)
 
