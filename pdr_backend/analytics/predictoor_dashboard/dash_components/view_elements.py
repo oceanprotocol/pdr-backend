@@ -5,8 +5,26 @@ from dash import dcc, html, dash_table
 def get_input_column():
     return html.Div(
         [
-            html.Div(id="feeds_container", style={"height": "50%"}),
-            html.Div(id="predictoors_container", style={"height": "50%"}),
+            html.Div(
+                get_table(
+                    table_id="feeds_table",
+                    table_name="Feeds",
+                    columns=[],
+                    data=None,
+                ),
+                id="feeds_container",
+                style={"height": "50%"},
+            ),
+            html.Div(
+                get_table(
+                    table_id="predictoors_table",
+                    table_name="Predictoors",
+                    columns=[],
+                    data=None,
+                ),
+                id="predictoors_container",
+                style={"height": "50%"},
+            ),
         ],
         style={
             "height": "100%",
@@ -112,4 +130,4 @@ def get_table(table_id, table_name, columns, data):
 
 
 def get_graph(figure):
-    return dcc.Graph(figure=figure, style={"width": "100%", "height": "30vh"})
+    return dcc.Graph(figure=figure, style={"width": "100%", "height": "28vh"})
