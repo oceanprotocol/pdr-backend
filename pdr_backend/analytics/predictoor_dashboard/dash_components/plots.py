@@ -42,10 +42,10 @@ def get_figures(payouts, feeds, predictoors):
         for predictor in predictoors:
             for feed in feeds:
                 slots, accuracies, profits, stakes = process_payouts(
-                    payouts, predictor, feed
+                    payouts, predictor, feed["contract"]
                 )
                 if slots:
-                    short_name = f"{predictor[:5]} - {feed[:5]}"
+                    short_name = f"{predictor[:5]} - {feed['feed_name']}"
                     accuracy_scatters.append(
                         create_scatter(short_name, slots, accuracies)
                     )
@@ -61,6 +61,13 @@ def get_figures(payouts, feeds, predictoors):
         title="Accuracy",
         yaxis_title="'%' accuracy over time",
         margin={"l": 20, "r": 0, "t": 50, "b": 0},
+        legend={
+            "orientation": "h",  # Horizontal orientation
+            "yanchor": "bottom",  # Anchor the legend to the bottom
+            "y": 1.02,  # Position the legend slightly above the plot
+            "xanchor": "right",  # Anchor the legend to the right
+            "x": 1,  # Position the legend to the right
+        },
     )
 
     fig_profit = go.Figure(profit_scatters)
@@ -68,6 +75,7 @@ def get_figures(payouts, feeds, predictoors):
         title="Profit",
         yaxis_title="OCEAN profit over time",
         margin={"l": 20, "r": 0, "t": 50, "b": 0},
+        showlegend=False,
     )
 
     fig_costs = go.Figure(stakes_scatters)
@@ -75,6 +83,7 @@ def get_figures(payouts, feeds, predictoors):
         title="Costs",
         yaxis_title="Stake (OCEAN) at a time",
         margin={"l": 20, "r": 0, "t": 50, "b": 0},
+        showlegend=False,
     )
 
     return fig_accuracy, fig_profit, fig_costs

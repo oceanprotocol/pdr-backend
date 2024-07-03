@@ -105,7 +105,12 @@ def get_callbacks(app):
         feeds_addrs = []
         predictoors_addrs = []
         for i in feeds_table_selected_rows:
-            feeds_addrs.append(feeds_data[i]["contract"])
+            feeds_addrs.append(
+                {
+                    "contract": feeds_data[i]["contract"],
+                    "feed_name": f"{feeds_data[i]['pair']}-{feeds_data[i]['timeframe']}",
+                }
+            )
 
         for i in predictoors_table_selected_rows:
             predictoors_addrs.append(predictoors_data[i]["user"])
