@@ -45,7 +45,7 @@ def get_predictoors_stake_data_from_db(lake_dir):
 
 
 def get_payouts_from_db(feed_addrs, predictoor_addrs, lake_dir):
-    payouts_data = {}
+    payouts_data = []
     db = DuckDBDataStore(lake_dir, read_only=True)
 
     # Constructing the SQL query

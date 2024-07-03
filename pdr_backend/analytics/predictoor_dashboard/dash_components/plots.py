@@ -1,42 +1,117 @@
 import plotly.graph_objects as go
+from enforce_typing import enforce_types
+from typing import Union, List, Tuple, Optional
 
 
-def create_scatter(name, x_data, y_data, mode="lines"):
+@enforce_types
+def create_scatter(
+    name: str, x_data: List[float], y_data: List[int], mode="lines"
+) -> go.Scatter:
+    """Create a scatter plot with the given data.
+    Args:
+        name (str): Name of the trace.
+        x_data (List): List of x values.
+        y_data (List): List of y values.
+        mode (str): Plot mode. Default is 'lines'.
+    Returns:
+        go.Scatter: Scatter plot trace.
+    """
     return go.Scatter(x=x_data, y=y_data, mode=mode, name=name)
 
 
-def create_bar(name, x_data, y_data):
+@enforce_types
+def create_bar(name: str, x_data: List[float], y_data: List[int]) -> go.Bar:
+    """Create a bar plot with the given data.
+    Args:
+        name (str): Name of the trace.
+        x_data (list): List of x values.
+        y_data (list): List of y values.
+    Returns:
+        go.Bar: Bar plot trace.
+    """
     return go.Bar(x=x_data, y=y_data, name=name)
 
 
-def process_payouts(payouts, predictor, feed):
-    slots = []
-    accuracies = []
-    profits = []
-    stakes = []
-    profit = 0
-    predictions = 0
-    correct_predictions = 0
+@enforce_types
+def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
+    """
+    Process payouts data for a given predictor and feed.
+    Args:
+        payouts (list): List of payouts data.
+        predictor (str): Predictor address.
+        feed (str): Feed contract address.
+    Returns:
+        tuple: Tuple of slots, accuracies, profits, and stakes.
+    """
+    slots, accuracies, profits, stakes = [], [], [], []
+    profit = predictions = correct_predictions = 0
+
     for p in payouts:
         if predictor in p["ID"] and feed in p["ID"]:
             predictions += 1
-            if p["payout"] > 0:
-                correct_predictions += 1
-                profit += p["payout"] - p["stake"]
-            else:
-                profit -= p["stake"]
+            profit_change = p["payout"] - p["stake"] if p["payout"] > 0 else -p["stake"]
+            profit += profit_change
+            correct_predictions += p["payout"] > 0
 
-            stakes.append(p["stake"])
             slots.append(p["slot"] / 1000)
             accuracies.append((correct_predictions / predictions) * 100)
             profits.append(profit)
+            stakes.append(p["stake"])
     return slots, accuracies, profits, stakes
 
 
-def get_figures(payouts, feeds, predictoors):
-    accuracy_scatters = []
-    profit_scatters = []
-    stakes_scatters = []
+@enforce_types
+def create_figure(
+    data_traces: List[Union[go.Scatter, go.Bar]],
+    title: str,
+    yaxis_title: str,
+    show_legend: bool = True,
+):
+    """
+    Create a figure with the given data traces.
+    Args:
+        data_traces (list): List of data traces.
+        title (str): Figure title.
+        yaxis_title (str): Y-axis title.
+        show_legend (bool): Show legend. Default is True.
+    Returns:
+        go.Figure: Plotly figure.
+    """
+    fig = go.Figure(data_traces)
+    fig.update_layout(
+        title=title,
+        yaxis_title=yaxis_title,
+        margin={"l": 20, "r": 0, "t": 50, "b": 0},
+        showlegend=show_legend,
+        legend=(
+            {
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "right",
+                "x": 1,
+            }
+            if show_legend
+            else {}
+        ),
+    )
+    return fig
+
+
+@enforce_types
+def get_figures(
+    payouts: Optional[List], feeds: List[str], predictoors: List[str]
+) -> Tuple[go.Figure, go.Figure, go.Figure]:
+    """
+    Get figures for accuracy, profit, and costs.
+    Args:
+        payouts (list): List of payouts data.
+        feeds (list): List of feeds data.
+        predictoors (list): List of predictoors data.
+    Returns:
+        tuple: Tuple of accuracy, profit, and costs figures.
+    """
+    accuracy_scatters, profit_scatters, stakes_scatters = [], [], []
 
     if payouts:
         for predictor in predictoors:
@@ -56,34 +131,14 @@ def get_figures(payouts, feeds, predictoors):
         profit_scatters.append(create_scatter("profit", [], []))
         stakes_scatters.append(create_bar("stakes", [], []))
 
-    fig_accuracy = go.Figure(accuracy_scatters)
-    fig_accuracy.update_layout(
-        title="Accuracy",
-        yaxis_title="'%' accuracy over time",
-        margin={"l": 20, "r": 0, "t": 50, "b": 0},
-        legend={
-            "orientation": "h",  # Horizontal orientation
-            "yanchor": "bottom",  # Anchor the legend to the bottom
-            "y": 1.02,  # Position the legend slightly above the plot
-            "xanchor": "right",  # Anchor the legend to the right
-            "x": 1,  # Position the legend to the right
-        },
+    fig_accuracy = create_figure(
+        accuracy_scatters, "Accuracy", "'%' accuracy over time"
     )
-
-    fig_profit = go.Figure(profit_scatters)
-    fig_profit.update_layout(
-        title="Profit",
-        yaxis_title="OCEAN profit over time",
-        margin={"l": 20, "r": 0, "t": 50, "b": 0},
-        showlegend=False,
+    fig_profit = create_figure(
+        profit_scatters, "Profit", "OCEAN profit over time", show_legend=False
     )
-
-    fig_costs = go.Figure(stakes_scatters)
-    fig_costs.update_layout(
-        title="Costs",
-        yaxis_title="Stake (OCEAN) at a time",
-        margin={"l": 20, "r": 0, "t": 50, "b": 0},
-        showlegend=False,
+    fig_costs = create_figure(
+        stakes_scatters, "Costs", "Stake (OCEAN) at a time", show_legend=False
     )
 
     return fig_accuracy, fig_profit, fig_costs
