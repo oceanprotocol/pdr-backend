@@ -1,6 +1,7 @@
+from typing import Union, List, Tuple, Optional
+
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
-from typing import Union, List, Tuple, Optional
 
 
 @enforce_types
@@ -100,7 +101,7 @@ def create_figure(
 
 @enforce_types
 def get_figures(
-    payouts: Optional[List], feeds: List[str], predictoors: List[str]
+    payouts: Optional[List], feeds: List, predictoors: List[str]
 ) -> Tuple[go.Figure, go.Figure, go.Figure]:
     """
     Get figures for accuracy, profit, and costs.
