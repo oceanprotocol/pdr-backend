@@ -1,7 +1,5 @@
 import dash_bootstrap_components as dbc
 from dash import dcc, html, dash_table
-import pandas as pd
-import plotly.graph_objects as go
 
 
 def get_input_column():
@@ -24,9 +22,9 @@ def get_input_column():
 def get_graphs_column():
     return html.Div(
         [
-            html.Div(id="accuracy_chart", style={"height": "30%"}),
-            html.Div(id="profit_chart", style={"height": "30%"}),
-            html.Div(id="predictoors_stake_chart", style={"height": "30%"}),
+            html.Div(id="accuracy_chart"),
+            html.Div(id="profit_chart"),
+            html.Div(id="stake_chart"),
         ],
         id="graphs_container",
         style={
@@ -36,6 +34,7 @@ def get_graphs_column():
             "flex": 3,
             "flexDirection": "column",
             "justifyContent": "space-around",
+            "paddingLeft": "40px",
         },
     )
 
@@ -105,4 +104,4 @@ def get_table(table_id, table_name, columns, data):
 
 
 def get_graph(figure):
-    return dcc.Graph(figure=figure, style={"width": "100%", "height": "45vh"})
+    return dcc.Graph(figure=figure, style={"width": "100%", "height": "30vh"})
