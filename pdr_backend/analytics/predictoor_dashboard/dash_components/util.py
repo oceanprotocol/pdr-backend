@@ -1,9 +1,22 @@
+from typing import List
+from enforce_typing import enforce_types
+
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table_pdr_predictions import predictions_table_name
 from pdr_backend.lake.table_pdr_payouts import payouts_table_name
 
 
-def _query_db(lake_dir, query):
+@enforce_types
+def _query_db(lake_dir: str, query: str) -> dict:
+    """
+    Query the database with the given query.
+    Args:
+        lake_dir (str): Path to the lake directory.
+        query (str): SQL query.
+    Returns:
+        dict: Query result.
+    """
+
     try:
         db = DuckDBDataStore(lake_dir, read_only=True)
         df = db.query_data(query)
@@ -15,7 +28,8 @@ def _query_db(lake_dir, query):
         return {}
 
 
-def get_feeds_data_from_db(lake_dir):
+@enforce_types
+def get_feeds_data_from_db(lake_dir: str):
     return _query_db(
         lake_dir,
         f"""
@@ -25,7 +39,8 @@ def get_feeds_data_from_db(lake_dir):
     )
 
 
-def get_predictoors_data_from_db(lake_dir):
+@enforce_types
+def get_predictoors_data_from_db(lake_dir: str):
     return _query_db(
         lake_dir,
         f"""
@@ -35,7 +50,8 @@ def get_predictoors_data_from_db(lake_dir):
     )
 
 
-def get_predictoors_stake_data_from_db(lake_dir):
+@enforce_types
+def get_predictoors_stake_data_from_db(lake_dir: str):
     return _query_db(
         lake_dir,
         f"""
@@ -44,8 +60,21 @@ def get_predictoors_stake_data_from_db(lake_dir):
     )
 
 
-def get_payouts_from_db(feed_addrs, predictoor_addrs, lake_dir):
-    payouts_data = []
+@enforce_types
+def get_payouts_from_db(
+    feed_addrs: List[str], predictoor_addrs: List[str], lake_dir: str
+) -> List[dict]:
+    """
+    Get payouts data for the given feed and predictoor addresses.
+    Args:
+        feed_addrs (list): List of feed addresses.
+        predictoor_addrs (list): List of predictoor addresses.
+        lake_dir (str): Path to the lake directory.
+    Returns:
+        list: List of payouts data.
+    """
+
+    payouts_data: List[dict] = []
     db = DuckDBDataStore(lake_dir, read_only=True)
 
     # Constructing the SQL query
