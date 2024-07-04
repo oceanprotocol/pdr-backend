@@ -5,8 +5,8 @@
 import logging
 import os
 import uuid
-import time
 from typing import Optional, Dict
+import time
 
 import numpy as np
 import polars as pl
@@ -28,7 +28,7 @@ from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_trader import SimTrader
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.strutil import shift_one_earlier
-from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
@@ -345,20 +345,6 @@ class SimEngine:
         timeframe = ppss.trader_ss.feed.timeframe
         number_of_data_points = ppss.sim_ss.test_n
         start_date = current_time_s - (timeframe.s * number_of_data_points)
-
-        # check if ppss is correctly configured for data fetching
-        if (
-            UnixTimeS(start_date)
-            < UnixTimeMs.from_timestr(self.ppss.lake_ss.st_timestr).to_seconds()
-        ):
-            logger.info(
-                (
-                    "Lake dates configuration doesn't meet the requirements. "
-                    "Make sure you set start date before %s"
-                ),
-                time.strftime("%Y-%m-%d", time.localtime(start_date)),
-            )
-            return False
 
         # fetch data from subgraph
         try:

@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 import os
-import shutil
 from unittest.mock import patch
 
 import pytest
@@ -221,23 +220,10 @@ def test_get_past_predictions_from_chain():
     d["lake_ss"]["lake_dir"] = path
     d["lake_ss"]["st_timestr"] = "2 hours ago"
     d["trader_ss"]["feed.timeframe"] = "5m"
-    d["sim_ss"]["test_n"] = 1000
-    ppss = PPSS(d=d, network="sapphire-mainnet")
-    feedsets = ppss.predictoor_ss.predict_train_feedsets
-    sim_engine = SimEngine(ppss, feedsets[0])
-
-    # run with wrong ppss lake config so there is not enough data fetched
-    resp = sim_engine._get_past_predictions_from_chain(ppss)
-    assert resp is False
-
-    # run with right ppss lake config
-    if os.path.exists(path):
-        shutil.rmtree(path)
-
-    # needs to be inspected and fixed
     d["sim_ss"]["test_n"] = 10
     ppss = PPSS(d=d, network="sapphire-mainnet")
 
+    feedsets = ppss.predictoor_ss.predict_train_feedsets
     sim_engine = SimEngine(ppss, feedsets[0])
     resp = sim_engine._get_past_predictions_from_chain(ppss)
     assert resp is True
