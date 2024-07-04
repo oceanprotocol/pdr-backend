@@ -3,8 +3,6 @@ Copyright 2024 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-> 📢 _Do you love AI, Python, and competitive games? The Predictoor team is hiring. [Learn more](https://github.com/oceanprotocol/jobs/blob/main/datascience.md)_.
-
 # pdr-backend
 
 ## Run bots (agents)
