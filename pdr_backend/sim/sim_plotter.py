@@ -141,7 +141,7 @@ class SimPlotter:
         cum_profits = list(np.cumsum(profits))
         ylabel = "predictoor profit (OCEAN)"
         title = f"Pdr profit vs time. Current: {cum_profits[-1]:.2f} OCEAN"
-        title += f". Avg profit per iter: {np.average(profits):.3f} OCEAN"
+        title += f". Avg profit per iter: {np.average(profits):.4f} OCEAN"
         fig = make_subplots(rows=1, cols=1, subplot_titles=(title,))
         self._add_subplot_y_vs_time(fig, cum_profits, ylabel, "lines", row=1, col=1)
         return fig
@@ -152,7 +152,7 @@ class SimPlotter:
         cum_profits = list(np.cumsum(profits))
         ylabel = "trader profit (USD)"
         title = f"Trader profit vs time. Current: ${cum_profits[-1]:.2f}"
-        title += f". Avg profit per iter: {np.average(profits):.3f} OCEAN"
+        title += f". Avg profit per iter: ${np.average(profits):.4f}"
         fig = make_subplots(rows=1, cols=1, subplot_titles=(title,))
         self._add_subplot_y_vs_time(fig, cum_profits, ylabel, "lines", row=1, col=1)
         return fig
@@ -198,74 +198,22 @@ class SimPlotter:
 
     @enforce_types
     def plot_pdr_profit_vs_ptrue(self):
-        # set titles
-        titles = [self._pdr_profit_dist_title(dirn) for dirn in [UP,DOWN]]
-        
-        # make subplots
-        fig = make_subplots(rows=1, cols=2, subplot_titles=titles)
-        
-        # fill in subplots
-        self._add_subplot_pdr_profit_vs_ptrue(fig, UP, row=1, col=1)
-        self._add_subplot_pdr_profit_vs_ptrue(fig, DOWN, row=1, col=2)
-        
-        # global: set ticks
-        minor = {"ticks": "inside", "showgrid": True}
-        rng = [0.5, 1.0]
-        for col in [1, 2]:
-            fig.update_xaxes(minor=minor, range=rng, dtick=0.1, row=1, col=col)
-            fig.update_yaxes(minor=minor, row=1, col=col)
-            
-        # global: don't show legend
-        fig.update_layout(showlegend=False)
-
-        return fig
-
-    @enforce_types
-    def _pdr_profit_dist_title(self, dirn:Dirn) -> str:
-        return f"Pdr profit dist'n vs prob({dirn_str(dirn)})"
-
-    @enforce_types
-    def _add_subplot_pdr_profit_vs_ptrue(self, fig, dirn:Dirn, row:int, col):
-        dirn_s = dirn_str(dirn)
-        x = np.array(self.st.true_vs_pred[dirn].predprobs)
-        y = np.array(self.st.hist_profits.pdr_profits_OCEAN)
-        I = (x >= 0.5).nonzero()[0]
-        x, y = x[I], y[I]
-        fig.add_traces(
-            [
-                # line: profit vs ptrue scatterplot
-                go.Scatter(
-                    x=x,
-                    y=y,
-                    mode="markers",
-                    marker={"color": "#636EFA", "size": 2},
-                ),
-                # line: 0.0 horizontal
-                go.Scatter(
-                    x=[min(x), max(x)],
-                    y=[0.0, 0.0],
-                    mode="lines",
-                    name="",
-                    line_dash="dot",
-                ),
-            ],
-            rows=[row]*2,
-            cols=[col]*2,
-        )
-        fig.update_xaxes(title=f"prob({dirn_s})", row=row, col=col)
-        fig.update_yaxes(title="pdr profit (OCEAN)", row=row, col=col)
+        return self._plot_profit_vs_ptrue(is_pdr=True)
 
     @enforce_types
     def plot_trader_profit_vs_ptrue(self):
-        # set titles
-        titles = [self._tdr_profit_dist_title(dirn) for dirn in [UP,DOWN]]
+        return self._plot_profit_vs_ptrue(is_pdr=False)
 
+    @enforce_types
+    def _plot_profit_vs_ptrue(self, is_pdr: bool):
+        titles = [self._profit_dist_title(is_pdr, dirn) for dirn in [UP,DOWN]]
+                
         # make subplots
         fig = make_subplots(rows=1, cols=2, subplot_titles=titles)
         
         # fill in subplots
-        self._add_subplot_tdr_profit_vs_ptrue(fig, UP, row=1, col=1)
-        self._add_subplot_tdr_profit_vs_ptrue(fig, DOWN, row=1, col=2)
+        self._add_subplot_profit_dist(fig, is_pdr, UP, row=1, col=1)
+        self._add_subplot_profit_dist(fig, is_pdr, DOWN, row=1, col=2)
         
         # global: set ticks
         minor = {"ticks": "inside", "showgrid": True}
@@ -278,17 +226,24 @@ class SimPlotter:
         fig.update_layout(showlegend=False)
 
         return fig
-
+    
     @enforce_types
-    def _tdr_profit_dist_title(self, dirn:Dirn) -> str:
+    def _profit_dist_title(self, is_pdr: bool, dirn:Dirn) -> str:
+        if is_pdr:
+            return f"Pdr profit dist'n vs prob({dirn_str(dirn)})"
+        
         return f"Trader profit dist'n vs prob({dirn_str(dirn)})"
 
-
     @enforce_types
-    def _add_subplot_tdr_profit_vs_ptrue(self, fig, dirn:Dirn, row:int, col):
+    def _add_subplot_profit_dist(
+        self, fig, is_pdr: bool, dirn:Dirn, row:int, col: int,
+    ):
         dirn_s = dirn_str(dirn)
         x = np.array(self.st.true_vs_pred[dirn].predprobs)
-        y = np.array(self.st.hist_profits.trader_profits_USD)
+        if is_pdr:
+            y = np.array(self.st.hist_profits.pdr_profits_OCEAN)
+        else:
+            y = np.array(self.st.hist_profits.trader_profits_USD)
         I = (x >= 0.5).nonzero()[0]
         x, y = x[I], y[I]
         fig.add_traces(
@@ -312,8 +267,14 @@ class SimPlotter:
             rows=[row]*2,
             cols=[col]*2,
         )
+        
         fig.update_xaxes(title=f"prob({dirn_s})", row=row, col=col)
-        fig.update_yaxes(title="tdr profit (OCEAN)", row=row, col=col)
+        
+        if is_pdr:
+            ytitle = "pdr profit (OCEAN)"
+        else:
+            ytitle = "trader profit (USD)"
+        fig.update_yaxes(title=ytitle, row=row, col=col)
 
     @enforce_types
     def plot_model_performance_vs_time(self):
