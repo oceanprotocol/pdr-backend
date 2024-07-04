@@ -250,7 +250,8 @@ class SimPlotter:
         else:
             y = np.array(self.st.hist_profits.trader_profits_USD)
         I = (x >= 0.5).nonzero()[0]
-        x, y = x[I], y[I]
+        if len(I) > 0:
+            x, y = x[I], y[I]
         fig.add_traces(
             [
                 # line: profit vs ptrue scatterplot
