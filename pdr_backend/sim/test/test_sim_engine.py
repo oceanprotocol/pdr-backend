@@ -237,7 +237,6 @@ def test_get_past_predictions_from_chain():
     # needs to be inspected and fixed
     d["sim_ss"]["test_n"] = 10
     ppss = PPSS(d=d, network="sapphire-mainnet")
-    print(ppss.lake_ss)
 
     sim_engine = SimEngine(ppss, feedsets[0])
     resp = sim_engine._get_past_predictions_from_chain(ppss)

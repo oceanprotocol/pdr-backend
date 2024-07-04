@@ -169,7 +169,7 @@ class SimEngine:
         ut_seconds = ut.to_seconds()
 
         # predict price direction
-        if self.ppss.sim_ss.use_own_model is not False:
+        if self.ppss.sim_ss.use_own_model:
             prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
         elif (
             self.prediction_dataset is not None
