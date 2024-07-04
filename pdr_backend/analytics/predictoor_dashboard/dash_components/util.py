@@ -86,3 +86,10 @@ def get_payouts_from_db(
     except Exception as e:
         print(e)
     return payouts_data
+
+
+# Function to filter the list by field containing a given string
+def filter_objects_by_field(objects, field, search_string):
+    return list(
+        filter(lambda obj: search_string.lower() in obj[field].lower(), objects)
+    )

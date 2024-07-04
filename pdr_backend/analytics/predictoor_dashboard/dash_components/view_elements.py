@@ -9,6 +9,7 @@ def get_input_column():
                 get_table(
                     table_id="feeds_table",
                     table_name="Feeds",
+                    searchable_field="pair",
                     columns=[],
                     data=None,
                 ),
@@ -19,6 +20,7 @@ def get_input_column():
                 get_table(
                     table_id="predictoors_table",
                     table_name="Predictoors",
+                    searchable_field="user",
                     columns=[],
                     data=None,
                 ),
@@ -76,7 +78,6 @@ def get_layout():
                     "justifyContent": "center",
                     "alignItems": "center",
                     "textAlign": "center",
-                    "marginTop": "40px",
                 },
             ),
             dcc.Loading(
@@ -105,10 +106,29 @@ def get_main_container():
     )
 
 
-def get_table(table_id, table_name, columns, data):
+def get_table(table_id, table_name, searchable_field, columns, data):
     return html.Div(
         [
-            html.H5(table_name),
+            html.Div(
+                [
+                    html.Span(table_name, style={"fontSize": "20px"}),
+                    dcc.Input(
+                        id=f"search-input-{table_name}",
+                        type="text",
+                        placeholder=f"Search for {searchable_field}",
+                        debounce=True,  # Trigger the input event after user stops typing
+                        style={
+                            "fontSize": "15px",
+                            "height": "100%",
+                        },
+                    ),
+                ],
+                style={
+                    "display": "flex",
+                    "justifyContent": "space-between",
+                    "alignItems": "center",
+                },
+            ),
             dash_table.DataTable(
                 id=table_id,
                 columns=[{"name": col, "id": col} for col in columns],
@@ -130,4 +150,4 @@ def get_table(table_id, table_name, columns, data):
 
 
 def get_graph(figure):
-    return dcc.Graph(figure=figure, style={"width": "100%", "height": "28vh"})
+    return dcc.Graph(figure=figure, style={"width": "100%", "height": "30vh"})

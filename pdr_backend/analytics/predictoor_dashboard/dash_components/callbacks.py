@@ -4,6 +4,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_feeds_data_from_db,
     get_predictoors_data_from_db,
     get_payouts_from_db,
+    filter_objects_by_field,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
     get_graph,
@@ -65,7 +66,6 @@ def get_callbacks(app):
 
     @app.callback(
         Output("feeds_table", "columns"),
-        Output("feeds_table", "data"),
         Input("feeds-data", "data"),
     )
     def create_feeds_table(feeds_data):
@@ -74,18 +74,17 @@ def get_callbacks(app):
         for feed in feeds_data:
             del feed["contract"]
         columns = [{"name": col, "id": col} for col in feeds_data[0].keys()]
-        return columns, feeds_data
+        return columns
 
     @app.callback(
         Output("predictoors_table", "columns"),
-        Output("predictoors_table", "data"),
         Input("predictoors-data", "data"),
     )
     def create_predictoors_table(predictoors_data):
         if not predictoors_data:
             return dash.no_update
         columns = [{"name": col, "id": col} for col in predictoors_data[0].keys()]
-        return columns, predictoors_data
+        return columns
 
     @app.callback(
         Output("accuracy_chart", "children"),
@@ -121,3 +120,33 @@ def get_callbacks(app):
             payouts_data, feeds_addrs, predictoors_addrs
         )
         return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
+
+    @app.callback(
+        Output("predictoors_table", "data"),
+        [
+            Input("search-input-Predictoors", "value"),
+            Input("predictoors-data", "data"),
+        ],
+    )
+    def update_predictoors_table_on_search(search_value, predictoors_data):
+        if not search_value:
+            return predictoors_data
+
+        # filter predictoors by user address
+        filtered_data = filter_objects_by_field(predictoors_data, "user", search_value)
+        return filtered_data
+
+    @app.callback(
+        Output("feeds_table", "data"),
+        [
+            Input("search-input-Feeds", "value"),
+            Input("feeds-data", "data"),
+        ],
+    )
+    def update_feeds_table_on_search(search_value, feeds_data):
+        if not search_value:
+            return feeds_data
+
+        # filter feeds by pair address
+        filtered_data = filter_objects_by_field(feeds_data, "pair", search_value)
+        return filtered_data
