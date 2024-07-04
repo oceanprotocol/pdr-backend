@@ -148,11 +148,13 @@ class SimPlotter:
 
     @enforce_types
     def plot_trader_profit_vs_time(self):
-        y = list(np.cumsum(self.st.hist_profits.trader_profits_USD))
+        profits = self.st.hist_profits.trader_profits_USD
+        cum_profits = list(np.cumsum(profits))
         ylabel = "trader profit (USD)"
-        title = f"Trader profit vs time. Current: ${y[-1]:.2f}"
+        title = f"Trader profit vs time. Current: ${cum_profits[-1]:.2f}"
+        title += f". Avg profit per iter: {np.average(profits):.3f} OCEAN"
         fig = make_subplots(rows=1, cols=1, subplot_titles=(title,))
-        self._add_subplot_y_vs_time(fig, y, ylabel, "lines", row=1, col=1)
+        self._add_subplot_y_vs_time(fig, cum_profits, ylabel, "lines", row=1, col=1)
         return fig
 
     @enforce_types
@@ -197,16 +199,14 @@ class SimPlotter:
     @enforce_types
     def plot_pdr_profit_vs_ptrue(self):
         # set titles
-        titles = [self._pdr_profit_title(UP), self._pdr_profit_title(DOWN)]
-
+        titles = [self._pdr_profit_dist_title(dirn) for dirn in [UP,DOWN]]
+        
         # make subplots
         fig = make_subplots(rows=1, cols=2, subplot_titles=titles)
         
         # fill in subplots
-        self._add_subplot_profit_vs_ptrue(fig, UP, row=1, col=1)
-        self._add_subplot_profit_vs_ptrue(fig, DOWN, row=1, col=2)
-
-        # global: set major x-axis ticks
+        self._add_subplot_pdr_profit_vs_ptrue(fig, UP, row=1, col=1)
+        self._add_subplot_pdr_profit_vs_ptrue(fig, DOWN, row=1, col=2)
         
         # global: set ticks
         minor = {"ticks": "inside", "showgrid": True}
@@ -221,7 +221,11 @@ class SimPlotter:
         return fig
 
     @enforce_types
-    def _add_subplot_profit_vs_ptrue(self, fig, dirn:Dirn, row:int, col:int):
+    def _pdr_profit_dist_title(self, dirn:Dirn) -> str:
+        return f"Pdr profit dist'n vs prob({dirn_str(dirn)})"
+
+    @enforce_types
+    def _add_subplot_pdr_profit_vs_ptrue(self, fig, dirn:Dirn, row:int, col):
         dirn_s = dirn_str(dirn)
         x = np.array(self.st.true_vs_pred[dirn].predprobs)
         y = np.array(self.st.hist_profits.pdr_profits_OCEAN)
@@ -252,28 +256,64 @@ class SimPlotter:
         fig.update_yaxes(title="pdr profit (OCEAN)", row=row, col=col)
 
     @enforce_types
-    def _pdr_profit_title(self, dirn:Dirn) -> str:
-        return f"Pdr profit dist'n vs prob({dirn_str(dirn)})"
-
-    @enforce_types
     def plot_trader_profit_vs_ptrue(self):
-        x = self.st.true_vs_pred[UP].predprobs
-        y = self.st.hist_profits.trader_profits_USD
-        fig = go.Figure(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="markers",
-                marker={"color": "#636EFA", "size": 2},
-            )
-        )
-        fig.add_hline(y=0, line_dash="dot", line_color="grey")
-        title = f"trader profit dist. avg={np.average(y):.2f} USD"
-        fig.update_layout(title=title)
-        fig.update_xaxes(title="prob(up)")
-        fig.update_yaxes(title="trader profit (USD)")
+        # set titles
+        titles = [self._tdr_profit_dist_title(dirn) for dirn in [UP,DOWN]]
+
+        # make subplots
+        fig = make_subplots(rows=1, cols=2, subplot_titles=titles)
+        
+        # fill in subplots
+        self._add_subplot_tdr_profit_vs_ptrue(fig, UP, row=1, col=1)
+        self._add_subplot_tdr_profit_vs_ptrue(fig, DOWN, row=1, col=2)
+        
+        # global: set ticks
+        minor = {"ticks": "inside", "showgrid": True}
+        rng = [0.5, 1.0]
+        for col in [1, 2]:
+            fig.update_xaxes(minor=minor, range=rng, dtick=0.1, row=1, col=col)
+            fig.update_yaxes(minor=minor, row=1, col=col)
+            
+        # global: don't show legend
+        fig.update_layout(showlegend=False)
 
         return fig
+
+    @enforce_types
+    def _tdr_profit_dist_title(self, dirn:Dirn) -> str:
+        return f"Trader profit dist'n vs prob({dirn_str(dirn)})"
+
+
+    @enforce_types
+    def _add_subplot_tdr_profit_vs_ptrue(self, fig, dirn:Dirn, row:int, col):
+        dirn_s = dirn_str(dirn)
+        x = np.array(self.st.true_vs_pred[dirn].predprobs)
+        y = np.array(self.st.hist_profits.trader_profits_USD)
+        I = (x >= 0.5).nonzero()[0]
+        x, y = x[I], y[I]
+        fig.add_traces(
+            [
+                # line: profit vs ptrue scatterplot
+                go.Scatter(
+                    x=x,
+                    y=y,
+                    mode="markers",
+                    marker={"color": "#636EFA", "size": 2},
+                ),
+                # line: 0.0 horizontal
+                go.Scatter(
+                    x=[min(x), max(x)],
+                    y=[0.0, 0.0],
+                    mode="lines",
+                    name="",
+                    line_dash="dot",
+                ),
+            ],
+            rows=[row]*2,
+            cols=[col]*2,
+        )
+        fig.update_xaxes(title=f"prob({dirn_s})", row=row, col=col)
+        fig.update_yaxes(title="tdr profit (OCEAN)", row=row, col=col)
 
     @enforce_types
     def plot_model_performance_vs_time(self):
