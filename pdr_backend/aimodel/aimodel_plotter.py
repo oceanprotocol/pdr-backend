@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -341,6 +345,7 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
       d -- AimodelPlotdata
     """
     imps_avg, imps_stddev = d.model.importance_per_var(include_stddev=True)
+
     imps_avg = imps_avg + 1e-15  # give imp > 0, so before dummy vars in plot
     varnames = d.colnames
     n = len(varnames)

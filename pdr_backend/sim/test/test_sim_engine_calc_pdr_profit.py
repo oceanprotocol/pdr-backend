@@ -4,6 +4,7 @@ from pytest import approx
 
 from pdr_backend.sim.sim_engine import calc_pdr_profit
 
+
 @enforce_types
 def test_sim_engine_calc_pdr_profit__happy_path():
     # true = up, guess = up (correct guess), others fully wrong
@@ -95,6 +96,7 @@ def test_sim_engine_calc_pdr_profit__happy_path():
         true_up_close=True,
     )
     assert profit == approx(516.923)
+
 
 @enforce_types
 def test_sim_engine_calc_pdr_profit__unhappy_path():

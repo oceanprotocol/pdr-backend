@@ -1,3 +1,7 @@
+<!--
+Copyright 2024 Ocean Protocol Foundation
+SPDX-License-Identifier: Apache-2.0
+-->
 ---
 name: Enhancement
 about: 'Benefit_yyy, via building_xxx'

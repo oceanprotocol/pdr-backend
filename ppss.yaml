@@ -1,3 +1,8 @@
+##
+## Copyright 2024 Ocean Protocol Foundation
+## SPDX-License-Identifier: Apache-2.0
+##
+
 # (web3_pp / network settings is at bottom, because it's long)
 lake_ss:
   lake_dir: lake_data
@@ -5,7 +10,7 @@ lake_ss:
     - binance BTC/USDT ETH/USDT 5m
   #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
   #    - kraken BTC/USDT 5m
-  st_timestr: 30 days ago # starting date for data
+  st_timestr: 10 days ago # starting date for data
   fin_timestr: now # ending date for data
 
 predictoor_ss:

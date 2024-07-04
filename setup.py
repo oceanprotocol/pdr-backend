@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2023 Ocean Protocol Foundation
+# Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
 from setuptools import find_packages, setup
@@ -9,9 +9,9 @@ from setuptools import find_packages, setup
 # Installed by pip install pdr-backend
 # or pip install -e .
 install_requirements = [
-    "black==24.3.0",
+    "black==24.4.2",
     "bumpversion",
-    "ccxt==4.3.46",
+    "ccxt==4.3.54",
     "coverage",
     "dash[testing]==2.17.1",
     "dash_bootstrap_components==1.6.0",
@@ -20,12 +20,12 @@ install_requirements = [
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.5.1",
-    "eth-typing==4.3.0",
+    "eth-typing==4.3.1",
     "flask==3.0.3",
     "freezegun==1.5.1",
     "imblearn",
     "kaleido==0.2.1",
-    "mypy==1.10.0",
+    "mypy==1.10.1",
     "numpy==2.0.0",
     "pandas==2.2.2",
     "pathlib",
@@ -33,24 +33,21 @@ install_requirements = [
     "polars==0.20.31",
     "polars[timezone]",
     "pyarrow==16.1.0",
-    "pylint==3.2.3",
+    "pylint==3.2.5",
     "pytest",
-    # pytest-asyncio: do not use dependabot to upgrade without checking lib changelog
     "pytest-asyncio==0.21.1",
     "pytest-env",
-    "pytz==2024.1",
     "pyyaml",
     "requests==2.32.3",
     "requests-mock==1.12.1",
     "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
-    "typeguard==4.2.1",
-    "types-pytz==2024.1.0.20240417",
-    "types-pyYAML==6.0.12.20240311",
-    "xgboost==2.0.3",
+    "typeguard==4.3.0",
+    "xgboost==2.1.0",
     "dash_bootstrap_components==1.6.0",
-    "web3==6.19.0",
+    "web3==6.20.0",
     "sapphire.py==0.2.3",
+    "stopit==1.1.2",
     "ocean-contracts==2.0.4",  # install this last
 ]
 

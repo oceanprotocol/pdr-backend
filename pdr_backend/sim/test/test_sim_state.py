@@ -1,7 +1,6 @@
 from enforce_typing import enforce_types
 import numpy as np
 import pytest
-from pytest import approx
 
 from pdr_backend.aimodel.true_vs_pred import PERF_NAMES, TrueVsPred
 from pdr_backend.sim.constants import dirn_str, UP, DOWN
@@ -158,7 +157,6 @@ def test_hist_profits__update():
         "pdr_profit_OCEAN": np.sum([2.1, 2.2]),
         "trader_profit_USD": np.sum([3.1, 3.2]),
     }
-
 
 
 # =============================================================================

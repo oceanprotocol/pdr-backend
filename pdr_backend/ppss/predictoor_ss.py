@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from typing import Dict, List, Optional
 
 from enforce_typing import enforce_types
@@ -199,7 +203,7 @@ def predictoor_ss_test_dict(
         "approach": 1,
         "stake_amount": 1,
         "sim_only": {
-            "others_stake": 2313.,
+            "others_stake": 2313.0,
             "others_accuracy": 0.50001,
             "revenue": 0.93007,
         },

@@ -9,6 +9,7 @@ PERF_NAMES = ["acc_est", "acc_l", "acc_u", "f1", "precision", "recall", "loss"]
 
 LOG_LOSS_ON_CONSTANT = 0.5
 
+
 class TrueVsPred:
     """
     True vs pred vals for a single aimodel, or for a history of models,

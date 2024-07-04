@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import argparse
 import logging
 import sys
@@ -37,14 +41,6 @@ HELP_SIGN = """
 Transactions are signed with envvar 'PRIVATE_KEY`.
 """
 
-HELP_DOT = """
-To pass args down to ppss, use dot notation.
-Example: pdr lake raw|etl update ppss.yaml sapphire-mainnet
-pdr lake raw|etl drop ppss.yaml sapphire-mainnet 2023-06-01
-pdr lake describe --HTML ppss.yaml sapphire-mainnet
-pdr lake validate ppss.yaml sapphire-mainnet
-"""
-
 HELP_OTHER_TOOLS = """
 Power tools:
   pdr multisim PPSS_FILE
@@ -76,7 +72,7 @@ Tools for core team:
 
 HELP_SHORT = HELP_TOP + HELP_MAIN + HELP_HELP + HELP_SIGN
 
-HELP_LONG = HELP_TOP + HELP_MAIN + HELP_HELP + HELP_OTHER_TOOLS + HELP_SIGN + HELP_DOT
+HELP_LONG = HELP_TOP + HELP_MAIN + HELP_HELP + HELP_OTHER_TOOLS + HELP_SIGN
 
 
 # ========================================================================

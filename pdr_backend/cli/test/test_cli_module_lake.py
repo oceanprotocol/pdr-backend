@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 from argparse import Namespace
 from unittest.mock import Mock, patch
 
@@ -59,7 +63,7 @@ def test_do_lake_validate():
 
     ppss = Mock()
 
-    with patch("pdr_backend.cli.cli_module_lake.LakeValidate") as mock_lake_info:
+    with patch("pdr_backend.cli.cli_module_lake.LakeInfo") as mock_lake_info:
         do_lake_validate(args, ppss)
 
     mock_lake_info.assert_called_once_with(ppss)

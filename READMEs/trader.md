@@ -1,5 +1,5 @@
 <!--
-Copyright 2023 Ocean Protocol Foundation
+Copyright 2024 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -72,8 +72,7 @@ What the engine does does:
    - Predict
    - Trade
    - Log to console and `logs/out_<time>.txt`
-   - For plots, output state to `sim_state/`
-
+   
 Let's visualize results. Open a separate console, and:
 ```console
 cd ~/code/pdr-backend # or wherever your pdr-backend dir is

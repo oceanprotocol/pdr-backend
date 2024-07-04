@@ -1,3 +1,7 @@
+<!--
+Copyright 2024 Ocean Protocol Foundation
+SPDX-License-Identifier: Apache-2.0
+-->
 # Get OCEAN on Sapphire Mainnet
 
 OCEAN has address [`0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520`](https://explorer.oasis.io/mainnet/sapphire/token/0x39d22B78A7651A76Ffbde2aaAB5FD92666Aca520) on Sapphire.

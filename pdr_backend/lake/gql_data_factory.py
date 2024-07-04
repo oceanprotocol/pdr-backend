@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import logging
 from typing import Dict, Type
 
@@ -216,6 +220,8 @@ class GQLDataFactory:
                     schema=dataclass.get_lake_schema(),
                 )
                 save_backoff_count = 0
+                if len(df["timestamp"]) == 0:
+                    return
                 if df["timestamp"][0] > df["timestamp"][len(df) - 1]:
                     return
 

@@ -21,7 +21,7 @@ from pdr_backend.sim.sim_model_factory import SimModelFactory
 from pdr_backend.sim.sim_model_prediction import SimModelPrediction
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_predictoor import SimPredictoor
-from pdr_backend.sim.sim_state import HistProfits, SimState
+from pdr_backend.sim.sim_state import SimState
 from pdr_backend.sim.sim_trader import SimTrader
 from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
@@ -278,6 +278,7 @@ class SimEngine:
             return False, False
 
         return True, False
+
 
 @enforce_types
 def calc_pdr_profit(

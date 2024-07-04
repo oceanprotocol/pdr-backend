@@ -1,3 +1,7 @@
+#
+# Copyright 2024 Ocean Protocol Foundation
+# SPDX-License-Identifier: Apache-2.0
+#
 import sys
 from unittest.mock import Mock, patch, MagicMock
 
@@ -29,6 +33,7 @@ def setup_mock_objects(mock_web3_pp, mock_feed_contract, feeds):
     mock_trader_ss.min_buffer = 1
     mock_trader_ss.get_feed_from_candidates.return_value = feeds["0x1"]
     mock_trader_ss.exchange_type = "mock"
+    mock_trader_ss.feed.timeframe.s = 300
 
     mock_web3_pp.get_contracts.return_value = {"0x1": mock_feed_contract}
 
