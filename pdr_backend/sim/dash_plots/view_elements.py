@@ -92,7 +92,7 @@ def get_tabs(figures):
             "name": "Predictoor Profit",
             "components": [
                 single_graph(figures, "pdr_profit_vs_time", width="100%"),
-                single_graph(figures, "pdr_profit_vs_ptrue", width="50%"),
+                single_graph(figures, "pdr_profit_vs_ptrue", width="100%"),
             ],
             "className": "predictor_profit_tab",
         },
@@ -100,7 +100,7 @@ def get_tabs(figures):
             "name": "Trader Profit",
             "components": [
                 single_graph(figures, "trader_profit_vs_time", width="100%"),
-                single_graph(figures, "trader_profit_vs_ptrue", width="50%"),
+                single_graph(figures, "trader_profit_vs_ptrue", width="100%"),
             ],
             "className": "trader_profit_tab",
         },

@@ -28,6 +28,7 @@ class SimPlotter:
         self.multi_id = None
 
     @staticmethod
+    @enforce_types
     def get_latest_run_id():
         if not os.path.exists("sim_state"):
             raise Exception(
@@ -37,6 +38,7 @@ class SimPlotter:
         return str(path).replace("sim_state/", "")
 
     @staticmethod
+    @enforce_types
     def get_all_run_names():
         path = Path("sim_state").iterdir()
         return [str(p).replace("sim_state/", "") for p in path]
@@ -135,11 +137,13 @@ class SimPlotter:
 
     @enforce_types
     def plot_pdr_profit_vs_time(self):
-        y = list(np.cumsum(self.st.hist_profits.pdr_profits_OCEAN))
+        profits = self.st.hist_profits.pdr_profits_OCEAN
+        cum_profits = list(np.cumsum(profits))
         ylabel = "predictoor profit (OCEAN)"
-        title = f"Predictoor profit vs time. Current: {y[-1]:.2f} OCEAN"
+        title = f"Pdr profit vs time. Current: {cum_profits[-1]:.2f} OCEAN"
+        title += f". Avg profit per iter: {np.average(profits):.3f} OCEAN"
         fig = make_subplots(rows=1, cols=1, subplot_titles=(title,))
-        self._add_subplot_y_vs_time(fig, y, ylabel, "lines", row=1, col=1)
+        self._add_subplot_y_vs_time(fig, cum_profits, ylabel, "lines", row=1, col=1)
         return fig
 
     @enforce_types
@@ -192,23 +196,55 @@ class SimPlotter:
 
     @enforce_types
     def plot_pdr_profit_vs_ptrue(self):
-        x = self.st.true_vs_pred[UP].predprobs
-        y = self.st.hist_profits.pdr_profits_OCEAN
-        fig = go.Figure(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="markers",
-                marker={"color": "#636EFA", "size": 2},
-            )
-        )
-        fig.add_hline(y=0, line_dash="dot", line_color="grey")
-        title = f"Predictoor profit dist. avg={np.average(y):.2f} OCEAN"
-        fig.update_layout(title=title)
-        fig.update_xaxes(title="prob(up)")
-        fig.update_yaxes(title="pdr profit (OCEAN)")
+        # set titles
+        titles = [self._pdr_profit_title(UP), self._pdr_profit_title(DOWN)]
+
+        # make subplots
+        fig = make_subplots(rows=1, cols=2, subplot_titles=titles)
+        
+        # fill in subplots
+        self._add_subplot_profit_vs_ptrue(fig, UP, row=1, col=1)
+        self._add_subplot_profit_vs_ptrue(fig, DOWN, row=1, col=2)
 
         return fig
+
+    @enforce_types
+    def _add_subplot_profit_vs_ptrue(self, fig, dirn:Dirn, row:int, col:int):
+        dirn_s = dirn_str(dirn)
+        x = self.st.true_vs_pred[dirn].predprobs
+        y = self.st.hist_profits.pdr_profits_OCEAN
+        fig.add_traces(
+            [
+                # line: profit vs ptrue scatterplot
+                go.Scatter(
+                    x=x,
+                    y=y,
+                    mode="markers",
+                    marker={"color": "#636EFA", "size": 2},
+                ),
+                # line: 0.0 horizontal
+                go.Scatter(
+                    x=[min(x), max(x)],
+                    y=[0.0, 0.0],
+                    mode="lines",
+                    name="",
+                    line_dash="dot",
+                ),
+            ],
+            rows=[row]*2,
+            cols=[col]*2,
+        )
+        fig.update_xaxes(title=f"prob({dirn_s})", row=row, col=col)
+        fig.update_yaxes(title="pdr profit (OCEAN)", row=row, col=col)
+        
+        # global: don't show legend
+        fig.update_layout(showlegend=False)
+
+        return fig
+
+    @enforce_types
+    def _pdr_profit_title(self, dirn:Dirn) -> str:
+        return f"Pdr profit dist'n vs prob({dirn_str(dirn)})"
 
     @enforce_types
     def plot_trader_profit_vs_ptrue(self):
@@ -280,22 +316,25 @@ class SimPlotter:
 
         return fig
 
-    def _acc_title(self, dirn: Dirn):
+    @enforce_types
+    def _acc_title(self, dirn: Dirn) -> str:
         hist_perfs, dirn_s = self.st.hist_perfs[dirn], dirn_str(dirn)
-        s = f"{dirn_s} accuracy = {hist_perfs.acc_ests[-1]*100:.2f}% "
-        s += f"[{hist_perfs.acc_ls[-1]*100:.2f}%, {hist_perfs.acc_us[-1]*100:.2f}%]"
+        s = f"{dirn_s} accuracy={hist_perfs.acc_ests[-1]*100:.1f}% "
+        s += f"[{hist_perfs.acc_ls[-1]*100:.1f}%, {hist_perfs.acc_us[-1]*100:.1f}%]"
         return s
 
-    def _f1_title(self, dirn: Dirn):
+    @enforce_types
+    def _f1_title(self, dirn: Dirn) -> str:
         hist_perfs, dirn_s = self.st.hist_perfs[dirn], dirn_str(dirn)
-        s = f"{dirn_s} f1={hist_perfs.f1s[-1]:.4f}"
-        s += f" [recall={hist_perfs.recalls[-1]:.4f}"
-        s += f", precision={hist_perfs.precisions[-1]:.4f}]"
+        s = f"{dirn_s} f1={hist_perfs.f1s[-1]:.2f}"
+        s += f" [recall={hist_perfs.recalls[-1]:.2f}"
+        s += f", prec'n={hist_perfs.precisions[-1]:.2f}]"
         return s
 
-    def _loss_title(self, dirn: Dirn):
+    @enforce_types
+    def _loss_title(self, dirn: Dirn) -> str:
         hist_perfs, dirn_s = self.st.hist_perfs[dirn], dirn_str(dirn)
-        s = f"{dirn_s} log loss = {hist_perfs.losses[-1]:.4f}"
+        s = f"{dirn_s} log loss = {hist_perfs.losses[-1]:.2f}"
         return s
     
     @enforce_types
@@ -403,7 +442,13 @@ class SimPlotter:
         df["time"] = range(len(hist_perfs.losses))
 
         fig.add_trace(
-            go.Scatter(x=df["time"], y=df["log loss"], mode="lines", name="log loss"),
+            go.Scatter(
+                x=df["time"],
+                y=df["log loss"],
+                mode="lines",
+                name="",
+                marker_color="#636EFA",
+            ),
             row=row,
             col=col,
         )
