@@ -61,29 +61,35 @@ class SimEngine:
         assert self.pdr_ss.aimodel_data_ss.transform == "None"
 
     @property
+    @enforce_types
     def pdr_ss(self) -> PredictoorSS:
         return self.ppss.predictoor_ss
 
     @property
+    @enforce_types
     def predict_feed(self) -> ArgFeed:
         return self.pdr_ss.predict_train_feedsets[0].predict
 
     @property
+    @enforce_types
     def timeframe(self) -> ArgTimeframe:
         assert self.predict_feed.timeframe is not None
         return self.predict_feed.timeframe
 
     @property
+    @enforce_types
     def others_stake(self) -> float:
-        return self.pdr_ss.others_stake.amt_eth
+        return float(self.pdr_ss.others_stake.amt_eth)
 
     @property
+    @enforce_types
     def others_accuracy(self) -> float:
         return self.pdr_ss.others_accuracy
 
     @property
+    @enforce_types
     def revenue(self) -> float:
-        return self.pdr_ss.revenue.amt_eth
+        return float(self.pdr_ss.revenue.amt_eth)
 
     @enforce_types
     def _init_loop_attributes(self):
