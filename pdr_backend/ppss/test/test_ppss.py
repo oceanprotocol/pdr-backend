@@ -218,6 +218,5 @@ def test_verify_use_chain_data_in_syms_dependencies():
     ppss2 = deepcopy(ppss)
     ppss2.sim_ss.d["test_n"] = 1000
     ppss2.lake_ss.d["st_timestr"] = "2 hours ago"
-    print(ppss2)
     with pytest.raises(ValueError):
         ppss2.verify_use_chain_data_in_syms_dependencies()
