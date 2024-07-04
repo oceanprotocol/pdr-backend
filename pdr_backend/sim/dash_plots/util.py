@@ -3,14 +3,13 @@ from typing import List
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel import aimodel_plotter
-from pdr_backend.sim.constants import UP
+from pdr_backend.sim.constants import UP, DOWN
 from pdr_backend.sim.dash_plots.view_elements import (
     FIGURE_NAMES,
     OTHER_FIGURES,
     MODEL_RESPONSE_FIGURES,
 )
 from pdr_backend.sim.sim_plotter import SimPlotter
-from pdr_backend.sim.constants import Dirn, UP, DOWN
 
 
 @enforce_types
