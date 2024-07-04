@@ -7,6 +7,7 @@ from statsmodels.stats.proportion import proportion_confint
 
 PERF_NAMES = ["acc_est", "acc_l", "acc_u", "f1", "precision", "recall", "loss"]
 
+LOG_LOSS_ON_CONSTANT = 0.5
 
 class TrueVsPred:
     """
@@ -58,7 +59,7 @@ class TrueVsPred:
     @enforce_types
     def log_loss(self) -> float:
         if min(self.truevals) == max(self.truevals):
-            return 3.0  # magic number
+            return LOG_LOSS_ON_CONSTANT
         return log_loss(self.truevals, self.predprobs)
 
     @enforce_types
