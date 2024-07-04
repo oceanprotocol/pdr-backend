@@ -1,7 +1,7 @@
 from typing import Union, List, Tuple, Optional
-from datetime import datetime
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
@@ -59,7 +59,7 @@ def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
             profits.append(profit)
             stakes.append(p["stake"])
     slot_in_date_format = [
-        datetime.utcfromtimestamp(ts).strftime("%m-%d %H:%M") for ts in slots
+        UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
     ]
     return slot_in_date_format, accuracies, profits, stakes
 
