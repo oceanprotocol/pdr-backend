@@ -206,13 +206,27 @@ class SimPlotter:
         self._add_subplot_profit_vs_ptrue(fig, UP, row=1, col=1)
         self._add_subplot_profit_vs_ptrue(fig, DOWN, row=1, col=2)
 
+        # global: set major x-axis ticks
+        
+        # global: set ticks
+        minor = {"ticks": "inside", "showgrid": True}
+        rng = [0.5, 1.0]
+        for col in [1, 2]:
+            fig.update_xaxes(minor=minor, range=rng, dtick=0.1, row=1, col=col)
+            fig.update_yaxes(minor=minor, row=1, col=col)
+            
+        # global: don't show legend
+        fig.update_layout(showlegend=False)
+
         return fig
 
     @enforce_types
     def _add_subplot_profit_vs_ptrue(self, fig, dirn:Dirn, row:int, col:int):
         dirn_s = dirn_str(dirn)
-        x = self.st.true_vs_pred[dirn].predprobs
-        y = self.st.hist_profits.pdr_profits_OCEAN
+        x = np.array(self.st.true_vs_pred[dirn].predprobs)
+        y = np.array(self.st.hist_profits.pdr_profits_OCEAN)
+        I = (x >= 0.5).nonzero()[0]
+        x, y = x[I], y[I]
         fig.add_traces(
             [
                 # line: profit vs ptrue scatterplot
@@ -236,11 +250,6 @@ class SimPlotter:
         )
         fig.update_xaxes(title=f"prob({dirn_s})", row=row, col=col)
         fig.update_yaxes(title="pdr profit (OCEAN)", row=row, col=col)
-        
-        # global: don't show legend
-        fig.update_layout(showlegend=False)
-
-        return fig
 
     @enforce_types
     def _pdr_profit_title(self, dirn:Dirn) -> str:
