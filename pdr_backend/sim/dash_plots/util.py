@@ -16,8 +16,8 @@ from pdr_backend.sim.constants import Dirn, UP, DOWN
 @enforce_types
 def get_figures_by_state(
     sim_plotter: SimPlotter,
-    selected_vars_UP: List[str], # UP model selected varnames
-    selected_vars_DOWN: List[str], # DOWN ""
+    selected_vars_UP: List[str],  # UP model selected varnames
+    selected_vars_DOWN: List[str],  # DOWN ""
 ):
     figs = {}
 
@@ -28,11 +28,12 @@ def get_figures_by_state(
         elif fig_name in MODEL_RESPONSE_FIGURES:
             dirn = UP if "UP" in fig_name else DOWN
             aimodel_plotdata = sim_plotter.aimodel_plotdata[dirn]
-            selected_vars = selected_vars_UP if dirn==UP else selected_vars_DOWN
-            selected_Is = [aimodel_plotdata.colnames.index(var)
-                           for var in selected_vars]
+            selected_vars = selected_vars_UP if dirn == UP else selected_vars_DOWN
+            selected_Is = [
+                aimodel_plotdata.colnames.index(var) for var in selected_vars
+            ]
             aimodel_plotdata.sweep_vars = selected_Is
-            func_name = f"plot_{fig_name}".replace("_UP","").replace("_DOWN","")
+            func_name = f"plot_{fig_name}".replace("_UP", "").replace("_DOWN", "")
             func = getattr(aimodel_plotter, func_name)
             fig = func(aimodel_plotdata)
 

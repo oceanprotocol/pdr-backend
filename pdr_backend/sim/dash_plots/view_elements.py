@@ -154,6 +154,7 @@ def selected_var_UP_checklist(state_options, selected_vars_UP_old):
         style={"display": "none"},
     )
 
+
 @enforce_types
 def selected_var_DOWN_checklist(state_options, selected_vars_DOWN_old):
     return dcc.Checklist(

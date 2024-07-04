@@ -105,10 +105,14 @@ def get_callbacks(app):
         state_options = sim_plotter.aimodel_plotdata[UP].colnames
 
         elements.append(selected_var_UP_checklist(state_options, selected_vars_UP_old))
-        elements.append(selected_var_DOWN_checklist(state_options, selected_vars_DOWN_old))
+        elements.append(
+            selected_var_DOWN_checklist(state_options, selected_vars_DOWN_old)
+        )
 
         figures = get_figures_by_state(
-            sim_plotter, selected_vars_UP, selected_vars_DOWN,
+            sim_plotter,
+            selected_vars_UP,
+            selected_vars_DOWN,
         )
         tabs = get_tabs(figures)
         selected_tab_value = selected_tab if selected_tab else tabs[0]["name"]

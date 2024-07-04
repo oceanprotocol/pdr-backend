@@ -206,37 +206,42 @@ class SimPlotter:
 
     @enforce_types
     def _plot_profit_vs_ptrue(self, is_pdr: bool):
-        titles = [self._profit_dist_title(is_pdr, dirn) for dirn in [UP,DOWN]]
-                
+        titles = [self._profit_dist_title(is_pdr, dirn) for dirn in [UP, DOWN]]
+
         # make subplots
         fig = make_subplots(rows=1, cols=2, subplot_titles=titles)
-        
+
         # fill in subplots
         self._add_subplot_profit_dist(fig, is_pdr, UP, row=1, col=1)
         self._add_subplot_profit_dist(fig, is_pdr, DOWN, row=1, col=2)
-        
+
         # global: set ticks
         minor = {"ticks": "inside", "showgrid": True}
         rng = [0.5, 1.0]
         for col in [1, 2]:
             fig.update_xaxes(minor=minor, range=rng, dtick=0.1, row=1, col=col)
             fig.update_yaxes(minor=minor, row=1, col=col)
-            
+
         # global: don't show legend
         fig.update_layout(showlegend=False)
 
         return fig
-    
+
     @enforce_types
-    def _profit_dist_title(self, is_pdr: bool, dirn:Dirn) -> str:
+    def _profit_dist_title(self, is_pdr: bool, dirn: Dirn) -> str:
         if is_pdr:
             return f"Pdr profit dist'n vs prob({dirn_str(dirn)})"
-        
+
         return f"Trader profit dist'n vs prob({dirn_str(dirn)})"
 
     @enforce_types
     def _add_subplot_profit_dist(
-        self, fig, is_pdr: bool, dirn:Dirn, row:int, col: int,
+        self,
+        fig,
+        is_pdr: bool,
+        dirn: Dirn,
+        row: int,
+        col: int,
     ):
         dirn_s = dirn_str(dirn)
         x = np.array(self.st.true_vs_pred[dirn].predprobs)
@@ -264,12 +269,12 @@ class SimPlotter:
                     line_dash="dot",
                 ),
             ],
-            rows=[row]*2,
-            cols=[col]*2,
+            rows=[row] * 2,
+            cols=[col] * 2,
         )
-        
+
         fig.update_xaxes(title=f"prob({dirn_s})", row=row, col=col)
-        
+
         if is_pdr:
             ytitle = "pdr profit (OCEAN)"
         else:
@@ -280,9 +285,12 @@ class SimPlotter:
     def plot_model_performance_vs_time(self):
         # set titles
         titles = [
-            self._acc_title(UP), self._acc_title(DOWN),
-            self._f1_title(UP), self._f1_title(DOWN),
-            self._loss_title(UP), self._loss_title(DOWN),
+            self._acc_title(UP),
+            self._acc_title(DOWN),
+            self._f1_title(UP),
+            self._f1_title(DOWN),
+            self._loss_title(UP),
+            self._loss_title(DOWN),
         ]
 
         # make subplots
@@ -346,9 +354,9 @@ class SimPlotter:
         hist_perfs, dirn_s = self.st.hist_perfs[dirn], dirn_str(dirn)
         s = f"{dirn_s} log loss = {hist_perfs.losses[-1]:.2f}"
         return s
-    
+
     @enforce_types
-    def _add_subplot_accuracy_vs_time(self, fig, dirn:Dirn, row:int, col:int):
+    def _add_subplot_accuracy_vs_time(self, fig, dirn: Dirn, row: int, col: int):
         hist_perfs = self.st.hist_perfs[dirn]
         acc_ests = [100 * a for a in hist_perfs.acc_ests]
         df = pd.DataFrame(acc_ests, columns=["accuracy"])
@@ -446,7 +454,7 @@ class SimPlotter:
         fig.update_yaxes(title_text="f1, etc", row=2, col=1)
 
     @enforce_types
-    def _add_subplot_log_loss_vs_time(self, fig, dirn:Dirn, row:int, col:int):
+    def _add_subplot_log_loss_vs_time(self, fig, dirn: Dirn, row: int, col: int):
         hist_perfs = self.st.hist_perfs[dirn]
         df = pd.DataFrame(hist_perfs.losses, columns=["log loss"])
         df["time"] = range(len(hist_perfs.losses))
