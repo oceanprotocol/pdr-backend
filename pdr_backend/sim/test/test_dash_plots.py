@@ -1,23 +1,26 @@
 from unittest.mock import Mock, patch
 
+from enforce_typing import enforce_types
 from plotly.graph_objs import Figure
 
 from pdr_backend.sim.dash_plots.util import get_figures_by_state
 from pdr_backend.sim.dash_plots.view_elements import (
-    get_tabs,
-    figure_names,
+    FIGURE_NAMES,
     get_header_elements,
+    get_tabs,
     get_waiting_template,
     selected_var_checklist,
 )
 from pdr_backend.sim.sim_plotter import SimPlotter
 
 
+@enforce_types
 def test_get_waiting_template():
     result = get_waiting_template("custom message")
     assert "custom message" in result.children[0].children
 
 
+@enforce_types
 def test_get_header_elements():
     st = Mock()
     st.iter_number = 5
@@ -33,14 +36,16 @@ def test_get_header_elements():
     assert result[1].className == "finalState"
 
 
+@enforce_types
 def test_get_tabs():
-    figures = {key: Figure() for key in figure_names}
+    figures = {name: Figure() for name in FIGURE_NAMES}
     result = get_tabs(figures)
     for tab in result:
         assert "name" in tab
         assert "components" in tab
 
 
+@enforce_types
 def test_selected_var_checklist():
     result = selected_var_checklist(["var1", "var2"], ["var1"])
     assert result.value == ["var1"]
@@ -48,6 +53,7 @@ def test_selected_var_checklist():
     assert result.options[1]["label"] == "var2"
 
 
+@enforce_types
 def test_get_figures_by_state():
     mock_sim_plotter = Mock(spec=SimPlotter)
     mock_sim_plotter.plot_pdr_profit_vs_time.return_value = Figure()
@@ -69,6 +75,6 @@ def test_get_figures_by_state():
 
         result = get_figures_by_state(mock_sim_plotter, ["var1", "var2"])
 
-    for key in figure_names:
-        assert key in result
-        assert isinstance(result[key], Figure)
+    for name in FIGURE_NAMES:
+        assert name in result
+        assert isinstance(result[name], Figure)

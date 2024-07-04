@@ -2,20 +2,28 @@ from dash import dcc, html
 from enforce_typing import enforce_types
 from plotly.graph_objs import Figure
 
-figure_names = [
+OTHER_FIGURES = [
     "pdr_profit_vs_time",
     "pdr_profit_vs_ptrue",
     "trader_profit_vs_time",
     "trader_profit_vs_ptrue",
     "model_performance_vs_time",
-    "aimodel_varimps",
-    "aimodel_response",
 ]
+
+MODEL_RESPONSE_FIGURES = [
+    "aimodel_varimps_UP",
+    "aimodel_response_UP",
+    "aimodel_varimps_DOWN",
+    "aimodel_response_DOWN",
+]
+
+FIGURE_NAMES = OTHER_FIGURES + MODEL_RESPONSE_FIGURES
+
 
 empty_selected_vars = dcc.Checklist([], [], id="selected_vars")
 
 empty_graphs_template = html.Div(
-    [dcc.Graph(figure=Figure(), id=key) for key in figure_names]
+    [dcc.Graph(figure=Figure(), id=name) for name in FIGURE_NAMES]
     + [empty_selected_vars],
     style={"display": "none"},
 )
@@ -116,12 +124,20 @@ def get_tabs(figures):
             "components": [
                 side_by_side_graphs(
                     figures,
-                    name1="aimodel_varimps",
-                    name2="aimodel_response",
+                    name1="aimodel_varimps_UP",
+                    name2="aimodel_response_UP",
                     height="100%",
                     width1="30%",
                     width2="70%",
-                )
+                ),
+                side_by_side_graphs(
+                    figures,
+                    name1="aimodel_varimps_DOWN",
+                    name2="aimodel_response_DOWN",
+                    height="100%",
+                    width1="30%",
+                    width2="70%",
+                ),
             ],
             "className": "model_response_tab",
         },
