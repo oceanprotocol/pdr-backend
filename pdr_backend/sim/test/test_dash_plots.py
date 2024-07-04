@@ -9,7 +9,7 @@ from pdr_backend.sim.dash_plots.view_elements import (
     get_header_elements,
     get_tabs,
     get_waiting_template,
-    selected_var_checklist,
+    selected_var_UP_checklist,
 )
 from pdr_backend.sim.sim_plotter import SimPlotter
 
@@ -46,8 +46,8 @@ def test_get_tabs():
 
 
 @enforce_types
-def test_selected_var_checklist():
-    result = selected_var_checklist(["var1", "var2"], ["var1"])
+def test_selected_var_UP_checklist():
+    result = selected_var_UP_checklist(["var1", "var2"], ["var1"])
     assert result.value == ["var1"]
     assert result.options[0]["label"] == "var1"
     assert result.options[1]["label"] == "var2"

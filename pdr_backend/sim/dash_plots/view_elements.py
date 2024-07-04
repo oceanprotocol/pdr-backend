@@ -19,11 +19,13 @@ MODEL_RESPONSE_FIGURES = [
 
 FIGURE_NAMES = OTHER_FIGURES + MODEL_RESPONSE_FIGURES
 
-EMPTY_SELECTED_VARS = dcc.Checklist([], [], id="selected_vars")
+EMPTY_SELECTED_VARS_UP = dcc.Checklist([], [], id="selected_vars_UP")
+EMPTY_SELECTED_VARS_DOWN = dcc.Checklist([], [], id="selected_vars_DOWN")
 
 EMPTY_GRAPHS_TEMPLATE = html.Div(
     [dcc.Graph(figure=Figure(), id=name) for name in FIGURE_NAMES]
-    + [EMPTY_SELECTED_VARS],
+    + [EMPTY_SELECTED_VARS_UP]
+    + [EMPTY_SELECTED_VARS_DOWN],
     style={"display": "none"},
 )
 
@@ -144,11 +146,20 @@ def get_tabs(figures):
 
 
 @enforce_types
-def selected_var_checklist(state_options, selected_vars_old):
+def selected_var_UP_checklist(state_options, selected_vars_UP_old):
     return dcc.Checklist(
         options=[{"label": var, "value": var} for var in state_options],
-        value=selected_vars_old,
-        id="selected_vars",
+        value=selected_vars_UP_old,
+        id="selected_vars_UP",
+        style={"display": "none"},
+    )
+
+@enforce_types
+def selected_var_DOWN_checklist(state_options, selected_vars_DOWN_old):
+    return dcc.Checklist(
+        options=[{"label": var, "value": var} for var in state_options],
+        value=selected_vars_DOWN_old,
+        id="selected_vars_DOWN",
         style={"display": "none"},
     )
 
