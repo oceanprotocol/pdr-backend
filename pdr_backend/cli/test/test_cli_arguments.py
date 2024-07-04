@@ -37,7 +37,7 @@ def test_do_help_long(capfd):
 def test_print_args(caplog):
     SimArgParser = defined_parsers["do_sim"]
     parser = SimArgParser
-    args = ["sim", "ppss.yaml", "development"]
+    args = ["sim", "ppss.yaml"]
     parsed_args = parser.parse_args(args)
     nested_args = {"foo": "bar"}
 
@@ -46,5 +46,4 @@ def test_print_args(caplog):
     assert "pdr sim: Begin" in caplog.text
     assert "Arguments:" in caplog.text
     assert "PPSS_FILE=ppss.yaml" in caplog.text
-    assert "NETWORK=development" in caplog.text
     assert "foo" in caplog.text
