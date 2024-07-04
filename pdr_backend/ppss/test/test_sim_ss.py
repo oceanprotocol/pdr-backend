@@ -62,7 +62,7 @@ def test_sim_ss_log_dir_relative_path():
 
 @enforce_types
 def test_sim_ss_test_n_badpaths(tmpdir):
-    d = sim_ss_test_dict(_logdir(tmpdir), True, test_n=-3)
+    d = sim_ss_test_dict(log_dir=_logdir(tmpdir), use_own_model=True, test_n=-3)
     with pytest.raises(ValueError):
         _ = SimSS(d)
 
@@ -80,7 +80,9 @@ def test_sim_ss_test_n_badpaths(tmpdir):
 @enforce_types
 def test_sim_ss_tradetype_happypaths(tmpdir):
     for tradetype in TRADETYPE_OPTIONS:
-        d = sim_ss_test_dict(_logdir(tmpdir), True, tradetype=tradetype)
+        d = sim_ss_test_dict(
+            log_dir=_logdir(tmpdir), use_own_model=True, tradetype=tradetype
+        )
         ss = SimSS(d)
         assert ss.tradetype == tradetype
 
@@ -92,14 +94,16 @@ def test_sim_ss_tradetype_badpaths(tmpdir):
     with pytest.raises(TypeError):
         _ = SimSS(d)
 
-    d = sim_ss_test_dict(_logdir(tmpdir), True, tradetype="not a tradetype")
+    d = sim_ss_test_dict(
+        log_dir=_logdir(tmpdir), use_own_model=True, tradetype="not a tradetype"
+    )
     with pytest.raises(ValueError):
         _ = SimSS(d)
 
 
 @enforce_types
 def test_sim_ss_is_final_iter(tmpdir):
-    d = sim_ss_test_dict(_logdir(tmpdir), True, test_n=10)
+    d = sim_ss_test_dict(log_dir=_logdir(tmpdir), use_own_model=True, test_n=10)
     ss = SimSS(d)
     with pytest.raises(ValueError):
         _ = ss.is_final_iter(-5)
