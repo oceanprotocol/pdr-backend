@@ -5,6 +5,7 @@
 import os
 import tempfile
 from typing import Optional, Tuple
+import time
 
 import yaml
 from enforce_typing import enforce_types
@@ -21,6 +22,7 @@ from pdr_backend.ppss.topup_ss import TopupSS
 from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.trueval_ss import TruevalSS
 from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed
 from pdr_backend.util.dictutil import recursive_update
@@ -73,6 +75,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
         # postconditions
         self.verify_feed_dependencies()
+        self.verify_use_chain_data_in_syms_dependencies()
 
     @staticmethod
     def constructor_dict(
@@ -96,6 +99,27 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
             recursive_update(d, nested_override_args)
 
         return d
+
+    def verify_use_chain_data_in_syms_dependencies(self):
+        current_time_s = int(time.time())
+        timeframe = self.trader_ss.feed.timeframe
+        number_of_data_points = self.sim_ss.test_n
+        start_date = current_time_s - (timeframe.s * number_of_data_points)
+        formatted_start_date_as_string = time.strftime(
+            "%Y-%m-%d", time.localtime(start_date)
+        )
+
+        # check if ppss is correctly configured for using chain data into simulations
+        if (
+            UnixTimeS(start_date)
+            < UnixTimeMs.from_timestr(self.lake_ss.st_timestr).to_seconds()
+        ):
+            raise ValueError(
+                (
+                    "Lake dates configuration doesn't meet the requirements. "
+                    f"Make sure you set start date before {formatted_start_date_as_string}"
+                )
+            )
 
     def verify_feed_dependencies(self):
         """Raise ValueError if a feed dependency is violated"""

@@ -6,6 +6,7 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from enforce_typing import enforce_types
+from pdr_backend.sim.sim_plotter import empty_fig
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
@@ -342,7 +343,11 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
     @arguments
       d -- AimodelPlotdata
     """
-    imps_avg, imps_stddev = d.model.importance_per_var(include_stddev=True)
+    try:
+        imps_avg, imps_stddev = d.model.importance_per_var(include_stddev=True)
+    except Exception:
+        return empty_fig("Can't plot var imp for chain data")
+
     imps_avg = imps_avg + 1e-15  # give imp > 0, so before dummy vars in plot
     varnames = d.colnames
     n = len(varnames)
