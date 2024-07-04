@@ -20,7 +20,7 @@ from pdr_backend.sim.sim_model import SimModel
 
 @enforce_types
 # pylint: disable=unused-argument
-def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
+def test_sim_engine_main(tmpdir, check_chromedriver, dash_duo):
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
 
