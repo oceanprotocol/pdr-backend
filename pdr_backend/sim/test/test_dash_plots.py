@@ -54,7 +54,7 @@ def test_selected_var_UP_checklist():
     assert result.options[0]["label"] == "var_up1"
     assert result.options[1]["label"] == "var_up2"
 
-    
+
 @enforce_types
 def test_selected_var_DOWN_checklist():
     result = selected_var_DOWN_checklist(["var_down1", "var_down2"], ["var_down1"])
