@@ -19,12 +19,11 @@ MODEL_RESPONSE_FIGURES = [
 
 FIGURE_NAMES = OTHER_FIGURES + MODEL_RESPONSE_FIGURES
 
+EMPTY_SELECTED_VARS = dcc.Checklist([], [], id="selected_vars")
 
-empty_selected_vars = dcc.Checklist([], [], id="selected_vars")
-
-empty_graphs_template = html.Div(
+EMPTY_GRAPHS_TEMPLATE = html.Div(
     [dcc.Graph(figure=Figure(), id=name) for name in FIGURE_NAMES]
-    + [empty_selected_vars],
+    + [EMPTY_SELECTED_VARS],
     style={"display": "none"},
 )
 
@@ -33,7 +32,7 @@ empty_graphs_template = html.Div(
 def get_waiting_template(err):
     return html.Div(
         [html.H2(f"Error/waiting: {err}", id="sim_state_text")]
-        + [empty_graphs_template],
+        + [EMPTY_GRAPHS_TEMPLATE],
         id="live-graphs",
     )
 
@@ -187,7 +186,7 @@ def get_main_container():
     return html.Div(
         [
             html.Div(
-                empty_graphs_template,
+                EMPTY_GRAPHS_TEMPLATE,
                 id="header",
                 style={
                     "display": "flex",
