@@ -359,7 +359,7 @@ class SimPlotter:
     @enforce_types
     def plot_prediction_residuals_dist(self):
         if _model_is_classif(self.st):
-            return _empty_fig("(Nothing to show because model is a classifier.)")
+            return empty_fig("(Nothing to show because model is a classifier.)")
 
         # calc data
         d = DistPlotdataFactory.build(self.st.aim.yerrs)
@@ -391,7 +391,7 @@ class SimPlotter:
     @enforce_types
     def plot_prediction_residuals_other(self):
         if _model_is_classif(self.st):
-            return _empty_fig()
+            return empty_fig()
 
         # calc data
         nlags = 10  # magic number alert # FIX ME: have spinner, like ARIMA feeds
@@ -477,7 +477,7 @@ def _model_is_classif(sim_state) -> bool:
 
 
 @enforce_types
-def _empty_fig(title=""):
+def empty_fig(title=""):
     fig = go.Figure()
     w = "white"
     fig.update_layout(title=title, paper_bgcolor=w, plot_bgcolor=w)
