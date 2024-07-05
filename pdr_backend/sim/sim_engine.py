@@ -64,7 +64,7 @@ class SimEngine:
             self.multi_id = str(uuid.uuid4())
 
         # timestamp -> prob up
-        self.chain_predictions_map: Optional[Dict[int, float]] = None
+        self.chain_predictions_map: Dict[int, float] = {}
         self.model: Optional[Aimodel] = None
 
     @property
