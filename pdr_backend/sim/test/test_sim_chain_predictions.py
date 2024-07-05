@@ -1,15 +1,17 @@
-from copy import deepcopy
 import os
+from copy import deepcopy
+from unittest.mock import patch
+
+import pytest
+from enforce_typing import enforce_types
+
+
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.ppss.ppss import PPSS, mock_ppss
 from pdr_backend.ppss.predictoor_ss import feedset_test_list
 from pdr_backend.sim.sim_chain_predictions import SimChainPredictions
 from pdr_backend.sim.sim_engine import SimEngine
-from pdr_backend.sim.test.test_sim_engine import mock_gql_update
 from pdr_backend.util.time_types import UnixTimeMs
-import pytest
-from unittest.mock import patch
-from enforce_typing import enforce_types
 
 
 def mock_gql_update(self):
