@@ -5,7 +5,6 @@
 import os
 
 import pytest
-import polars as pl
 from dash import Dash
 from enforce_typing import enforce_types
 from selenium.common.exceptions import NoSuchElementException  # type: ignore[import-untyped]
