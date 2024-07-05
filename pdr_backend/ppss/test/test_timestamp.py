@@ -2,7 +2,8 @@
 # Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from zoneinfo import available_timezones, ZoneInfo
 
 import time_machine
 import freezegun
@@ -27,28 +28,6 @@ FREEZE_TIME_UTC_MINUS_5 = datetime(2024, 1, 1, 13-5, 0, 0, tzinfo=TIMEZONE_UTC_M
 #@freezegun.freeze_time("2024-01-01 13:00:00", tz_offset=-5) # specify time w/o timezone info; do specify railgun timezone too 
 # first arg to freeze_time() is in UTC, second arg is how much to offset it by,
 #   therefore the computer running this block will see time as utc - 5
-
-# problem: travel.__init__() got an unexpected keyword argument 'tz_offset'
-# @time_machine.travel("2024-01-01 13:00:00", tz_offset=-5)
-
-# problem: it implicitly stays in UTC timezone
-#@time_machine.travel(FREEZE_TIME_UTC_MINUS_5)
-
-from zoneinfo import ZoneInfo, available_timezones
-# dt1 = datetime(2024, 1, 1, 13, tzinfo=timezone.utc)
-# dt2 = datetime(2024, 1, 1, 13, tzinfo=ZoneInfo("America/New_York"))
-# delta_hours = (dt2 - dt1).seconds/3600
-# tz_minus_five = None
-# for cand_tz_str in available_timezones():
-#     cand_tz = ZoneInfo(cand_tz_str)
-#     dt3 = datetime(2024, 1, 1, 13, tzinfo=cand_tz)
-#     cand_delta_hours = (dt3 - dt1).seconds/3600
-#     if cand_delta_hours == -5:
-#         tz_minus_five = cand_tz
-#         break
-# import pdb; pdb.set_trace()
-# hill_valley_tz = ZoneInfo("America/Los_Angeles")
-# @time_machine.travel(datetime(2024, 1, 1, 13-0, 0, 0, tzinfo=hill_valley_tz))
 
 def _tz_offset_from_utc(delta_hours:int):
     """Return a timezone that's offset from UTC by the specified # hours"""
