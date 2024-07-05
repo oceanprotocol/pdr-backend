@@ -46,7 +46,11 @@ curl https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json
 If you're running MacOS, then in console:
 
 ```console
+# so that sapphire.py works. Details in #66
 codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
+
+# so that xgboost works. Details in #1339
+brew install libomp
 ```
 
 ## Simulate Modeling and Trading
