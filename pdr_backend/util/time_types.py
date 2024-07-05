@@ -171,11 +171,4 @@ def tz_offset_from_utc(delta_hours: int):
 @enforce_types
 def dt_now_UTC() -> datetime:
     """Returns the time now, with a guarantee that it's UTC timezone"""
-    # NEW
-    dt = datetime.now(UTC)  # knows timezone
-
-    # OLD
-    # dt = datetime.utcnow() # doesn't know timezone
-    # dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
-
-    return dt
+    return datetime.now(UTC)
