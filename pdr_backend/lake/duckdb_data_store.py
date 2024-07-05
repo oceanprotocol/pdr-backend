@@ -233,32 +233,6 @@ class DuckDBDataStore(BaseDataStore):
             self.insert_from_df(df, table_name)
 
     @enforce_types
-    def update_data(self, df: pl.DataFrame, table_name: str, column_name: str):
-        """
-        Update the table with the provided DataFrame.
-        @arguments:
-            df - The Polars DataFrame to update.
-            table_name - A unique name for the table.
-            column_name - The column to use as the index for the update.
-        @example:
-            df = pl.DataFrame({
-                "id": [1, 2, 3],
-                "name": ["John", "Jane", "Doe"],
-                "age": [25, 30, 35]
-            })
-            update_data(df, "people", "id")
-        """
-
-        update_columns = ", ".join(
-            [f"{column} = {df[column]}" for column in df.columns]
-        )
-        self.execute_sql(
-            f"""UPDATE {table_name}
-            SET {update_columns}
-            WHERE {column_name} = {df[column_name]}"""
-        )
-
-    @enforce_types
     def execute_sql(self, query: str):
         """
         Execute a SQL query across DuckDB using SQL.
