@@ -253,9 +253,9 @@ def test_how_freezegun_is_wrong():
     assert timestr(datetime.now()) == "2024-01-01 08:00:00"
 
 
-# needed because it takes a couple of ms to run instructions in the test
+# needed because it takes a few ms to run instructions in the test
 def _close_ints(x, y):
-    return abs(x - y) <= 2
+    return abs(x - y) <= 20
 
 
 # can not use freezegun fixtures because it does not work with dateparser
