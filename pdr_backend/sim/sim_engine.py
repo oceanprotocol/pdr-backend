@@ -8,7 +8,6 @@ import uuid
 from typing import Optional, Dict
 
 import numpy as np
-from pdr_backend.sim.sim_chain_predictions import SimChainPredictions
 import polars as pl
 from enforce_typing import enforce_types
 from sklearn.metrics import log_loss, precision_recall_fscore_support
@@ -23,6 +22,7 @@ from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.sim.sim_chain_predictions import SimChainPredictions
 from pdr_backend.sim.sim_logger import SimLogLine
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_trader import SimTrader
