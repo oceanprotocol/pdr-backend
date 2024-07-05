@@ -138,3 +138,8 @@ def _dt_now_UTC() -> datetime:
     #dt = datetime.utcnow()
     dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
     return dt
+
+@enforce_types
+def timestr(dt: datetime) -> str:
+    """Simple time string, useful for testing"""
+    return dt.strftime("%Y-%m-%d %H:%M:%S")

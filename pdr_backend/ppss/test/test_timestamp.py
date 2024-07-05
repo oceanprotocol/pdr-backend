@@ -10,18 +10,16 @@ import freezegun
 import pytest
 import time_machine
 
-from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
+from pdr_backend.util.time_types import (
+    timestr,
+    UnixTimeMs,
+    UnixTimeS,
+)
 
 @enforce_types
-def _timestr(dt: datetime) -> str:
+def timestr(dt: datetime) -> str:
+    """Simple time string, useful for testing"""
     return dt.strftime("%Y-%m-%d %H:%M:%S")
-
-TIMEZONE_UTC = timezone.utc
-FREEZE_TIME_UTC = datetime(2024, 1, 1, 13, 0, 0, tzinfo=TIMEZONE_UTC)
-
-TIMEZONE_UTC_MINUS_5 = timezone(-timedelta(hours=5))
-#FREEZE_TIME_UTC_MINUS_5 = datetime(2024, 1, 1, 13-5, 0, 0, tzinfo=TIMEZONE_UTC_MINUS_5)
-FREEZE_TIME_UTC_MINUS_5 = datetime(2024, 1, 1, 13-5, 0, 0, tzinfo=TIMEZONE_UTC_MINUS_5)
 
 @enforce_types
 def _tz_offset_from_utc(delta_hours:int):
@@ -47,21 +45,21 @@ def test_time_now_implicit():
     target_utc_s = 1704114000
 
     # test: datetime library directly, to confirm time_machine.travel() behavior
-    assert _timestr(datetime.now(UTC)) == target_utc_str
-    assert _timestr(datetime.now()) == target_utc_minus_5_str
+    assert timestr(datetime.now(UTC)) == target_utc_str
+    assert timestr(datetime.now()) == target_utc_minus_5_str
 
     # test: UnixTimeMs(utc_ms).to_dt()
-    assert _timestr(UnixTimeMs(target_utc_ms).to_dt()) == target_utc_str
+    assert timestr(UnixTimeMs(target_utc_ms).to_dt()) == target_utc_str
 
     # test: time_types.UnixTimeMs. Its now() should always return a value in UTC
     utc_ms = UnixTimeMs.now()
     assert int(utc_ms) == target_utc_ms
-    assert _timestr(UnixTimeMs(utc_ms).to_dt()) == target_utc_str
+    assert timestr(UnixTimeMs(utc_ms).to_dt()) == target_utc_str
 
     # test: time_types.UnixTimeS. Its now() should always return a value in UTC
     utc_s = UnixTimeS.now()
     assert utc_s == target_utc_s
-    assert _timestr(UnixTimeMs(utc_s * 1000).to_dt()) == target_utc_str
+    assert timestr(UnixTimeMs(utc_s * 1000).to_dt()) == target_utc_str
 
 # We specify that it's 1pm UTC, or 8am UTC-5
 # First arg to freeze_time() is in UTC, second arg is how much to offset it by,
@@ -71,14 +69,14 @@ def test_time_now_implicit():
 def test_how_freezegun_is_wrong():
     with pytest.raises(AssertionError):
         # freezegun should not treat these as equal
-        assert _timestr(datetime.now(UTC)) != _timestr(datetime.now())
+        assert timestr(datetime.now(UTC)) != timestr(datetime.now())
 
     with pytest.raises(AssertionError):
         # freezegun will think datetime.now(UTC) is 8am, not 1pm
-        assert _timestr(datetime.now(UTC)) == "2024-01-01 13:00:00"
+        assert timestr(datetime.now(UTC)) == "2024-01-01 13:00:00"
 
     # freezegun gets this right, but that's because it's naive wrt timezone
-    assert _timestr(datetime.now()) == "2024-01-01 08:00:00"
+    assert timestr(datetime.now()) == "2024-01-01 08:00:00"
 
 # needed because it takes a couple of ms to run instructions in the test
 def _close_ints(x, y):
