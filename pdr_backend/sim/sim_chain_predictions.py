@@ -6,7 +6,7 @@ from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 import polars as pl
 
 
@@ -14,6 +14,28 @@ logger = logging.getLogger("sim_engine_chain_predictions")
 
 
 class SimChainPredictions:
+    @staticmethod
+    def verify_use_chain_data_in_syms_dependencies(ppss: PPSS):
+        current_time_s = int(time.time())
+        timeframe = ppss.trader_ss.feed.timeframe
+        number_of_data_points = ppss.sim_ss.test_n
+        start_date = current_time_s - (timeframe.s * number_of_data_points)
+        formatted_start_date_as_string = time.strftime(
+            "%Y-%m-%d", time.localtime(start_date)
+        )
+
+        # check if ppss is correctly configured for using chain data into simulations
+        if (
+            UnixTimeS(start_date)
+            < UnixTimeMs.from_timestr(ppss.lake_ss.st_timestr).to_seconds()
+        ):
+            raise ValueError(
+                (
+                    "Lake dates configuration doesn't meet the requirements. "
+                    f"Make sure you set start date before {formatted_start_date_as_string}"
+                )
+            )
+
     @staticmethod
     def get_predictions_data(
         start_slot: int, end_slot: int, ppss: PPSS, predict_feed: ArgFeed
