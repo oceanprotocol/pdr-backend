@@ -2,13 +2,19 @@
 # Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, UTC
 from zoneinfo import available_timezones, ZoneInfo
 
-import time_machine
+from enforce_typing import enforce_types
 import freezegun
+import pytest
+import time_machine
 
 from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
+
+@enforce_types
+def _timestr(dt: datetime) -> str:
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 TIMEZONE_UTC = timezone.utc
 FREEZE_TIME_UTC = datetime(2024, 1, 1, 13, 0, 0, tzinfo=TIMEZONE_UTC)
@@ -17,18 +23,7 @@ TIMEZONE_UTC_MINUS_5 = timezone(-timedelta(hours=5))
 #FREEZE_TIME_UTC_MINUS_5 = datetime(2024, 1, 1, 13-5, 0, 0, tzinfo=TIMEZONE_UTC_MINUS_5)
 FREEZE_TIME_UTC_MINUS_5 = datetime(2024, 1, 1, 13-5, 0, 0, tzinfo=TIMEZONE_UTC_MINUS_5)
 
-# Issue: freezegun FakeDatetime timestamps don't match those generated from real datetime in some instances
-# Solution: bypass it by setting the timezone of the frozen timestamp to utc, hence testing in UTC instead of local time
-# https://github.com/spulec/freezegun/issues/346
-
-#@freezegun.freeze_time(time_to_freeze=FREEZE_TIME_UTC_MINUS_5) # specify time incl timezone info; don't specify railgun timezone so it's implicitly utc
-#
-#@freezegun.freeze_time(time_to_freeze=FREEZE_TIME_UTC_MINUS_5, tz_offset=-5) # specify time incl timezone info; do specify railgun timezone too 
-#
-#@freezegun.freeze_time("2024-01-01 13:00:00", tz_offset=-5) # specify time w/o timezone info; do specify railgun timezone too 
-# first arg to freeze_time() is in UTC, second arg is how much to offset it by,
-#   therefore the computer running this block will see time as utc - 5
-
+@enforce_types
 def _tz_offset_from_utc(delta_hours:int):
     """Return a timezone that's offset from UTC by the specified # hours"""
     if delta_hours < 0:
@@ -43,20 +38,16 @@ def _tz_offset_from_utc(delta_hours:int):
     raise ValueError("No timezone found with target delta_hours")
 TZ_MINUS_5 = _tz_offset_from_utc(-5)
 
-def _timestr(dt) -> str:
-    return dt.strftime("%Y-%m-%d %H:%M:%S") 
-
 @time_machine.travel(datetime(2024, 1, 1, 8, 0, 0, tzinfo=TZ_MINUS_5))
 def test_time_now_implicit():    
     # set targets
     target_utc_minus_5_str = "2024-01-01 08:00:00"
-
     target_utc_str = "2024-01-01 13:00:00"
     target_utc_ms = 1704114000000
     target_utc_s = 1704114000
 
     # test: datetime library directly, to confirm time_machine.travel() behavior
-    assert _timestr(datetime.utcnow()) == target_utc_str
+    assert _timestr(datetime.now(UTC)) == target_utc_str
     assert _timestr(datetime.now()) == target_utc_minus_5_str
 
     # test: UnixTimeMs(utc_ms).to_dt()
@@ -72,6 +63,22 @@ def test_time_now_implicit():
     assert utc_s == target_utc_s
     assert _timestr(UnixTimeMs(utc_s * 1000).to_dt()) == target_utc_str
 
+# We specify that it's 1pm UTC, or 8am UTC-5
+# First arg to freeze_time() is in UTC, second arg is how much to offset it by,
+#   therefore the computer running this block should see time as utc - 5
+# Alas, freezegun can't properly handle timezones, so we shouldn't use it
+@freezegun.freeze_time("2024-01-01 13:00:00", tz_offset=-5)
+def test_how_freezegun_is_wrong():
+    with pytest.raises(AssertionError):
+        # freezegun should not treat these as equal
+        assert _timestr(datetime.now(UTC)) != _timestr(datetime.now())
+
+    with pytest.raises(AssertionError):
+        # freezegun will think datetime.now(UTC) is 8am, not 1pm
+        assert _timestr(datetime.now(UTC)) == "2024-01-01 13:00:00"
+
+    # freezegun gets this right, but that's because it's naive wrt timezone
+    assert _timestr(datetime.now()) == "2024-01-01 08:00:00"
 
 # needed because it takes a couple of ms to run instructions in the test
 def _close_ints(x, y):
