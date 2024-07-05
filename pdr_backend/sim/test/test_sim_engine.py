@@ -5,6 +5,7 @@
 import os
 from unittest.mock import patch
 
+from pdr_backend.sim.sim_chain_predictions import SimEngineChainPredictions
 import pytest
 import polars as pl
 from dash import Dash
@@ -168,8 +169,10 @@ def mock_gql_update(self):
 
 
 @enforce_types
-@patch("pdr_backend.sim.sim_engine.GQLDataFactory.__init__", new=mock_gql_init)
-def test_get_predictions_signals_data(tmpdir):
+@patch(
+    "pdr_backend.sim.sim_chain_predictions.GQLDataFactory.__init__", new=mock_gql_init
+)
+def test_get_predictions_data(tmpdir):
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
 
@@ -182,16 +185,18 @@ def test_get_predictions_signals_data(tmpdir):
     sim_engine = SimEngine(ppss, feedsets[0])
 
     # Getting prediction dataset
-    sim_engine._get_past_predictions_from_chain(ppss)
+    SimEngineChainPredictions.verify_prediction_data(ppss)
 
     # check the duckdb file exists in the lake directory
     assert os.path.exists(ppss.lake_ss.lake_dir)
     assert os.path.exists(os.path.join(ppss.lake_ss.lake_dir, "duckdb.db"))
 
     st_ut_s = UnixTimeMs(ppss.lake_ss.st_timestamp).to_seconds()
-    prediction_dataset = sim_engine._get_predictions_signals_data(
+    prediction_dataset = SimEngineChainPredictions.get_predictions_data(
         st_ut_s,
         UnixTimeMs(ppss.lake_ss.fin_timestamp).to_seconds(),
+        ppss,
+        sim_engine.predict_feed,
     )
 
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
@@ -211,8 +216,10 @@ def test_get_predictions_signals_data(tmpdir):
     _clear_test_db(ppss)
 
 
-@patch("pdr_backend.sim.sim_engine.GQLDataFactory.__init__", new=mock_gql_init)
-def test_get_past_predictions_from_chain():
+@patch(
+    "pdr_backend.sim.sim_chain_predictions.GQLDataFactory.__init__", new=mock_gql_init
+)
+def test_verify_prediction_data():
     s = os.path.abspath("ppss.yaml")
     d = PPSS.constructor_dict(s)
     path = "my_lake_data"
@@ -222,9 +229,6 @@ def test_get_past_predictions_from_chain():
     d["trader_ss"]["feed.timeframe"] = "5m"
     d["sim_ss"]["test_n"] = 10
     ppss = PPSS(d=d, network="sapphire-mainnet")
-
-    feedsets = ppss.predictoor_ss.predict_train_feedsets
-    sim_engine = SimEngine(ppss, feedsets[0])
-    resp = sim_engine._get_past_predictions_from_chain(ppss)
+    resp = SimEngineChainPredictions.verify_prediction_data(ppss)
     assert resp is True
     _clear_test_db(ppss)
