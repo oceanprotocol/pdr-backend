@@ -24,12 +24,26 @@ class AimodelDataSS(StrMixin):
         self.d = d
 
         # test inputs
-        if not 0 < self.max_n_train:
-            raise ValueError(self.max_n_train)
-        if not 0 < self.autoregressive_n < np.inf:
-            raise ValueError(self.autoregressive_n)
-        if self.transform not in TRANSFORM_OPTIONS:
-            raise ValueError(self.transform)
+        self.validate_max_n_train(self.max_n_train)
+        self.validate_autoregressive_n(self.autoregressive_n)
+        self.validate_transform(self.transform)
+
+    # --------------------------------
+    # validators
+    @staticmethod
+    def validate_max_n_train(max_n_train: int):
+        if not 0 < max_n_train:
+            raise ValueError(max_n_train)
+
+    @staticmethod
+    def validate_autoregressive_n(autoregressive_n: int):
+        if not 0 < autoregressive_n < np.inf:
+            raise ValueError(autoregressive_n)
+
+    @staticmethod
+    def validate_transform(transform: str):
+        if transform not in TRANSFORM_OPTIONS:
+            raise ValueError(transform)
 
     # --------------------------------
     # yaml properties
@@ -50,9 +64,23 @@ class AimodelDataSS(StrMixin):
         return self.d["autoregressive_n"]
 
     @property
-    def transform(self) -> int:
+    def transform(self) -> str:
         """eg 'RelDiff'"""
         return self.d["transform"]
+
+    # --------------------------------
+    # setters
+    def set_max_n_train(self, max_n_train: int):
+        self.validate_max_n_train(max_n_train)
+        self.d["max_n_train"] = max_n_train
+
+    def set_autoregressive_n(self, autoregressive_n: int):
+        self.validate_autoregressive_n(autoregressive_n)
+        self.d["autoregressive_n"] = autoregressive_n
+
+    def set_transform(self, transform: str):
+        self.validate_transform(transform)
+        self.d["transform"] = transform
 
 
 # =========================================================================
