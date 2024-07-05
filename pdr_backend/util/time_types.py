@@ -4,6 +4,7 @@
 #
 from datetime import datetime, timezone, UTC
 from typing import Union
+from zoneinfo import available_timezones, ZoneInfo
 
 import dateparser
 from enforce_typing import enforce_types
@@ -25,7 +26,7 @@ class UnixTimeS(int):
     @staticmethod
     @enforce_types
     def now() -> "UnixTimeS":
-        dt = _dt_now_UTC()
+        dt = dt_now_UTC()
         return UnixTimeS(int(dt.timestamp()))
 
     @staticmethod
@@ -49,7 +50,7 @@ class UnixTimeMs(int):
     @staticmethod
     @enforce_types
     def now() -> "UnixTimeMs":
-        dt = _dt_now_UTC()
+        dt = dt_now_UTC()
         return UnixTimeMs(int(dt.timestamp() * 1000))
 
     @staticmethod
@@ -132,14 +133,48 @@ class UnixTimeMs(int):
 
 
 @enforce_types
-def _dt_now_UTC() -> datetime:
-    dt = datetime.now(UTC)
-    
-    #dt = datetime.utcnow()
-    dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
-    return dt
-
-@enforce_types
 def timestr(dt: datetime) -> str:
     """Simple time string, useful for testing"""
     return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+@enforce_types
+def tz_offset_from_utc(delta_hours:int):
+    """Return a timezone that's offset from UTC by the specified # hours"""
+    # preconditions
+    assert -24 <= delta_hours <= 24
+
+    # condition input
+    if delta_hours < 0:
+        delta_hours += 24
+
+    # corner case - guarantee UTC timezone offset is zero
+    # (since there are other timezones with offset of zero)
+    if delta_hours == 0:
+        return UTC
+
+    # We use an arbitrary time: Jan 1, 2024 at 13.00.
+    # That's ok because we are looking at the difference between
+    # the times, based on two different time zones.
+    yyyy, hh, mm, dd = 2024, 1, 1, 13
+    utc_dt = datetime(yyyy, hh, mm, dd, tzinfo=timezone.utc)
+    for cand_tz_str in sorted(available_timezones()):
+        cand_tz = ZoneInfo(cand_tz_str)
+        cand_dt = datetime(yyyy, hh, mm, dd, tzinfo=cand_tz)
+        cand_delta_hours = (utc_dt - cand_dt).seconds / 3600
+        if cand_delta_hours == delta_hours:
+            return cand_tz
+        
+    raise AssertionError(f"No timezone found for delta_hours={delta_hours}")
+
+
+@enforce_types
+def dt_now_UTC() -> datetime:
+    """Returns the time now, with a guarantee that it's UTC timezone"""
+    # NEW
+    dt = datetime.now(UTC) # knows timezone
+
+    # OLD
+    #dt = datetime.utcnow() # doesn't know timezone
+    #dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
+    
+    return dt
