@@ -65,9 +65,7 @@ def get_bronze_pdr_slots_data_with_SQL(
 
     db = DuckDBDataStore(path)
 
-    db.create_table_if_not_exists(
-        temp_bronze_pdr_slots_table_name, BronzeSlot.get_lake_schema()
-    )
+    db.create_empty(temp_bronze_pdr_slots_table_name, BronzeSlot.get_lake_schema())
 
     query = f"""
             INSERT INTO {temp_bronze_pdr_slots_table_name}
