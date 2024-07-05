@@ -73,22 +73,25 @@ def test_from_timestr():
 
 
 @enforce_types
-def test_from_natural_language__now():    
+def test_from_natural_language__now():
     now_ms1 = dt_now_UTC().timestamp() * 1000
     now_ms2 = UnixTimeMs.from_natural_language("now")
     assert isinstance(now_ms2, int)
-    assert now_ms2 >= now_ms1
+    assert now_ms1 == approx(now_ms2, abs=1000)
+
 
 @enforce_types
 def test_from_natural_language__2_days_ago():
-    def _get_time_n_days_ago(num_days:int) -> int:
+    def _get_time_n_days_ago(num_days: int) -> int:
         ago_dt = dt_now_UTC() - timedelta(days=num_days)
         ago_ms = int(ago_dt.timestamp() * 1000)
         return ago_ms
+
     ago_ms1 = _get_time_n_days_ago(num_days=2)
     ago_ms2 = UnixTimeMs.from_natural_language("2 days ago")
     assert isinstance(ago_ms2, int)
-    assert ago_ms2 >= ago_ms1
+    assert ago_ms1 == approx(ago_ms2, abs=1000)
+
 
 @enforce_types
 def test_from_natural_language__unhappy_path():
@@ -183,17 +186,17 @@ def test_timezones():
     ut_ms = UnixTimeMs.now()
     assert ut_ms == approx(ut_ms_target, abs=tol_ms)
 
-    
+
 @enforce_types
 def test_tz_offset_from_utc():
     assert tz_offset_from_utc(0) == UTC
-    
+
     assert tz_offset_from_utc(-5) == ZoneInfo(key="America/Atikokan")
     assert tz_offset_from_utc(11) == ZoneInfo(key="Antarctica/Macquarie")
 
     with pytest.raises(AssertionError):
         tz_offset_from_utc(-25)
-        
+
     with pytest.raises(AssertionError):
         tz_offset_from_utc(+25)
 
@@ -206,7 +209,7 @@ def test_timestr():
 
 @enforce_types
 @time_machine.travel(datetime(2024, 1, 1, 8, 0, 0, tzinfo=TZ_UTC_MINUS_5))
-def test_time_now_implicit():    
+def test_time_now_implicit():
     # set targets
     target_utc_minus_5_str = "2024-01-01 08:00:00"
     target_utc_str = "2024-01-01 13:00:00"
@@ -230,6 +233,7 @@ def test_time_now_implicit():
     assert utc_s == target_utc_s
     assert timestr(UnixTimeMs(utc_s * 1000).to_dt()) == target_utc_str
 
+
 # We specify that it's 1pm UTC, or 8am UTC-5
 # First arg to freeze_time() is in UTC, second arg is how much to offset it by,
 #   therefore the computer running this block should see time as utc - 5
@@ -247,6 +251,7 @@ def test_how_freezegun_is_wrong():
 
     # freezegun gets this right, but that's because it's naive wrt timezone
     assert timestr(datetime.now()) == "2024-01-01 08:00:00"
+
 
 # needed because it takes a couple of ms to run instructions in the test
 def _close_ints(x, y):
@@ -269,17 +274,18 @@ def test_time_now_natural_language():
         int(UnixTimeMs.now()) - 3600000 * 24 * 18,
     )
 
+
 @enforce_types
 def test_dt_now_UTC_1():
     dt1 = dt_now_UTC()
     dt2 = datetime.now(UTC)
-    assert (dt2-dt1).seconds < 1
-    assert 23.99 < (dt1-dt2).seconds/3600 < 23.999999 # fyi, diff wraps around
+    assert (dt2 - dt1).seconds < 1
+    assert 23.99 < (dt1 - dt2).seconds / 3600 < 23.999999  # fyi, diff wraps around
+
 
 @enforce_types
 @time_machine.travel(datetime(2024, 1, 1, 8, 0, 0, tzinfo=TZ_UTC_MINUS_5))
 def test_dt_now_UTC_2():
     dt1 = dt_now_UTC()
     dt2 = datetime.now(UTC)
-    assert (dt2-dt1).seconds < 1
-    
+    assert (dt2 - dt1).seconds < 1
