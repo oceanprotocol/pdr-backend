@@ -105,4 +105,3 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
         assert "tab--selected" in tab.get_attribute("class")
         for figure_name in figures:
             dash_duo.find_element(f"#{figure_name}")
-

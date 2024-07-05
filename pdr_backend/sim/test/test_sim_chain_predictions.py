@@ -11,6 +11,7 @@ import pytest
 from unittest.mock import patch
 from enforce_typing import enforce_types
 
+
 def mock_gql_update(self):
     ppss = self.ppss
 
@@ -55,9 +56,6 @@ def mock_gql_update(self):
     )
 
 
-
-
-
 def _clear_test_db(ppss):
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
     db.drop_table("pdr_payouts")
@@ -69,6 +67,7 @@ def mock_gql_init(self, *args):
     self.ppss = args[0]
 
     self._update = lambda: mock_gql_update(self)  # Assign the mock update method
+
 
 @enforce_types
 @patch(
@@ -118,7 +117,6 @@ def test_get_predictions_data(tmpdir):
     _clear_test_db(ppss)
 
 
-
 @patch(
     "pdr_backend.sim.sim_chain_predictions.GQLDataFactory.__init__", new=mock_gql_init
 )
@@ -135,7 +133,6 @@ def test_verify_prediction_data():
     resp = SimChainPredictions.verify_prediction_data(ppss)
     assert resp is True
     _clear_test_db(ppss)
-
 
 
 @enforce_types
