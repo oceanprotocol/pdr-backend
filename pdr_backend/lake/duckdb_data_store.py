@@ -39,14 +39,14 @@ class DuckDBDataStore(BaseDataStore):
         )  # Keep a persistent connection
 
     @enforce_types
-    def create_table(self, table_name: str, schema: SchemaDict):
+    def create_empty(self, table_name: str, schema: SchemaDict):
         """
         Create a table if it does not exist.
         @arguments:
             table_name - The name of the table.
             schema - The schema of the table.
         @example:
-            create_table("people", {
+            create_empty("people", {
                 "id": pl.Int64,
                 "name": pl.Utf8,
                 "age": pl.Int64
@@ -58,10 +58,10 @@ class DuckDBDataStore(BaseDataStore):
         if table_name not in table_names:
             # Create an empty DataFrame with the schema
             empty_df = pl.DataFrame([], schema=schema)
-            self._insert(empty_df, table_name)
+            self._create_from_df(empty_df, table_name)
 
     @enforce_types
-    def _insert(
+    def create_from_df(
         self, df: pl.DataFrame, table_name: str
     ):  # pylint: disable=unused-argument
         """
@@ -134,7 +134,7 @@ class DuckDBDataStore(BaseDataStore):
 
         logger.info("insert = %s", table_name)
         logger.info("%s", df)
-        self._insert(df, table_name)
+        self._create_from_df(df, table_name)
 
     @enforce_types
     def query_data(self, query: str) -> Optional[pl.DataFrame]:

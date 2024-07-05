@@ -162,7 +162,7 @@ def test_persistent_store(
     predictions_table_name = Prediction.get_lake_table_name()
     # Initialize Table, fill with data, validate
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
-    db._insert(_gql_datafactory_first_predictions_df, predictions_table_name)
+    db._create_from_df(_gql_datafactory_first_predictions_df, predictions_table_name)
 
     assert _table_exists(db, predictions_table_name)
 
