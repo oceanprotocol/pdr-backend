@@ -90,7 +90,6 @@ def do_sim(args, nested_args=None):
         network="development",
         nested_override_args=nested_args,
     )
-    # todo this is ugly
     if not ppss.sim_ss.use_own_model:
         ppss = PPSS(
             yaml_filename=args.PPSS_FILE,

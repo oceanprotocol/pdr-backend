@@ -3,8 +3,9 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
-from enforce_typing import enforce_types
+import polars as pl
 
+from enforce_typing import enforce_types
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.ppss.ppss import PPSS, mock_ppss

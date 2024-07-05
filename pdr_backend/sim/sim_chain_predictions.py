@@ -1,13 +1,15 @@
 import logging
 import time
+
 from typing import Dict, Optional
-from enforce_typing import enforce_types
+
+import polars as pl
+
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
-import polars as pl
 
 
 logger = logging.getLogger("sim_engine_chain_predictions")
