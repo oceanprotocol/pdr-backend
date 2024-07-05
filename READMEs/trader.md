@@ -66,7 +66,7 @@ By default `use_own_model` is set to True, and can be changed inside `my_ppss.ya
 
 Let's run the simulation engine. In console:
 ```console
-pdr sim my_ppss.yaml sapphire-mainnet
+pdr sim my_ppss.yaml
 ```
 
 What the engine does does:
