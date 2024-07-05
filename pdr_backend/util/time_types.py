@@ -2,7 +2,7 @@
 # Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
-from datetime import datetime, timezone
+from datetime import datetime, timezone, UTC
 from typing import Union
 
 import dateparser
@@ -133,6 +133,8 @@ class UnixTimeMs(int):
 
 @enforce_types
 def _dt_now_UTC() -> datetime:
-    dt = datetime.utcnow()
+    dt = datetime.now(UTC)
+    
+    #dt = datetime.utcnow()
     dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
     return dt
