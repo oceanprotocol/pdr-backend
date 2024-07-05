@@ -30,6 +30,7 @@ def test_aimodel_ss__default_values():
         ss.calibrate_probs == d["calibrate_probs"] == "CalibratedClassifierCV_Sigmoid"
     )
     assert ss.calibrate_regr == d["calibrate_regr"] == "None"
+    assert ss.train_every_n_epochs == d["train_every_n_epochs"] == 1
 
     # str
     assert "AimodelSS" in str(ss)
@@ -69,6 +70,9 @@ def test_aimodel_ss__nondefault_values():
         ss = AimodelSS(aimodel_ss_test_dict(calibrate_regr=calibrate_regr))
         assert ss.calibrate_regr == calibrate_regr and calibrate_regr in str(ss)
 
+    ss = AimodelSS(aimodel_ss_test_dict(train_every_n_epochs=44))
+    assert ss.train_every_n_epochs == 44
+
 
 @enforce_types
 def test_aimodel_ss__bad_inputs():
@@ -88,6 +92,12 @@ def test_aimodel_ss__bad_inputs():
     with pytest.raises(ValueError):
         AimodelSS(aimodel_ss_test_dict(calibrate_regr="foo"))
 
+    with pytest.raises(ValueError):
+        AimodelSS(aimodel_ss_test_dict(train_every_n_epochs=0))
+
+    with pytest.raises(ValueError):
+        AimodelSS(aimodel_ss_test_dict(train_every_n_epochs=-5))
+
 
 @enforce_types
 def test_aimodel_ss__calibrate_probs_skmethod():
@@ -100,3 +110,17 @@ def test_aimodel_ss__calibrate_probs_skmethod():
     ss = AimodelSS(d)
     assert ss.calibrate_probs_skmethod(100) == "sigmoid"  # because N is small
     assert ss.calibrate_probs_skmethod(1000) == "isotonic"
+
+
+@enforce_types
+def test_aimodel_ss__setters():
+    d = aimodel_ss_test_dict()
+    ss = AimodelSS(d)
+
+    # train_every_n_epochs
+    ss.set_train_every_n_epochs(77)
+    assert ss.train_every_n_epochs == 77
+    with pytest.raises(ValueError):
+        ss.set_train_every_n_epochs(0)
+    with pytest.raises(ValueError):
+        ss.set_train_every_n_epochs(-5)
