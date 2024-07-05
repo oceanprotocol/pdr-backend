@@ -26,7 +26,7 @@ def _setup_fixture(tmpdir):
 def test_insert(tmpdir):
     db, example_df, table_name = _setup_fixture(tmpdir)
 
-    db._create_from_df(example_df, table_name)
+    db.create_from_df(example_df, table_name)
 
     # Check if the table is registered
     table_exists = db.table_exists(table_name)
@@ -36,7 +36,7 @@ def test_insert(tmpdir):
 def test_insert_to_exist_table(tmpdir):
     db, example_df, table_name = _setup_fixture(tmpdir)
 
-    db._create_from_df(example_df, table_name)
+    db.create_from_df(example_df, table_name)
 
     # Check if the table is registered
     table_exists = db.table_exists(table_name)
