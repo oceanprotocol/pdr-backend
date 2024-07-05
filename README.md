@@ -64,6 +64,7 @@ Main tools:
   - [VPS dev flow](READMEs/vps.md)
   - [Release process](READMEs/release-process.md)
   - [Clean code guidelines](READMEs/clean-code.md)
+  - [Dependency management](READMEs/dependencies.md)
 - [Run dfbuyer bot](READMEs/dfbuyer.md) - runs Predictoor DF rewards
 - [Run publisher](READMEs/publisher.md) - publish new feeds
 - [Run trueval](READMEs/trueval.md) - run trueval bot
