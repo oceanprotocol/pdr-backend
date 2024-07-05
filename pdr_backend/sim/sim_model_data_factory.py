@@ -44,20 +44,20 @@ class SimModelDataFactory:
         _, _, y_close, _, _ = data_f.create_xy(
             df,
             testshift,
-            p.variant_close(),
-            ArgFeeds([p.variant_close()]),
+            p.variant_signal("close"),
+            ArgFeeds([p.variant_signal("close")]),
         )
         X_high, _, y_high, x_high_df, _ = data_f.create_xy(
             df,
             testshift,
-            p.variant_high(),
-            ArgFeeds([p.variant_high()]),
+            p.variant_signal("high"),
+            ArgFeeds([p.variant_signal("high")]),
         )
         X_low, _, y_low, x_low_df, _ = data_f.create_xy(
             df,
             testshift,
-            p.variant_low(),
-            ArgFeeds([p.variant_low()]),
+            p.variant_signal("low"),
+            ArgFeeds([p.variant_signal("low")]),
         )
 
         ytrue_UP_list = []
