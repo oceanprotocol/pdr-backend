@@ -5,7 +5,6 @@
 import os
 import tempfile
 from typing import Optional, Tuple
-import time
 
 import yaml
 from enforce_typing import enforce_types
@@ -22,7 +21,6 @@ from pdr_backend.ppss.topup_ss import TopupSS
 from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.ppss.trueval_ss import TruevalSS
 from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
-from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 from pdr_backend.ppss.web3_pp import Web3PP
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed
 from pdr_backend.util.dictutil import recursive_update
