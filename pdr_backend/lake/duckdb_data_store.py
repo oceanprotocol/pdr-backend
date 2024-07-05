@@ -39,14 +39,14 @@ class DuckDBDataStore(BaseDataStore):
         )  # Keep a persistent connection
 
     @enforce_types
-    def create_table_if_not_exists(self, table_name: str, schema: SchemaDict):
+    def create_table(self, table_name: str, schema: SchemaDict):
         """
         Create a table if it does not exist.
         @arguments:
             table_name - The name of the table.
             schema - The schema of the table.
         @example:
-            create_table_if_not_exists("people", {
+            create_table("people", {
                 "id": pl.Int64,
                 "name": pl.Utf8,
                 "age": pl.Int64
@@ -58,10 +58,10 @@ class DuckDBDataStore(BaseDataStore):
         if table_name not in table_names:
             # Create an empty DataFrame with the schema
             empty_df = pl.DataFrame([], schema=schema)
-            self._create_and_fill_table(empty_df, table_name)
+            self._insert(empty_df, table_name)
 
     @enforce_types
-    def _create_and_fill_table(
+    def _insert(
         self, df: pl.DataFrame, table_name: str
     ):  # pylint: disable=unused-argument
         """
@@ -109,7 +109,7 @@ class DuckDBDataStore(BaseDataStore):
         return view_name in self.get_view_names()
 
     @enforce_types
-    def insert_to_table(self, df: pl.DataFrame, table_name: str):
+    def insert_from_df(self, df: pl.DataFrame, table_name: str):
         """
         Insert data to a table
         @arguments:
@@ -121,20 +121,20 @@ class DuckDBDataStore(BaseDataStore):
                 "name": ["John", "Jane", "Doe"],
                 "age": [25, 30, 35]
             })
-            insert_to_table(df, "people")
+            insert_from_df(df, "people")
         """
         # Check if the table exists
         table_names = self.get_table_names()
 
         if table_name in table_names:
-            logger.info("insert_to_table table_name = %s", table_name)
-            logger.info("insert_to_table DF = %s", df)
+            logger.info("insert_from_df table_name = %s", table_name)
+            logger.info("insert_from_df DF = %s", df)
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
             return
 
-        logger.info("create_and_fill_table = %s", table_name)
+        logger.info("insert = %s", table_name)
         logger.info("%s", df)
-        self._create_and_fill_table(df, table_name)
+        self._insert(df, table_name)
 
     @enforce_types
     def query_data(self, query: str) -> Optional[pl.DataFrame]:
@@ -215,14 +215,14 @@ class DuckDBDataStore(BaseDataStore):
         )
 
     @enforce_types
-    def fill_table_from_csv(self, table_name: str, csv_folder_path: str):
+    def insert_from_csv(self, table_name: str, csv_folder_path: str):
         """
         Insert to table from CSV files.
         @arguments:
             table_name - A unique name for the table.
             csv_folder_path - The path to the folder containing the CSV files.
         @example:
-            fill_table_from_csv("data/csv", "people")
+            insert_from_csv("data/csv", "people")
         """
 
         csv_files = glob.glob(os.path.join(csv_folder_path, "*.csv"))
@@ -230,7 +230,7 @@ class DuckDBDataStore(BaseDataStore):
         logger.info("csv_files %s", csv_files)
         for csv_file in csv_files:
             df = pl.read_csv(csv_file)
-            self.insert_to_table(df, table_name)
+            self.insert_from_df(df, table_name)
 
     @enforce_types
     def update_data(self, df: pl.DataFrame, table_name: str, column_name: str):
