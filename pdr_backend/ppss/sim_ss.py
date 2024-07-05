@@ -82,7 +82,7 @@ class SimSS(StrMixin):
 @enforce_types
 def sim_ss_test_dict(
     log_dir: str,
-    use_own_model: bool,
+    use_own_model: Optional[bool] = True,
     test_n: Optional[int] = None,
     tradetype: Optional[str] = None,
 ) -> dict:
