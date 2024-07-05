@@ -13,7 +13,7 @@ import polars as pl
 logger = logging.getLogger("sim_engine_chain_predictions")
 
 
-class SimEngineChainPredictions:
+class SimChainPredictions:
     @staticmethod
     def get_predictions_data(
         start_slot: int, end_slot: int, ppss: PPSS, predict_feed: ArgFeed

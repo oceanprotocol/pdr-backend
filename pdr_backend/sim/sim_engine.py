@@ -8,7 +8,7 @@ import uuid
 from typing import Optional, Dict
 
 import numpy as np
-from pdr_backend.sim.sim_chain_predictions import SimEngineChainPredictions
+from pdr_backend.sim.sim_chain_predictions import SimChainPredictions
 import polars as pl
 from enforce_typing import enforce_types
 from sklearn.metrics import log_loss, precision_recall_fscore_support
@@ -86,14 +86,14 @@ class SimEngine:
 
     @enforce_types
     def load_chain_prediction_data(self):
-        chain_prediction_data = SimEngineChainPredictions.verify_prediction_data(
+        chain_prediction_data = SimChainPredictions.verify_prediction_data(
             self.ppss
         )
         if not chain_prediction_data:
             raise Exception(
                 "Could not get the required prediction data to run the simulations"
             )
-        self.chain_predictions_map = SimEngineChainPredictions.get_predictions_data(
+        self.chain_predictions_map = SimChainPredictions.get_predictions_data(
             UnixTimeMs(self.ppss.lake_ss.st_timestamp).to_seconds(),
             UnixTimeMs(self.ppss.lake_ss.fin_timestamp).to_seconds(),
             self.ppss,

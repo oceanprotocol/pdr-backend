@@ -5,7 +5,7 @@
 import os
 from unittest.mock import patch
 
-from pdr_backend.sim.sim_chain_predictions import SimEngineChainPredictions
+from pdr_backend.sim.sim_chain_predictions import SimChainPredictions
 import pytest
 import polars as pl
 from dash import Dash
@@ -185,14 +185,14 @@ def test_get_predictions_data(tmpdir):
     sim_engine = SimEngine(ppss, feedsets[0])
 
     # Getting prediction dataset
-    SimEngineChainPredictions.verify_prediction_data(ppss)
+    SimChainPredictions.verify_prediction_data(ppss)
 
     # check the duckdb file exists in the lake directory
     assert os.path.exists(ppss.lake_ss.lake_dir)
     assert os.path.exists(os.path.join(ppss.lake_ss.lake_dir, "duckdb.db"))
 
     st_ut_s = UnixTimeMs(ppss.lake_ss.st_timestamp).to_seconds()
-    prediction_dataset = SimEngineChainPredictions.get_predictions_data(
+    prediction_dataset = SimChainPredictions.get_predictions_data(
         st_ut_s,
         UnixTimeMs(ppss.lake_ss.fin_timestamp).to_seconds(),
         ppss,
@@ -229,6 +229,6 @@ def test_verify_prediction_data():
     d["trader_ss"]["feed.timeframe"] = "5m"
     d["sim_ss"]["test_n"] = 10
     ppss = PPSS(d=d, network="sapphire-mainnet")
-    resp = SimEngineChainPredictions.verify_prediction_data(ppss)
+    resp = SimChainPredictions.verify_prediction_data(ppss)
     assert resp is True
     _clear_test_db(ppss)
