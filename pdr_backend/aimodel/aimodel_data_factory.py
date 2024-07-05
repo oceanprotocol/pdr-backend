@@ -20,6 +20,7 @@ from pdr_backend.util.mathutil import fill_nans, has_nan
 logger = logging.getLogger("aimodel_data_factory")
 
 
+@enforce_types
 class AimodelDataFactory:
     """
     Roles:
@@ -54,7 +55,6 @@ class AimodelDataFactory:
        - "timestamp" values are ut: int is unix time, UTC, in ms (not s)
     """
 
-    @enforce_types
     def __init__(self, ss: PredictoorSS):
         self.ss = ss
 
@@ -78,7 +78,6 @@ class AimodelDataFactory:
     def testshift(test_n: int, test_i: int) -> int:
         return test_n - test_i - 1
 
-    @enforce_types
     def create_xy(
         self,
         mergedohlcv_df: pl.DataFrame,
@@ -213,7 +212,6 @@ class AimodelDataFactory:
         # return
         return X, ytran, yraw, x_df, xrecent
 
-    @enforce_types
     def get_highlow(
         self, mergedohlcv_df: pl.DataFrame, feed: ArgFeed, testshift: int
     ) -> tuple:
