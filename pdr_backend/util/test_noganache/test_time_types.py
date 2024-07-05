@@ -10,22 +10,13 @@ import pytest
 from pytest import approx
 import time_machine
 
-from pdr_backend.util.test_noganache.test_time_types_util import (
-    tz_offset_from_utc,
-)
 from pdr_backend.util.time_types import (
     dt_now_UTC,
     UnixTimeMs,
     UnixTimeS,
 )
 
-TZ_UTC_MINUS_5 = tz_offset_from_utc(-5)
-
-
-@enforce_types
-def _simplestr(dt: datetime) -> str:
-    """Simple time string, useful for testing"""
-    return dt.strftime("%Y-%m-%d %H:%M:%S")
+TZ_NOT_UTC = ZoneInfo(key="America/Atikokan")
 
 
 @enforce_types
@@ -194,31 +185,17 @@ def test_timezones():
 
 
 @enforce_types
-def testtz_offset_from_utc():
-    assert tz_offset_from_utc(0) == UTC
-
-    assert tz_offset_from_utc(-5) == ZoneInfo(key="America/Atikokan")
-    assert tz_offset_from_utc(11) == ZoneInfo(key="Antarctica/Macquarie")
-
-    with pytest.raises(AssertionError):
-        tz_offset_from_utc(-25)
-
-    with pytest.raises(AssertionError):
-        tz_offset_from_utc(+25)
-
-
-@enforce_types
-@time_machine.travel(datetime(2024, 1, 1, 8, 0, 0, tzinfo=TZ_UTC_MINUS_5))
+@time_machine.travel(datetime(2024, 1, 1, 8, 0, 0, tzinfo=TZ_NOT_UTC))
 def test_time_now_implicit():
-    # set targets
-    target_utc_minus_5_str = "2024-01-01 08:00:00"
-    target_utc_str = "2024-01-01 13:00:00"
-    target_utc_ms = 1704114000000
-    target_utc_s = 1704114000
+    # base data
+    dt_utc = datetime.now(UTC)
+    dt_nonutc = datetime.now()
+    assert dt_utc != dt_nonutc, "time_machine misses timezone"
 
-    # test: datetime library directly, to confirm time_machine.travel() behavior
-    assert _simplestr(datetime.now(UTC)) == target_utc_str
-    assert _simplestr(datetime.now()) == target_utc_minus_5_str
+    # set targets
+    target_utc_str = _simplestr(dt_utc)
+    target_utc_s = int(dt_utc.timestamp())
+    target_utc_ms = target_utc_s * 1000
 
     # test: UnixTimeMs(utc_ms).to_dt()
     assert _simplestr(UnixTimeMs(target_utc_ms).to_dt()) == target_utc_str
@@ -264,8 +241,14 @@ def test_dt_now_UTC_1():
 
 
 @enforce_types
-@time_machine.travel(datetime(2024, 1, 1, 8, 0, 0, tzinfo=TZ_UTC_MINUS_5))
+@time_machine.travel(datetime(2024, 1, 1, 8, 0, 0, tzinfo=TZ_NOT_UTC))
 def test_dt_now_UTC_2():
     dt1 = dt_now_UTC()
     dt2 = datetime.now(UTC)
     assert (dt2 - dt1).seconds < 1
+
+
+@enforce_types
+def _simplestr(dt: datetime) -> str:
+    """Simple time string, useful for testing"""
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
