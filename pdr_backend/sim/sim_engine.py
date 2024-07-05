@@ -86,9 +86,7 @@ class SimEngine:
 
     @enforce_types
     def load_chain_prediction_data(self):
-        chain_prediction_data = SimChainPredictions.verify_prediction_data(
-            self.ppss
-        )
+        chain_prediction_data = SimChainPredictions.verify_prediction_data(self.ppss)
         if not chain_prediction_data:
             raise Exception(
                 "Could not get the required prediction data to run the simulations"
