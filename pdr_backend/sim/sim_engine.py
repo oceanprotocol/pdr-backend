@@ -6,9 +6,9 @@ import logging
 import os
 import uuid
 from typing import Optional, Dict
-import time
 
 import numpy as np
+from pdr_backend.sim.sim_chain_predictions import SimEngineChainPredictions
 import polars as pl
 from enforce_typing import enforce_types
 from sklearn.metrics import log_loss, precision_recall_fscore_support
@@ -29,8 +29,6 @@ from pdr_backend.sim.sim_trader import SimTrader
 from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
 
 logger = logging.getLogger("sim_engine")
 
@@ -65,8 +63,8 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
 
-        self.crt_trained_model: Optional[Aimodel] = None
-        self.prediction_dataset: Optional[Dict[int, float]] = None
+        # timestamp -> prob up
+        self.chain_predictions_map: Optional[Dict[int, float]] = None
         self.model: Optional[Aimodel] = None
 
     @property
@@ -87,6 +85,22 @@ class SimEngine:
         self.sim_plotter.init_state(self.multi_id)
 
     @enforce_types
+    def load_chain_prediction_data(self):
+        chain_prediction_data = SimEngineChainPredictions.verify_prediction_data(
+            self.ppss
+        )
+        if not chain_prediction_data:
+            raise Exception(
+                "Could not get the required prediction data to run the simulations"
+            )
+        self.chain_predictions_map = SimEngineChainPredictions.get_predictions_data(
+            UnixTimeMs(self.ppss.lake_ss.st_timestamp).to_seconds(),
+            UnixTimeMs(self.ppss.lake_ss.fin_timestamp).to_seconds(),
+            self.ppss,
+            self.predict_feed,
+        )
+
+    @enforce_types
     def run(self):
         logger.info("Start run")
         self._init_loop_attributes()
@@ -97,17 +111,7 @@ class SimEngine:
 
         # fetch predictions data
         if not self.ppss.sim_ss.use_own_model:
-            chain_prediction_data = self._get_past_predictions_from_chain(self.ppss)
-            if not chain_prediction_data:
-                logger.error(
-                    "Could not get the required prediction data to run the simulations"
-                )
-                return
-
-            self.prediction_dataset = self._get_predictions_signals_data(
-                UnixTimeMs(self.ppss.lake_ss.st_timestamp).to_seconds(),
-                UnixTimeMs(self.ppss.lake_ss.fin_timestamp).to_seconds(),
-            )
+            self.load_chain_prediction_data()
 
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
@@ -124,7 +128,6 @@ class SimEngine:
         revenue = pdr_ss.revenue.amt_eth
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
         predict_feed = self.predict_train_feedset.predict
         train_feeds = self.predict_train_feedset.train_on
@@ -171,15 +174,11 @@ class SimEngine:
         # predict price direction
         if self.ppss.sim_ss.use_own_model:
             prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
-        elif (
-            self.prediction_dataset is not None
-            and ut_seconds in self.prediction_dataset
-        ):
-            # check if the current slot is in the keys
-            prob_up = self.prediction_dataset[ut_seconds]
         else:
-            logger.error("No prediction found at time %s", ut_seconds)
-            return
+            prob_up = self.chain_predictions_map.get(ut_seconds)
+            if prob_up is None:
+                logger.error("No prediction found at time %s", ut_seconds)
+                return
 
         prob_down: float = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
@@ -294,95 +293,3 @@ class SimEngine:
             return False, False
 
         return True, False
-
-    @enforce_types
-    def _get_predictions_signals_data(
-        self, start_slot: int, end_slot: int
-    ) -> Dict[int, Optional[float]]:
-        result_dict: Dict[int, Optional[float]] = {}
-        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        query_cont = f"""
-            SELECT
-                contract
-            FROM
-                pdr_predictions
-            WHERE
-                timeframe = '{self.predict_feed.timeframe}'
-                AND pair = '{self.predict_feed.pair.pair_str}'
-            LIMIT 1
-        """
-        feed_contract_addr = db.query_data(query_cont)
-        if len(feed_contract_addr) == 0:
-            logger.error("Contract address for the given feed not found in database")
-            return result_dict
-
-        query = f"""
-            SELECT
-                slot,
-                CASE
-                    WHEN roundSumStakes = 0.0 THEN NULL
-                    ELSE roundSumStakesUp / roundSumStakes
-                END AS probUp
-            FROM
-                pdr_payouts
-            WHERE
-                slot > {start_slot}
-                AND slot < {end_slot}
-                AND ID LIKE '{feed_contract_addr.row(0)[0]}%'
-        """
-
-        df: pl.DataFrame = db.query_data(query)
-
-        for row in df.to_dicts():
-            if row["probUp"] is not None:
-                result_dict[row["slot"]] = row["probUp"]
-
-        return result_dict
-
-    def _get_past_predictions_from_chain(self, ppss: PPSS):
-        # calculate needed data start date
-        current_time_s = int(time.time())
-        timeframe = ppss.trader_ss.feed.timeframe
-        number_of_data_points = ppss.sim_ss.test_n
-        start_date = current_time_s - (timeframe.s * number_of_data_points)
-
-        # fetch data from subgraph
-        try:
-            gql_data_factory = GQLDataFactory(ppss)
-            gql_data_factory._update()
-        except Exception as e:
-            logger.error("Fetching chain data failed. %s", e)
-
-        # check if required data exists in the data base
-        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        query = """
-        (SELECT timestamp
-            FROM pdr_payouts
-            ORDER BY timestamp ASC
-            LIMIT 1)
-            UNION ALL
-            (SELECT timestamp
-            FROM pdr_payouts
-            ORDER BY timestamp DESC
-            LIMIT 1);
-        """
-        data: pl.DataFrame = db.query_data(query)
-
-        if data.shape[0] > 0 and len(data["timestamp"]) < 2:
-            logger.info(
-                "No prediction data found in database at %s", self.ppss.lake_ss.lake_dir
-            )
-            return False
-        start_timestamp = UnixTimeMs(data["timestamp"][0]).to_seconds()
-
-        if start_timestamp > start_date:
-            logger.info(
-                (
-                    "Not enough predictions data in the lake. "
-                    "Make sure you fetch data starting from %s up to today"
-                ),
-                time.strftime("%Y-%m-%d", time.localtime(start_date)),
-            )
-            return False
-
-        return True
