@@ -42,6 +42,7 @@ install_requirements = [
     "requests-mock==1.12.1",
     "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
+    "time_machine==2.14.2",
     "typeguard==4.3.0",
     "xgboost==2.1.0",
     "dash_bootstrap_components==1.6.0",

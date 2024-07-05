@@ -12,7 +12,7 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
-from pdr_backend.util.time_types import UnixTimeMs, _dt_now_UTC
+from pdr_backend.util.time_types import UnixTimeMs, dt_now_UTC
 
 _D = {
     "feeds": ["kraken ETH/USDT 5m", "binanceus ETH/USDT,TRX/DAI 1h"],
@@ -79,7 +79,7 @@ def test_lake_ss_start_time():
 
     assert ss.st_timestr == "3 days ago"
 
-    ut2 = _dt_now_UTC() - timedelta(days=3)
+    ut2 = dt_now_UTC() - timedelta(days=3)
     assert ss.st_timestamp / 1000 == pytest.approx(ut2.timestamp(), 1.0)
 
 
