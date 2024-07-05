@@ -133,14 +133,11 @@ class UnixTimeMs(int):
 
 
 @enforce_types
-def timestr(dt: datetime) -> str:
-    """Simple time string, useful for testing"""
-    return dt.strftime("%Y-%m-%d %H:%M:%S")
-
-
-@enforce_types
-def tz_offset_from_utc(delta_hours: int):
-    """Return a timezone that's offset from UTC by the specified # hours"""
+def _tz_offset_from_utc(delta_hours: int):
+    """
+    Return a timezone that's offset from UTC by the specified # hours.
+    This is meant to be used for testing only.
+    """
     # preconditions
     assert -24 <= delta_hours <= 24
 
