@@ -80,6 +80,7 @@ class AimodelFactory:
         ss = self.ss
         assert ss.do_regr
         assert ycont is not None
+        assert X.shape[0] == ycont.shape[0], (X.shape[0], ycont.shape[0])
         do_constant = min(ycont) == max(ycont) or ss.approach == "RegrConstant"
 
         # weight newest sample 10x, and 2nd-newest sample 5x
@@ -145,6 +146,7 @@ class AimodelFactory:
     ) -> Aimodel:
         ss = self.ss
         assert not ss.do_regr
+        assert X.shape[0] == len(ytrue), (X.shape[0], len(ytrue))
         n_True, n_False = sum(ytrue), sum(np.invert(ytrue))
         smallest_n = min(n_True, n_False)
         do_constant = (smallest_n == 0) or ss.approach == "ClassifConstant"
