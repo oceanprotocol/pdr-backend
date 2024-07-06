@@ -15,6 +15,7 @@ from pdr_backend.aimodel.aimodel_plotter import (
     plot_aimodel_response,
     plot_aimodel_varimps,
 )
+from pdr_backend.aimodel.ycont_to_ytrue import ycont_to_ytrue
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import _df_from_raw_data
 from pdr_backend.lake.test.resources2_btc import get_large_BINANCE_BTC_DATA
@@ -71,7 +72,7 @@ def test_aimodel_prices_static(approach: str, autoregr_n: int, transform: str):
     X_train, X_test = X[:N_train, :], X[N_train:, :]
     ytran_train, _ = ytran[:N_train], ytran[N_train:]
     y_thr = 0.0  # always 0.0 when modeling % change
-    ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
+    ytrue = ycont_to_ytrue(ytran, y_thr)
     ytrue_train, ytrue_test = ytrue[:N_train], ytrue[N_train:]
 
     # build model
@@ -173,7 +174,7 @@ def _run_one_iter(autoregr_n, max_n_train, transform, sim_test_n, test_i) -> flo
     trueprice = ysignal[-1]
 
     y_thr = 0.0  # always 0.0 when modeling % change
-    ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
+    ytrue = ycont_to_ytrue(ytran, y_thr)
     ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
     model_f = AimodelFactory(pdr_ss.aimodel_ss)

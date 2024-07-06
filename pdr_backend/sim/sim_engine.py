@@ -17,6 +17,7 @@ from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.aimodel.ycont_to_ytrue import ycont_to_ytrue
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
@@ -130,7 +131,7 @@ class SimEngine:
             y_thr = cur_close
         else:  # transform = "RelDiff"
             y_thr = 0.0
-        ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
+        ytrue = ycont_to_ytrue(ytran, y_thr)
 
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
