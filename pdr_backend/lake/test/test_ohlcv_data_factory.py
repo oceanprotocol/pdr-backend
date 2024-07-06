@@ -2,10 +2,11 @@
 # Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
+import asyncio
 import os
 import time
 from typing import List
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from enforce_typing import enforce_types
 import numpy as np
@@ -94,7 +95,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
 
     with patch("ccxt.binanceus") as mock:
         mock.return_value = FakeExchange()
-        factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
+        asyncio.run(factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp))
 
     def _uts_in_rawohlcv_file(filename: str) -> List[int]:
         df = load_rawohlcv_file(filename)
@@ -117,7 +118,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
 
     with patch("ccxt.binanceus") as mock:
         mock.return_value = FakeExchange()
-        factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
+        asyncio.run(factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp))
     uts2 = _uts_in_rawohlcv_file(filename)
     assert uts2 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
@@ -129,7 +130,7 @@ def test_update_rawohlcv_files(st_timestr: str, fin_timestr: str, n_uts, tmpdir)
 
     with patch("ccxt.binanceus") as mock:
         mock.return_value = FakeExchange()
-        factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp)
+        asyncio.run(factory._update_rawohlcv_files_at_feed(feed, ss.fin_timestamp))
     uts3 = _uts_in_rawohlcv_file(filename)
     assert uts3 == _uts_in_range(ss.st_timestamp, ss.fin_timestamp)
 
@@ -219,7 +220,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
     # mock
     n_pts = 20
 
-    def mock_update(*args, **kwargs):  # pylint: disable=unused-argument
+    async def mock_update(*args, **kwargs):  # pylint: disable=unused-argument
         s_per_epoch = S_PER_MIN * 5
         raw_tohlcv_data = [
             [st_ut + s_per_epoch * i] + [ohlcv_val] * 5 for i in range(n_pts)
@@ -232,7 +233,7 @@ def _test_mergedohlcv_df__low_vs_high_level(tmpdir, ohlcv_val):
     factory._update_rawohlcv_files_at_feed = mock_update
 
     # test 1: get mergedohlcv_df via several low-level instrs, as get_mergedohlcv_df() does
-    factory._update_rawohlcv_files(fin_ut)
+    asyncio.run(factory._update_rawohlcv_files(fin_ut))
     assert os.path.getsize(filename) > 500
 
     df0 = pl.read_parquet(filename, columns=["high"])
@@ -314,7 +315,7 @@ def test_get_mergedohlcv_df_calls(
     mock_merge_rawohlcv_dfs.return_value = Mock(spec=pl.DataFrame)
     _, factory = _lake_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
 
-    factory._update_rawohlcv_files = Mock(return_value=None)
+    factory._update_rawohlcv_files = AsyncMock(return_value=None)
     factory._load_rawohlcv_files = Mock(return_value=None)
 
     mergedohlcv_df = factory.get_mergedohlcv_df()
