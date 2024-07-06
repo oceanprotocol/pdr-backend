@@ -2,11 +2,11 @@ from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
 
-from pdr_backend.ppss.ppss import mock_ppss, PPSS
-from pdr_backend.ppss.predictoor_ss import PredictoorSS
-from pdr_backend.binmodel.constants import UP, DOWN
 from pdr_backend.binmodel.binmodel_data import BinmodelData
 from pdr_backend.binmodel.binmodel_data_factory import BinmodelDataFactory
+from pdr_backend.binmodel.constants import UP, DOWN
+from pdr_backend.ppss.ppss import mock_ppss, PPSS
+from pdr_backend.ppss.predictoor_ss import PredictoorSS
 
 
 @enforce_types

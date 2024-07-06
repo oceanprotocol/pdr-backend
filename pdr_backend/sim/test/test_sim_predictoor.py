@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.binmodel.binmodel_prediction import BinmodelPrediction
+from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.sim.sim_predictoor import SimPredictoor
 
 

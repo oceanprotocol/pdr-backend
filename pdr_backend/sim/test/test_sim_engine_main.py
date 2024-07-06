@@ -5,6 +5,7 @@ from dash import Dash
 from enforce_typing import enforce_types
 from selenium.common.exceptions import NoSuchElementException  # type: ignore[import-untyped]
 
+from pdr_backend.binmodel.binmodel import Binmodel
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
 from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
 from pdr_backend.ppss.aimodel_ss import aimodel_ss_test_dict
@@ -15,7 +16,6 @@ from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
 from pdr_backend.sim.dash_plots.callbacks import get_callbacks
 from pdr_backend.sim.dash_plots.view_elements import get_layout
 from pdr_backend.sim.sim_engine import SimEngine
-from pdr_backend.binmodel.binmodel import Binmodel
 
 
 @enforce_types

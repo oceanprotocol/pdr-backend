@@ -2,8 +2,8 @@ from typing import Tuple
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.predictoor_ss import PredictoorSS
 from pdr_backend.binmodel.binmodel_prediction import BinmodelPrediction
+from pdr_backend.ppss.predictoor_ss import PredictoorSS
 
 
 class SimPredictoor:

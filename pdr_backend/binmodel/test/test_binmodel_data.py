@@ -1,8 +1,8 @@
 from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
 
-from pdr_backend.binmodel.constants import Dirn, UP, DOWN
 from pdr_backend.binmodel.binmodel_data import BinmodelData, BinmodelData1Dir
+from pdr_backend.binmodel.constants import Dirn, UP, DOWN
 from pdr_backend.binmodel.test.resources import get_Xy_UP, get_Xy_DOWN
 
 

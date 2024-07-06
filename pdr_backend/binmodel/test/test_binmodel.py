@@ -3,9 +3,9 @@ from unittest.mock import Mock
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.binmodel.constants import UP, DOWN
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.binmodel.binmodel import Binmodel
+from pdr_backend.binmodel.constants import UP, DOWN
 
 
 @enforce_types

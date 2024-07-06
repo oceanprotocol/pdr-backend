@@ -2,12 +2,12 @@ from enforce_typing import enforce_types
 import numpy as np
 import polars as pl
 
+from pdr_backend.binmodel.binmodel_data import BinmodelData, BinmodelData1Dir
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
-from pdr_backend.binmodel.binmodel_data import BinmodelData, BinmodelData1Dir
 
 
 class BinmodelDataFactory:

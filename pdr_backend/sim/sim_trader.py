@@ -6,8 +6,8 @@ import logging
 
 from enforce_typing import enforce_types
 
-from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 from pdr_backend.binmodel.binmodel_prediction import BinmodelPrediction
+from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 
 logger = logging.getLogger("sim_trader")
 

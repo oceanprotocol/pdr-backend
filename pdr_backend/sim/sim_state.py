@@ -8,9 +8,9 @@ from enforce_typing import enforce_types
 import numpy as np
 
 from pdr_backend.aimodel.true_vs_pred import PERF_NAMES, TrueVsPred
-from pdr_backend.binmodel.constants import Dirn, dirn_str, UP, DOWN
 from pdr_backend.binmodel.binmodel import Binmodel
 from pdr_backend.binmodel.binmodel_data import BinmodelData
+from pdr_backend.binmodel.constants import Dirn, dirn_str, UP, DOWN
 
 
 # =============================================================================

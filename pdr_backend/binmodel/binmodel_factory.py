@@ -3,10 +3,10 @@ from typing import Optional
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
-from pdr_backend.ppss.aimodel_ss import AimodelSS
-from pdr_backend.binmodel.constants import UP, DOWN
 from pdr_backend.binmodel.binmodel import Binmodel
 from pdr_backend.binmodel.binmodel_data import BinmodelData
+from pdr_backend.binmodel.constants import UP, DOWN
+from pdr_backend.ppss.aimodel_ss import AimodelSS
 
 
 class BinmodelFactory:

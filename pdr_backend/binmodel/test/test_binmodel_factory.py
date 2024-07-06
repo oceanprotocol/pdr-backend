@@ -2,10 +2,10 @@ from unittest.mock import Mock
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.binmodel.binmodel import Binmodel
 from pdr_backend.binmodel.binmodel_factory import BinmodelFactory
 from pdr_backend.binmodel.test.resources import get_binmodel_data
+from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 
 
 @enforce_types
