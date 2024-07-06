@@ -3,25 +3,28 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 import logging
-from enforce_typing import enforce_types
-from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 
+from enforce_typing import enforce_types
+
+from pdr_backend.binmodel.binmodel_prediction import BinmodelPrediction
+from pdr_backend.exchange.exchange_mgr import ExchangeMgr
 
 logger = logging.getLogger("sim_trader")
 
 
 # pylint: disable=too-many-instance-attributes
 class SimTrader:
-    def __init__(self, ppss, predict_feed):
+    @enforce_types
+    def __init__(self, ppss):
         self.ppss = ppss
 
-        self.position_open = ""  # long, short, ""
-        self.position_size = 0  # amount of tokens in position
-        self.position_worth = 0  # amount of USD in position
-        self.tp = 0.0  # take profit
-        self.sl = 0.0  # stop loss
-        self.tp_percent = self.ppss.trader_ss.take_profit_percent
-        self.sl_percent = self.ppss.trader_ss.stop_loss_percent
+        self.position_open: str = ""  # long, short, ""
+        self.position_size: float = 0.0  # amount of tokens in position
+        self.position_worth: float = 0.0  # amount of USD in position
+        self.tp: float = 0.0  # take profit
+        self.sl: float = 0.0  # stop loss
+        self.tp_percent: float = self.ppss.trader_ss.take_profit_percent
+        self.sl_percent: float = self.ppss.trader_ss.stop_loss_percent
 
         mock = self.ppss.sim_ss.tradetype in ["histmock"]
         exchange_mgr = ExchangeMgr(self.ppss.exchange_mgr_ss)
@@ -29,7 +32,7 @@ class SimTrader:
             "mock" if mock else ppss.predictoor_ss.exchange_str,
         )
 
-        self.predict_feed = predict_feed
+        self.predict_feed = ppss.predictoor_ss.predict_train_feedsets[0].predict
         assert isinstance(self.tokcoin, str)
         assert isinstance(self.usdcoin, str)
 
@@ -43,26 +46,48 @@ class SimTrader:
         """Return e.g. 'USDT'"""
         return self.predict_feed.pair.quote_str
 
+    @enforce_types
     def close_long_position(self, sell_price: float) -> float:
         tokcoin_amt_send = self.position_size
         usd_received = self._sell(sell_price, tokcoin_amt_send)
         self.position_open = ""
         profit = usd_received - self.position_worth
-        return profit
+        return float(profit)
 
+    @enforce_types
     def close_short_position(self, buy_price: float) -> float:
         usdcoin_amt_send = self.position_size * buy_price
         self._buy(buy_price, usdcoin_amt_send)
         self.position_open = ""
         profit = self.position_worth - usdcoin_amt_send
-        return profit
+        return float(profit)
 
-    # pylint: disable = too-many-return-statements
+    @enforce_types
     def trade_iter(
         self,
         cur_close: float,
-        pred_up,
-        pred_down,
+        high: float,
+        low: float,
+        p: BinmodelPrediction,
+    ) -> float:
+        profit_USD = self._trade_iter(
+            cur_close,
+            p.pred_up,
+            p.pred_down,
+            p.conf_up,
+            p.conf_down,
+            high,
+            low,
+        )
+        return float(profit_USD)
+
+    # pylint: disable=too-many-return-statements
+    @enforce_types
+    def _trade_iter(
+        self,
+        cur_close: float,
+        pred_up: bool,
+        pred_down: bool,
         conf_up: float,
         conf_down: float,
         high: float,
@@ -78,13 +103,12 @@ class SimTrader:
 
         @arguments
             cur_close -- current price of the token
+            high -- highest price reached during the previous period
+            low -- lowest price reached during the previous period
             pred_up -- prediction that the price will go up
             pred_down -- prediction that the price will go down
             conf_up -- confidence in the prediction that the price will go up
             conf_down -- confidence in the prediction that the price will go down
-            high -- highest price reached during the period
-            low -- lowest price reached during the period
-
 
         @return
             profit -- profit made by the trader in this iteration
@@ -110,7 +134,7 @@ class SimTrader:
                 self.position_size = tokcoin_amt_send
                 self.tp = cur_close - (cur_close * self.tp_percent)
                 self.sl = cur_close + (cur_close * self.sl_percent)
-            return 0
+            return 0.0
 
         # Check for take profit or stop loss
         if self.position_open == "long":
@@ -133,7 +157,7 @@ class SimTrader:
             if not pred_down:
                 return self.close_short_position(cur_close)
 
-        return 0
+        return 0.0
 
     @enforce_types
     def _buy(self, price: float, usdcoin_amt_send: float) -> float:
@@ -165,7 +189,7 @@ class SimTrader:
             self.usdcoin,
         )
 
-        return tokcoin_amt_recd
+        return float(tokcoin_amt_recd)
 
     @enforce_types
     def _sell(self, price: float, tokcoin_amt_send: float) -> float:
@@ -199,4 +223,4 @@ class SimTrader:
             self.usdcoin,
         )
 
-        return usdcoin_amt_recd
+        return float(usdcoin_amt_recd)

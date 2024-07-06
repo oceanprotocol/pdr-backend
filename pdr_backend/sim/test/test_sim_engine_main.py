@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 import os
 
 import pytest
@@ -9,9 +5,11 @@ from dash import Dash
 from enforce_typing import enforce_types
 from selenium.common.exceptions import NoSuchElementException  # type: ignore[import-untyped]
 
-from pdr_backend.aimodel.aimodel import Aimodel
+from pdr_backend.binmodel.binmodel import Binmodel
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
 from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
+from pdr_backend.ppss.aimodel_ss import aimodel_ss_test_dict
+from pdr_backend.ppss.aimodel_data_ss import aimodel_data_ss_test_dict
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
@@ -22,7 +20,7 @@ from pdr_backend.sim.sim_engine import SimEngine
 
 @enforce_types
 # pylint: disable=unused-argument
-def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
+def test_sim_engine_main(tmpdir, check_chromedriver, dash_duo):
     s = fast_test_yaml_str(tmpdir)
     ppss = PPSS(yaml_str=s, network="development")
 
@@ -37,37 +35,45 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
 
     # lake ss
     lake_dir = os.path.join(tmpdir, "parquet_data")
-    d = lake_ss_test_dict(lake_dir, feeds=feedsets.feed_strs)
-    assert "st_timestr" in d
-    d["st_timestr"] = "2023-06-18"
-    d["fin_timestr"] = "2023-06-19"
-    ppss.lake_ss = LakeSS(d)
+    lake_d = lake_ss_test_dict(
+        lake_dir,
+        feeds=feedsets.feed_strs,
+        st_timestr="2023-06-18",
+        fin_timestr="2023-06-19",
+    )
+    ppss.lake_ss = LakeSS(lake_d)
 
     # predictoor ss
-    d = predictoor_ss_test_dict(feedset_list)
-    assert "max_n_train" in d["aimodel_data_ss"]
-    assert "autoregressive_n" in d["aimodel_data_ss"]
-    assert "approach" in d["aimodel_ss"]
-    assert "train_every_n_epochs" in d["aimodel_ss"]
-    d["aimodel_data_ss"]["max_n_train"] = 20
-    d["aimodel_data_ss"]["autoregressive_n"] = 1
-    d["aimodel_ss"]["approach"] = "ClassifLinearRidge"
-    d["aimodel_ss"]["train_every_n_epochs"] = 2
-    ppss.predictoor_ss = PredictoorSS(d)
+    pdr_d = predictoor_ss_test_dict(
+        feedset_list,
+        aimodel_data_ss_dict=aimodel_data_ss_test_dict(
+            max_n_train=20,
+            autoregressive_n=1,
+        ),
+        aimodel_ss_dict=aimodel_ss_test_dict(
+            approach="ClassifLinearRidge",
+            train_every_n_epochs=2,
+        ),
+    )
+    ppss.predictoor_ss = PredictoorSS(pdr_d)
 
     # sim ss
     log_dir = os.path.join(tmpdir, "logs")
-    d = sim_ss_test_dict(log_dir, test_n=5)
-    ppss.sim_ss = SimSS(d)
+    sim_d = sim_ss_test_dict(log_dir, test_n=5)
+    ppss.sim_ss = SimSS(sim_d)
 
     # go
-    feedsets = ppss.predictoor_ss.predict_train_feedsets
-    sim_engine = SimEngine(ppss, feedsets[0])
+    sim_engine = SimEngine(ppss)
 
-    assert sim_engine.model is None
+    assert sim_engine.st.binmodel is None
     sim_engine.run()
-    assert isinstance(sim_engine.model, Aimodel)
 
+    # basic test that engine ran
+    assert isinstance(sim_engine.st.binmodel, Binmodel)
+
+    # basic tests for plots
+    if check_chromedriver is None:
+        return
     app = Dash("pdr_backend.sim.sim_dash")
     app.config["suppress_callback_exceptions"] = True
     app.run_id = sim_engine.multi_id
@@ -94,7 +100,6 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
         "trader_profit_tab": ["trader_profit_vs_time", "trader_profit_vs_ptrue"],
         "model_performance_tab": ["model_performance_vs_time"],
         "model_response_tab": ["aimodel_response", "aimodel_varimps"],
-        "model_residuals_tab": ["prediction_residuals_other"],
     }
 
     for tab_name, figures in tabs.items():

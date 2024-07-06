@@ -28,7 +28,7 @@ def test_multisim1(tmpdir):
     multisim_engine.run()
 
     # csv ok?
-    target_columns = ["run_number"] + SimState.recent_metrics_names() + [param]
+    target_columns = ["run_number"] + SimState.metrics_names() + [param]
     assert multisim_engine.csv_header() == target_columns
     assert os.path.exists(multisim_engine.csv_file)
     df = multisim_engine.load_csv()

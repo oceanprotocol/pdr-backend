@@ -6,23 +6,30 @@ from dash import dcc, html
 from enforce_typing import enforce_types
 from plotly.graph_objs import Figure
 
-figure_names = [
+OTHER_FIGURES = [
     "pdr_profit_vs_time",
     "pdr_profit_vs_ptrue",
     "trader_profit_vs_time",
     "trader_profit_vs_ptrue",
     "model_performance_vs_time",
-    "aimodel_varimps",
-    "aimodel_response",
-    "prediction_residuals_dist",
-    "prediction_residuals_other",
 ]
 
-empty_selected_vars = dcc.Checklist([], [], id="selected_vars")
+MODEL_RESPONSE_FIGURES = [
+    "aimodel_varimps_UP",
+    "aimodel_response_UP",
+    "aimodel_varimps_DOWN",
+    "aimodel_response_DOWN",
+]
 
-empty_graphs_template = html.Div(
-    [dcc.Graph(figure=Figure(), id=key) for key in figure_names]
-    + [empty_selected_vars],
+FIGURE_NAMES = OTHER_FIGURES + MODEL_RESPONSE_FIGURES
+
+EMPTY_SELECTED_VARS_UP = dcc.Checklist([], [], id="selected_vars_UP")
+EMPTY_SELECTED_VARS_DOWN = dcc.Checklist([], [], id="selected_vars_DOWN")
+
+EMPTY_GRAPHS_TEMPLATE = html.Div(
+    [dcc.Graph(figure=Figure(), id=name) for name in FIGURE_NAMES]
+    + [EMPTY_SELECTED_VARS_UP]
+    + [EMPTY_SELECTED_VARS_DOWN],
     style={"display": "none"},
 )
 
@@ -31,7 +38,7 @@ empty_graphs_template = html.Div(
 def get_waiting_template(err):
     return html.Div(
         [html.H2(f"Error/waiting: {err}", id="sim_state_text")]
-        + [empty_graphs_template],
+        + [EMPTY_GRAPHS_TEMPLATE],
         id="live-graphs",
     )
 
@@ -98,7 +105,7 @@ def get_tabs(figures):
             "name": "Predictoor Profit",
             "components": [
                 single_graph(figures, "pdr_profit_vs_time", width="100%"),
-                single_graph(figures, "pdr_profit_vs_ptrue", width="50%"),
+                single_graph(figures, "pdr_profit_vs_ptrue", width="100%"),
             ],
             "className": "predictor_profit_tab",
         },
@@ -106,7 +113,7 @@ def get_tabs(figures):
             "name": "Trader Profit",
             "components": [
                 single_graph(figures, "trader_profit_vs_time", width="100%"),
-                single_graph(figures, "trader_profit_vs_ptrue", width="50%"),
+                single_graph(figures, "trader_profit_vs_ptrue", width="100%"),
             ],
             "className": "trader_profit_tab",
         },
@@ -122,38 +129,42 @@ def get_tabs(figures):
             "components": [
                 side_by_side_graphs(
                     figures,
-                    name1="aimodel_varimps",
-                    name2="aimodel_response",
+                    name1="aimodel_varimps_UP",
+                    name2="aimodel_response_UP",
                     height="100%",
                     width1="30%",
                     width2="70%",
-                )
-            ],
-            "className": "model_response_tab",
-        },
-        {
-            "name": "Model residuals",
-            "components": [
+                ),
                 side_by_side_graphs(
                     figures,
-                    name1="prediction_residuals_dist",
-                    name2="prediction_residuals_other",
+                    name1="aimodel_varimps_DOWN",
+                    name2="aimodel_response_DOWN",
                     height="100%",
-                    width1="60%",
-                    width2="40%",
+                    width1="30%",
+                    width2="70%",
                 ),
             ],
-            "className": "model_residuals_tab",
+            "className": "model_response_tab",
         },
     ]
 
 
 @enforce_types
-def selected_var_checklist(state_options, selected_vars_old):
+def selected_var_UP_checklist(state_options, selected_vars_UP_old):
     return dcc.Checklist(
         options=[{"label": var, "value": var} for var in state_options],
-        value=selected_vars_old,
-        id="selected_vars",
+        value=selected_vars_UP_old,
+        id="selected_vars_UP",
+        style={"display": "none"},
+    )
+
+
+@enforce_types
+def selected_var_DOWN_checklist(state_options, selected_vars_DOWN_old):
+    return dcc.Checklist(
+        options=[{"label": var, "value": var} for var in state_options],
+        value=selected_vars_DOWN_old,
+        id="selected_vars_DOWN",
         style={"display": "none"},
     )
 
@@ -191,7 +202,7 @@ def get_main_container():
     return html.Div(
         [
             html.Div(
-                empty_graphs_template,
+                EMPTY_GRAPHS_TEMPLATE,
                 id="header",
                 style={
                     "display": "flex",

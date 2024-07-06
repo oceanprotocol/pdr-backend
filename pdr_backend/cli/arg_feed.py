@@ -93,6 +93,14 @@ class ArgFeed:
         feed = feeds[0]
         return feed
 
+    def variant_signal(self, signal_str: str) -> "ArgFeed":
+        return ArgFeed(
+            self.exchange,
+            signal_str,
+            self.pair,
+            self.timeframe,
+        )
+
 
 @enforce_types
 def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:

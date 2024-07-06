@@ -1,32 +1,29 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 import logging
 import os
 import uuid
-from typing import Optional
+from typing import Optional, Tuple
 
-import numpy as np
 import polars as pl
 from enforce_typing import enforce_types
-from sklearn.metrics import log_loss, precision_recall_fscore_support
-from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
-from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
-from pdr_backend.aimodel.ycont_to_ytrue import ycont_to_ytrue
+from pdr_backend.binmodel.binmodel_data_factory import BinmodelDataFactory
+from pdr_backend.binmodel.binmodel_factory import BinmodelFactory
+from pdr_backend.binmodel.binmodel_prediction import BinmodelPrediction
+from pdr_backend.binmodel.constants import Dirn, UP, DOWN
 from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.ppss.predictoor_ss import PredictoorSS
+from pdr_backend.sim.calc_pdr_profit import calc_pdr_profit
 from pdr_backend.sim.sim_logger import SimLogLine
 from pdr_backend.sim.sim_plotter import SimPlotter
+from pdr_backend.sim.sim_predictoor import SimPredictoor
+from pdr_backend.sim.sim_state import HistProfits, SimState
 from pdr_backend.sim.sim_trader import SimTrader
-from pdr_backend.sim.sim_state import SimState
 from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -34,25 +31,24 @@ logger = logging.getLogger("sim_engine")
 
 
 # pylint: disable=too-many-instance-attributes
+@enforce_types
 class SimEngine:
-    @enforce_types
     def __init__(
         self,
         ppss: PPSS,
-        predict_train_feedset: PredictTrainFeedset,
         multi_id: Optional[str] = None,
     ):
-        self.predict_train_feedset = predict_train_feedset
-        assert isinstance(self.predict_feed, ArgFeed)
-        assert self.predict_feed.signal == "close", "only operates on close predictions"
         self.ppss = ppss
+
+        assert self.predict_feed.signal == "close", "only operates on close predictions"
 
         # can be disabled by calling disable_realtime_state()
         self.do_state_updates = True
 
         self.st = SimState()
 
-        self.trader = SimTrader(ppss, self.predict_feed)
+        self.sim_predictoor = SimPredictoor(ppss.predictoor_ss)
+        self.sim_trader = SimTrader(ppss)
 
         self.sim_plotter = SimPlotter()
 
@@ -63,13 +59,33 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
 
-        self.model: Optional[Aimodel] = None
+        assert self.pdr_ss.aimodel_data_ss.transform == "None"
+
+    @property
+    def pdr_ss(self) -> PredictoorSS:
+        return self.ppss.predictoor_ss
 
     @property
     def predict_feed(self) -> ArgFeed:
-        return self.predict_train_feedset.predict
+        return self.pdr_ss.predict_train_feedsets[0].predict
 
-    @enforce_types
+    @property
+    def timeframe(self) -> ArgTimeframe:
+        assert self.predict_feed.timeframe is not None
+        return self.predict_feed.timeframe
+
+    @property
+    def others_stake(self) -> float:
+        return float(self.pdr_ss.others_stake.amt_eth)
+
+    @property
+    def others_accuracy(self) -> float:
+        return float(self.pdr_ss.others_accuracy)
+
+    @property
+    def revenue(self) -> float:
+        return self.pdr_ss.revenue.amt_eth
+
     def _init_loop_attributes(self):
         filebase = f"out_{UnixTimeMs.now()}.txt"
         self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
@@ -79,174 +95,157 @@ class SimEngine:
         logger.addHandler(fh)
 
         self.st.init_loop_attributes()
+
         logger.info("Initialize plot data.")
         self.sim_plotter.init_state(self.multi_id)
 
-    @enforce_types
     def run(self):
         logger.info("Start run")
+
+        # initialize
         self._init_loop_attributes()
 
-        # main loop!
+        # ohclv data
         f = OhlcvDataFactory(self.ppss.lake_ss)
         mergedohlcv_df = f.get_mergedohlcv_df()
-        for test_i in range(self.ppss.sim_ss.test_n):
-            self.run_one_iter(test_i, mergedohlcv_df)
 
+        # main loop!
+        for iter_i in range(self.ppss.sim_ss.test_n):
+            self.run_one_iter(iter_i, mergedohlcv_df)
+
+        # done
         logger.info("Done all iters.")
 
     # pylint: disable=too-many-statements# pylint: disable=too-many-statements
-    @enforce_types
-    def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
-        ppss, pdr_ss, st = self.ppss, self.ppss.predictoor_ss, self.st
-        transform = pdr_ss.aimodel_data_ss.transform
-        stake_amt = pdr_ss.stake_amount.amt_eth
-        others_stake = pdr_ss.others_stake.amt_eth
-        revenue = pdr_ss.revenue.amt_eth
+    def run_one_iter(self, iter_i: int, mergedohlcv_df: pl.DataFrame):
+        # base data
+        st = self.st
+        df = mergedohlcv_df
+        binmodel_data_f = BinmodelDataFactory(self.ppss)
+        testshift = binmodel_data_f.testshift(iter_i)
 
-        testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
-        data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
-        predict_feed = self.predict_train_feedset.predict
-        train_feeds = self.predict_train_feedset.train_on
+        # observe current price value, and related thresholds for classifier
+        cur_close = self._curval(df, testshift, "close")
+        cur_high = self._curval(df, testshift, "high")
+        cur_low = self._curval(df, testshift, "low")
+        y_thr_UP = binmodel_data_f.thr_UP(cur_close)
+        y_thr_DOWN = binmodel_data_f.thr_DOWN(cur_close)
 
-        # X, ycont, and x_df are all expressed in % change wrt prev candle
-        X, ytran, yraw, x_df, _ = data_f.create_xy(
-            mergedohlcv_df,
-            testshift,
-            predict_feed,
-            train_feeds,
-        )
-        colnames = list(x_df.columns)
+        # build model
+        model_factory = BinmodelFactory(self.pdr_ss.aimodel_ss)
+        st.binmodel_data = binmodel_data_f.build(iter_i, df)
+        if model_factory.do_build(st.binmodel, iter_i):
+            st.binmodel = model_factory.build(st.binmodel_data)
 
-        st_, fin = 0, X.shape[0] - 1
-        X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
-        ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
+        # make prediction
+        predprob = self.st.binmodel.predict_next(st.binmodel_data.X_test)
 
-        cur_high, cur_low = data_f.get_highlow(mergedohlcv_df, predict_feed, testshift)
+        conf_thr = self.ppss.trader_ss.sim_confidence_threshold
+        binmodel_p = BinmodelPrediction(conf_thr, predprob[UP], predprob[DOWN])
 
-        cur_close = yraw[-2]
-        next_close = yraw[-1]
+        # predictoor takes action (stake)
+        stake_up, stake_down = self.sim_predictoor.predict_iter(binmodel_p)
 
-        if transform == "None":
-            y_thr = cur_close
-        else:  # transform = "RelDiff"
-            y_thr = 0.0
-        ytrue = ycont_to_ytrue(ytran, y_thr)
-
-        ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
-
-        if (
-            self.model is None
-            or self.st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0
-        ):
-            model_f = AimodelFactory(pdr_ss.aimodel_ss)
-            self.model = model_f.build(X_train, ytrue_train, ytran_train, y_thr)
-
-        # current time
-        recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
-        timeframe: ArgTimeframe = predict_feed.timeframe  # type: ignore
-        ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
-
-        # predict price direction
-        prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
-        prob_down: float = 1.0 - prob_up
-        conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
-        conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
-        conf_threshold = self.ppss.trader_ss.sim_confidence_threshold
-        pred_up: bool = prob_up > 0.5 and conf_up > conf_threshold
-        pred_down: bool = prob_up < 0.5 and conf_down > conf_threshold
-        st.probs_up.append(prob_up)
-
-        # predictoor: (simulate) submit predictions with stake
-        acct_up_profit = acct_down_profit = 0.0
-        stake_up = stake_amt * prob_up
-        stake_down = stake_amt * (1.0 - prob_up)
-        acct_up_profit -= stake_up
-        acct_down_profit -= stake_down
-
-        profit = self.trader.trade_iter(
+        # trader takes action (trade)
+        trader_profit_USD = self.sim_trader.trade_iter(
             cur_close,
-            pred_up,
-            pred_down,
-            conf_up,
-            conf_down,
             cur_high,
             cur_low,
+            binmodel_p,
         )
 
-        st.trader_profits_USD.append(profit)
+        # observe next price values
+        next_close = self._nextval(df, testshift, "close")
+        next_high = self._nextval(df, testshift, "high")
+        next_low = self._nextval(df, testshift, "low")
 
-        # observe true price
-        true_up = next_close > cur_close
-        st.ytrues.append(true_up)
+        # observe price change prev -> next, and related changes for classifier
+        trueval_up_close = next_close > cur_close
+        trueval = {
+            UP: next_high > y_thr_UP,  # did next high go > prev close+% ?
+            DOWN: next_low < y_thr_DOWN,  # did next low  go < prev close-% ?
+        }
 
-        # update classifier metrics
-        n_correct = sum(np.array(st.ytrues) == np.array(st.ytrues_hat))
-        n_trials = len(st.ytrues)
-        acc_est = n_correct / n_trials
-        acc_l, acc_u = proportion_confint(count=n_correct, nobs=n_trials)
-        (precision, recall, f1, _) = precision_recall_fscore_support(
-            st.ytrues,
-            st.ytrues_hat,
-            average="binary",
-            zero_division=0.0,
+        # calc predictoor profit
+        pdr_profit_OCEAN = calc_pdr_profit(
+            self.others_stake,
+            self.others_accuracy,
+            stake_up,
+            stake_down,
+            self.revenue,
+            trueval_up_close,
         )
-        if min(st.ytrues) == max(st.ytrues):
-            loss = 3.0
-        else:
-            loss = log_loss(st.ytrues, st.probs_up)
-        yerr = 0.0
-        if self.model.do_regr:
-            pred_ycont = self.model.predict_ycont(X_test)[0]
-            if transform == "None":
-                pred_next_close = pred_ycont
-            else:  # transform = "RelDiff"
-                relchange = pred_ycont
-                pred_next_close = cur_close + relchange * cur_close
-            yerr = next_close - pred_next_close
 
-        st.aim.update(acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr)
+        # update state
+        st.update(trueval, predprob, pdr_profit_OCEAN, trader_profit_USD)
 
-        # track predictoor profit
-        tot_stake = others_stake + stake_amt
-        others_stake_correct = others_stake * pdr_ss.others_accuracy
-        if true_up:
-            tot_stake_correct = others_stake_correct + stake_up
-            percent_to_me = stake_up / tot_stake_correct
-            acct_up_profit += (revenue + tot_stake) * percent_to_me
-        else:
-            tot_stake_correct = others_stake_correct + stake_down
-            percent_to_me = stake_down / tot_stake_correct
-            acct_down_profit += (revenue + tot_stake) * percent_to_me
-        pdr_profit_OCEAN = acct_up_profit + acct_down_profit
-        st.pdr_profits_OCEAN.append(pdr_profit_OCEAN)
+        # log
+        ut = self._calc_ut(df, testshift)
+        SimLogLine(self.ppss, self.st, iter_i, ut).log()
 
-        SimLogLine(ppss, st, test_i, ut, acct_up_profit, acct_down_profit).log_line()
+        # plot
+        do_save_state, is_final_state = self._do_save_state(iter_i)
+        if do_save_state:
+            d = self._aimodel_plotdata()
+            st.iter_number = iter_i
+            self.sim_plotter.save_state(st, d, is_final_state)
 
-        save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
+    def _aimodel_plotdata(self) -> dict:
+        d_UP = self._aimodel_plotdata_1dir(UP)
+        d_DOWN = self._aimodel_plotdata_1dir(DOWN)
+        return {UP: d_UP, DOWN: d_DOWN}
 
-        if save_state:
-            colnames = [shift_one_earlier(colname) for colname in colnames]
-            most_recent_x = X[-1, :]
-            slicing_x = most_recent_x  # plot about the most recent x
-            d = AimodelPlotdata(
-                self.model,
-                X_train,
-                ytrue_train,
-                ytran_train,
-                y_thr,
-                colnames,
-                slicing_x,
-            )
-            self.st.iter_number = test_i
-            self.sim_plotter.save_state(self.st, d, is_final_state)
+    def _aimodel_plotdata_1dir(self, dirn: Dirn) -> AimodelPlotdata:
+        st = self.st
+        model = st.binmodel[dirn]
+        model_data = st.binmodel_data[dirn]
+
+        colnames = model_data.colnames
+        colnames = [shift_one_earlier(c) for c in colnames]
+
+        most_recent_x = model_data.X[-1, :]
+        slicing_x = most_recent_x
+        d = AimodelPlotdata(
+            model,
+            model_data.X_train,
+            model_data.ytrue_train,
+            None,
+            None,
+            model_data.colnames,
+            slicing_x,
+        )
+        return d
+
+    def _curval(self, df, testshift: int, signal_str: str) -> float:
+        # float() so not np.float64, bc applying ">" gives np.bool -> problems
+        return float(self._yraw(df, testshift, signal_str)[-2])
+
+    def _nextval(self, df, testshift: int, signal_str: str) -> float:
+        # float() so not np.float64, bc applying ">" gives np.bool -> problems
+        return float(self._yraw(df, testshift, signal_str)[-1])
+
+    def _yraw(self, mergedohlcv_df, testshift: int, signal_str: str):
+        assert signal_str in ["close", "high", "low"]
+        feed = self.predict_feed.variant_signal(signal_str)
+        aimodel_data_f = AimodelDataFactory(self.pdr_ss)
+        _, _, yraw, _, _ = aimodel_data_f.create_xy(
+            mergedohlcv_df,
+            testshift,
+            feed,
+            ArgFeeds([feed]),
+        )
+        return yraw
+
+    def _calc_ut(self, mergedohlcv_df, testshift: int) -> UnixTimeMs:
+        recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
+        ut = UnixTimeMs(recent_ut - testshift * self.timeframe.ms)
+        return ut
 
     def disable_realtime_state(self):
         self.do_state_updates = False
 
-    @enforce_types
-    def save_state(self, i: int, N: int):
-        "Save state on this iteration Y/N?"
+    def _do_save_state(self, i: int) -> Tuple[bool, bool]:
+        """For this iteration i, (a) save state? (b) is it final iteration?"""
         if self.ppss.sim_ss.is_final_iter(i):
             return True, True
 
@@ -257,6 +256,7 @@ class SimEngine:
         # don't save first 5 iters -> not interesting
         # then save the next 5 -> "stuff's happening!"
         # then save every 5th iter, to balance "stuff's happening" w/ speed
+        N = self.ppss.sim_ss.test_n
         do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
         if not do_update:
             return False, False
