@@ -1,5 +1,6 @@
 from enforce_typing import enforce_types
 
+
 @enforce_types
 def calc_pdr_profit(
     others_stake: float,
@@ -27,5 +28,5 @@ def calc_pdr_profit(
         percent_to_me = stake_down / tot_stake_correct
         amt_received = (revenue + tot_stake) * percent_to_me
     pdr_profit_OCEAN = amt_received - amt_sent
-    
+
     return float(pdr_profit_OCEAN)

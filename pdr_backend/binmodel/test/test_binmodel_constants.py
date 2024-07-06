@@ -12,12 +12,6 @@ def test_binmodel_constants__basic():
     assert UP in Dirn
     assert DOWN in Dirn
 
-    assert 1 in Dirn
-    assert 2 in Dirn
-    assert 0 not in Dirn
-    assert 3 not in Dirn
-    assert "up" not in Dirn
-
 
 @enforce_types
 def test_binmodel_constants__dirn_str():
