@@ -36,12 +36,12 @@ class BinmodelData1Dir:
         return self.X[self.st : self.fin, :]
 
     @property
-    def X_test(self) -> np.ndarray:
-        return self.X[self.fin : self.fin + 1, :]
-
-    @property
     def ytrue_train(self) -> np.ndarray:
         return self.ytrue[self.st : self.fin]
+
+    @property
+    def X_test(self) -> np.ndarray:
+        return self.X[self.fin : self.fin + 1, :]
 
 
 class BinmodelData(dict):

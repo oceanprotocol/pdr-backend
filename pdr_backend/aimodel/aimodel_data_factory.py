@@ -160,10 +160,12 @@ class AimodelDataFactory:
         assert len(x_list) == len(xrecent_list) == len(xcol_list)
         x_df = pd.concat(x_list, keys=xcol_list, axis=1)
         xrecent_df = pd.concat(xrecent_list, keys=xcol_list, axis=1)
+        assert x_df.shape[0] == N_train + 1  # the +1 is for test
 
         # convert x dfs to numpy arrays
         X = x_df.to_numpy()
         xrecent = xrecent_df.to_numpy()[0, :]
+        assert X.shape[0] == N_train + 1  # the +1 is for test
 
         # y is set from yval_{exch_str, signal_str, pair_str}
         hist_col = hist_col_name(predict_feed)
@@ -219,6 +221,12 @@ def _slice(x: list, st: int, fin: int) -> list:
     assert st < 0
     assert fin <= 0
     assert st < fin
+    assert abs(st) <= len(x), f"st is out of bounds. st={st}, len(x)={len(x)}"
+
     if fin == 0:
-        return x[st:]
-    return x[st:fin]
+        slicex = x[st:]
+    else:
+        slicex = x[st:fin]
+
+    assert len(slicex) == fin - st, (len(slicex), fin - st, st, fin)
+    return slicex

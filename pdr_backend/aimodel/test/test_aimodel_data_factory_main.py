@@ -109,12 +109,17 @@ def test_create_xy_notransform__1exchange_1coin_1signal():
     ]
     d = predictoor_ss_test_dict(feedset_list=feedset_list)
     predictoor_ss = PredictoorSS(d)
+    predictoor_ss.aimodel_data_ss.set_max_n_train(7)
+    predictoor_ss.aimodel_data_ss.set_autoregressive_n(3)
+
     predict_feed = predictoor_ss.predict_train_feedsets[0].predict
     train_feeds = predictoor_ss.predict_train_feedsets[0].train_on
     aimodel_data_factory = AimodelDataFactory(predictoor_ss)
     mergedohlcv_df = merge_rawohlcv_dfs(ETHUSDT_RAWOHLCV_DFS)
 
     # =========== have testshift = 0
+    # no. rows of X = len(y) = max_n_train + max_n_test(=1) = 7 + 1 = 8
+    # no. cols of X = autoregressive_n * num_signals = 3 * 1  = 3
     target_X = np.array(
         [
             [11.0, 10.0, 9.0],  # oldest
