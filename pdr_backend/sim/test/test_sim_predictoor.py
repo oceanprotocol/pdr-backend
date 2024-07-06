@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
-from pdr_backend.grpmodel.grpmodel_prediction import GrpmodelPrediction
+from pdr_backend.binmodel.binmodel_prediction import BinmodelPrediction
 from pdr_backend.sim.sim_predictoor import SimPredictoor
 
 
@@ -25,20 +25,20 @@ def test_sim_predictoor__predict_iter():
     sim_pdr = _sim_pdr()
 
     # case 1: don't trust models
-    p = GrpmodelPrediction(conf_thr=0.9, prob_UP=0.4, prob_DOWN=0.4)
+    p = BinmodelPrediction(conf_thr=0.9, prob_UP=0.4, prob_DOWN=0.4)
     assert not p.do_trust_models()
     stake_up, stake_down = sim_pdr.predict_iter(p)
     assert stake_up == stake_down == 0.0
 
     # case 2: UP dominates
-    p = GrpmodelPrediction(conf_thr=0.1, prob_UP=0.6, prob_DOWN=0.4)
+    p = BinmodelPrediction(conf_thr=0.1, prob_UP=0.6, prob_DOWN=0.4)
     assert p.do_trust_models()
     stake_up, stake_down = sim_pdr.predict_iter(p)
     assert 0.0 < stake_down < stake_up < 1.0
     assert (stake_up + stake_down) <= sim_pdr.max_stake_amt
 
     # case 3: DOWN dominates
-    p = GrpmodelPrediction(conf_thr=0.1, prob_UP=0.4, prob_DOWN=0.6)
+    p = BinmodelPrediction(conf_thr=0.1, prob_UP=0.4, prob_DOWN=0.6)
     assert p.do_trust_models()
     stake_up, stake_down = sim_pdr.predict_iter(p)
     assert 0.0 < stake_up < stake_down < 1.0

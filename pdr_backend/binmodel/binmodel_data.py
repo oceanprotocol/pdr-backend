@@ -3,10 +3,10 @@ from typing import Dict, List
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.grpmodel.constants import Dirn, UP, DOWN
+from pdr_backend.binmodel.constants import Dirn, UP, DOWN
 
 
-class GrpmodelData1Dir:
+class BinmodelData1Dir:
 
     @enforce_types
     def __init__(
@@ -44,12 +44,12 @@ class GrpmodelData1Dir:
         return self.ytrue[self.st : self.fin]
 
 
-class GrpmodelData(dict):
+class BinmodelData(dict):
     @enforce_types
     def __init__(
         self,
-        data_UP: GrpmodelData1Dir,
-        data_DOWN: GrpmodelData1Dir,
+        data_UP: BinmodelData1Dir,
+        data_DOWN: BinmodelData1Dir,
     ):
         self[UP] = data_UP
         self[DOWN] = data_DOWN

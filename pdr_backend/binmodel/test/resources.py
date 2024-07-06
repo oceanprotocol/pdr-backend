@@ -1,7 +1,7 @@
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.grpmodel.grpmodel_data import GrpmodelData, GrpmodelData1Dir
+from pdr_backend.binmodel.binmodel_data import BinmodelData, BinmodelData1Dir
 
 
 @enforce_types
@@ -19,15 +19,15 @@ def get_Xy_DOWN() -> tuple:
 
 
 @enforce_types
-def get_grpmodel_data() -> GrpmodelData:
+def get_binmodel_data() -> BinmodelData:
     (X_UP, ytrue_UP) = get_Xy_UP()
     (X_DOWN, ytrue_DOWN) = get_Xy_DOWN()
 
     colnames_UP = ["x0_high", "x1_high"]
     colnames_DOWN = ["x0_low", "x1_low"]
 
-    data_UP = GrpmodelData1Dir(X_UP, ytrue_UP, colnames_UP)
-    data_DOWN = GrpmodelData1Dir(X_DOWN, ytrue_DOWN, colnames_DOWN)
-    data = GrpmodelData(data_UP, data_DOWN)
+    data_UP = BinmodelData1Dir(X_UP, ytrue_UP, colnames_UP)
+    data_DOWN = BinmodelData1Dir(X_DOWN, ytrue_DOWN, colnames_DOWN)
+    data = BinmodelData(data_UP, data_DOWN)
 
     return data

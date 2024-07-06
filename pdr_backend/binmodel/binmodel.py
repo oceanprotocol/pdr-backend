@@ -1,11 +1,11 @@
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel import Aimodel
-from pdr_backend.grpmodel.constants import UP, DOWN
+from pdr_backend.binmodel.constants import UP, DOWN
 
 
 @enforce_types
-class Grpmodel(dict):
+class Binmodel(dict):
 
     def __init__(self, model_UP: Aimodel, model_DOWN: Aimodel):
         self[UP] = model_UP

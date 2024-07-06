@@ -11,10 +11,10 @@ from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.grpmodel.constants import Dirn, UP, DOWN
-from pdr_backend.grpmodel.grpmodel_data_factory import GrpmodelDataFactory
-from pdr_backend.grpmodel.grpmodel_factory import GrpmodelFactory
-from pdr_backend.grpmodel.grpmodel_prediction import GrpmodelPrediction
+from pdr_backend.binmodel.constants import Dirn, UP, DOWN
+from pdr_backend.binmodel.binmodel_data_factory import BinmodelDataFactory
+from pdr_backend.binmodel.binmodel_factory import BinmodelFactory
+from pdr_backend.binmodel.binmodel_prediction import BinmodelPrediction
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
@@ -124,37 +124,37 @@ class SimEngine:
         # base data
         st = self.st
         df = mergedohlcv_df
-        grpmodel_data_f = GrpmodelDataFactory(self.ppss)
-        testshift = grpmodel_data_f.testshift(iter_i)
+        binmodel_data_f = BinmodelDataFactory(self.ppss)
+        testshift = binmodel_data_f.testshift(iter_i)
 
         # observe current price value, and related thresholds for classifier
         cur_close = self._curval(df, testshift, "close")
         cur_high = self._curval(df, testshift, "high")
         cur_low = self._curval(df, testshift, "low")
-        y_thr_UP = grpmodel_data_f.thr_UP(cur_close)
-        y_thr_DOWN = grpmodel_data_f.thr_DOWN(cur_close)
+        y_thr_UP = binmodel_data_f.thr_UP(cur_close)
+        y_thr_DOWN = binmodel_data_f.thr_DOWN(cur_close)
 
         # build model
-        model_factory = GrpmodelFactory(self.pdr_ss.aimodel_ss)
-        st.grpmodel_data = grpmodel_data_f.build(iter_i, df)
-        if model_factory.do_build(st.grpmodel, iter_i):
-            st.grpmodel = model_factory.build(st.grpmodel_data)
+        model_factory = BinmodelFactory(self.pdr_ss.aimodel_ss)
+        st.binmodel_data = binmodel_data_f.build(iter_i, df)
+        if model_factory.do_build(st.binmodel, iter_i):
+            st.binmodel = model_factory.build(st.binmodel_data)
 
         # make prediction
-        predprob = self.st.grpmodel.predict_next(st.grpmodel_data.X_test)
+        predprob = self.st.binmodel.predict_next(st.binmodel_data.X_test)
 
         conf_thr = self.ppss.trader_ss.sim_confidence_threshold
-        grpmodel_p = GrpmodelPrediction(conf_thr, predprob[UP], predprob[DOWN])
+        binmodel_p = BinmodelPrediction(conf_thr, predprob[UP], predprob[DOWN])
 
         # predictoor takes action (stake)
-        stake_up, stake_down = self.sim_predictoor.predict_iter(grpmodel_p)
+        stake_up, stake_down = self.sim_predictoor.predict_iter(binmodel_p)
 
         # trader takes action (trade)
         trader_profit_USD = self.sim_trader.trade_iter(
             cur_close,
             cur_high,
             cur_low,
-            grpmodel_p,
+            binmodel_p,
         )
 
         # observe next price values
@@ -202,8 +202,8 @@ class SimEngine:
     @enforce_types
     def _aimodel_plotdata_1dir(self, dirn: Dirn) -> AimodelPlotdata:
         st = self.st
-        model = st.grpmodel[dirn]
-        model_data = st.grpmodel_data[dirn]
+        model = st.binmodel[dirn]
+        model_data = st.binmodel_data[dirn]
 
         colnames = model_data.colnames
         colnames = [shift_one_earlier(c) for c in colnames]

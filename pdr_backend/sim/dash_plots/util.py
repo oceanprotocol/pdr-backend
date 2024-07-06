@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import stopit
 
 from pdr_backend.aimodel import aimodel_plotter
-from pdr_backend.grpmodel.constants import Dirn, UP, DOWN
+from pdr_backend.binmodel.constants import Dirn, UP, DOWN
 from pdr_backend.sim.dash_plots.view_elements import (
     FIGURE_NAMES,
     OTHER_FIGURES,

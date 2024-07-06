@@ -7,7 +7,7 @@ import logging
 from enforce_typing import enforce_types
 
 from pdr_backend.exchange.exchange_mgr import ExchangeMgr
-from pdr_backend.grpmodel.grpmodel_prediction import GrpmodelPrediction
+from pdr_backend.binmodel.binmodel_prediction import BinmodelPrediction
 
 logger = logging.getLogger("sim_trader")
 
@@ -68,7 +68,7 @@ class SimTrader:
         cur_close: float,
         high: float,
         low: float,
-        p: GrpmodelPrediction,
+        p: BinmodelPrediction,
     ) -> float:
         profit_USD = self._trade_iter(
             cur_close,

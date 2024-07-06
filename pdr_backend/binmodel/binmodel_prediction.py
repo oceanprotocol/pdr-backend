@@ -3,7 +3,7 @@ from enforce_typing import enforce_types
 
 # pylint: disable=too-many-instance-attributes
 @enforce_types
-class GrpmodelPrediction:
+class BinmodelPrediction:
     def __init__(
         self,
         conf_thr: float,

@@ -15,7 +15,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from pdr_backend.grpmodel.constants import Dirn, dirn_str, UP, DOWN
+from pdr_backend.binmodel.constants import Dirn, dirn_str, UP, DOWN
 
 HEIGHT = 7.5
 WIDTH = int(HEIGHT * 3.2)
