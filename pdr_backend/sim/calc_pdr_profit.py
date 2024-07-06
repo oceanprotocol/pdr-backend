@@ -8,7 +8,7 @@ def calc_pdr_profit(
     stake_down: float,
     revenue: float,
     true_up_close: bool,
-):
+) -> float:
     assert others_stake >= 0
     assert 0.0 <= others_accuracy <= 1.0
     assert stake_up >= 0.0
@@ -27,4 +27,5 @@ def calc_pdr_profit(
         percent_to_me = stake_down / tot_stake_correct
         amt_received = (revenue + tot_stake) * percent_to_me
     pdr_profit_OCEAN = amt_received - amt_sent
-    return pdr_profit_OCEAN
+    
+    return float(pdr_profit_OCEAN)

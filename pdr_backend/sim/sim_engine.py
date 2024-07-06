@@ -31,8 +31,8 @@ logger = logging.getLogger("sim_engine")
 
 
 # pylint: disable=too-many-instance-attributes
+@enforce_types
 class SimEngine:
-    @enforce_types
     def __init__(
         self,
         ppss: PPSS,
@@ -76,17 +76,16 @@ class SimEngine:
 
     @property
     def others_stake(self) -> float:
-        return self.pdr_ss.others_stake.amt_eth
+        return float(self.pdr_ss.others_stake.amt_eth)
 
     @property
     def others_accuracy(self) -> float:
-        return self.pdr_ss.others_accuracy
+        return float(self.pdr_ss.others_accuracy)
 
     @property
     def revenue(self) -> float:
         return self.pdr_ss.revenue.amt_eth
 
-    @enforce_types
     def _init_loop_attributes(self):
         filebase = f"out_{UnixTimeMs.now()}.txt"
         self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
@@ -100,7 +99,6 @@ class SimEngine:
         logger.info("Initialize plot data.")
         self.sim_plotter.init_state(self.multi_id)
 
-    @enforce_types
     def run(self):
         logger.info("Start run")
 
@@ -119,7 +117,6 @@ class SimEngine:
         logger.info("Done all iters.")
 
     # pylint: disable=too-many-statements# pylint: disable=too-many-statements
-    @enforce_types
     def run_one_iter(self, iter_i: int, mergedohlcv_df: pl.DataFrame):
         # base data
         st = self.st
@@ -193,13 +190,11 @@ class SimEngine:
             st.iter_number = iter_i
             self.sim_plotter.save_state(st, d, is_final_state)
 
-    @enforce_types
     def _aimodel_plotdata(self) -> dict:
         d_UP = self._aimodel_plotdata_1dir(UP)
         d_DOWN = self._aimodel_plotdata_1dir(DOWN)
         return {UP: d_UP, DOWN: d_DOWN}
 
-    @enforce_types
     def _aimodel_plotdata_1dir(self, dirn: Dirn) -> AimodelPlotdata:
         st = self.st
         model = st.binmodel[dirn]
@@ -221,17 +216,14 @@ class SimEngine:
         )
         return d
 
-    @enforce_types
     def _curval(self, df, testshift: int, signal_str: str) -> float:
         # float() so not np.float64, bc applying ">" gives np.bool -> problems
         return float(self._yraw(df, testshift, signal_str)[-2])
 
-    @enforce_types
     def _nextval(self, df, testshift: int, signal_str: str) -> float:
         # float() so not np.float64, bc applying ">" gives np.bool -> problems
         return float(self._yraw(df, testshift, signal_str)[-1])
 
-    @enforce_types
     def _yraw(self, mergedohlcv_df, testshift: int, signal_str: str):
         assert signal_str in ["close", "high", "low"]
         feed = self.predict_feed.variant_signal(signal_str)
@@ -244,17 +236,14 @@ class SimEngine:
         )
         return yraw
 
-    @enforce_types
     def _calc_ut(self, mergedohlcv_df, testshift: int) -> UnixTimeMs:
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
         ut = UnixTimeMs(recent_ut - testshift * self.timeframe.ms)
         return ut
 
-    @enforce_types
     def disable_realtime_state(self):
         self.do_state_updates = False
 
-    @enforce_types
     def _do_save_state(self, i: int) -> Tuple[bool, bool]:
         """For this iteration i, (a) save state? (b) is it final iteration?"""
         if self.ppss.sim_ss.is_final_iter(i):

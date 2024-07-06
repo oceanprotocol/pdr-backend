@@ -8,7 +8,7 @@ from pdr_backend.sim.calc_pdr_profit import calc_pdr_profit
 @enforce_types
 def test_calc_pdr_profit__happy_path():
     # true = up, guess = up (correct guess), others fully wrong
-    profit = calc_pdr_profit(
+    profit: float = calc_pdr_profit(
         others_stake=2000.0,
         others_accuracy=0.0,
         stake_up=1000.0,
@@ -19,7 +19,7 @@ def test_calc_pdr_profit__happy_path():
     assert profit == 2002.0
 
     # true = down, guess = down (correct guess), others fully wrong
-    profit = calc_pdr_profit(
+    profit: float = calc_pdr_profit(
         others_stake=2000.0,
         others_accuracy=0.0,
         stake_up=0.0,
@@ -30,7 +30,7 @@ def test_calc_pdr_profit__happy_path():
     assert profit == 2002.0
 
     # true = up, guess = down (incorrect guess), others fully right
-    profit = calc_pdr_profit(
+    profit: float = calc_pdr_profit(
         others_stake=2000.0,
         others_accuracy=1.0,
         stake_up=0.0,
@@ -41,7 +41,7 @@ def test_calc_pdr_profit__happy_path():
     assert profit == -1000.0
 
     # true = down, guess = up (incorrect guess), others fully right
-    profit = calc_pdr_profit(
+    profit: float = calc_pdr_profit(
         others_stake=2000.0,
         others_accuracy=1.0,
         stake_up=1000.0,
@@ -63,7 +63,7 @@ def test_calc_pdr_profit__happy_path():
     # - rec'd (to me) = (revenue + tot_stake) * percent_to_me
     #   = (2 + 3100) * 1.0 = 3102
     # - profit = received - sent = 2102 - 1100 = 1002
-    profit = calc_pdr_profit(
+    profit: float = calc_pdr_profit(
         others_stake=1000.0,
         others_accuracy=0.00,
         stake_up=1000.0,
@@ -87,7 +87,7 @@ def test_calc_pdr_profit__happy_path():
     # - amt_received = (revenue + tot_stake) * percent_to_me
     #   = (2 + 2100) * 0.769230 = 1616.9230769
     # - profit = received - sent = 1616.9230769 - 1100 = 516.923
-    profit = calc_pdr_profit(
+    profit: float = calc_pdr_profit(
         others_stake=1000.0,
         others_accuracy=0.30,
         stake_up=1000.0,
