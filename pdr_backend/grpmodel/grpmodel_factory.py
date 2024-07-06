@@ -4,24 +4,24 @@ from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.ppss.aimodel_ss import AimodelSS
-from pdr_backend.sim.constants import UP, DOWN
-from pdr_backend.sim.sim_model import SimModel
-from pdr_backend.sim.sim_model_data import SimModelData
+from pdr_backend.grpmodel.constants import UP, DOWN
+from pdr_backend.grpmodel.grpmodel import Grpmodel
+from pdr_backend.grpmodel.grpmodel_data import GrpmodelData
 
 
-class SimModelFactory:
+class GrpmodelFactory:
     @enforce_types
     def __init__(self, aimodel_ss: AimodelSS):
         self.aimodel_ss = aimodel_ss
 
     @enforce_types
-    def do_build(self, prev_model: Optional[SimModel], test_i: int) -> bool:
+    def do_build(self, prev_model: Optional[Grpmodel], test_i: int) -> bool:
         """Update/train model?"""
         n = self.aimodel_ss.train_every_n_epochs
         return prev_model is None or test_i % n == 0
 
     @enforce_types
-    def build(self, data: SimModelData) -> SimModel:
+    def build(self, data: GrpmodelData) -> Grpmodel:
         model_f = AimodelFactory(self.aimodel_ss)
 
         model_UP = model_f.build(
@@ -38,5 +38,5 @@ class SimModelFactory:
             None,
         )
 
-        sim_model = SimModel(model_UP, model_DOWN)
-        return sim_model
+        grpmodel = Grpmodel(model_UP, model_DOWN)
+        return grpmodel

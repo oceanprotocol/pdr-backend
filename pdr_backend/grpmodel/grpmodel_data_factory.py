@@ -7,10 +7,10 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
-from pdr_backend.sim.sim_model_data import SimModelData, SimModelData1Dir
+from pdr_backend.grpmodel.grpmodel_data import GrpmodelData, GrpmodelData1Dir
 
 
-class SimModelDataFactory:
+class GrpmodelDataFactory:
     @enforce_types
     def __init__(self, ppss: PPSS):
         self.ppss = ppss
@@ -33,7 +33,7 @@ class SimModelDataFactory:
         return AimodelDataFactory.testshift(test_n, test_i)
 
     @enforce_types
-    def build(self, test_i: int, mergedohlcv_df: pl.DataFrame) -> SimModelData:
+    def build(self, test_i: int, mergedohlcv_df: pl.DataFrame) -> GrpmodelData:
         """Construct sim model data"""
         df = mergedohlcv_df
         testshift = self.testshift(test_i)  # eg [99, 98, .., 2, 1, 0]
@@ -79,11 +79,11 @@ class SimModelDataFactory:
         colnames_DOWN = list(x_low_df.columns)
 
         # Q: I used X[1:,:], but should it be X[:-1,:] ?
-        d_UP = SimModelData1Dir(X_high[1:, :], ytrue_UP, colnames_UP)
-        d_DOWN = SimModelData1Dir(X_low[1:, :], ytrue_DOWN, colnames_DOWN)
+        d_UP = GrpmodelData1Dir(X_high[1:, :], ytrue_UP, colnames_UP)
+        d_DOWN = GrpmodelData1Dir(X_low[1:, :], ytrue_DOWN, colnames_DOWN)
 
         # note: alternatively, each input X could be h+l+c rather than just h or l
-        d = SimModelData(d_UP, d_DOWN)
+        d = GrpmodelData(d_UP, d_DOWN)
 
         return d
 

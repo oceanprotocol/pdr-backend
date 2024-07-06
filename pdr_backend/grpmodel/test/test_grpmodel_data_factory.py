@@ -4,13 +4,13 @@ import polars as pl
 
 from pdr_backend.ppss.ppss import mock_ppss, PPSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
-from pdr_backend.sim.constants import UP, DOWN
-from pdr_backend.sim.sim_model_data import SimModelData
-from pdr_backend.sim.sim_model_data_factory import SimModelDataFactory
+from pdr_backend.grpmodel.constants import UP, DOWN
+from pdr_backend.grpmodel.grpmodel_data import GrpmodelData
+from pdr_backend.grpmodel.grpmodel_data_factory import GrpmodelDataFactory
 
 
 @enforce_types
-def test_sim_model_data_factory__basic():
+def test_grpmodel_data_factory__basic():
     # base data
     data_f = _factory()
 
@@ -24,7 +24,7 @@ def test_sim_model_data_factory__basic():
 
 
 @enforce_types
-def test_sim_model_data_factory__testshift():
+def test_grpmodel_data_factory__testshift():
     # base data
     data_f = _factory()
     test_i = 3
@@ -37,7 +37,7 @@ def test_sim_model_data_factory__testshift():
 
 
 @enforce_types
-def test_sim_model_data_factory__thr_UP__thr_DOWN():
+def test_grpmodel_data_factory__thr_UP__thr_DOWN():
     # base data
     data_f = _factory()
     cur_close = 8.0
@@ -55,7 +55,7 @@ def test_sim_model_data_factory__thr_UP__thr_DOWN():
 
 
 @enforce_types
-def test_sim_model_data_factory__build():
+def test_grpmodel_data_factory__build():
     # base data
     mergedohlcv_df = _merged_ohlcv_df()
     data_f = _factory()
@@ -66,13 +66,13 @@ def test_sim_model_data_factory__build():
 
     # test
     # - keep this light for now. Maybe expand when things stabilize
-    assert isinstance(data, SimModelData)
+    assert isinstance(data, GrpmodelData)
     assert 9.0 < np.min(data[UP].X) < np.max(data[UP].X) < 9.99  # all 'high'
     assert 0.0 < np.min(data[DOWN].X) < np.max(data[DOWN].X) < 0.99  # all 'low'
 
 
 @enforce_types
-def _factory() -> SimModelDataFactory:
+def _factory() -> GrpmodelDataFactory:
     s = "binanceus ETH/USDT c 5m"
     feedset_list = [{"predict": s, "train_on": s}]
     ppss = mock_ppss(feedset_list)
@@ -82,7 +82,7 @@ def _factory() -> SimModelDataFactory:
     ppss.predictoor_ss.aimodel_data_ss.set_autoregressive_n(1)
     ppss.sim_ss.set_test_n(2)
 
-    data_f = SimModelDataFactory(ppss)
+    data_f = GrpmodelDataFactory(ppss)
     return data_f
 
 

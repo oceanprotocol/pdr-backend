@@ -15,7 +15,7 @@ from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
 from pdr_backend.sim.dash_plots.callbacks import get_callbacks
 from pdr_backend.sim.dash_plots.view_elements import get_layout
 from pdr_backend.sim.sim_engine import SimEngine
-from pdr_backend.sim.sim_model import SimModel
+from pdr_backend.grpmodel.grpmodel import Grpmodel
 
 
 @enforce_types
@@ -65,11 +65,11 @@ def test_sim_engine_main(tmpdir, check_chromedriver, dash_duo):
     # go
     sim_engine = SimEngine(ppss)
 
-    assert sim_engine.st.sim_model is None
+    assert sim_engine.st.grpmodel is None
     sim_engine.run()
 
     # basic test that engine ran
-    assert isinstance(sim_engine.st.sim_model, SimModel)
+    assert isinstance(sim_engine.st.grpmodel, Grpmodel)
 
     # basic tests for plots
     if check_chromedriver is None:

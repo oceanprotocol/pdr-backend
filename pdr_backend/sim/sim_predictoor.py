@@ -3,7 +3,7 @@ from typing import Tuple
 from enforce_typing import enforce_types
 
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
-from pdr_backend.sim.sim_model_prediction import SimModelPrediction
+from pdr_backend.grpmodel.grpmodel_prediction import GrpmodelPrediction
 
 
 class SimPredictoor:
@@ -16,7 +16,7 @@ class SimPredictoor:
         return self.pdr_ss.stake_amount.amt_eth
 
     @enforce_types
-    def predict_iter(self, p: SimModelPrediction) -> Tuple[float, float]:
+    def predict_iter(self, p: GrpmodelPrediction) -> Tuple[float, float]:
         """@return (stake_up, stake_down)"""
         if not p.do_trust_models():
             stake_up = 0.0

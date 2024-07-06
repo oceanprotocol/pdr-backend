@@ -3,10 +3,10 @@ from typing import Dict, List
 from enforce_typing import enforce_types
 import numpy as np
 
-from pdr_backend.sim.constants import Dirn, UP, DOWN
+from pdr_backend.grpmodel.constants import Dirn, UP, DOWN
 
 
-class SimModelData1Dir:
+class GrpmodelData1Dir:
 
     @enforce_types
     def __init__(
@@ -44,12 +44,12 @@ class SimModelData1Dir:
         return self.ytrue[self.st : self.fin]
 
 
-class SimModelData(dict):
+class GrpmodelData(dict):
     @enforce_types
     def __init__(
         self,
-        data_UP: SimModelData1Dir,
-        data_DOWN: SimModelData1Dir,
+        data_UP: GrpmodelData1Dir,
+        data_DOWN: GrpmodelData1Dir,
     ):
         self[UP] = data_UP
         self[DOWN] = data_DOWN

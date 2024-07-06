@@ -6,7 +6,7 @@ import time
 
 from dash import Input, Output, State
 
-from pdr_backend.sim.constants import UP
+from pdr_backend.grpmodel.constants import UP
 from pdr_backend.sim.dash_plots.util import get_figures_by_state
 from pdr_backend.sim.dash_plots.view_elements import (
     get_tabs,

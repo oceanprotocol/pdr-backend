@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from pdr_backend.aimodel.true_vs_pred import PERF_NAMES, TrueVsPred
-from pdr_backend.sim.constants import dirn_str, UP, DOWN
+from pdr_backend.grpmodel.constants import dirn_str, UP, DOWN
 from pdr_backend.sim.sim_state import (
     HistPerfs,
     HistProfits,
@@ -170,8 +170,8 @@ def test_sim_state__basic_init():
 
     # test empty raw state
     assert st.iter_number == 0
-    assert st.sim_model_data is None
-    assert st.sim_model is None
+    assert st.grpmodel_data is None
+    assert st.grpmodel is None
     assert isinstance(st.true_vs_pred[UP], TrueVsPred)
     assert isinstance(st.true_vs_pred[DOWN], TrueVsPred)
     assert isinstance(st.hist_perfs[UP], HistPerfs)
@@ -199,14 +199,14 @@ def test_sim_state__init_loop_attributes():
 
     # change after init
     st.iter_number = 1
-    st.sim_model = "foo"
+    st.grpmodel = "foo"
 
     # should go back to init state
     st.init_loop_attributes()
 
     # check
     assert st.iter_number == 0
-    assert st.sim_model is None
+    assert st.grpmodel is None
 
 
 @enforce_types

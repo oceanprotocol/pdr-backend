@@ -1,170 +1,275 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
-import asyncio
-import copy
-import csv
 import logging
 import os
 import uuid
-from typing import List, Union
+from typing import Optional, Tuple
 
-import pandas as pd
+import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.cli.nested_arg_parser import flat_to_nested_args
-from pdr_backend.ppss.multisim_ss import MultisimSS
+from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
+from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
+from pdr_backend.cli.arg_timeframe import ArgTimeframe
+from pdr_backend.grpmodel.constants import Dirn, UP, DOWN
+from pdr_backend.grpmodel.grpmodel_data_factory import GrpmodelDataFactory
+from pdr_backend.grpmodel.grpmodel_factory import GrpmodelFactory
+from pdr_backend.grpmodel.grpmodel_prediction import GrpmodelPrediction
+from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.sim.sim_engine import SimEngine
-from pdr_backend.sim.sim_state import SimState
-from pdr_backend.util.dictutil import recursive_update
-from pdr_backend.util.point import Point
+from pdr_backend.ppss.predictoor_ss import PredictoorSS
+from pdr_backend.sim.calc_pdr_profit import calc_pdr_profit
+from pdr_backend.sim.sim_logger import SimLogLine
+from pdr_backend.sim.sim_plotter import SimPlotter
+from pdr_backend.sim.sim_predictoor import SimPredictoor
+from pdr_backend.sim.sim_state import HistProfits, SimState
+from pdr_backend.sim.sim_trader import SimTrader
+from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
 
-logger = logging.getLogger("multisim_engine")
-lock = asyncio.Lock()
+logger = logging.getLogger("sim_engine")
 
 
-class MultisimEngine:
+# pylint: disable=too-many-instance-attributes
+class SimEngine:
     @enforce_types
-    def __init__(self, d: dict):
-        """
-        @arguments
-          d -- created via PPSS.constructor_dict()
-        """
-        self.d: dict = d
-        self.network = "development"
+    def __init__(
+        self,
+        ppss: PPSS,
+        multi_id: Optional[str] = None,
+    ):
+        self.ppss = ppss
 
-        filebase = f"multisim_metrics_{UnixTimeMs.now()}.csv"
-        log_dir = self.ppss.sim_ss.log_dir  # type: ignore[attr-defined]
-        self.csv_file = os.path.join(log_dir, filebase)
+        assert self.predict_feed.signal == "close", "only operates on close predictions"
+
+        # can be disabled by calling disable_realtime_state()
+        self.do_state_updates = True
+
+        self.st = SimState()
+
+        self.sim_predictoor = SimPredictoor(ppss.predictoor_ss)
+        self.sim_trader = SimTrader(ppss)
+
+        self.sim_plotter = SimPlotter()
+
+        self.logfile = ""
+
+        if multi_id:
+            self.multi_id = multi_id
+        else:
+            self.multi_id = str(uuid.uuid4())
+
+        assert self.pdr_ss.aimodel_data_ss.transform == "None"
 
     @property
-    def ppss(self) -> PPSS:
-        return PPSS(d=self.d, network=self.network)
+    def pdr_ss(self) -> PredictoorSS:
+        return self.ppss.predictoor_ss
 
     @property
-    def ss(self) -> MultisimSS:
-        return self.ppss.multisim_ss  # type: ignore
+    def predict_feed(self) -> ArgFeed:
+        return self.pdr_ss.predict_train_feedsets[0].predict
+
+    @property
+    def timeframe(self) -> ArgTimeframe:
+        assert self.predict_feed.timeframe is not None
+        return self.predict_feed.timeframe
+
+    @property
+    def others_stake(self) -> float:
+        return self.pdr_ss.others_stake.amt_eth
+
+    @property
+    def others_accuracy(self) -> float:
+        return self.pdr_ss.others_accuracy
+
+    @property
+    def revenue(self) -> float:
+        return self.pdr_ss.revenue.amt_eth
+
+    @enforce_types
+    def _init_loop_attributes(self):
+        filebase = f"out_{UnixTimeMs.now()}.txt"
+        self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
+
+        fh = logging.FileHandler(self.logfile)
+        fh.setLevel(logging.INFO)
+        logger.addHandler(fh)
+
+        self.st.init_loop_attributes()
+
+        logger.info("Initialize plot data.")
+        self.sim_plotter.init_state(self.multi_id)
 
     @enforce_types
     def run(self):
-        ss = self.ss
-        logger.info("Multisim engine: start. # runs = %s", ss.n_runs)
-        self.initialize_csv_with_header()
-        asyncio.run(self.run_async(ss.n_runs))
+        logger.info("Start run")
+
+        # initialize
+        self._init_loop_attributes()
+
+        # ohclv data
+        f = OhlcvDataFactory(self.ppss.lake_ss)
+        mergedohlcv_df = f.get_mergedohlcv_df()
+
+        # main loop!
+        for iter_i in range(self.ppss.sim_ss.test_n):
+            self.run_one_iter(iter_i, mergedohlcv_df)
+
+        # done
+        logger.info("Done all iters.")
+
+    # pylint: disable=too-many-statements# pylint: disable=too-many-statements
+    @enforce_types
+    def run_one_iter(self, iter_i: int, mergedohlcv_df: pl.DataFrame):
+        # base data
+        st = self.st
+        df = mergedohlcv_df
+        grpmodel_data_f = GrpmodelDataFactory(self.ppss)
+        testshift = grpmodel_data_f.testshift(iter_i)
+
+        # observe current price value, and related thresholds for classifier
+        cur_close = self._curval(df, testshift, "close")
+        cur_high = self._curval(df, testshift, "high")
+        cur_low = self._curval(df, testshift, "low")
+        y_thr_UP = grpmodel_data_f.thr_UP(cur_close)
+        y_thr_DOWN = grpmodel_data_f.thr_DOWN(cur_close)
+
+        # build model
+        model_factory = GrpmodelFactory(self.pdr_ss.aimodel_ss)
+        st.grpmodel_data = grpmodel_data_f.build(iter_i, df)
+        if model_factory.do_build(st.grpmodel, iter_i):
+            st.grpmodel = model_factory.build(st.grpmodel_data)
+
+        # make prediction
+        predprob = self.st.grpmodel.predict_next(st.grpmodel_data.X_test)
+
+        conf_thr = self.ppss.trader_ss.sim_confidence_threshold
+        grpmodel_p = GrpmodelPrediction(conf_thr, predprob[UP], predprob[DOWN])
+
+        # predictoor takes action (stake)
+        stake_up, stake_down = self.sim_predictoor.predict_iter(grpmodel_p)
+
+        # trader takes action (trade)
+        trader_profit_USD = self.sim_trader.trade_iter(
+            cur_close,
+            cur_high,
+            cur_low,
+            grpmodel_p,
+        )
+
+        # observe next price values
+        next_close = self._nextval(df, testshift, "close")
+        next_high = self._nextval(df, testshift, "high")
+        next_low = self._nextval(df, testshift, "low")
+
+        # observe price change prev -> next, and related changes for classifier
+        trueval_up_close = next_close > cur_close
+        trueval = {
+            UP: next_high > y_thr_UP,  # did next high go > prev close+% ?
+            DOWN: next_low < y_thr_DOWN,  # did next low  go < prev close-% ?
+        }
+
+        # calc predictoor profit
+        pdr_profit_OCEAN = calc_pdr_profit(
+            self.others_stake,
+            self.others_accuracy,
+            stake_up,
+            stake_down,
+            self.revenue,
+            trueval_up_close,
+        )
+
+        # update state
+        st.update(trueval, predprob, pdr_profit_OCEAN, trader_profit_USD)
+
+        # log
+        ut = self._calc_ut(df, testshift)
+        SimLogLine(self.ppss, self.st, iter_i, ut).log()
+
+        # plot
+        do_save_state, is_final_state = self._do_save_state(iter_i)
+        if do_save_state:
+            d = self._aimodel_plotdata()
+            st.iter_number = iter_i
+            self.sim_plotter.save_state(st, d, is_final_state)
 
     @enforce_types
-    async def run_async(self, n_runs):
-        tasks = []
-
-        for run_i in range(n_runs):
-            tasks.append(self.run_one(run_i))
-
-        await asyncio.gather(*tasks)
+    def _aimodel_plotdata(self) -> dict:
+        d_UP = self._aimodel_plotdata_1dir(UP)
+        d_DOWN = self._aimodel_plotdata_1dir(DOWN)
+        return {UP: d_UP, DOWN: d_DOWN}
 
     @enforce_types
-    async def run_one(self, run_i: int):
-        point_i = self.ss.point_i(run_i)
-        logger.info("Multisim run_i=%s: start. Vals=%s", run_i, point_i)
-        ppss = self.ppss_from_point(point_i)
-        multi_id = str(uuid.uuid4())
-        sim_engine = SimEngine(ppss, multi_id)
-        sim_engine.disable_realtime_state()
-        sim_engine.run()
-        st = sim_engine.st
-        metrics_values = st.final_metrics_values()
-        metrics_list = [metrics_values[name] for name in st.metrics_names()]
-        async with lock:
-            self.update_csv(run_i, metrics_list, point_i)
-            logger.info("Multisim run_i=%s: done", run_i)
+    def _aimodel_plotdata_1dir(self, dirn: Dirn) -> AimodelPlotdata:
+        st = self.st
+        model = st.grpmodel[dirn]
+        model_data = st.grpmodel_data[dirn]
 
-        logger.info("Multisim engine: done. Output file: %s", self.csv_file)
+        colnames = model_data.colnames
+        colnames = [shift_one_earlier(c) for c in colnames]
 
-    def ppss_from_point(self, point_i: Point) -> PPSS:
-        """
-        @description
-          Compute PPSS for sim_engine run #i
-
-        @arguments
-          point_i -- value of each sweep param
-        """
-        nested_args = flat_to_nested_args(point_i)
-        d = copy.deepcopy(self.d)
-        recursive_update(d, nested_args)
-        ppss = PPSS(d=d, network=self.network)
-        return ppss
+        most_recent_x = model_data.X[-1, :]
+        slicing_x = most_recent_x
+        d = AimodelPlotdata(
+            model,
+            model_data.X_train,
+            model_data.ytrue_train,
+            None,
+            None,
+            model_data.colnames,
+            slicing_x,
+        )
+        return d
 
     @enforce_types
-    def csv_header(self) -> List[str]:
-        # put metrics first, because point_meta names/values can be superlong
-        header = []
-        header += ["run_number"]
-        header += SimState.metrics_names()
-        header += list(self.ss.point_meta.keys())
-        return header
+    def _curval(self, df, testshift: int, signal_str: str) -> float:
+        # float() so not np.float64, bc applying ">" gives np.bool -> problems
+        return float(self._yraw(df, testshift, signal_str)[-2])
 
     @enforce_types
-    def spaces(self) -> List[int]:
-        buf = 3
-        spaces = []
-        spaces += [len("run_number") + buf]
-        spaces += [max(len(name), 6) + buf for name in SimState.metrics_names()]
-
-        for var, cand_vals in self.ss.point_meta.items():
-            var_len = len(var)
-            max_val_len = max(len(str(cand_val)) for cand_val in cand_vals)
-            space = max(var_len, max_val_len) + buf
-            spaces.append(space)
-
-        return spaces
+    def _nextval(self, df, testshift: int, signal_str: str) -> float:
+        # float() so not np.float64, bc applying ">" gives np.bool -> problems
+        return float(self._yraw(df, testshift, signal_str)[-1])
 
     @enforce_types
-    def initialize_csv_with_header(self):
-        assert not os.path.exists(self.csv_file), self.csv_file
-        spaces = self.spaces()
-        with open(self.csv_file, "w") as f:
-            writer = csv.writer(f)
-            row = self.csv_header()
-            writer.writerow([name.rjust(space) for name, space in zip(row, spaces)])
-        logger.info("Multisim output file: %s", self.csv_file)
+    def _yraw(self, mergedohlcv_df, testshift: int, signal_str: str):
+        assert signal_str in ["close", "high", "low"]
+        feed = self.predict_feed.variant_signal(signal_str)
+        aimodel_data_f = AimodelDataFactory(self.pdr_ss)
+        _, _, yraw, _, _ = aimodel_data_f.create_xy(
+            mergedohlcv_df,
+            testshift,
+            feed,
+            ArgFeeds([feed]),
+        )
+        return yraw
 
     @enforce_types
-    def update_csv(
-        self,
-        run_i: int,
-        run_metrics: List[Union[int, float]],
-        point_i: Point,
-    ):
-        """
-        @description
-          Update csv with metrics from a given sim run
-
-        @arguments
-          run_i - it's run #i
-          run_metrics -- output of SimState.recent_metrics_values() for run #i
-          point_i -- value of each sweep param, for run #i
-        """
-        assert os.path.exists(self.csv_file), self.csv_file
-        spaces = self.spaces()
-
-        def _val2str(val):
-            if isinstance(val, (float, int)):
-                return f"{val:.4f}"
-            return str(val)
-
-        with open(self.csv_file, "a") as f:
-            writer = csv.writer(f)
-            row = [str(run_i)] + run_metrics + list(point_i.values())
-            assert len(row) == len(self.csv_header())
-            writer.writerow(
-                [_val2str(val).rjust(space) for val, space in zip(row, spaces)]
-            )
+    def _calc_ut(self, mergedohlcv_df, testshift: int) -> UnixTimeMs:
+        recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
+        ut = UnixTimeMs(recent_ut - testshift * self.timeframe.ms)
+        return ut
 
     @enforce_types
-    def load_csv(self) -> pd.DataFrame:
-        """Load csv as a pandas Dataframe."""
-        df = pd.read_csv(self.csv_file)
-        df.rename(columns=lambda x: x.strip(), inplace=True)  # strip whitespace
-        return df
+    def disable_realtime_state(self):
+        self.do_state_updates = False
+
+    @enforce_types
+    def _do_save_state(self, i: int) -> Tuple[bool, bool]:
+        """For this iteration i, (a) save state? (b) is it final iteration?"""
+        if self.ppss.sim_ss.is_final_iter(i):
+            return True, True
+
+        # don't save if disabled
+        if not self.do_state_updates:
+            return False, False
+
+        # don't save first 5 iters -> not interesting
+        # then save the next 5 -> "stuff's happening!"
+        # then save every 5th iter, to balance "stuff's happening" w/ speed
+        N = self.ppss.sim_ss.test_n
+        do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
+        if not do_update:
+            return False, False
+
+        return True, False

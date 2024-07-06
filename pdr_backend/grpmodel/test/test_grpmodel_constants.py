@@ -1,11 +1,11 @@
 from enforce_typing import enforce_types
 import pytest
 
-from pdr_backend.sim.constants import Dirn, dirn_str, UP, DOWN
+from pdr_backend.grpmodel.constants import Dirn, dirn_str, UP, DOWN
 
 
 @enforce_types
-def test_sim_constants__basic():
+def test_grpmodel_constants__basic():
     assert UP == Dirn.UP
     assert DOWN == Dirn.DOWN
 
@@ -20,7 +20,7 @@ def test_sim_constants__basic():
 
 
 @enforce_types
-def test_sim_constants__dirn_str():
+def test_grpmodel_constants__dirn_str():
     assert dirn_str(UP) == "UP"
     assert dirn_str(DOWN) == "DOWN"
     with pytest.raises(TypeError):
@@ -30,7 +30,7 @@ def test_sim_constants__dirn_str():
 
 
 @enforce_types
-def test_sim_constants__can_sort():
+def test_grpmodel_constants__can_sort():
     # this is possible because Dirn inherits from IntEnum, vs Enum :)
     assert sorted([Dirn.UP, Dirn.DOWN]) == [Dirn.UP, Dirn.DOWN]
     assert sorted([UP, DOWN]) == [UP, DOWN]

@@ -2,16 +2,16 @@ from enforce_typing import enforce_types
 import pytest
 from pytest import approx
 
-from pdr_backend.sim.sim_model_prediction import (
-    SimModelPrediction,
+from pdr_backend.grpmodel.grpmodel_prediction import (
+    GrpmodelPrediction,
     _do_trust_models,
     _models_in_conflict,
 )
 
 
 @enforce_types
-def test_sim_model_prediction_case1_models_in_conflict():
-    p = SimModelPrediction(conf_thr=0.1, prob_UP=0.6, prob_DOWN=0.7)
+def test_grpmodel_prediction_case1_models_in_conflict():
+    p = GrpmodelPrediction(conf_thr=0.1, prob_UP=0.6, prob_DOWN=0.7)
     assert p.conf_thr == 0.1
     assert p.prob_UP == 0.6
     assert p.prob_DOWN == 0.7
@@ -25,8 +25,8 @@ def test_sim_model_prediction_case1_models_in_conflict():
 
 
 @enforce_types
-def test_sim_model_prediction_case2_up_dominates():
-    p = SimModelPrediction(conf_thr=0.1, prob_UP=0.6, prob_DOWN=0.3)
+def test_grpmodel_prediction_case2_up_dominates():
+    p = GrpmodelPrediction(conf_thr=0.1, prob_UP=0.6, prob_DOWN=0.3)
     assert p.conf_thr == 0.1
     assert p.prob_UP == 0.6
     assert p.prob_DOWN == 0.3
@@ -40,13 +40,13 @@ def test_sim_model_prediction_case2_up_dominates():
     assert p.prob_up_MERGED == approx(0.6)
 
     # setup like above, but now with higher conf thr, which it can't exceed
-    p = SimModelPrediction(conf_thr=0.3, prob_UP=0.6, prob_DOWN=0.3)
+    p = GrpmodelPrediction(conf_thr=0.3, prob_UP=0.6, prob_DOWN=0.3)
     assert not p.pred_up
 
 
 @enforce_types
-def test_sim_model_prediction_case3_down_dominates():
-    p = SimModelPrediction(conf_thr=0.1, prob_UP=0.4, prob_DOWN=0.7)
+def test_grpmodel_prediction_case3_down_dominates():
+    p = GrpmodelPrediction(conf_thr=0.1, prob_UP=0.4, prob_DOWN=0.7)
     assert p.conf_thr == 0.1
     assert p.prob_UP == 0.4
     assert p.prob_DOWN == 0.7
@@ -60,7 +60,7 @@ def test_sim_model_prediction_case3_down_dominates():
     assert p.prob_up_MERGED == approx(1.0 - 0.7) == approx(0.3)
 
     # setup like above, but now with higher conf thr, which it can't exceed
-    p = SimModelPrediction(conf_thr=0.5, prob_UP=0.4, prob_DOWN=0.7)
+    p = GrpmodelPrediction(conf_thr=0.5, prob_UP=0.4, prob_DOWN=0.7)
     assert not p.pred_down
 
 

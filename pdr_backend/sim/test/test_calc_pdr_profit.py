@@ -2,11 +2,11 @@ from enforce_typing import enforce_types
 import pytest
 from pytest import approx
 
-from pdr_backend.sim.sim_engine import calc_pdr_profit
+from pdr_backend.sim.calc_pdr_profit import calc_pdr_profit
 
 
 @enforce_types
-def test_sim_engine_calc_pdr_profit__happy_path():
+def test_calc_pdr_profit__happy_path():
     # true = up, guess = up (correct guess), others fully wrong
     profit = calc_pdr_profit(
         others_stake=2000.0,
@@ -99,7 +99,7 @@ def test_sim_engine_calc_pdr_profit__happy_path():
 
 
 @enforce_types
-def test_sim_engine_calc_pdr_profit__unhappy_path():
+def test_calc_pdr_profit__unhappy_path():
     o_stake = 2000.0
     o_accuracy = 0.51
     stake_up = 1000.0

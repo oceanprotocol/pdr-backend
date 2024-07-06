@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 from enforce_typing import enforce_types
 from plotly.graph_objs import Figure
 
-from pdr_backend.sim.constants import UP, DOWN
+from pdr_backend.grpmodel.constants import UP, DOWN
 from pdr_backend.sim.dash_plots.util import get_figures_by_state
 from pdr_backend.sim.dash_plots.view_elements import (
     FIGURE_NAMES,

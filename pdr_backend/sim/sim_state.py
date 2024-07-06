@@ -8,9 +8,9 @@ from enforce_typing import enforce_types
 import numpy as np
 
 from pdr_backend.aimodel.true_vs_pred import PERF_NAMES, TrueVsPred
-from pdr_backend.sim.constants import Dirn, dirn_str, UP, DOWN
-from pdr_backend.sim.sim_model import SimModel
-from pdr_backend.sim.sim_model_data import SimModelData
+from pdr_backend.grpmodel.constants import Dirn, dirn_str, UP, DOWN
+from pdr_backend.grpmodel.grpmodel import Grpmodel
+from pdr_backend.grpmodel.grpmodel_data import GrpmodelData
 
 
 # =============================================================================
@@ -155,8 +155,8 @@ class SimState:
     @enforce_types
     def init_loop_attributes(self):
         self.iter_number = 0
-        self.sim_model_data: Optional[SimModelData] = None
-        self.sim_model: Optional[SimModel] = None
+        self.grpmodel_data: Optional[GrpmodelData] = None
+        self.grpmodel: Optional[Grpmodel] = None
         self.true_vs_pred = {UP: TrueVsPred(), DOWN: TrueVsPred()}
         self.hist_perfs = {UP: HistPerfs(UP), DOWN: HistPerfs(DOWN)}
         self.hist_profits = HistProfits()
