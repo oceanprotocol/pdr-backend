@@ -6,11 +6,10 @@ import logging
 import sys
 from typing import List, Optional, Tuple
 
+from enforce_typing import enforce_types
 import numpy as np
 import pandas as pd
 import polars as pl
-
-from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
@@ -57,22 +56,6 @@ class AimodelDataFactory:
 
     def __init__(self, ss: PredictoorSS):
         self.ss = ss
-
-    @staticmethod
-    def ycont_to_ytrue(ycont: np.ndarray, y_thr: float) -> np.ndarray:
-        """
-        @description
-          Convert regression y (ycont) to classifier y (ybool).
-
-        @arguments
-          ycont -- 1d array of [sample_i]:cont_value -- regression model outputs
-          y_thr -- classify to True if ycont >= this threshold
-
-        @return
-          ybool -- 1d array of [sample_i]:bool_value -- classifier model outputs
-        """
-        ybool = np.array([ycont_val >= y_thr for ycont_val in ycont])
-        return ybool
 
     @staticmethod
     def testshift(test_n: int, test_i: int) -> int:
