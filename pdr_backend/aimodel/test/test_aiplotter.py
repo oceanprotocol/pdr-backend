@@ -3,4 +3,4 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-# nothing here: put all the testing in test_aimodel_main.py
+# nothing here, see testing in test_aimodel_general.py
