@@ -83,13 +83,15 @@ class SimEngine:
         self.sim_plotter.init_state(self.multi_id)
 
     @enforce_types
-    def run(self):
+    def run(self, mergedohlcv_df: Optional[pl.DataFrame] = None):
         logger.info("Start run")
         self._init_loop_attributes()
 
         # main loop!
-        f = OhlcvDataFactory(self.ppss.lake_ss)
-        mergedohlcv_df = f.get_mergedohlcv_df()
+        if mergedohlcv_df is None:
+            f = OhlcvDataFactory(self.ppss.lake_ss)
+            mergedohlcv_df = f.get_mergedohlcv_df()
+
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
 
