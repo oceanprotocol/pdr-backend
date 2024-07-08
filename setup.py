@@ -39,7 +39,7 @@ install_requirements = [
     "pyyaml",
     "requests==2.32.3",
     "requests-mock==1.12.1",
-    "scikit-learn==1.5.0",
+    "scikit-learn==1.5.1",
     "statsmodels==0.14.2",
     "time_machine==2.14.2",
     "typeguard==4.3.0",
