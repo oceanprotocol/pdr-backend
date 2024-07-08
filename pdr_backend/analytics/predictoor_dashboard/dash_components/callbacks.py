@@ -58,12 +58,15 @@ def get_callbacks(app):
         ):
             return dash.no_update
 
-
-        current_feeds_table_data = update_feeds_table_on_search(search_value_feeds, feeds_data)
+        current_feeds_table_data = update_feeds_table_on_search(
+            search_value_feeds, feeds_data
+        )
         for i in feeds_table_selected_rows:
             feeds_addrs.append(current_feeds_table_data[i]["contract"])
 
-        current_predictoors_table_data = update_predictoors_table_on_search(search_value_predictoors, predictoors_data)
+        current_predictoors_table_data = update_predictoors_table_on_search(
+            search_value_predictoors, predictoors_data
+        )
         for i in predictoors_table_selected_rows:
             predictoors_addrs.append(current_predictoors_table_data[i]["user"])
 
@@ -116,9 +119,11 @@ def get_callbacks(app):
     ):
         feeds_addrs = []
         predictoors_addrs = []
-        
+
         ## calculate selected feeds
-        current_feeds_table_data = update_feeds_table_on_search(search_value_feeds, feeds_data)
+        current_feeds_table_data = update_feeds_table_on_search(
+            search_value_feeds, feeds_data
+        )
         for i in feeds_table_selected_rows:
             feeds_addrs.append(
                 {
@@ -128,12 +133,12 @@ def get_callbacks(app):
             )
 
         ## calculate selected predictoors addrs
-        current_predictoors_table_data = update_predictoors_table_on_search(search_value_predictoors, predictoors_data)
+        current_predictoors_table_data = update_predictoors_table_on_search(
+            search_value_predictoors, predictoors_data
+        )
         for i in predictoors_table_selected_rows:
             predictoors_addrs.append(current_predictoors_table_data[i]["user"])
 
-        print("feeds_addrs--->", feeds_addrs)
-        print("predictoors_addrs--->", predictoors_addrs)
         # get figures
         accuracy_fig, profit_fig, stakes_fig = get_figures(
             payouts_data, feeds_addrs, predictoors_addrs

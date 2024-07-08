@@ -1,9 +1,12 @@
+import logging
 from typing import Union, List
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table_pdr_predictions import predictions_table_name
 from pdr_backend.lake.table_pdr_payouts import payouts_table_name
+
+logger = logging.getLogger("predictoor_dashboard_utils")
 
 
 @enforce_types
@@ -84,7 +87,7 @@ def get_payouts_from_db(
             return payouts_data
         payouts_data = df.to_dicts()
     except Exception as e:
-        print(e)
+        logger.error(e)
     return payouts_data
 
 

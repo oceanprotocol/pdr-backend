@@ -109,9 +109,14 @@ def mock_payout(payout_tuple: tuple) -> Payout:
 def mock_payouts() -> List[Payout]:
     return [mock_payout(payout_tuple) for payout_tuple in _PAYOUT_TUPS]
 
+
 @enforce_types
 def mock_payouts_related_with_predictions() -> List[Payout]:
-    return [mock_payout(payout_tuple) for payout_tuple in _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS]
+    return [
+        mock_payout(payout_tuple)
+        for payout_tuple in _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS
+    ]
+
 
 _PAYOUT_TUPS = [
     (

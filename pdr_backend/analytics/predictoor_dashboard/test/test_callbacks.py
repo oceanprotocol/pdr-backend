@@ -6,14 +6,19 @@ from dash.testing.application_runners import import_app
 import dash_bootstrap_components as dbc
 from dash.testing.browser import Browser
 
-from pdr_backend.analytics.predictoor_dashboard.dash_components.callbacks import get_callbacks
-from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import get_layout
+from pdr_backend.analytics.predictoor_dashboard.dash_components.callbacks import (
+    get_callbacks,
+)
+from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
+    get_layout,
+)
 from pdr_backend.analytics.predictoor_dashboard.test.resources import (
     _prepare_test_db,
-    _clear_test_db
+    _clear_test_db,
 )
 from pdr_backend.lake.table_pdr_payouts import payouts_table_name
 from selenium.webdriver.common.keys import Keys
+
 
 @pytest.fixture
 def _test_analytics_app():
@@ -21,18 +26,17 @@ def _test_analytics_app():
     get_callbacks(app)
     return app
 
+
 def test_get_input_data_from_db(
     tmpdir,
     _sample_daily_predictions,
     _sample_payouts_related_with_predictions,
-    dash_duo
+    dash_duo,
 ):
     _clear_test_db(str(tmpdir))
 
     _prepare_test_db(
-        tmpdir,
-        _sample_payouts_related_with_predictions,
-        table_name=payouts_table_name
+        tmpdir, _sample_payouts_related_with_predictions, table_name=payouts_table_name
     )
 
     ppss, _ = _prepare_test_db(
@@ -40,10 +44,7 @@ def test_get_input_data_from_db(
         _sample_daily_predictions,
     )
 
-    app = Dash(
-        __name__,
-        external_stylesheets=[dbc.themes.BOOTSTRAP]
-    )
+    app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
     app.config["suppress_callback_exceptions"] = True
     app.layout = get_layout()
     get_callbacks(app)
@@ -56,13 +57,13 @@ def test_get_input_data_from_db(
     dash_duo.wait_for_element("#feeds_table tbody tr")
     dash_duo.wait_for_element("#predictoors_table tbody tr")
 
-    #----TEST SEARCH INPUT WITH "OCEAN" VALUE----#
+    # ----TEST SEARCH INPUT WITH "OCEAN" VALUE----#
     dash_duo.find_element("#search-input-Feeds").send_keys("OCEAN" + Keys.ENTER)
     # wait 5 seconds
     time.sleep(2)
     assert len(dash_duo.find_elements("#feeds_table tbody tr")) == 1
 
-    #----TEST SEARCH INPUT WITH "BTC" VALUE----#
+    # ----TEST SEARCH INPUT WITH "BTC" VALUE----#
     # reset the search input
     dash_duo.find_element("#search-input-Feeds").clear()
     # enter "BTC" phrase to the "search-input-Feeds" input
@@ -71,7 +72,7 @@ def test_get_input_data_from_db(
     # check if the "Feeds" table has only two rows
     assert len(dash_duo.find_elements("#feeds_table tbody tr")) == 2
 
-    #----TEST SEARCH INPUT WITH "ADA" VALUE----#
+    # ----TEST SEARCH INPUT WITH "ADA" VALUE----#
     # reset the search input
     dash_duo.find_element("#search-input-Feeds").clear()
     # enter "BTC" phrase to the "search-input-Feeds" input
@@ -81,17 +82,16 @@ def test_get_input_data_from_db(
     # check if the "Feeds" table has only two rows
     assert len(dash_duo.find_elements("#feeds_table tbody tr")) == 2
 
-    #----TEST PREDICTOOR INPUT WITH "0xaaa" VALUE----#
-    dash_duo.find_element("#search-input-Predictoors").send_keys("0xaaa"  + Keys.ENTER)
+    # ----TEST PREDICTOOR INPUT WITH "0xaaa" VALUE----#
+    dash_duo.find_element("#search-input-Predictoors").send_keys("0xaaa" + Keys.ENTER)
     time.sleep(2)
     assert len(dash_duo.find_elements("#predictoors_table tbody tr")) == 1
 
-
-    #----TEST PREDICTOOR INPUT WITH "0xd2" VALUE----#
+    # ----TEST PREDICTOOR INPUT WITH "0xd2" VALUE----#
     # clear input
     dash_duo.find_element("#search-input-Predictoors").clear()
     # enter "0xd2" phrase to the "search-input-Predictoors" input
-    dash_duo.find_element("#search-input-Predictoors").send_keys("0xd2"  + Keys.ENTER)
+    dash_duo.find_element("#search-input-Predictoors").send_keys("0xd2" + Keys.ENTER)
     time.sleep(2)
 
     # check if the "Predictoors" table has only one row

@@ -14,6 +14,7 @@ from pdr_backend.analytics.predictoor_dashboard.test.resources import (
     _clear_test_db,
 )
 
+
 @enforce_types
 @patch(
     "pdr_backend.analytics.predictoor_dashboard.dash_components.util.DuckDBDataStore"
