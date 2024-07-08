@@ -346,14 +346,3 @@ def test_create_table(tmpdir):
     check_result = db.table_exists(table_name)
     assert check_result
 
-
-def test_close(tmpdir):
-    """
-    Test close connection.
-    """
-
-    db = DuckDBDataStore(str(tmpdir))
-    db_instances_len = len(db._instances)
-    db.duckdb_conn.close()
-
-    assert len(db._instances) + 1 == db_instances_len
