@@ -9,6 +9,8 @@ import polars as pl
 from enforce_typing import enforce_types
 from polars.dataframe.frame import DataFrame
 
+from pdr_backend.lake.table import Table
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 pl.Config.set_tbl_hide_dataframe_shape(True)
@@ -310,18 +312,21 @@ class ValidationOverview:
             ), bronze_predictions AS (
                 SELECT
                     ID,
-                    timestamp
-                FROM {Table.from_dataclass(Prediction).table_name}
+                    timestamp,
+                    max(timestamp) as max_timestamp,
+                    min(timestamp) as min_timestamp
+                FROM {Table.from_dataclass(BronzePrediction).table_name}
+                GROUP BY ID, timestamp
             ),
             unmatched_payouts AS (
                 SELECT
                     payouts.ID,
                     payouts.timestamp
                 FROM payouts
-                LEFT JOIN predictions
-                ON payouts.ID = predictions.ID
-                WHERE predictions.ID IS NULL
-                AND payouts.timestamp BETWEEN MIN(predictions.timestamp) AND MAX(predictions.timestamp)
+                LEFT JOIN bronze_predictions
+                ON payouts.ID = bronze_predictions.ID
+                WHERE bronze_predictions.ID IS NULL
+                AND payouts.timestamp BETWEEN bronze_predictions.min_timestamp AND bronze_predictions.max_timestamp
             )
             select * from unmatched_payouts;
         """

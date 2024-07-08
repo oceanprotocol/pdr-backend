@@ -3,7 +3,7 @@ Copyright 2024 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Lake,ETL, and PredictoorJob Overview
+# Lake & ETL Overview
 
 This README describes how you can operate the lake and use analytics to understand the world of predictoor.
 
@@ -11,183 +11,164 @@ First, we want to make sure we get all the data we'll need! Then, we'll process 
 
 To complete this we'll be interacting different components in our stack, such as the: Lake, GQLDataFactory, and the ETL.
 
-## **Content** ##
 
-- [**Lake**](#lake)
+## Content
+- [**ETL Tables & Architecture**](#etl-tables--architecture)
+- [**Lake - "Storage"**](#lake---storage)
+- [**GQL Data Factory & RAW**](#gql-data-factory--raw-data)
+- [**Data Warehouse - "Database"**](#data-warehouse---database)
 - [**ETL**](#etl)
-- [**PredictoorJob**](#predictoorjob---from-subgraph-to-chart-data)
+- [**Checkpoints**](#checkpoints)
+- [**Dumb Components**](#dumb-components)
 - [**Examples**](#examples)
 - [**Dos and Don'ts**](#dos-and-donts)
-- [**What's next?**](#tbd---to-come)
 
-## **Lake - Think "Database"**
-For most users, the lake can simply be thought of as a database. It contains many tables with complete records and reliable information. It should be easy to understand and to work with. We use a combination of CSVs & DuckDB as our Data Lake/Warehouse.
 
-Currently, the "Lake" (DB) data can be accessed via the PersistentDataStore (PDS - DuckDB Wrapper) and operated with via the CLI module `lake` command `pdr lake describe ppss.yaml sapphire-mainnet` (cli_module_lake.py)
+## ETL Tables & Architecture
+To provide summaries on Predidctoor users and systems, we want to fetch all new data and make it available for analysis.
+
+The GraphQL Data Factory & ETL helps us achieve this by breaking the process down into 3 steps.
+1. Ingesting + Loading Data - GQLDataFactory
+1. Processing the data - ETL
+1. Describing, visualization, and querying the data
+
+The following diagram presents the ETL tables and workflow. Please maintain the [diagram](diagrams/lake.html) and image so they are up-to-date.
+![Lake & ETL Tables](images/lake_tables_diagram.png)
+
+
+## Lake - "Storage"
+For most users, the lake can simply be thought of disk storage.
+
+It contains many folders and CSVs, that maintain a complete set of records and reliable information. It should be easy to understand and to work with.
+
+Currently, the lake (CSVs) can be accessed via the CSVDataStore (CSV wrapper) and operated with via the CLI module `lake raw` commands `pdr lake raw update ppss.yaml sapphire-mainnet` (cli_module_lake.py)
 
 Some features include:
 1. The lake has a few commands: `describe`, `validate`, `update`, `drop`, and `query`
-1. The lake is made up of many timeseries objects that should exist from `st_ts` and `end_ts`.
-1. All the data inside lake tables should exist between `st_ts` and `end_ts`.
-1. The `st_ts` and `end_ts` checkpoints come from `ppss.yaml` but are computed through the lake as time progresses, new events are fired, and records are processed.
-1. The lake is designed so raw data is fetched once, so the rest can be rebuilt many times.
-1. The main work building the data take place inside the ETL in the form of SQL queries that run on DuckDB.
-1. The lake does not support backfilling, you have to drop all data and then set a new ppss.lake_ss.st_ts.
+1. The lake is made up of many timeseries objects that should exist from `lake_ss.st_ts` and `lake_ss.end_ts`.
+1. All the data inside lake folders should exist between `st_ts` and `end_ts`.
+1. The `st_ts` and `end_ts` checkpoints come from `ppss.yaml` and the `lake_ss` component.
+1. You can set `st_ts` and `end_ts` to relative times ("3 hours ago" -> "now"), so new new records are always fetched and processed.
+1. The lake is designed so raw data is fetched only once from subgraph and then saved into `lake_data/` and DuckDB.
 
-## Lake Data
-The following diagram presents the table schemas within the lake together with their relationships. This visualization aims to provide a clearer understanding of the lake's structure.
-![Project Logo](images/lake_tables_diagram.png)
+**Note:** The lake currently does not support backfilling. If you need to, drop all data, adjust `st_ts` and `end_ts`, and then fetch again.
 
 
-## **ETL**
+## GQL Data Factory & Raw Data
+Is responsible for running a series of graphql fetches against subgraphs and then saves this raw data into the lake (CSV).  
+
+Because GQL Data Factory is responsible for "Ingesting & Loading", we piggy back on this routine and also plce this raw data into our data warehouse (DuckDB).
+
+When the GQL Data Factory updates, it looks at each query and their respective `lake_data/` folder to figure out where to resume from. Once all data has been fetched and loaded into `lake_data/` and the Data Warehouse (DuckDB), the update routine ends.
+
+**Note:** The lake is designed to only be filled once. By default GQL Data Factory will not delete data from `lake_data/`. This is done intentionally.
+
+If you want to refetch parts of your lake data:
+1. Delete the `lake_data` folder
+```console
+sudo rm -r lake_data/
+```
+
+2. Drop all records from the Data Warehouse
+```
+```console
+pdr lake raw drop ppss.yaml sapphire-mainnet 2020-01-01
+pdr lake etl drop ppss.yaml sapphire-mainnet 2020-01-01
+```
+
+3. Fetch the data again (if required, update `st_ts` and `end_ts`)
+```console
+pdr lake raw update ppss.yaml sapphire-mainnet
+```
+
+## Data Warehouse - "Database"
+For most users, the Data Warehouse (DuckDB) is just a database.
+
+To deliver a complete data stack capable of storing, processing, and enriching all of our data, we load all CSVs (lake) into DuckDB (DW) and then process this data through a series of SQL queries (ETL) inside the DW.
+
+Currently, the DW (DB) can be accessed via the DuckDBDataStore (DuckDB Wrapper) and operated with via the CLI module `lake` commands `pdr lake etl update ppss.yaml sapphire-mainnet` (cli_module_lake.py)
+
+Some features include:
+1. The DW is atomic and designed to be destroyed/rebuilt by leveraging raw data from `lake_data`. There are no migrations.
+1. To rebuild the DW, please use a combination of `lake etl drop` and `lake etl update` commands.
+1. The DW is rebuilt using a series of SQL queries that Extract-Transform-Load (ETL) into new tables.
+1. All ETL SQL queries run on DuckDB and follow a "mini-batch" routine to be as efficient as possible.
+1. ETL tables use a "Medallion Achitecture" (bronze, silver, gold) to deliver a structured ETL architecture.
+1. All the data inside ETL tables exist between `st_ts` and `end_ts`.
+
+**Note:** All ETL is done on the DW to be efficient and future-proof ourselves towards distributed DBs. Do not jump between python -> sql -> python, this is computationally and memory expensive. All queries are designed to function as mini-batch opeations to reduce the amount of scans, joins, inserts, and updates.
+
+
+## ETL
 Is responsible for running a series of Jobs and queries that keep the lake in great shape.
 
-### ETL - End-To-End Update from CLI
-1. from the cli - `pdr lake raw update && pdr lake etl update`
+### Update from CLI
+From the cli - `pdr lake etl update ppss.yaml sapphire-mainnet`
 
-### ETL - End-To-End - Data Workflow from Code
+### Data Flow
 As you are developing and building around the data and lake, you might need to update how the system works, and be able to follow this workflow.
-1. GQLDF completes succesfully. Fetch from source raw => into CSV & DuckDB.
-1. Run SQL query over this data to clean it, join w/ other tables, transform => into Bronze Tables
+1. GQLDF completes succesfully. Fetch from source RAW => into CSV & DuckDB.
+1. ETL runs SQL queries over the RAW data to clean it, join w/ other tables, transform => into Bronze Tables
 1. Aggregating + Summarizing it => into Silver & Gold tables.
 1. Serving this data into dahboards and other locations.
 
-### ETL - User Operations Workflow from Code & CLI
+### Workflow
 As you are developing and building around the lake, your workflow migh look like this.
 1. Writing & Updating ETL code
 1. Dropping ETL tables via CLI
 1. Rebuilding ETL tables via CLI
 
-### ETL Limitations
-1. Insert only. No updates. Null values inside `bronze_pdr_prediction` tables.
+### Limitations
 1. No backfilling data before `st_ts`. If you want to backfill drop all records or select a new `lake_path`.
 
-## **PredictoorJob - From subgraph to chart data**
-To provide summaries on Predidctoor users and systems, we want to fetch all new data and make it available for analysis.
 
-PredictoorJob helps us achieve this by breaking the process down into 3 steps.
-1. Ingesting + Loading Data - GQLDataFactory
-1. Processing the data - ETL
-1. Querying the data - Dash (TBD)
+## Checkpoints
 
-When these steps complete (1)(2), the final records are then used in dashbords (3) and other systems.
-![Screenshot from 2024-02-29 13-51-46](https://github.com/oceanprotocol/pdr-backend/assets/69865342/8dc020e2-cf53-49d8-8327-9afc222e1750)
-
-### PredictoorJob Workflow
-To understand how this works a bit better, let's break this down into more detail.
-
-#### Step 1 - GQLDataFactory - Fetching predictoor data [st_ts => end_ts] from subgraph into csv & lake.
-1. Fetching the new raw data [st_ts => end_ts].
-1. Saving it to CSV.
-1. Saving it to the Lake.
-
-#### Step 2 - ETL - (PredictoorJob) - Processing new raw data from sources through SQL queries.
-1. Processing latest data + inserting w/ basic `INSERT SQL` query into `temp_table_data` inside lake.
-1. Completing swap strategy to get `temp_table_data` into `prod_table_data`.
-
-#### Step 3 - Dash - TBD
-
-_There were already streamlit plots created for silver tables. Please read further._
-
-## **PredictoorJob Checkpointing**
 In order to only process new data, we want to "maintain a checkpoint" that helps us know where to start/resume from.
 
-The simplest way to do this right now is to use the most frequent event we have in our data: **predictions submitted by predictoors**. We use this timestamp/checkpoint such that we only process new events, once.
+The simplest way to do this is to use the first and last event timestamps from our data.
 
-By separating the RAW from the ETL data, at any point we should be able to (1) drop the ETL rows and rebuild them from raw. Making our data very flexible and forgiving to work with. 
+### GQL Data Factory
+All CSVs should be in-sync... with nearly the same [st_ts => end_ts] across all folders.
+1. GQLDF fetches [st_ts => end_ts] from CSVs if available so it can resume, otherwise it uses ppss.yaml `st_ts`
+1. For each GQL, we fetch all records [st_ts => end_ts] and save them as they arrive
+1. Write raw data to CSV [st_ts => end_ts]
+1. Write raw data to DW [st_ts => end_ts]
 
-_(1a) The cost do analyze all of predictoor may in the futurenot be cheap, but you should be able to downscale the date_range._
+### ETL
+All ETL tables should be in-sync with nearly the same [st_ts => end_ts].
+1. ETL looks at CSV and ETL Tables last_records to identify how to resume [st_ts => end_ts], otherwise it uses ppss.yaml.
+1. ETL begins by process all RAW records [st_ts => end_ts] before processing the ETL tables.
+1. RAW records are processed into NewEvents (INSERT) and UpdateEvents(UPDATE) and stored in temporary tables.
+1. All NewEvents and UpdateEvents [st_ts => end_ts] from RAW tables, are used to update bronze tables.
 
-### Lake Stack st_ts => end_ts
-All systems should be working in-sync... with the same [st_ts => end_ts] across all systems. In conjunction with ppss.yaml and everything else.
-1. GQLDF fetches [st_ts => end_ts]
-1. CSV saves [st_ts => end_ts]
-1. PDS saves [st_ts => end_ts]
-1. ETL processes + saves [st_ts => end_ts]
-1. CLI/FE/Querying [st_ts => end_ts]
-
-### Exception to the rule
+**Exceptions to the rule**
 This doesn't always have to be the case.
-1. RAW + ETL Tables could have been dropped.
-2. CSV + GQLDF => could be far ahead.
-3. CLI/FE/Querying => would be limited to RAW + ETL tables & data
+1. RAW + ETL records could have been dropped.
+2. CSV + GQLDF could be far ahead.
 
-How to resolve a drop?
-1. RAW + ETL Tables should be 1:1 => st_st.
-2. CSV would be ahead. So we can take the max(timestamp) to know how far it is and where to sync-to => st_end
+**How to resolve a drop?**
+1. Run `describe` and `validate` to make sure there are no errors.
+2. Drop all RAW + ETL Tables from DW and rebuild the DW from scratch.
 3. RAW Tables are rebuilt from CSV records.
 4. ETL Tables are rebuilt from RAW tables.
 
-All systems [GQLDF + CSV + RAW + ETL Updating] should be working as expected along w/ the cli & ppss.yaml.
+All systems [GQLDF + ETL + CSV + DuckDB] should be working out-of-the-box by using ppss.yaml & the cli.
 
-## **[PredictoorJob][Ingest + Load Step] - GQLDF Fetch + DuckDB Insert**
 
-GQL CSV and Lake max(timestamp) should remain 1:1 right now.
-As new records are fetched, both of these should update atomically.
+## "Dumb" Components
+Components should be self-contained, "dumb", and perform one role.
 
-This process ends once all subgraph events have been written to duckdb tables.
+GQLDF is upstream from ETL and does not have any knowledge of it. Do not create dependencies where there are none.
 
-### First Run - GQLDF Fetch + DuckDB Insert - No Records In Lake
-When we start filling the lake, there will be no records to tell us where to resume from... So, we'll use ppss.yaml to get the lake_ss (1) st_ts and (2) end_ts.
+If you delete data from `lake_data`, do not expect this change to be reflected in RAW or ETL tables.
 
-GQLDataFactory will begin fetching from subgraph to fill the lake.
-- from: ppss.lake_ss.st_ts - ie. 01-04-2024
-- to: ppss.lake_ss.end_ts - ie. time.time()
-- This is first appended into a CSV file
-- Then this is inserted into lake (DuckDB via PDS)
+Rather, think about the DX, entry points, and [how to approach this intuitively](https://github.com/oceanprotocol/pdr-backend/issues/1087#issuecomment-2155527087) so these checks are built into the DX and easy-to-use.
 
-**ETL Step does not begin until this completes successfully**
 
-### Second+ Run - GQLDF Fetch + DuckDB Insert - Records Exist In Lake
-When we resume updating the lake we can still initialize the run w/ ppss.yaml to get (1) st_ts ("01-04-2024") and (2) end_ts (now).... but we run some checks....
-1. We can query the CSV to get `max(timestamp) from pdr_predictions` - 01-05-2024 - Which we can use as the `st_ts`.
-1. We query the lake table to get `max(timestamp) from pdr_predictions` - 01-05-2024 - Which we can use as the `st_ts`
+## Examples & How To's
 
-Providing us with the parmeters:
-- from: 01-05-2024
-- to: ppss.lake_ss.end_ts - i.e. time.time()
-- This resumes fetching from where our data left off
-- This provides us with a much smaller amount of events to fetch/join/update
-
-**ETL Step does not begin until this completes successfully**
-
-## **[PredictoorJob][ETL + Process Step] - SQL Queries - Bronze/Silver/Gold Tables - No Updates**
-
-When inserting from raw data into duckdb, we try to clean up and enrich this data if possible, completing the first step. Now that the latest raw records have been written to DuckDB the ETL can kick off.
-
-We want to start w/ updating the bronze_predictions table and other bronze_records since these reflect newly-arrived events.
-
-However, many events and data points are not yet available when a prediction is submitted (like the payout). These values (and columns) remain null for now. 
-
-The `bronze_pdr_prediction` query captures all parameters required to complete a pdr_prediction schema object, by joining across all table and related events (truevals, payouts) that are available in cold (old) data.
-
-We now have to handle events as-they-are-happening in hot (new) data. (Incremental Updates)
-
-## **Jobs and Environment**
-
-Jobs should be self-contained and only be concerned about going from A->B.
-It takes an input [A] -> Does Stuff -> generates an output [B]
-
-Each components responsible for each job is dumb and unaware of other jobs. You do not solve a downstream job problem by reaching back upstream. GQLDF does not have any knowledge of ETL. If you delete a CSV file, you should not use GQLDF to update the ETL. 
-
-Build dumb components that serve a single purpose and operate within their environment.
-
-## **Dumb Components - No Magic**
-
-The jobs and pipelines are not "smart". 
-They are designed to be components with a single function.
-
-If you delete data from CSV, there are no expectations that Raw or ETL tables will be updated.
-What is expected, is that you understand the lake and know how to operate it.
-- You can delete part of the CSV data and it should just fetch back-up again.
-- If you drop your Raw + ETL tables, everything should just build back-up again.
-- If you drop the "tail" of most things, they should be rebuilt back-up again.
-
-Anything outside of how the lake works is not expected to be supported. Example: User randomly deletes records... Please, **do not try and solve for these scenarios.**
-
-## **Examples**
-
-### **Run Lake end to end**
+### Run Lake end to end
 
 1. Fetch the data and create the Lake with **RAW** and **ETL** data
 ```console
@@ -207,7 +188,7 @@ pdr lake query ./lake_data "SELECT * FROM pdr_predictions"
 ```
 
 
-### **Modify Lake data**
+### Modify Lake data
 5. Drop data from the Lake at **ETL** level starting from a specified date
 ```console
 pdr lake etl drop ppss.yaml sapphire-mainnet 2024-01-10
@@ -233,32 +214,11 @@ pdr lake etl update ppss.yaml sapphire-mainnet
 pdr lake validate ppss.yaml sapphire-mainnet 
 ```
 
-## **DOS and DONT'S**
+## DO'S and DONT'S
 **Don't**:
  - !! Don't modify the CSV files in any way, otherwise data is going to be eronated !!
 
-**Dos**:
- - If data is eronated or there is any issue with the Lake reset the lake
- - Reset the Lake by deleting the **lake_data** folder and creating it again
-
-# [TBD - TO COME] 
-
-### [PredictoorJob][IncrementalJob][ETL]
-
-Many data points are not yet available when a prediction is submitted (like the payout). There are many adjustments and improvements to the data that help enrich it like hadling predictoor_payout events when they arrive and updating the lake.
-
-How: You write a SQL query that handles new pdr_payout events that happened in the last update period. This means we are now: handling events as-they-are-happening live and updating our records. (Incremental Updates)
-
-Then: You join these events with existing records, to update their null fields, aggregates, and summaries.
-
-We probably want to start w/ updating the bronze_predictions table and records when truevals & payouts happen.
-
-_We had this before in polars, but not in SQL._
-
-### Dash Plots
-
-There were already streamlit plots created for silver tables. However, the silver queries and tables are not quite there yet.
-
-Until then, if needed, bronze_prediction tables could be queried/charted via PDS.
-1. Queries would be completed against lake via PDS by using `SELECT * FROM prod_data` and plotted into charts
-1. Dash could then be used to display and interact with plots further.
+**Do's**:
+ - If data is eronated or there is any issue with the Lake, reset the lake
+ - Reset the Lake by deleting `lake_data/` folder
+ - Recreate the Lake by running `lake raw update` and `lake etl update` commands
