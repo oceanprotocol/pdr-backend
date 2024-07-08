@@ -1,5 +1,5 @@
 <!--
-Copyright 2024 Ocean Protocol Foundation
+Copyright 2023 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -23,6 +23,10 @@ Once you're done the main flow, you can go beyond, with any of:
 - [Run many bots](#run-many-bots). Steps: [give keys](#many-bots-give-keys), [templates](#many-bots-generate-templates), [deploy agents](#many-bots-deploy-agents), [monitor agents](#many-bots-monitor-agents), [destroy agents](#many-bots-destroy-agents)
 
 ## 1. Install pdr-backend Repo
+
+Prerequisites:
+- Python 3.12. Earlier _will_ fail, e.g. can't find `UTC`. [Details](https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated)
+- Ubuntu MacOS. _Not_ Windows.
 
 In a new console:
 
@@ -54,11 +58,7 @@ curl https://raw.githubusercontent.com/oceanprotocol/contracts/main/addresses/ad
 If you're running MacOS, then in console:
 
 ```console
-# so that sapphire.py works. Details in #66
 codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
-
-# so that xgboost works. Details in #1339
-brew install libomp
 ```
 
 ## 2. Simulate Modeling and Trading
