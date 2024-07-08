@@ -16,12 +16,12 @@ def _prepare_test_db(tmpdir, sample_data, table_name=predictions_table_name):
     db = DuckDBDataStore(str(ppss.lake_ss.lake_dir))
 
     sample_data_df = _object_list_to_df(sample_data)
-    db.insert_to_table(
+    db.insert_from_df(
         sample_data_df,
         table_name,
     )
 
-    db.close()
+    db.duckdb_conn.close()
 
     return ppss, sample_data_df
 
@@ -31,4 +31,4 @@ def _clear_test_db(dir: str):
     db = DuckDBDataStore(dir)
     db.drop_table("pdr_payouts")
     db.drop_table("pdr_predictions")
-    db.close()
+    db.duckdb_conn.close()

@@ -22,7 +22,7 @@ def _query_db(lake_dir: str, query: str) -> Union[dict, Exception]:
     try:
         db = DuckDBDataStore(lake_dir, read_only=True)
         df = db.query_data(query)
-        db.close()
+        db.duckdb_conn.close()
         if len(df) == 0:
             return {}
         return df.to_dicts()
@@ -82,7 +82,7 @@ def get_payouts_from_db(
     try:
         db = DuckDBDataStore(lake_dir, read_only=True)
         df = db.query_data(query)
-        db.close()
+        db.duckdb_conn.close()
         if len(df) == 0:
             return payouts_data
         payouts_data = df.to_dicts()
