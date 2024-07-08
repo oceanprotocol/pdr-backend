@@ -22,8 +22,8 @@ def _do_sql_payouts(
         {payout_table.table_name}.ID,
         {payout_table.table_name}.slot,
         {payout_table.table_name}.user,
-        {payout_table.table_name}.stake,
         {payout_table.table_name}.predvalue,
+        {payout_table.table_name}.stake,
         {payout_table.table_name}.payout,
         {payout_table.table_name}.timestamp,
     from
