@@ -27,8 +27,8 @@ def _prepare_test_db(tmpdir, sample_data, table_name=predictions_table_name):
 
 
 @enforce_types
-def _clear_test_db(dir: str):
-    db = DuckDBDataStore(dir)
+def _clear_test_db(directory: str):
+    db = DuckDBDataStore(directory)
     db.drop_table("pdr_payouts")
     db.drop_table("pdr_predictions")
     db.duckdb_conn.close()

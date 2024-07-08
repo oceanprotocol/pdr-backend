@@ -1,10 +1,9 @@
-import pytest
 import time
+import pytest
 
 from dash import Dash
-from dash.testing.application_runners import import_app
 import dash_bootstrap_components as dbc
-from dash.testing.browser import Browser
+from selenium.webdriver.common.keys import Keys
 
 from pdr_backend.analytics.predictoor_dashboard.dash_components.callbacks import (
     get_callbacks,
@@ -17,7 +16,6 @@ from pdr_backend.analytics.predictoor_dashboard.test.resources import (
     _clear_test_db,
 )
 from pdr_backend.lake.table_pdr_payouts import payouts_table_name
-from selenium.webdriver.common.keys import Keys
 
 
 @pytest.fixture

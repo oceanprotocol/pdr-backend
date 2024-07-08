@@ -345,4 +345,3 @@ def test_create_table(tmpdir):
     # Check if the table is registered
     check_result = db.table_exists(table_name)
     assert check_result
-

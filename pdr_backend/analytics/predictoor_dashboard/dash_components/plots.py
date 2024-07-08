@@ -88,6 +88,8 @@ def create_figure(
         margin={"l": 20, "r": 0, "t": 50, "b": 0},
         showlegend=show_legend,
         xaxis_nticks=4,
+        bargap=0.1,
+        barmode="stack",
         legend=(
             {
                 "orientation": "h",
