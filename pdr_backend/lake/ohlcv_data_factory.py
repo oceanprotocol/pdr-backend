@@ -2,6 +2,7 @@
 # Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
+import asyncio
 import logging
 import os
 from typing import Dict
@@ -81,7 +82,8 @@ class OhlcvDataFactory:
         logger.info("Data start: %s", self.ss.st_timestamp.pretty_timestr())
         logger.info("Data fin: %s", fin_ut.pretty_timestr())
 
-        self._update_rawohlcv_files(fin_ut)
+        asyncio.run(self._update_rawohlcv_files(fin_ut))
+        logger.info("Update all rawohlcv files: done")
         rawohlcv_dfs = self._load_rawohlcv_files(fin_ut)
         mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
@@ -91,14 +93,15 @@ class OhlcvDataFactory:
         assert isinstance(mergedohlcv_df, pl.DataFrame)
         return mergedohlcv_df
 
-    def _update_rawohlcv_files(self, fin_ut: UnixTimeMs):
+    async def _update_rawohlcv_files(self, fin_ut: UnixTimeMs):
         logger.info("Update all rawohlcv files: begin")
+        tasks = []
         for feed in self.ss.feeds:
-            self._update_rawohlcv_files_at_feed(feed, fin_ut)
+            tasks.append(self._update_rawohlcv_files_at_feed(feed, fin_ut))
 
-        logger.info("Update all rawohlcv files: done")
+        await asyncio.gather(*tasks)
 
-    def _update_rawohlcv_files_at_feed(self, feed: ArgFeed, fin_ut: UnixTimeMs):
+    async def _update_rawohlcv_files_at_feed(self, feed: ArgFeed, fin_ut: UnixTimeMs):
         """
         @arguments
           feed -- ArgFeed

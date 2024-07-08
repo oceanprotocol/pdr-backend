@@ -2,10 +2,11 @@
 # Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
+from datetime import datetime, UTC
 from unittest.mock import Mock, patch
 
 from enforce_typing import enforce_types
-from freezegun import freeze_time
+import time_machine
 
 from pdr_backend.analytics.check_network import (
     _N_FEEDS,
@@ -18,7 +19,9 @@ from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
 from pdr_backend.util.currency_types import Eth, Wei
 
 PATH = "pdr_backend.analytics.check_network"
-MOCK_CUR_UT = 1702826080
+
+MOCK_DT = datetime(2023, 12, 17, 15, 14, 40, tzinfo=UTC)
+MOCK_CUR_UT = int(MOCK_DT.timestamp())  # 1702826080
 
 
 @enforce_types
@@ -30,7 +33,7 @@ MOCK_CUR_UT = 1702826080
     f"{PATH}.get_expected_consume",
     side_effect=Mock(return_value=100),
 )
-@freeze_time("2023-12-17 15:14:40")  # corresponds to MOCK_CUR_UT
+@time_machine.travel(MOCK_DT)
 def test_check_dfbuyer(  # pylint: disable=unused-argument
     mock_get_expected_consume_,
     mock_get_consume_so_far_per_contract_,

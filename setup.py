@@ -22,7 +22,6 @@ install_requirements = [
     "eth-keys==0.5.1",
     "eth-typing==4.3.1",
     "flask==3.0.3",
-    "freezegun==1.5.1",
     "imblearn",
     "kaleido==0.2.1",
     "mypy==1.10.1",
@@ -42,11 +41,13 @@ install_requirements = [
     "requests-mock==1.12.1",
     "scikit-learn==1.5.0",
     "statsmodels==0.14.2",
+    "time_machine==2.14.2",
     "typeguard==4.3.0",
     "xgboost==2.1.0",
     "dash_bootstrap_components==1.6.0",
     "web3==6.20.0",
     "sapphire.py==0.2.3",
+    "stopit==1.1.2",
     "ocean-contracts==2.0.4",  # install this last
 ]
 

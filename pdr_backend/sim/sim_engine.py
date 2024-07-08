@@ -17,6 +17,7 @@ from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.aimodel.ycont_to_ytrue import ycont_to_ytrue
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
@@ -82,13 +83,15 @@ class SimEngine:
         self.sim_plotter.init_state(self.multi_id)
 
     @enforce_types
-    def run(self):
+    def run(self, mergedohlcv_df: Optional[pl.DataFrame] = None):
         logger.info("Start run")
         self._init_loop_attributes()
 
         # main loop!
-        f = OhlcvDataFactory(self.ppss.lake_ss)
-        mergedohlcv_df = f.get_mergedohlcv_df()
+        if mergedohlcv_df is None:
+            f = OhlcvDataFactory(self.ppss.lake_ss)
+            mergedohlcv_df = f.get_mergedohlcv_df()
+
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
 
@@ -130,7 +133,7 @@ class SimEngine:
             y_thr = cur_close
         else:  # transform = "RelDiff"
             y_thr = 0.0
-        ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
+        ytrue = ycont_to_ytrue(ytran, y_thr)
 
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
