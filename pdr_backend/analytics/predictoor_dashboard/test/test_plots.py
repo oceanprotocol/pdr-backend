@@ -124,6 +124,8 @@ def test_create_figure():
     assert isinstance(result, MockFigure)
     assert result.data_traces == []
     assert result.layout == {
+        "bargap": 0.1,
+        "barmode": "stack",
         "title": "title",
         "yaxis_title": "yaxis_title",
         "margin": {"l": 20, "r": 0, "t": 50, "b": 0},
