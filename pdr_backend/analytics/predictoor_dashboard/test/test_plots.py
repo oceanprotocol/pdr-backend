@@ -37,7 +37,7 @@ def test_create_bar(
     mock_bar.return_value = "bar"
     result = create_bar("name", [1, 2, 3], [4, 5, 6])
     assert result == "bar"
-    mock_bar.assert_called_once_with(x=[1, 2, 3], y=[4, 5, 6], name="name", width=1)
+    mock_bar.assert_called_once_with(x=[1, 2, 3], y=[4, 5, 6], name="name", width=5)
 
 
 @enforce_types
