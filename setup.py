@@ -29,7 +29,7 @@ install_requirements = [
     "pandas==2.2.2",
     "pathlib",
     "plotly==5.22.0",
-    "polars==0.20.31",
+    "polars==1.1.0",
     "polars[timezone]",
     "pyarrow==16.1.0",
     "pylint==3.2.5",
