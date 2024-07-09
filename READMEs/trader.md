@@ -16,6 +16,11 @@ Then, you can [go beyond](#go-beyond): [optimize trading strategy](#optimize-tra
 
 ## Install pdr-backend Repo
 
+Prerequisites:
+- Python 3.12. Earlier _will_ fail, e.g. can't find `UTC`. [Details](https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated)
+- Ubuntu MacOS. _Not_ Windows.
+
+
 In a new console:
 
 ```console
