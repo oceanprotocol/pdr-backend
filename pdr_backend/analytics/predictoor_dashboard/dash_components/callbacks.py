@@ -12,6 +12,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
     get_figures,
 )
+from pdr_backend.cli.arg_pair import ArgPair
 
 
 # pylint: disable=too-many-statements
@@ -23,11 +24,12 @@ def get_callbacks(app):
         Input("data-folder", "data"),
     )
     def get_input_data_from_db(files_dir):
-        feeds_data = get_feeds_data_from_db(files_dir)
-        predictoors_data = get_predictoors_data_from_db(files_dir)
-        if isinstance(feeds_data, Exception):
-            return None, None, dash.html.H3(str(feeds_data))
-        return feeds_data, predictoors_data, None
+        try:
+            feeds_data = get_feeds_data_from_db(files_dir)
+            predictoors_data = get_predictoors_data_from_db(files_dir)
+            return feeds_data, predictoors_data, None
+        except Exception as e:
+            return None, None, dash.html.H3(str(e))
 
     @app.callback(
         Output("payouts-data", "data"),
@@ -81,8 +83,10 @@ def get_callbacks(app):
     def create_feeds_table(feeds_data):
         if not feeds_data:
             return dash.no_update
+
         for feed in feeds_data:
             del feed["contract"]
+
         columns = [{"name": col, "id": col} for col in feeds_data[0].keys()]
         return columns
 
@@ -128,7 +132,12 @@ def get_callbacks(app):
             feeds_addrs.append(
                 {
                     "contract": current_feeds_table_data[i]["contract"],
-                    "feed_name": f"{current_feeds_table_data[i]['pair']}-{current_feeds_table_data[i]['timeframe']}",  # pylint: disable=line-too-long
+                    "feed_name": str(
+                        ArgPair(
+                            base_str=current_feeds_table_data[i]["pair"],
+                            quote_str=current_feeds_table_data[i]["timeframe"],
+                        )
+                    ),
                 }
             )
 

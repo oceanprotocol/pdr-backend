@@ -1,16 +1,16 @@
 import logging
-from typing import Union, List
+from typing import Union, List, Dict, Any
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.lake.table_pdr_predictions import predictions_table_name
-from pdr_backend.lake.table_pdr_payouts import payouts_table_name
+from pdr_backend.lake.payout import Payout
+from pdr_backend.lake.prediction import Prediction
 
 logger = logging.getLogger("predictoor_dashboard_utils")
 
 
 @enforce_types
-def _query_db(lake_dir: str, query: str) -> Union[dict, Exception]:
+def _query_db(lake_dir: str, query: str) -> Union[List[dict], Exception]:
     """
     Query the database with the given query.
     Args:
@@ -23,11 +23,10 @@ def _query_db(lake_dir: str, query: str) -> Union[dict, Exception]:
         db = DuckDBDataStore(lake_dir, read_only=True)
         df = db.query_data(query)
         db.duckdb_conn.close()
-        if len(df) == 0:
-            return {}
-        return df.to_dicts()
+        return df.to_dicts() if len(df) else []
     except Exception as e:
-        return e
+        logger.error(f"Error querying the database: {e}")
+        return []
 
 
 @enforce_types
@@ -35,7 +34,7 @@ def get_feeds_data_from_db(lake_dir: str):
     return _query_db(
         lake_dir,
         f"""
-            SELECT contract, pair, timeframe, source FROM {predictions_table_name}
+            SELECT contract, pair, timeframe, source FROM {Prediction.get_lake_table_name()}
             GROUP BY contract, pair, timeframe, source
         """,
     )
@@ -46,7 +45,7 @@ def get_predictoors_data_from_db(lake_dir: str):
     return _query_db(
         lake_dir,
         f"""
-            SELECT user FROM {predictions_table_name}
+            SELECT user FROM {Prediction.get_lake_table_name()}
             GROUP BY user
         """,
     )
@@ -66,10 +65,8 @@ def get_payouts_from_db(
         list: List of payouts data.
     """
 
-    payouts_data: List[dict] = []
-
     # Constructing the SQL query
-    query = f"SELECT * FROM {payouts_table_name} WHERE ("
+    query = f"SELECT * FROM {Payout.get_lake_table_name()} WHERE ("
 
     # Adding conditions for the first list
     query += " OR ".join([f"ID LIKE '%{item}%'" for item in feed_addrs])
@@ -79,20 +76,14 @@ def get_payouts_from_db(
     query += " OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])
     query += ");"
 
-    try:
-        db = DuckDBDataStore(lake_dir, read_only=True)
-        df = db.query_data(query)
-        db.duckdb_conn.close()
-        if len(df) == 0:
-            return payouts_data
-        payouts_data = df.to_dicts()
-    except Exception as e:
-        logger.error(e)
-    return payouts_data
+    print("query--->", query)
+    return _query_db(lake_dir, query)
 
 
 # Function to filter the list by field containing a given string
-def filter_objects_by_field(objects, field, search_string):
+def filter_objects_by_field(
+    objects: List[Dict[str, Any]], field: str, search_string: str
+) -> List[Dict[str, Any]]:
     return list(
         filter(lambda obj: search_string.lower() in obj[field].lower(), objects)
     )

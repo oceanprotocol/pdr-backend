@@ -8,11 +8,12 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_payouts_from_db,
 )
 
-from pdr_backend.lake.table_pdr_payouts import payouts_table_name
 from pdr_backend.analytics.predictoor_dashboard.test.resources import (
     _prepare_test_db,
     _clear_test_db,
 )
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.payout import Payout
 
 
 @enforce_types
@@ -34,7 +35,9 @@ def test_get_feeds_data_from_db(
     tmpdir,
     _sample_first_predictions,
 ):
-    ppss, sample_data_df = _prepare_test_db(tmpdir, _sample_first_predictions)
+    ppss, sample_data_df = _prepare_test_db(
+        tmpdir, _sample_first_predictions, Prediction.get_lake_table_name()
+    )
 
     result = get_feeds_data_from_db(ppss.lake_ss.lake_dir)
 
@@ -49,7 +52,9 @@ def test_get_predictoors_data_from_db(
     tmpdir,
     _sample_first_predictions,
 ):
-    ppss, sample_data_df = _prepare_test_db(tmpdir, _sample_first_predictions)
+    ppss, sample_data_df = _prepare_test_db(
+        tmpdir, _sample_first_predictions, Prediction.get_lake_table_name()
+    )
 
     result = get_predictoors_data_from_db(ppss.lake_ss.lake_dir)
 
@@ -66,10 +71,11 @@ def test_get_payouts_from_db(
     tmpdir,
     _sample_payouts,
 ):
-    ppss, _ = _prepare_test_db(tmpdir, _sample_payouts, table_name=payouts_table_name)
+    ppss, _ = _prepare_test_db(tmpdir, _sample_payouts, table_name="pdr_payouts")
 
     result = get_payouts_from_db([], [], ppss.lake_ss.lake_dir)
 
+    print("result--->", result)
     assert len(result) == 0
 
     result = get_payouts_from_db(

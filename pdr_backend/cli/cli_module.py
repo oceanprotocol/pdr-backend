@@ -307,9 +307,4 @@ def do_arima_plots(args, nested_args=None):
 @enforce_types
 # pylint: disable=unused-argument
 def do_predictoor_dashboard(args, nested_args=None):
-    ppss = PPSS(
-        yaml_filename=args.PPSS_FILE,
-        network=args.NETWORK,
-        nested_override_args=nested_args,
-    )
-    predictoor_dash(ppss, args.debug_mode)
+    predictoor_dash(args.ppss, args.debug_mode)

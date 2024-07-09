@@ -216,7 +216,7 @@ Congrats! You've gone through all the essential steps to earn $ by running a pre
 
 ## 6. Run Dashboard
 
-After running your predictor bot, the next logical step is to **monitor and analyze its performance**.
+After running your predictor bot, you may **monitor and analyze its performance**.
 
 To assist with this, pdr_backend provides a dashboard that utilizes **live blockchain data** to visualize key performance metrics such as **accuracy, profit, and costs over a specific period**.
 

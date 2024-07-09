@@ -1,3 +1,4 @@
+from itertools import product
 from typing import Union, List, Tuple, Optional
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
@@ -48,16 +49,18 @@ def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
     profit = predictions = correct_predictions = 0
 
     for p in payouts:
-        if predictor in p["ID"] and feed in p["ID"]:
-            predictions += 1
-            profit_change = p["payout"] - p["stake"] if p["payout"] > 0 else -p["stake"]
-            profit += profit_change
-            correct_predictions += p["payout"] > 0
+        if not (predictor in p["ID"] and feed in p["ID"]):
+            continue
 
-            slots.append(p["slot"])
-            accuracies.append((correct_predictions / predictions) * 100)
-            profits.append(profit)
-            stakes.append(p["stake"])
+        predictions += 1
+        profit_change = max(p["payout"], 0) - p["stake"]
+        profit += profit_change
+        correct_predictions += p["payout"] > 0
+
+        slots.append(p["slot"])
+        accuracies.append((correct_predictions / predictions) * 100)
+        profits.append(profit)
+        stakes.append(p["stake"])
     slot_in_date_format = [
         UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
     ]
@@ -82,6 +85,18 @@ def create_figure(
         go.Figure: Plotly figure.
     """
     fig = go.Figure(data_traces)
+    legend_config = (
+        {
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": 1.02,
+            "xanchor": "right",
+            "x": 1,
+        }
+        if show_legend
+        else {}
+    )
+
     fig.update_layout(
         title=title,
         yaxis_title=yaxis_title,
@@ -90,17 +105,7 @@ def create_figure(
         xaxis_nticks=4,
         bargap=0.1,
         barmode="stack",
-        legend=(
-            {
-                "orientation": "h",
-                "yanchor": "bottom",
-                "y": 1.02,
-                "xanchor": "right",
-                "x": 1,
-            }
-            if show_legend
-            else {}
-        ),
+        legend=legend_config,
     )
     return fig
 
@@ -121,21 +126,25 @@ def get_figures(
     accuracy_scatters, profit_scatters, stakes_scatters = [], [], []
 
     if payouts:
-        for predictor in predictoors:
-            for feed in feeds:
-                slots, accuracies, profits, stakes = process_payouts(
-                    payouts, predictor, feed["contract"]
+        for predictor, feed in product(predictoors, feeds):
+            slots, accuracies, profits, stakes = process_payouts(
+                payouts, predictor, feed["contract"]
+            )
+            if slots:
+                short_name = f"{predictor[:5]} - {feed['feed_name']}"
+                accuracy_scatters.append(
+                    go.Scatter(x=slots, y=accuracies, mode="lines", name=short_name)
                 )
-                if slots:
-                    short_name = f"{predictor[:5]} - {feed['feed_name']}"
-                    accuracy_scatters.append(
-                        create_scatter(short_name, slots, accuracies)
-                    )
-                    profit_scatters.append(create_scatter(short_name, slots, profits))
-                    stakes_scatters.append(create_bar(short_name, slots, stakes))
-    else:
-        accuracy_scatters.append(create_scatter("accuracy", [], []))
-        profit_scatters.append(create_scatter("profit", [], []))
+                profit_scatters.append(
+                    go.Scatter(x=slots, y=profits, mode="lines", name=short_name)
+                )
+                stakes_scatters.append(create_bar(short_name, slots, stakes))
+
+    if not accuracy_scatters:
+        accuracy_scatters.append(go.Scatter(x=[], y=[], mode="lines", name="accuracy"))
+    if not profit_scatters:
+        profit_scatters.append(go.Scatter(x=[], y=[], mode="lines", name="profit"))
+    if not stakes_scatters:
         stakes_scatters.append(create_bar("stakes", [], []))
 
     fig_accuracy = create_figure(

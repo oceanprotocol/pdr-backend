@@ -15,7 +15,8 @@ from pdr_backend.analytics.predictoor_dashboard.test.resources import (
     _prepare_test_db,
     _clear_test_db,
 )
-from pdr_backend.lake.table_pdr_payouts import payouts_table_name
+from pdr_backend.lake.payout import Payout
+from pdr_backend.lake.prediction import Prediction
 
 
 @pytest.fixture
@@ -34,12 +35,15 @@ def test_get_input_data_from_db(
     _clear_test_db(str(tmpdir))
 
     _prepare_test_db(
-        tmpdir, _sample_payouts_related_with_predictions, table_name=payouts_table_name
+        tmpdir,
+        _sample_payouts_related_with_predictions,
+        table_name=Payout.get_lake_table_name(),
     )
 
     ppss, _ = _prepare_test_db(
         tmpdir,
         _sample_daily_predictions,
+        table_name=Prediction.get_lake_table_name(),
     )
 
     app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
