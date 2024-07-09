@@ -16,6 +16,11 @@ Then, you can [go beyond](#go-beyond): [optimize trading strategy](#optimize-tra
 
 ## Install pdr-backend Repo
 
+Prerequisites:
+- Python 3.12. Earlier _will_ fail, e.g. can't find `UTC`. [Details](https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated)
+- Ubuntu MacOS. _Not_ Windows.
+
+
 In a new console:
 
 ```console
@@ -46,7 +51,11 @@ curl https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json
 If you're running MacOS, then in console:
 
 ```console
+# so that sapphire.py works. Details in #66
 codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
+
+# so that xgboost works. Details in #1339
+brew install libomp
 ```
 
 ## Simulate Modeling and Trading

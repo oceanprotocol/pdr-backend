@@ -108,6 +108,26 @@ def test_sim_ss_is_final_iter(tmpdir):
         _ = ss.is_final_iter(11)
 
 
+@enforce_types
+def test_sim_ss_setters(tmpdir):
+    d = sim_ss_test_dict(_logdir(tmpdir))
+    ss = SimSS(d)
+
+    # test_n
+    ss.set_test_n(32)
+    assert ss.test_n == 32
+    with pytest.raises(ValueError):
+        ss.set_test_n(0)
+    with pytest.raises(ValueError):
+        ss.set_test_n(-5)
+
+    # tradetype
+    ss.set_tradetype("livereal")
+    assert ss.tradetype == "livereal"
+    with pytest.raises(ValueError):
+        ss.set_tradetype("foo")
+
+
 # ====================================================================
 # helper funcs
 @enforce_types

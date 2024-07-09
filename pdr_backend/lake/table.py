@@ -142,7 +142,7 @@ class NamedTable:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        DuckDBDataStore(ppss.lake_ss.lake_dir).insert_to_table(data, self.fullname)
+        DuckDBDataStore(ppss.lake_ss.lake_dir).insert_from_df(data, self.fullname)
         logger.info("  Appended %s rows to db table: %s", data.shape[0], self.fullname)
 
 

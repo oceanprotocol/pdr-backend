@@ -168,7 +168,7 @@ class GQLDataFactory:
 
         buffer_df = pl.DataFrame([], schema=dataclass.get_lake_schema())
 
-        DuckDBDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
+        DuckDBDataStore(self.ppss.lake_ss.lake_dir).create_empty(
             temp_table.fullname,
             dataclass.get_lake_schema(),
         )
