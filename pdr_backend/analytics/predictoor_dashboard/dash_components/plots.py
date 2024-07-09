@@ -30,7 +30,7 @@ def create_bar(name: str, x_data: List[float], y_data: List[int]) -> go.Bar:
     Returns:
         go.Bar: Bar plot trace.
     """
-    return go.Bar(x=x_data, y=y_data, name=name, width=1)
+    return go.Bar(x=x_data, y=y_data, name=name, width=5)
 
 
 @enforce_types
