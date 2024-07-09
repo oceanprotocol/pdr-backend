@@ -172,14 +172,14 @@ class SimEngine:
         prob_up: float = 0.0
         # predict price direction
         if self.ppss.sim_ss.use_own_model:
-            prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+            prob_up = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
         else:
             ut_seconds = ut.to_seconds()
             prediction = self.chain_predictions_map.get(ut_seconds)
             if prediction is None or type(prediction) is not float:
                 logger.error("No prediction found at time %s", ut_seconds)
                 return
-            prob_up: float = prediction
+            prob_up = prediction
 
         prob_down: float = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
