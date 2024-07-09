@@ -68,10 +68,11 @@ Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change pa
 cp ppss.yaml my_ppss.yaml
 ```
 
-Chose the source of the predictions used as signals for trading:
-- Own built model, creates predictions on the way   `use_own_model=True`
-- Live chain, gets the predictions from give chain  `use_own_model=False`
-By default `use_own_model` is set to True, and can be changed inside `my_ppss.yaml` file.
+Choose the source of the predictions used as signals for trading:
+- Use the builtin model. `use_own_model=True`
+- Get the predictions from live feeds. `use_own_model=False`
+
+By default `use_own_model` is set to `True`, and can be changed inside `my_ppss.yaml` file.
 
 Let's run the simulation engine. In console:
 ```console
@@ -81,8 +82,8 @@ pdr sim my_ppss.yaml
 What the engine does does:
 1. Set simulation parameters.
 2. Grab historical price data from exchanges and stores in `lake_data/` dir. It re-uses any previously saved data.
-3. Run through many 5min epochs. At each epoch:
-   - Build a model or Get predictions from chain
+3. Run through many 5 min epochs. At each epoch:
+   - Build a model or get predictions from chain
    - Predict
    - Trade
    - Log to console and `logs/out_<time>.txt`
