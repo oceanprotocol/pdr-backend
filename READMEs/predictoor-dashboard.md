@@ -50,5 +50,5 @@ The displayed charts are:
 
 We are constantly looking for ways to improve the Predictoor dashboard to help predictors become more profitable and are open to suggestions and ideas.
 
-If you are a predictor and want to help us improve this tool, **join our Discord channel** and drop a message, or open a GitHub issue.
+If you are a predictor and want to help us improve this tool, [join our Discord channel](https://discord.gg/Tvqd7Z648H) and drop a message, or open a GitHub issue.
 

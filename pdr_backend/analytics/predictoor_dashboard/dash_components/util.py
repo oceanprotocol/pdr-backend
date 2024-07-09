@@ -25,7 +25,7 @@ def _query_db(lake_dir: str, query: str) -> Union[List[dict], Exception]:
         db.duckdb_conn.close()
         return df.to_dicts() if len(df) else []
     except Exception as e:
-        logger.error(f"Error querying the database: {e}")
+        logger.error("Error querying the database: %s", e)
         return []
 
 

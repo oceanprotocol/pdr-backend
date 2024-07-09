@@ -71,11 +71,12 @@ def test_get_payouts_from_db(
     tmpdir,
     _sample_payouts,
 ):
-    ppss, _ = _prepare_test_db(tmpdir, _sample_payouts, table_name="pdr_payouts")
+    ppss, _ = _prepare_test_db(
+        tmpdir, _sample_payouts, table_name=Payout.get_lake_table_name()
+    )
 
     result = get_payouts_from_db([], [], ppss.lake_ss.lake_dir)
 
-    print("result--->", result)
     assert len(result) == 0
 
     result = get_payouts_from_db(
