@@ -81,7 +81,7 @@ def test_schema_interpreter_float_as_integer():
     with pytest.raises(
         TypeError,
         match="unexpected value while building Series of type Int64; found value of type Float64",
-    ) as e:
+    ):
         tohlcv_data = [
             [
                 1624003200000.00,
