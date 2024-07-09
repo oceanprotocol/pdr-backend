@@ -167,7 +167,7 @@ class SimEngine:
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
         timeframe: ArgTimeframe = predict_feed.timeframe  # type: ignore
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
-
+        prob_up: float = 0.0
         # predict price direction
         if self.ppss.sim_ss.use_own_model:
             prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
