@@ -93,9 +93,7 @@ class SimEngine:
     def load_chain_prediction_data(self):
         SimChainPredictions.verify_use_chain_data_in_syms_dependencies(self.ppss)
         if not SimChainPredictions.verify_prediction_data(self.ppss):
-            raise Exception(
-                "Could not get the required prediction data to run the simulations"
-            )
+            raise Exception("Couldn't get prediction data")
         self.chain_predictions_map = SimChainPredictions.get_predictions_data(
             UnixTimeMs(self.ppss.lake_ss.st_timestamp).to_seconds(),
             UnixTimeMs(self.ppss.lake_ss.fin_timestamp).to_seconds(),
