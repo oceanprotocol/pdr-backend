@@ -33,7 +33,7 @@ def mock_gql_update(self):
     # timestamps are in ms according to slots
     timestamps = [slot * 1000 for slot in slots]
 
-    db.insert_to_table(
+    db.insert_from_df(
         pl.DataFrame(
             {
                 "ID": payout_ids,
@@ -47,7 +47,7 @@ def mock_gql_update(self):
         "pdr_payouts",
     )
 
-    db.insert_to_table(
+    db.insert_from_df(
         pl.DataFrame(
             {
                 "timeframe": ["5m"],
