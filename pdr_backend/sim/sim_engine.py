@@ -85,6 +85,10 @@ class SimEngine:
         logger.info("Initialize plot data.")
         self.sim_plotter.init_state(self.multi_id)
 
+        # fetch predictions data
+        if not self.ppss.sim_ss.use_own_model:
+            self.load_chain_prediction_data()
+
     @enforce_types
     def load_chain_prediction_data(self):
         SimChainPredictions.verify_use_chain_data_in_syms_dependencies(self.ppss)
@@ -107,10 +111,6 @@ class SimEngine:
         if mergedohlcv_df is None:
             f = OhlcvDataFactory(self.ppss.lake_ss)
             mergedohlcv_df = f.get_mergedohlcv_df()
-
-        # fetch predictions data
-        if not self.ppss.sim_ss.use_own_model:
-            self.load_chain_prediction_data()
 
         # main loop!
         for test_i in range(self.ppss.sim_ss.test_n):
