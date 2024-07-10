@@ -103,7 +103,7 @@ def get_figures(
             )
             if not slots:
                 continue
-                
+
             short_name = f"{predictor[:5]} - {feed['feed_name']}"
             accuracy_scatters.append(
                 go.Scatter(x=slots, y=accuracies, mode="lines", name=short_name)

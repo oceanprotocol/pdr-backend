@@ -3,41 +3,11 @@ from unittest.mock import patch
 from enforce_typing import enforce_types
 
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
-    create_scatter,
-    create_bar,
     process_payouts,
     create_figure,
     get_figures,
 )
 from pdr_backend.util.time_types import UnixTimeS
-
-
-@enforce_types
-@patch(
-    "pdr_backend.analytics.predictoor_dashboard.dash_components.plots.go.Scatter",
-)
-def test_create_scatter(
-    mock_scatter,
-):
-    mock_scatter.return_value = "scatter"
-    result = create_scatter("name", [1, 2, 3], [4, 5, 6])
-    assert result == "scatter"
-    mock_scatter.assert_called_once_with(
-        x=[1, 2, 3], y=[4, 5, 6], mode="lines", name="name"
-    )
-
-
-@enforce_types
-@patch(
-    "pdr_backend.analytics.predictoor_dashboard.dash_components.plots.go.Bar",
-)
-def test_create_bar(
-    mock_bar,
-):
-    mock_bar.return_value = "bar"
-    result = create_bar("name", [1, 2, 3], [4, 5, 6])
-    assert result == "bar"
-    mock_bar.assert_called_once_with(x=[1, 2, 3], y=[4, 5, 6], name="name", width=5)
 
 
 @enforce_types
