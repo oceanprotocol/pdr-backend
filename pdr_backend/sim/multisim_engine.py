@@ -15,7 +15,6 @@ import pandas as pd
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.nested_arg_parser import flat_to_nested_args
-from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.multisim_ss import MultisimSS
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_engine import SimEngine
@@ -42,8 +41,6 @@ class MultisimEngine:
         log_dir = self.ppss.sim_ss.log_dir  # type: ignore[attr-defined]
         self.csv_file = os.path.join(log_dir, filebase)
 
-        self.ohlcv_dfs: List[pd.DataFrame] = []
-
     @property
     def ppss(self) -> PPSS:
         return PPSS(d=self.d, network=self.network)
@@ -57,15 +54,6 @@ class MultisimEngine:
         ss = self.ss
         logger.info("Multisim engine: start. # runs = %s", ss.n_runs)
         self.initialize_csv_with_header()
-
-        # must be done in advance, as it's async
-        for run_i in range(ss.n_runs):
-            point_i = self.ss.point_i(run_i)
-            point_i_ppss = self.ppss_from_point(point_i)
-            f = OhlcvDataFactory(point_i_ppss.lake_ss)
-            mergedohlcv_df = f.get_mergedohlcv_df()
-            self.ohlcv_dfs.append(mergedohlcv_df)
-
         asyncio.run(self.run_async(ss.n_runs))
 
     @enforce_types
@@ -86,8 +74,7 @@ class MultisimEngine:
         multi_id = str(uuid.uuid4())
         sim_engine = SimEngine(ppss, feedset, multi_id)
         sim_engine.disable_realtime_state()
-        sim_engine.run(self.ohlcv_dfs[run_i])
-
+        sim_engine.run()
         st = sim_engine.st
         recent_metrics = st.recent_metrics()
 
@@ -196,12 +183,14 @@ class MultisimEngine:
     def load_csv(self) -> pd.DataFrame:
         """Load csv as a pandas Dataframe."""
         df = pd.read_csv(self.csv_file)
-        df.rename(columns=lambda x: x.strip(), inplace=True)
+        df.rename(columns=lambda x: x.strip(), inplace=True)  # strip whitespace
+        return df
 
     @enforce_types
     def check_csv_uniqueness(self):
         """Check that all values in the 'pdr_profit_OCEAN' column are unique."""
         df = self.load_csv()
         pdr_profit_OCEAN_values = df["pdr_profit_OCEAN"]
-        assert pdr_profit_OCEAN_values.is_unique, "Duplicate pdr_profit_OCEAN values found in CSV"
-        return df
+        assert (
+            pdr_profit_OCEAN_values.is_unique
+        ), "Duplicate pdr_profit_OCEAN values found in CSV"
