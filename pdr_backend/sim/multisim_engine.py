@@ -190,10 +190,18 @@ class MultisimEngine:
             writer.writerow(
                 [_val2str(val).rjust(space) for val, space in zip(row, spaces)]
             )
+        self.check_csv_uniqueness()
 
     @enforce_types
     def load_csv(self) -> pd.DataFrame:
         """Load csv as a pandas Dataframe."""
         df = pd.read_csv(self.csv_file)
-        df.rename(columns=lambda x: x.strip(), inplace=True)  # strip whitespace
+        df.rename(columns=lambda x: x.strip(), inplace=True)
+
+    @enforce_types
+    def check_csv_uniqueness(self):
+        """Check that all values in the 'pdr_profit_OCEAN' column are unique."""
+        df = self.load_csv()
+        pdr_profit_OCEAN_values = df["pdr_profit_OCEAN"]
+        assert pdr_profit_OCEAN_values.is_unique, "Duplicate pdr_profit_OCEAN values found in CSV"
         return df
