@@ -113,23 +113,44 @@ def get_table(table_id, table_name, searchable_field, columns, data):
             html.Div(
                 [
                     html.Span(table_name, style={"fontSize": "20px"}),
+                ],
+                style={
+                    "display": "flex",
+                    "justifyContent": "space-between",
+                    "alignItems": "center",
+                },
+            ),
+            html.Div(
+                [
                     dcc.Input(
                         id=f"search-input-{table_name}",
                         type="text",
                         placeholder=f"Search for {searchable_field}",
                         debounce=True,  # Trigger the input event after user stops typing
                         style={
+                            "display": "flex",
+                            "flex": "1",
                             "fontSize": "15px",
-                            "height": "100%",
                         },
                     ),
-                    html.Button("Select All", id=f"select-all-{table_id}", n_clicks=0),
-                    html.Button("Clear All", id=f"clear-all-{table_id}", n_clicks=0),
+                    html.Button(
+                        "Select All",
+                        id=f"select-all-{table_id}",
+                        n_clicks=0,
+                        style={"borderWidth": "1px"},
+                    ),
+                    html.Button(
+                        "Clear",
+                        id=f"clear-all-{table_id}",
+                        n_clicks=0,
+                        style={"borderWidth": "1px"},
+                    ),
                 ],
                 style={
                     "display": "flex",
                     "justifyContent": "space-between",
                     "alignItems": "center",
+                    "gap": "10px",
                 },
             ),
             dash_table.DataTable(
@@ -141,7 +162,7 @@ def get_table(table_id, table_name, searchable_field, columns, data):
                 sort_action="native",  # Enables data to be sorted
                 style_cell={"textAlign": "left"},
                 style_table={
-                    "height": "38vh",
+                    "height": "35vh",
                     "width": "100%",
                     "overflow": "auto",
                     "marginTop": "5px",

@@ -189,6 +189,7 @@ def get_callbacks(app):
             Input("clear-all-feeds_table", "n_clicks"),
         ],
         [State("feeds_table", "data"), State("feeds_table", "selected_rows")],
+        prevent_initial_call=True,
     )
     def select_or_clear_all_feeds(_, __, rows, ___):
         """
@@ -208,6 +209,7 @@ def get_callbacks(app):
             State("predictoors_table", "data"),
             State("predictoors_table", "selected_rows"),
         ],
+        prevent_initial_call=True,
     )
     def select_or_clear_all_predictoors(_, __, rows, ___):
         """
