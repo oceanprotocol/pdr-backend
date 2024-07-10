@@ -14,6 +14,7 @@ This README shows how to earn $ by running a predictoor bot on mainnet.
 1. **[Run bot on testnet](#3-run-predictoor-bot-on-sapphire-testnet)**
 1. **[Run bot on mainnet](#4-run-predictoor-bot-on-sapphire-mainnet)**
 1. **[Claim payout](#5-claim-payout)**
+1. **[Run dashboard to monitor and analyze performance](#6-run-dashboard)**
 
 Once you're done the main flow, you can go beyond, with any of:
 
@@ -216,6 +217,14 @@ When running predictoors on mainnet, you have the potential to earn $.
 **[Here](payout.md)** are instructions to claim your earnings.
 
 Congrats! You've gone through all the essential steps to earn $ by running a predictoor bot on mainnet.
+
+## 6. Run Dashboard
+
+After running your predictor bot, you may **monitor and analyze its performance**.
+
+To assist with this, pdr_backend provides a dashboard that utilizes **live blockchain data** to visualize key performance metrics such as **accuracy, profit, and costs over a specific period**.
+
+Please refer to this **[setup guide](predictoor-dashboard.md)** for detailed instructions on how to set up, configure, and **run the dashboard** to visualize real-time data from the blockchain.
 
 The next sections describe how to go beyond, by optimizing the model and more.
 

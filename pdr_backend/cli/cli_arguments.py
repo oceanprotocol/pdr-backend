@@ -50,6 +50,7 @@ Power tools:
   pdr lake raw|etl drop PPSS_FILE NETWORK ST
   pdr lake describe --HTML PPSS_FILE NETWORK
   pdr lake validate PPSS_FILE NETWORK
+  pdr predictoor_dashboard PPSS_FILE NETWORK
   pdr analytics PPSS_FILE NETWORK
 
 Utilities:
@@ -630,6 +631,19 @@ class ArimaPlotsArgParser(CustomArgParser, PPSS_Mixin, DEBUG_Mixin):
         )
 
 
+class PredictoorDashboardArgParser(
+    CustomArgParser, PPSS_Mixin, NETWORK_Mixin, DEBUG_Mixin
+):
+    # pylint: disable=unused-argument
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+
+        self.add_arguments_bulk(
+            command_name,
+            ["PPSS", "NETWORK", "DEBUG"],
+        )
+
+
 # below, list each entry in defined_parsers in same order as HELP_LONG
 defined_parsers = {
     # main tools
@@ -676,6 +690,9 @@ defined_parsers = {
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
     "do_sim_plots": SimPlotsArgParser("Visualize simulation data", "sim_plots"),
     "do_arima_plots": ArimaPlotsArgParser("Visualize ARIMA data", "arima_plots"),
+    "do_predictoor_dashboard": PredictoorDashboardArgParser(
+        "Visualize Predictoor data", "predictoor_dashboard"
+    ),
 }
 
 
