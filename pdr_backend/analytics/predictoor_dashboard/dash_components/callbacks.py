@@ -11,6 +11,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
     get_figures,
+    get_metrics,
 )
 
 
@@ -103,6 +104,9 @@ def get_callbacks(app):
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),
         Output("stake_chart", "children"),
+        Output("accuracy_metric", "children"),
+        Output("profit_metric", "children"),
+        Output("stake_metric", "children"),
         Input("payouts-data", "data"),
         Input("feeds_table", "selected_rows"),
         Input("predictoors_table", "selected_rows"),
@@ -147,7 +151,18 @@ def get_callbacks(app):
             payouts_data, feeds_addrs, predictoors_addrs
         )
 
-        return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
+        accuracy, profit, stakes = get_metrics(
+            payouts_data, feeds_addrs, predictoors_addrs
+        )
+
+        return (
+            get_graph(accuracy_fig),
+            get_graph(profit_fig),
+            get_graph(stakes_fig),
+            accuracy,
+            profit,
+            stakes,
+        )
 
     @app.callback(
         Output("predictoors_table", "data"),

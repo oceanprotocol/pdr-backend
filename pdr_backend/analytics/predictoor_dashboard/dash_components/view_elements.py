@@ -41,11 +41,7 @@ def get_input_column():
 
 def get_graphs_column():
     return html.Div(
-        [
-            html.Div(id="accuracy_chart"),
-            html.Div(id="profit_chart"),
-            html.Div(id="stake_chart"),
-        ],
+        [get_graphs_column_metrics_row(), get_graphs_column_plots_row()],
         id="graphs_container",
         style={
             "height": "100%",
@@ -55,6 +51,51 @@ def get_graphs_column():
             "justifyContent": "space-around",
             "paddingLeft": "40px",
         },
+    )
+
+
+def get_graphs_column_metrics_row():
+    return html.Div(
+        [
+            get_metric(label="Accuracy", value="50%", value_id="accuracy_metric"),
+            get_metric(label="Profit", value="50%", value_id="profit_metric"),
+            get_metric(label="Stake", value="50%", value_id="stake_metric"),
+        ],
+        id="metrics_container",
+        style={
+            "height": "20%",
+            "display": "flex",
+            "justifyContent": "space-between",
+        },
+    )
+
+
+def get_graphs_column_plots_row():
+    return html.Div(
+        [
+            html.Div(id="accuracy_chart"),
+            html.Div(id="profit_chart"),
+            html.Div(id="stake_chart"),
+        ],
+        id="plots_container",
+        style={
+            "height": "80%",
+            "display": "flex",
+            "flexDirection": "column",
+            "justifyContent": "space-between",
+        },
+    )
+
+
+def get_metric(label, value, value_id):
+    return html.Div(
+        [
+            html.Span(
+                label,
+            ),
+            html.Span(value, id=value_id, style={"fontWeight": "bold"}),
+        ],
+        style={"display": "flex", "flexDirection": "column", "font-size": "20px"},
     )
 
 
@@ -151,4 +192,4 @@ def get_table(table_id, table_name, searchable_field, columns, data):
 
 
 def get_graph(figure):
-    return dcc.Graph(figure=figure, style={"width": "100%", "height": "30vh"})
+    return dcc.Graph(figure=figure, style={"width": "100%", "height": "28vh"})

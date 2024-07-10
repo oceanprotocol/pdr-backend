@@ -131,3 +131,28 @@ def get_figures(
     )
 
     return fig_accuracy, fig_profit, fig_costs
+
+
+def get_metrics(payouts: Optional[List], feeds: List, predictoors: List[str]):
+    """
+    Get accuracy, profit, and costs over all selected feeds and predictoors.
+    Args:
+        payouts (list): List of payouts data.
+        feeds (list): List of feeds data.
+        predictoors (list): List of predictoors data.
+    Returns:
+        tuple: Tuple of accuracy, profit, and costs values.
+    """
+    accuracy, profit, stake = 0, 0, 0
+
+    if payouts:
+        for predictor, feed in product(predictoors, feeds):
+            slots, accuracies, profits, stakes = process_payouts(
+                payouts, predictor, feed["contract"]
+            )
+            if not slots:
+                continue
+            stake = stakes[-1]
+            profit = profits[-1]
+            accuracies = accuracies[-1]
+    return accuracy, profit, stake
