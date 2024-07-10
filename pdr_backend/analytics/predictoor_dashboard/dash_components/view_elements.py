@@ -59,7 +59,7 @@ def get_graphs_column_metrics_row():
         [
             get_metric(label="Accuracy", value="50%", value_id="accuracy_metric"),
             get_metric(label="Profit", value="50%", value_id="profit_metric"),
-            get_metric(label="Stake", value="50%", value_id="stake_metric"),
+            get_metric(label="Avg Stake", value="50%", value_id="stake_metric"),
         ],
         id="metrics_container",
         style={

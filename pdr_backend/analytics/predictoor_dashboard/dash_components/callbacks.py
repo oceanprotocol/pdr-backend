@@ -159,9 +159,9 @@ def get_callbacks(app):
             get_graph(accuracy_fig),
             get_graph(profit_fig),
             get_graph(stakes_fig),
-            accuracy,
-            profit,
-            stakes,
+            f"{round(accuracy, 2)}%",
+            f"{round(profit, 2)} OCEAN",
+            f"{round(stakes, 2)} OCEAN",
         )
 
     @app.callback(

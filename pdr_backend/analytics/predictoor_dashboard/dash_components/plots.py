@@ -143,7 +143,7 @@ def get_metrics(payouts: Optional[List], feeds: List, predictoors: List[str]):
     Returns:
         tuple: Tuple of accuracy, profit, and costs values.
     """
-    accuracy, profit, stake = 0, 0, 0
+    accuracy, profit, stake = None, None, None
 
     if payouts:
         for predictor, feed in product(predictoors, feeds):
@@ -152,7 +152,9 @@ def get_metrics(payouts: Optional[List], feeds: List, predictoors: List[str]):
             )
             if not slots:
                 continue
-            stake = stakes[-1]
-            profit = profits[-1]
-            accuracies = accuracies[-1]
+            stake = ((stakes[-1] + stake) / 2) if stake else stakes[-1]
+            profit = (profits[-1] + profit) if profit else profits[-1]
+            accuracy = ((accuracies[-1] + accuracy) / 2) if accuracy else accuracies[-1]
+    else:
+        return 0, 0, 0
     return accuracy, profit, stake
