@@ -132,12 +132,7 @@ def get_callbacks(app):
             feeds_addrs.append(
                 {
                     "contract": current_feeds_table_data[i]["contract"],
-                    "feed_name": str(
-                        ArgPair(
-                            base_str=current_feeds_table_data[i]["pair"],
-                            quote_str=current_feeds_table_data[i]["timeframe"],
-                        )
-                    ),
+                    "feed_name": f"{current_feeds_table_data[i]['pair']}-{current_feeds_table_data[i]['timeframe']}",  # pylint: disable=line-too-long
                 }
             )
 
