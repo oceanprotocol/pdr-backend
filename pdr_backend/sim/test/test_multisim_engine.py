@@ -35,6 +35,9 @@ def test_multisim1(tmpdir):
     assert df.shape[0] == 2  # 2 runs
     assert df.shape[1] == len(target_columns)
     assert list(df.columns) == target_columns
+    assert df[
+        "pdr_profit_OCEAN"
+    ].is_unique, "Duplicate pdr_profit_OCEAN values found in CSV"
 
 
 @enforce_types
