@@ -12,7 +12,6 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
     get_figures,
 )
-from pdr_backend.cli.arg_pair import ArgPair
 
 
 # pylint: disable=too-many-statements
