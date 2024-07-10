@@ -127,11 +127,17 @@ class DuckDBDataStore(BaseDataStore):
         table_names = self.get_table_names()
 
         if table_name in table_names:
-            logger.info("insert_to_table table_name = %s, num_rows = %s", table_name, df.shape[0])
+            logger.info(
+                "insert_to_table table_name = %s, num_rows = %s",
+                table_name,
+                df.shape[0],
+            )
             self.duckdb_conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
             return
 
-        logger.info("create_and_fill_table = %s, num_rows = %s", table_name, df.shape[0])
+        logger.info(
+            "create_and_fill_table = %s, num_rows = %s", table_name, df.shape[0]
+        )
         self._create_and_fill_table(df, table_name)
 
     @enforce_types
