@@ -25,7 +25,7 @@ To complete this we'll be interacting different components in our stack, such as
 
 
 ## ETL Tables & Architecture
-To provide summaries on Predidctoor users and systems, we want to fetch all new data and make it available for analysis.
+To provide summaries on Predictoor users and systems, we want to fetch all new data and make it available for analysis.
 
 The GraphQL Data Factory & ETL helps us achieve this by breaking the process down into 3 steps.
 1. Ingesting + Loading Data - GQLDataFactory
@@ -33,50 +33,54 @@ The GraphQL Data Factory & ETL helps us achieve this by breaking the process dow
 1. Describing, visualization, and querying the data
 
 The following diagram presents the ETL tables and workflow. Please maintain the [diagram](diagrams/lake.html) and image so they are up-to-date.
+
 ![Lake & ETL Tables](images/lake_tables_diagram.png)
 
 
 ## Lake - "Storage"
 For most users, the lake can simply be thought of disk storage.
 
-It contains many folders and CSVs, that maintain a complete set of records and reliable information. It should be easy to understand and to work with.
+It keeps all records stored as a timeseries CSV with a max number of records, where you can search and sample sections of the data if required.
 
-Currently, the lake (CSVs) can be accessed via the CSVDataStore (CSV wrapper) and operated with via the CLI module `lake raw` commands `pdr lake raw update ppss.yaml sapphire-mainnet` (cli_module_lake.py)
+In python, the lake (raw) data can be accessed via CSVDataStore (a CSV wrapper) and the CLI Lake module (cli_module_lake.py).
+
+As a user, you can operate the lake via the CLI command: `pdr lake raw update ppss.yaml sapphire-mainnet`
 
 Some features include:
 1. The lake has a few commands: `describe`, `validate`, `update`, `drop`, and `query`
 1. The lake is made up of many timeseries objects that should exist from `lake_ss.st_ts` and `lake_ss.end_ts`.
 1. All the data inside lake folders should exist between `st_ts` and `end_ts`.
 1. The `st_ts` and `end_ts` checkpoints come from `ppss.yaml` and the `lake_ss` component.
-1. You can set `st_ts` and `end_ts` to relative times ("3 hours ago" -> "now"), so new new records are always fetched and processed.
+1. You can set `st_ts` and `end_ts` to relative times ("3 hours ago" -> "now"), so new records are always fetched and processed.
 1. The lake is designed so raw data is fetched only once from subgraph and then saved into `lake_data/` and DuckDB.
 
 **Note:** The lake currently does not support backfilling. If you need to, drop all data, adjust `st_ts` and `end_ts`, and then fetch again.
 
+![GQLDF Fetch & Write](images/gql_data_factory_fetch_1_write_n.png)
+
 
 ## GQL Data Factory & Raw Data
-Is responsible for running a series of graphql fetches against subgraphs and then saves this raw data into the lake (CSV).  
+Is responsible for running a series of graphql fetches against subgraphs and then saves this raw data against 1->N buckets. 
 
-Because GQL Data Factory is responsible for "Ingesting & Loading", we piggy back on this routine and also plce this raw data into our data warehouse (DuckDB).
+GQLDF features a buffer, and will write out records as they arrive. Because ingesting is expensive, we use this routine to write it to (local) disk as CSVs, an into our (local) Data Warehouse (DuckDB).
 
 When the GQL Data Factory updates, it looks at each query and their respective `lake_data/` folder to figure out where to resume from. Once all data has been fetched and loaded into `lake_data/` and the Data Warehouse (DuckDB), the update routine ends.
 
-**Note:** The lake is designed to only be filled once. By default GQL Data Factory will not delete data from `lake_data/`. This is done intentionally.
+**Note:** The lake is designed to only be filled once. By default GQL Data Factory will not delete data from `lake_data/`.
 
-If you want to refetch parts of your lake data:
+**[DX-Self-Healing Lake]**
+
+If you delete RAW CSV data sequentially from the end, i.e. "drop_tail()" then GQLDF will attempt to self-heal and simply fill in the data that it's missing.
+
+![GQLDF Fetch & Write](images/gql_data_factory_fetch.png)
+
+**[DX-How to clear your Lake and start from scratch]**
 1. Delete the `lake_data` folder
 ```console
 sudo rm -r lake_data/
 ```
 
-2. Drop all records from the Data Warehouse
-```
-```console
-pdr lake raw drop ppss.yaml sapphire-mainnet 2020-01-01
-pdr lake etl drop ppss.yaml sapphire-mainnet 2020-01-01
-```
-
-3. Fetch the data again (if required, update `st_ts` and `end_ts`)
+2. Fetch the raw data (if required, update `st_ts` and `end_ts`)
 ```console
 pdr lake raw update ppss.yaml sapphire-mainnet
 ```
@@ -98,9 +102,21 @@ Some features include:
 
 **Note:** All ETL is done on the DW to be efficient and future-proof ourselves towards distributed DBs. Do not jump between python -> sql -> python, this is computationally and memory expensive. All queries are designed to function as mini-batch opeations to reduce the amount of scans, joins, inserts, and updates.
 
+**[DX-How to clear your Data Warehouse without clearing your lake]**
+1. Drop all records from the Data Warehouse
+```console
+pdr lake raw drop ppss.yaml sapphire-mainnet 2020-01-01
+pdr lake etl drop ppss.yaml sapphire-mainnet 2020-01-01
+```
+
+2. Fetch if needed, load from lake, and run the full ETL pipeline
+```console
+pdr lake etl update ppss.yaml sapphire-mainnet
+```
+
 
 ## ETL
-Is responsible for running a series of Jobs and queries that keep the lake in great shape.
+Is responsible for running a series of queries that transform and enrich the data so it can provide standard calculations accuately and valuable insights more readily.
 
 ### Update from CLI
 From the cli - `pdr lake etl update ppss.yaml sapphire-mainnet`
@@ -121,9 +137,7 @@ As you are developing and building around the lake, your workflow migh look like
 ### Limitations
 1. No backfilling data before `st_ts`. If you want to backfill drop all records or select a new `lake_path`.
 
-
 ## Checkpoints
-
 In order to only process new data, we want to "maintain a checkpoint" that helps us know where to start/resume from.
 
 The simplest way to do this is to use the first and last event timestamps from our data.
@@ -135,35 +149,30 @@ All CSVs should be in-sync... with nearly the same [st_ts => end_ts] across all 
 1. Write raw data to CSV [st_ts => end_ts]
 1. Write raw data to DW [st_ts => end_ts]
 
+![GQLDF Fetch & Write](images/gql_use_cache_and_swap.png)
+
 ### ETL
 All ETL tables should be in-sync with nearly the same [st_ts => end_ts].
-1. ETL looks at CSV and ETL Tables last_records to identify how to resume [st_ts => end_ts], otherwise it uses ppss.yaml.
-1. ETL begins by process all RAW records [st_ts => end_ts] before processing the ETL tables.
-1. RAW records are processed into NewEvents (INSERT) and UpdateEvents(UPDATE) and stored in temporary tables.
-1. All NewEvents and UpdateEvents [st_ts => end_ts] from RAW tables, are used to update bronze tables.
+1. ETL looks at CSV and ETL Tables last_records to identify how to resume, otherwise it uses ppss.yaml.
+1. ETL first processes RAW records, before building ETL records/tables 
+1. RAW records are processed into NewEvents (INSERT) and UpdateEvents(UPDATE) and stored in temporary tables: [TempTable] & [TempUpdateTable].
+1. NewEvents and UpdateEvents are used to yield/update ETL tables.
+1. ETL tabels follow a "Medallion Architecture": bronze, silver, gold
+
+![ETL Update Routine](images/etl_checkpoints.png)
 
 **Exceptions to the rule**
 This doesn't always have to be the case.
 1. RAW + ETL records could have been dropped.
 2. CSV + GQLDF could be far ahead.
 
-**How to resolve a drop?**
+**[DX-How to resolve checkpoint and data problems]**
 1. Run `describe` and `validate` to make sure there are no errors.
 2. Drop all RAW + ETL Tables from DW and rebuild the DW from scratch.
 3. RAW Tables are rebuilt from CSV records.
 4. ETL Tables are rebuilt from RAW tables.
 
 All systems [GQLDF + ETL + CSV + DuckDB] should be working out-of-the-box by using ppss.yaml & the cli.
-
-
-## "Dumb" Components
-Components should be self-contained, "dumb", and perform one role.
-
-GQLDF is upstream from ETL and does not have any knowledge of it. Do not create dependencies where there are none.
-
-If you delete data from `lake_data`, do not expect this change to be reflected in RAW or ETL tables.
-
-Rather, think about the DX, entry points, and [how to approach this intuitively](https://github.com/oceanprotocol/pdr-backend/issues/1087#issuecomment-2155527087) so these checks are built into the DX and easy-to-use.
 
 
 ## Examples & How To's
@@ -222,3 +231,11 @@ pdr lake validate ppss.yaml sapphire-mainnet
  - If data is eronated or there is any issue with the Lake, reset the lake
  - Reset the Lake by deleting `lake_data/` folder
  - Recreate the Lake by running `lake raw update` and `lake etl update` commands
+
+
+## "Dumb" Components
+Lake components should be self-contained, "dumb", and perform one role.
+
+GQLDF is upstream from ETL and does not have any knowledge of it. Do not create dependencies where there are none. I.E. If you delete CSV data from `lake_data`, do not expect this change to be reflected in RAW or ETL tables. Similarly, ETL should assume that GQLDF is performing it's role as expected.
+
+Rather, help improve the lake validation and CLI tools to improve the lake DX and operations. Think about the entry points, validations, and [how to improve the user flow](https://github.com/oceanprotocol/pdr-backend/issues/1087#issuecomment-2155527087) so these checks being done outside core systems, once, while remaining user friendly.
