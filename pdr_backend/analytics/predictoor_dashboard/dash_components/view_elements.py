@@ -31,6 +31,7 @@ def get_input_column():
         style={
             "height": "100%",
             "width": "20%",
+            "marginTop": "8px",
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "space-around",
