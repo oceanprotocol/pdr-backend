@@ -123,6 +123,8 @@ def get_table(table_id, table_name, searchable_field, columns, data):
                             "height": "100%",
                         },
                     ),
+                    html.Button("Select All", id=f"select-all-{table_id}", n_clicks=0),
+                    html.Button("Clear All", id=f"clear-all-{table_id}", n_clicks=0),
                 ],
                 style={
                     "display": "flex",
@@ -132,10 +134,11 @@ def get_table(table_id, table_name, searchable_field, columns, data):
             ),
             dash_table.DataTable(
                 id=table_id,
-                columns=[{"name": col, "id": col} for col in columns],
+                columns=[{"name": col, "id": col, "sortable": True} for col in columns],
                 data=data,
                 row_selectable="multi",  # Can be 'multi' for multiple rows
                 selected_rows=[],
+                sort_action="native",  # Enables data to be sorted
                 style_cell={"textAlign": "left"},
                 style_table={
                     "height": "38vh",

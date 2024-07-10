@@ -28,3 +28,15 @@ def _sample_payouts():
 @pytest.fixture()
 def _sample_payouts_related_with_predictions():
     return mock_payouts_related_with_predictions()
+
+
+# Test for select_or_clear_all_by_table function
+@pytest.fixture
+def sample_table_rows():
+    return [
+        {"name": "Alice", "age": 30, "city": "New York"},
+        {"name": "Bob", "age": 24, "city": "San Francisco"},
+        {"name": "Charlie", "age": 29, "city": "Boston"},
+        {"name": "David", "age": 34, "city": "Chicago"},
+        {"name": "Eve", "age": 28, "city": "Los Angeles"},
+    ]

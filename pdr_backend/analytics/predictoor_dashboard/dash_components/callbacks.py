@@ -12,6 +12,9 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
     get_figures,
 )
+from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
+    select_or_clear_all_by_table,
+)
 
 
 # pylint: disable=too-many-statements
@@ -178,3 +181,38 @@ def get_callbacks(app):
         # filter feeds by pair address
         filtered_data = filter_objects_by_field(feeds_data, "pair", search_value)
         return filtered_data
+
+    @app.callback(
+        Output("feeds_table", "selected_rows"),
+        [
+            Input("select-all-feeds_table", "n_clicks"),
+            Input("clear-all-feeds_table", "n_clicks"),
+        ],
+        [State("feeds_table", "data"), State("feeds_table", "selected_rows")],
+    )
+    def select_or_clear_all_feeds(_, __, rows, ___):
+        """
+        Select or clear all rows in the feeds table.
+        """
+
+        ctx = dash.callback_context
+        return select_or_clear_all_by_table(ctx, "feeds_table", rows)
+
+    @app.callback(
+        Output("predictoors_table", "selected_rows"),
+        [
+            Input("select-all-predictoors_table", "n_clicks"),
+            Input("clear-all-predictoors_table", "n_clicks"),
+        ],
+        [
+            State("predictoors_table", "data"),
+            State("predictoors_table", "selected_rows"),
+        ],
+    )
+    def select_or_clear_all_predictoors(_, __, rows, ___):
+        """
+        Select or clear all rows in the predictoors table.
+        """
+
+        ctx = dash.callback_context
+        return select_or_clear_all_by_table(ctx, "predictoors_table", rows)
