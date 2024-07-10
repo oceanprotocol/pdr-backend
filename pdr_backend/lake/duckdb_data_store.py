@@ -12,7 +12,7 @@ from typing import Any, Optional
 import duckdb
 import polars as pl
 from enforce_typing import enforce_types
-from polars.type_aliases import SchemaDict
+from polars._typing import SchemaDict
 
 from pdr_backend.lake.base_data_store import BaseDataStore
 
