@@ -79,9 +79,6 @@ def get_payout_query(
                                 name
                             }
                         }
-                        revenue
-                        roundSumStakesUp
-                        roundSumStakes
                     }
                 }
             }
@@ -163,11 +160,6 @@ def fetch_payouts(
                 ],
                 "predvalue": bool(payout["predictedValue"]),
                 "slot": UnixTimeS(int(payout["id"].split("-")[1])),
-                "revenue": float(payout["prediction"]["slot"]["revenue"]),
-                "roundSumStakesUp": float(
-                    payout["prediction"]["slot"]["roundSumStakesUp"]
-                ),
-                "roundSumStakes": float(payout["prediction"]["slot"]["roundSumStakes"]),
                 "stake": float(payout["prediction"]["stake"]),
             }
         )
