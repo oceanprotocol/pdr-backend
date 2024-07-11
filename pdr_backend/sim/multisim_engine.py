@@ -177,7 +177,10 @@ class MultisimEngine:
             writer.writerow(
                 [_val2str(val).rjust(space) for val, space in zip(row, spaces)]
             )
-        self.check_csv_uniqueness()
+
+        assert (
+            self.check_csv_uniqueness()
+        ), "Duplicate pdr_profit_OCEAN values found in CSV"
 
     @enforce_types
     def load_csv(self) -> pd.DataFrame:
@@ -187,10 +190,8 @@ class MultisimEngine:
         return df
 
     @enforce_types
-    def check_csv_uniqueness(self):
+    def check_csv_uniqueness(self) -> bool:
         """Check that all values in the 'pdr_profit_OCEAN' column are unique."""
         df = self.load_csv()
         pdr_profit_OCEAN_values = df["pdr_profit_OCEAN"]
-        assert (
-            pdr_profit_OCEAN_values.is_unique
-        ), "Duplicate pdr_profit_OCEAN values found in CSV"
+        return pdr_profit_OCEAN_values.is_unique
