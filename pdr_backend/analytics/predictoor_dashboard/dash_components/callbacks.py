@@ -61,10 +61,15 @@ def get_callbacks(app):
             or len(predictoors_table_selected_rows) == 0
         ):
             accuracy_fig, profit_fig, stakes_fig = get_figures([], [], [])
-            accuracy, profit, stakes = get_metrics(
-                [], [], []
+            accuracy, profit, stakes = get_metrics([], [], [])
+            return (
+                get_graph(accuracy_fig),
+                get_graph(profit_fig),
+                get_graph(stakes_fig),
+                accuracy,
+                profit,
+                stakes,
             )
-            return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig), accuracy, profit, stakes
 
         ## calculate selected feeds
         for i in feeds_table_selected_rows:
@@ -90,7 +95,14 @@ def get_callbacks(app):
             payouts, feeds_display_data, predictoors_addrs
         )
 
-        return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig), f"{round(accuracy, 2)}%", f"{round(profit, 2)} OCEAN", f"{round(stakes, 2)} OCEAN"
+        return (
+            get_graph(accuracy_fig),
+            get_graph(profit_fig),
+            get_graph(stakes_fig),
+            f"{round(accuracy, 2)}%",
+            f"{round(profit, 2)} OCEAN",
+            f"{round(stakes, 2)} OCEAN",
+        )
 
     @app.callback(
         Output("feeds_table", "columns"),
