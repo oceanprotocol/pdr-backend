@@ -16,7 +16,7 @@ from pdr_backend.sim.sim_state import SimState
 
 
 @enforce_types
-def test_multisim1(tmpdir):
+async def test_multisim1(tmpdir):
     constructor_d = _constructor_d_with_fast_runtime(tmpdir)
 
     param = "predictoor_ss.aimodel_data_ss.autoregressive_n"
