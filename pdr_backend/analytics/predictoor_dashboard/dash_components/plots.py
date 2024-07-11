@@ -1,18 +1,16 @@
 from itertools import product
-from typing import Union, List, Tuple, Optional
+from typing import Dict, Union, List, Tuple
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
 from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
+def process_payouts_for_pair(payouts: List[dict]) -> tuple:
     """
     Process payouts data for a given predictor and feed.
     Args:
         payouts (list): List of payouts data.
-        predictor (str): Predictor address.
-        feed (str): Feed contract address.
     Returns:
         tuple: Tuple of slots, accuracies, profits, and stakes.
     """
@@ -20,9 +18,6 @@ def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
     profit = predictions = correct_predictions = 0
 
     for p in payouts:
-        if not (predictor in p["ID"] and feed in p["ID"]):
-            continue
-
         predictions += 1
         profit_change = max(p["payout"], 0) - p["stake"]
         profit += profit_change
@@ -32,10 +27,36 @@ def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
         accuracies.append((correct_predictions / predictions) * 100)
         profits.append(profit)
         stakes.append(p["stake"])
+
     slot_in_date_format = [
         UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
     ]
+
     return slot_in_date_format, accuracies, profits, stakes
+
+
+@enforce_types
+def process_payout_information(
+    payouts: List[dict], predictoors: List[str], feeds: List[Dict]
+) -> Dict:
+    if not payouts:
+        return {}
+
+    results = {}
+
+    for predictor, feed in product(predictoors, feeds):
+        slots, accuracies, profits, stakes = process_payouts_for_pair(
+            # payouts for a given predictor and feed
+            [p for p in payouts if predictor in p["ID"] or feed["contract"] in p["ID"]]
+        )
+
+        if not slots:
+            continue
+
+        short_name = f"{predictor[:5]} - {feed['feed_name']}"
+        results[short_name] = (slots, accuracies, profits, stakes)
+
+    return results
 
 
 @enforce_types
@@ -83,7 +104,7 @@ def create_figure(
 
 @enforce_types
 def get_figures(
-    payouts: Optional[List], feeds: List, predictoors: List[str]
+    payouts: List, feeds: List, predictoors: List[str]
 ) -> Tuple[go.Figure, go.Figure, go.Figure]:
     """
     Get figures for accuracy, profit, and costs.
@@ -96,29 +117,15 @@ def get_figures(
     """
     accuracy_scatters, profit_scatters, stakes_scatters = [], [], []
 
-    if payouts:
-        for predictor, feed in product(predictoors, feeds):
-            slots, accuracies, profits, stakes = process_payouts(
-                payouts, predictor, feed["contract"]
-            )
-            if not slots:
-                continue
+    processed_payouts = process_payout_information(payouts, predictoors, feeds)
 
-            short_name = f"{predictor[:5]} - {feed['feed_name']}"
-            accuracy_scatters.append(
-                go.Scatter(x=slots, y=accuracies, mode="lines", name=short_name)
-            )
-            profit_scatters.append(
-                go.Scatter(x=slots, y=profits, mode="lines", name=short_name)
-            )
-            stakes_scatters.append(go.Bar(x=slots, y=stakes, name=short_name, width=5))
-
-    if not accuracy_scatters:
-        accuracy_scatters.append(go.Scatter(x=[], y=[], mode="lines", name="accuracy"))
-    if not profit_scatters:
-        profit_scatters.append(go.Scatter(x=[], y=[], mode="lines", name="profit"))
-    if not stakes_scatters:
-        stakes_scatters.append(go.Bar(x=[], y=[], name="stakes", width=5))
+    for label, payout in processed_payouts.items():
+        slots, accuracies, profits, stakes = payout
+        accuracy_scatters.append(
+            go.Scatter(x=slots, y=accuracies, mode="lines", name=label)
+        )
+        profit_scatters.append(go.Scatter(x=slots, y=profits, mode="lines", name=label))
+        stakes_scatters.append(go.Bar(x=slots, y=stakes, name=label, width=5))
 
     fig_accuracy = create_figure(
         accuracy_scatters, "Accuracy", "'%' accuracy over time"

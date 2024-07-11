@@ -3,7 +3,7 @@ from unittest.mock import patch
 from enforce_typing import enforce_types
 
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
-    process_payouts,
+    process_payout_information,
     create_figure,
     get_figures,
 )
@@ -14,20 +14,28 @@ from pdr_backend.util.time_types import UnixTimeS
 def test_process_payouts(
     _sample_payouts,
 ):
-    ## convert List[Payout] to List[dict]
-    payouts = [p.__dict__ for p in _sample_payouts]
+    # convert List[Payout] to List[dict]
+    user = ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"]
+    feed = [
+        {
+            "contract": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+            "feed_name": "Feed1",
+        }
+    ]
+    payouts = [
+        p.__dict__
+        for p in _sample_payouts
+        if user[0] in p.ID or feed[0]["contract"] in p.ID
+    ]
 
-    user = "0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"
-    feed = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
-    result = process_payouts(payouts, user, feed)
+    result = process_payout_information(payouts, user, feed)
 
     ## filter payouts by user and feed
-    filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
-    filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
+    filtered_payouts = sorted(payouts, key=lambda x: x["slot"])
 
-    assert len(result) == 4
+    assert len(result) == 1
 
-    slots, accuracies, profits, stakes = result
+    slots, accuracies, profits, stakes = result["0xeb1 - Feed1"]
 
     assert len(slots) == len(filtered_payouts)
     assert slots[0] == UnixTimeS(

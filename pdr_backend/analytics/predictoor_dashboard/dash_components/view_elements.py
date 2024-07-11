@@ -61,10 +61,8 @@ def get_graphs_column():
 def get_layout():
     return html.Div(
         [
-            dcc.Store(id="data-folder"),
             dcc.Store(id="feeds-data"),
             dcc.Store(id="predictoors-data"),
-            dcc.Store(id="predictoors-stake-data"),
             html.H1(
                 "Predictoor dashboard",
                 id="page_title",

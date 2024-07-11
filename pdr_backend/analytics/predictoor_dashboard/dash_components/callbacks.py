@@ -1,4 +1,4 @@
-from dash import Input, Output, State
+from dash import Input, Output
 import dash
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_feeds_data_from_db,
@@ -20,12 +20,12 @@ def get_callbacks(app):
         Output("feeds-data", "data"),
         Output("predictoors-data", "data"),
         Output("error-message", "children"),
-        Input("data-folder", "data"),
+        Input("loading", "children"),
     )
-    def get_input_data_from_db(files_dir):
+    def get_input_data_from_db():
         try:
-            feeds_data = get_feeds_data_from_db(files_dir)
-            predictoors_data = get_predictoors_data_from_db(files_dir)
+            feeds_data = get_feeds_data_from_db(app.lake_dir)
+            predictoors_data = get_predictoors_data_from_db(app.lake_dir)
             return feeds_data, predictoors_data, None
         except Exception as e:
             return None, None, dash.html.H3(str(e))
@@ -40,39 +40,35 @@ def get_callbacks(app):
             Input("feeds_table", "data"),
             Input("predictoors_table", "data"),
         ],
-        State("data-folder", "data"),
     )
     def get_display_data_from_db(
         feeds_table_selected_rows,
         predictoors_table_selected_rows,
         feeds_data,
         predictoors_data,
-        lake_dir,
     ):
-        feeds_addrs = []
         feeds_display_data = []
         predictoors_addrs = []
-        if (
-            len(feeds_table_selected_rows) == 0
-            or len(predictoors_table_selected_rows) == 0
-        ):
-            accuracy_fig, profit_fig, stakes_fig = get_figures([], [], [])
-            return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
 
-        ## calculate selected feeds
-        for i in feeds_table_selected_rows:
-            feeds_addrs.append(feeds_data[i]["contract"])
+        selected_feeds = [feeds_data[i] for i in feeds_table_selected_rows]
+
+        # calculate selected feeds
+        for row in selected_feeds:
             feeds_display_data.append(
                 {
-                    "contract": feeds_data[i]["contract"],
-                    "feed_name": f"{feeds_data[i]['pair']}-{feeds_data[i]['timeframe']}",  # pylint: disable=line-too-long
+                    "contract": row["contract"],
+                    "feed_name": f"{row['pair']}-{row['timeframe']}",  # pylint: disable=line-too-long
                 }
             )
 
         for i in predictoors_table_selected_rows:
             predictoors_addrs.append(predictoors_data[i]["user"])
 
-        payouts = get_payouts_from_db(feeds_addrs, predictoors_addrs, lake_dir)
+        payouts = get_payouts_from_db(
+            [item["contract"] for item in feeds_display_data],
+            predictoors_addrs,
+            app.lake_dir,
+        )
 
         # get figures
         accuracy_fig, profit_fig, stakes_fig = get_figures(
