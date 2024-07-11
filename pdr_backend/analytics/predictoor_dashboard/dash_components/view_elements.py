@@ -112,16 +112,6 @@ def get_table(table_id, table_name, searchable_field, columns, data):
             html.Div(
                 [
                     html.Span(table_name, style={"fontSize": "20px"}),
-                    dcc.Input(
-                        id=f"search-input-{table_name}",
-                        type="text",
-                        placeholder=f"Search for {searchable_field}",
-                        debounce=True,  # Trigger the input event after user stops typing
-                        style={
-                            "fontSize": "15px",
-                            "height": "100%",
-                        },
-                    ),
                 ],
                 style={
                     "display": "flex",
@@ -129,15 +119,66 @@ def get_table(table_id, table_name, searchable_field, columns, data):
                     "alignItems": "center",
                 },
             ),
+            html.Div(
+                [
+                    dcc.Input(
+                        id=f"search-input-{table_name}",
+                        type="text",
+                        placeholder=f"Search for {searchable_field}",
+                        debounce=True,  # Trigger the input event after user stops typing
+                        style={"fontSize": "15px", "min-width": "100px"},
+                    ),
+                    html.Div(
+                        [
+                            html.Button(
+                                "Select All",
+                                id=f"select-all-{table_id}",
+                                n_clicks=0,
+                                style={
+                                    "border": "0",
+                                    "min-width": "90px",
+                                    "fontSize": "15px",
+                                    "backgroundColor": "#dedede",
+                                    "borderRadius": "3px",
+                                },
+                            ),
+                            html.Button(
+                                "Clear",
+                                id=f"clear-all-{table_id}",
+                                n_clicks=0,
+                                style={
+                                    "border": "0",
+                                    "fontSize": "15px",
+                                    "backgroundColor": "#dedede",
+                                    "borderRadius": "3px",
+                                },
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "justifyContent": "space-between",
+                            "alignItems": "center",
+                            "gap": "10px",
+                        },
+                    ),
+                ],
+                style={
+                    "display": "flex",
+                    "justifyContent": "space-between",
+                    "alignItems": "center",
+                    "gap": "10px",
+                },
+            ),
             dash_table.DataTable(
                 id=table_id,
-                columns=[{"name": col, "id": col} for col in columns],
+                columns=[{"name": col, "id": col, "sortable": True} for col in columns],
                 data=data,
                 row_selectable="multi",  # Can be 'multi' for multiple rows
                 selected_rows=[],
+                sort_action="native",  # Enables data to be sorted
                 style_cell={"textAlign": "left"},
                 style_table={
-                    "height": "38vh",
+                    "height": "35vh",
                     "width": "100%",
                     "overflow": "auto",
                     "marginTop": "5px",
