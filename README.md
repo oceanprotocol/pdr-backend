@@ -86,17 +86,19 @@ OPF-run bots & higher-level tools:
 - `trueval` - report true values to contract
 - `dfbuyer` - buy feeds on behalf of Predictoor DF
 - `publisher` - publish pdr data feeds
-- `lake` - data lake and analytics tools
 - `deployer` - deployer tool
-- `accuracy` - calculates % correct, for display in predictoor.ai webapp
 
 Mid-level building blocks:
 
 - `cli` - implementation of CLI
 - `ppss` - implements settings
-- `ohlcv` - financial data pipeline
-- `subgraph` - blockchain queries, complements lake
 - `aimodel` - AI/ML modeling engine
+
+Data-level building blocks:
+
+- `ohlcv` - financial data pipeline
+- `lake` - data lake and analytics tools
+- `subgraph` - blockchain queries, complements lake
 - `accuracy` - to report % correct in webapp
 - `pred_submitter` - for predictoor bots to submit >>1 predictions in 1 tx
 
