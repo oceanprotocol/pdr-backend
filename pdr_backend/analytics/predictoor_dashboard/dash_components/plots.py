@@ -82,9 +82,9 @@ def create_figure(
 
 
 @enforce_types
-def get_figures(
+def get_figures_and_metrics(
     payouts: Optional[List], feeds: List, predictoors: List[str]
-) -> Tuple[go.Figure, go.Figure, go.Figure]:
+) -> Tuple[go.Figure, go.Figure, go.Figure, float | None, float | None, float | None]:
     """
     Get figures for accuracy, profit, and costs.
     Args:
@@ -92,9 +92,10 @@ def get_figures(
         feeds (list): List of feeds data.
         predictoors (list): List of predictoors data.
     Returns:
-        tuple: Tuple of accuracy, profit, and costs figures.
+        tuple: Tuple of accuracy, profit, and costs figures, avg accuracy, total profit, avg stake
     """
     accuracy_scatters, profit_scatters, stakes_scatters = [], [], []
+    avg_accuracy, total_profit, avg_stake = None, None, None
 
     if payouts:
         for predictor, feed in product(predictoors, feeds):
@@ -103,6 +104,14 @@ def get_figures(
             )
             if not slots:
                 continue
+
+            avg_stake = ((stakes[-1] + avg_stake) / 2) if avg_stake else stakes[-1]
+            total_profit = (profits[-1] + total_profit) if total_profit else profits[-1]
+            avg_accuracy = (
+                ((accuracies[-1] + avg_accuracy) / 2)
+                if avg_accuracy
+                else accuracies[-1]
+            )
 
             short_name = f"{predictor[:5]} - {feed['feed_name']}"
             accuracy_scatters.append(
@@ -115,10 +124,9 @@ def get_figures(
 
     if not accuracy_scatters:
         accuracy_scatters.append(go.Scatter(x=[], y=[], mode="lines", name="accuracy"))
-    if not profit_scatters:
         profit_scatters.append(go.Scatter(x=[], y=[], mode="lines", name="profit"))
-    if not stakes_scatters:
         stakes_scatters.append(go.Bar(x=[], y=[], name="stakes", width=5))
+        avg_accuracy = total_profit = avg_stake = 0
 
     fig_accuracy = create_figure(
         accuracy_scatters, "Accuracy", "'%' accuracy over time"
@@ -130,31 +138,4 @@ def get_figures(
         stakes_scatters, "Costs", "Stake (OCEAN) at a time", show_legend=False
     )
 
-    return fig_accuracy, fig_profit, fig_costs
-
-
-def get_metrics(payouts: Optional[List], feeds: List, predictoors: List[str]):
-    """
-    Get accuracy, profit, and costs over all selected feeds and predictoors.
-    Args:
-        payouts (list): List of payouts data.
-        feeds (list): List of feeds data.
-        predictoors (list): List of predictoors data.
-    Returns:
-        tuple: Tuple of accuracy, profit, and costs values.
-    """
-    accuracy, profit, stake = None, None, None
-
-    if payouts:
-        for predictor, feed in product(predictoors, feeds):
-            slots, accuracies, profits, stakes = process_payouts(
-                payouts, predictor, feed["contract"]
-            )
-            if not slots:
-                continue
-            stake = ((stakes[-1] + stake) / 2) if stake else stakes[-1]
-            profit = (profits[-1] + profit) if profit else profits[-1]
-            accuracy = ((accuracies[-1] + accuracy) / 2) if accuracy else accuracies[-1]
-    else:
-        return 0, 0, 0
-    return accuracy, profit, stake
+    return fig_accuracy, fig_profit, fig_costs, avg_accuracy, total_profit, avg_stake

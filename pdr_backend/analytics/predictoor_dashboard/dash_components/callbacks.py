@@ -10,8 +10,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
     get_graph,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
-    get_figures,
-    get_metrics,
+    get_figures_and_metrics,
 )
 
 
@@ -60,15 +59,21 @@ def get_callbacks(app):
             len(feeds_table_selected_rows) == 0
             or len(predictoors_table_selected_rows) == 0
         ):
-            accuracy_fig, profit_fig, stakes_fig = get_figures([], [], [])
-            accuracy, profit, stakes = get_metrics([], [], [])
+            (
+                accuracy_fig,
+                profit_fig,
+                stakes_fig,
+                avg_accuracy,
+                total_profit,
+                avg_stake,
+            ) = get_figures_and_metrics([], [], [])
             return (
                 get_graph(accuracy_fig),
                 get_graph(profit_fig),
                 get_graph(stakes_fig),
-                accuracy,
-                profit,
-                stakes,
+                f"{round(avg_accuracy, 2)}%",
+                f"{round(total_profit, 2)} OCEAN",
+                f"{round(avg_stake, 2)} OCEAN",
             )
 
         ## calculate selected feeds
@@ -87,21 +92,17 @@ def get_callbacks(app):
         payouts = get_payouts_from_db(feeds_addrs, predictoors_addrs, lake_dir)
 
         # get figures
-        accuracy_fig, profit_fig, stakes_fig = get_figures(
-            payouts, feeds_display_data, predictoors_addrs
-        )
-
-        accuracy, profit, stakes = get_metrics(
-            payouts, feeds_display_data, predictoors_addrs
+        accuracy_fig, profit_fig, stakes_fig, avg_accuracy, total_profit, avg_stake = (
+            get_figures_and_metrics(payouts, feeds_display_data, predictoors_addrs)
         )
 
         return (
             get_graph(accuracy_fig),
             get_graph(profit_fig),
             get_graph(stakes_fig),
-            f"{round(accuracy, 2)}%",
-            f"{round(profit, 2)} OCEAN",
-            f"{round(stakes, 2)} OCEAN",
+            f"{round(avg_accuracy, 2)}%",
+            f"{round(total_profit, 2)} OCEAN",
+            f"{round(avg_stake, 2)} OCEAN",
         )
 
     @app.callback(
