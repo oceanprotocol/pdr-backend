@@ -223,7 +223,7 @@ def get_table(table_id, table_name, searchable_field, columns, data):
                 sort_action="native",  # Enables data to be sorted
                 style_cell={"textAlign": "left"},
                 style_table={
-                    "height": "36vh",
+                    "height": "34vh",
                     "width": "100%",
                     "overflow": "auto",
                     "paddingTop": "5px",
