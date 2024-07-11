@@ -126,23 +126,40 @@ def get_table(table_id, table_name, searchable_field, columns, data):
                         type="text",
                         placeholder=f"Search for {searchable_field}",
                         debounce=True,  # Trigger the input event after user stops typing
+                        style={"fontSize": "15px", "min-width": "100px"},
+                    ),
+                    html.Div(
+                        [
+                            html.Button(
+                                "Select All",
+                                id=f"select-all-{table_id}",
+                                n_clicks=0,
+                                style={
+                                    "border": "0",
+                                    "min-width": "90px",
+                                    "fontSize": "15px",
+                                    "backgroundColor": "#dedede",
+                                    "borderRadius": "3px",
+                                },
+                            ),
+                            html.Button(
+                                "Clear",
+                                id=f"clear-all-{table_id}",
+                                n_clicks=0,
+                                style={
+                                    "border": "0",
+                                    "fontSize": "15px",
+                                    "backgroundColor": "#dedede",
+                                    "borderRadius": "3px",
+                                },
+                            ),
+                        ],
                         style={
                             "display": "flex",
-                            "flex": "1",
-                            "fontSize": "15px",
+                            "justifyContent": "space-between",
+                            "alignItems": "center",
+                            "gap": "10px",
                         },
-                    ),
-                    html.Button(
-                        "Select All",
-                        id=f"select-all-{table_id}",
-                        n_clicks=0,
-                        style={"borderWidth": "1px"},
-                    ),
-                    html.Button(
-                        "Clear",
-                        id=f"clear-all-{table_id}",
-                        n_clicks=0,
-                        style={"borderWidth": "1px"},
                     ),
                 ],
                 style={
