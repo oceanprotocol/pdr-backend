@@ -68,12 +68,6 @@ Copy [`ppss.yaml`](../ppss.yaml) into your own file `my_ppss.yaml` and change pa
 cp ppss.yaml my_ppss.yaml
 ```
 
-Choose the source of the predictions used as signals for trading:
-- Use the builtin model. `use_own_model=True`
-- Get the predictions from live feeds. `use_own_model=False`
-
-By default `use_own_model` is set to `True`, and can be changed inside `my_ppss.yaml` file.
-
 Let's run the simulation engine. In console:
 ```console
 pdr sim my_ppss.yaml
@@ -181,6 +175,16 @@ Once you're familiar with the above, you can set your own trading strategy and o
 1. Fork `pdr-backend` repo.
 1. Change trader bot code as you wish, while iterating with simulation.
 1. Bring your trader bot to testnet then mainnet.
+
+
+## Source of predictions
+
+Choose the source of the predictions used as signals for trading:
+- Use the builtin model. `use_own_model=True`
+- Get the predictions from live feeds. `use_own_model=False`
+
+By default `use_own_model` is set to `True`, and can be changed inside `my_ppss.yaml` file.
+
 
 ## Run Bots Remotely
 
