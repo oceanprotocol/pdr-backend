@@ -19,7 +19,7 @@ from pdr_backend.sim.sim_state import SimState
 def test_multisim1(tmpdir):
     constructor_d = _constructor_d_with_fast_runtime(tmpdir)
 
-    param = "predictoor_ss.aimodel_data_ss.autoregressive_n"
+    param = "predictoor_ss.aimodel_ss.autoregressive_n"
     d = multisim_ss_test_dict(sweep_params=[{param: "1, 2"}])
     constructor_d["multisim_ss"] = d
 
