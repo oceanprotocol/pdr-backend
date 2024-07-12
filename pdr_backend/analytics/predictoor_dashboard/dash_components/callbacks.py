@@ -51,8 +51,6 @@ def get_callbacks(app):
         predictoors_data,
         lake_dir,
     ):
-        feeds_addrs = []
-        predictoors_addrs = []
         if (
             len(feeds_table_selected_rows) == 0
             or len(predictoors_table_selected_rows) == 0
@@ -62,16 +60,22 @@ def get_callbacks(app):
         current_feeds_table_data = update_feeds_table_on_search(
             search_value_feeds, feeds_data
         )
-        for i in feeds_table_selected_rows:
-            feeds_addrs.append(current_feeds_table_data[i]["contract"])
 
         current_predictoors_table_data = update_predictoors_table_on_search(
             search_value_predictoors, predictoors_data
         )
-        for i in predictoors_table_selected_rows:
-            predictoors_addrs.append(current_predictoors_table_data[i]["user"])
 
-        payouts = get_payouts_from_db(feeds_addrs, predictoors_addrs, lake_dir)
+        payouts = get_payouts_from_db(
+            [
+                current_feeds_table_data[i]["contract"]
+                for i in feeds_table_selected_rows
+            ],
+            [
+                current_predictoors_table_data[i]["user"]
+                for i in predictoors_table_selected_rows
+            ],
+            lake_dir,
+        )
 
         return payouts
 
@@ -120,31 +124,32 @@ def get_callbacks(app):
         feeds_data,
         predictoors_data,
     ):
-        feeds_addrs = []
-        predictoors_addrs = []
-
-        ## calculate selected feeds
+        # calculate selected feeds
         current_feeds_table_data = update_feeds_table_on_search(
             search_value_feeds, feeds_data
         )
-        for i in feeds_table_selected_rows:
-            feeds_addrs.append(
-                {
-                    "contract": current_feeds_table_data[i]["contract"],
-                    "feed_name": f"{current_feeds_table_data[i]['pair']}-{current_feeds_table_data[i]['timeframe']}",  # pylint: disable=line-too-long
-                }
-            )
 
-        ## calculate selected predictoors addrs
+        feeds_data = [
+            {
+                "contract": current_feeds_table_data[i]["contract"],
+                "feed_name": f"{current_feeds_table_data[i]['pair']}-{current_feeds_table_data[i]['timeframe']}",  # pylint: disable=line-too-long
+            }
+            for i in feeds_table_selected_rows
+        ]
+
+        # calculate selected predictoors addrs
         current_predictoors_table_data = update_predictoors_table_on_search(
             search_value_predictoors, predictoors_data
         )
-        for i in predictoors_table_selected_rows:
-            predictoors_addrs.append(current_predictoors_table_data[i]["user"])
 
         # get figures
         accuracy_fig, profit_fig, stakes_fig = get_figures(
-            payouts_data, feeds_addrs, predictoors_addrs
+            payouts_data,
+            feeds_data,
+            [
+                current_predictoors_table_data[i]["user"]
+                for i in predictoors_table_selected_rows
+            ],
         )
 
         return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
