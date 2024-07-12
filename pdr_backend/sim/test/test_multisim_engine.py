@@ -36,6 +36,7 @@ def test_multisim1(tmpdir):
     assert df.shape[1] == len(target_columns)
     assert list(df.columns) == target_columns
 
+
 @enforce_types
 def _constructor_d_with_fast_runtime(tmpdir):
     s = fast_test_yaml_str(tmpdir)
