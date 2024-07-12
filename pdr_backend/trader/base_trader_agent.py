@@ -88,10 +88,12 @@ class BaseTraderAgent:
     def check_subscriptions_and_subscribe(self):
         if not self.feed_contract.is_valid_subscription():
             logger.info("Purchase subscription for feed %s: begin", self.feed)
-            self.feed_contract.buy_and_start_subscription(
+            receipt = self.feed_contract.buy_and_start_subscription(
                 gasLimit=None,
                 wait_for_receipt=True,
             )
+            if receipt["status"] != 1: 
+                raise Exception(f"Failed to purchase subscription, tx: {receipt["transactionHash"].hex()}")
             logger.info("Purchase subscription for feed %s: done", self.feed)
         time.sleep(1)
 
