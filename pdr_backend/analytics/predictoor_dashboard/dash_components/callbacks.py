@@ -22,7 +22,9 @@ def get_callbacks(app):
         Output("error-message", "children"),
         Input("loading", "children"),
     )
-    def get_input_data_from_db():
+    # Dash runs all callbacks at app startup
+    # but it also requires at least an Input, so we use a dummy Input
+    def get_input_data_from_db(noop):  # pylint: disable=unused-argument
         try:
             feeds_data = get_feeds_data_from_db(app.lake_dir)
             predictoors_data = get_predictoors_data_from_db(app.lake_dir)
