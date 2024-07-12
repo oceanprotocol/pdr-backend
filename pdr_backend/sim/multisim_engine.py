@@ -184,4 +184,3 @@ class MultisimEngine:
         df = pd.read_csv(self.csv_file)
         df.rename(columns=lambda x: x.strip(), inplace=True)  # strip whitespace
         return df
-
