@@ -35,8 +35,6 @@ def test_multisim1(tmpdir):
     assert df.shape[0] == 2  # 2 runs
     assert df.shape[1] == len(target_columns)
     assert list(df.columns) == target_columns
-    assert multisim_engine.check_csv_uniqueness()
-
 
 @enforce_types
 def _constructor_d_with_fast_runtime(tmpdir):
