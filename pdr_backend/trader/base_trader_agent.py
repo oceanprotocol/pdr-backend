@@ -93,9 +93,8 @@ class BaseTraderAgent:
                 wait_for_receipt=True,
             )
             if receipt["status"] != 1:
-                raise Exception(
-                    f"Failed to purchase subscription, tx: {receipt["transactionHash"].hex()}"
-                )
+                txhash = receipt["transactionHash"].hex()
+                raise Exception(f"Failed to purchase subscription, tx: {txhash}")
             logger.info("Purchase subscription for feed %s: done", self.feed)
         time.sleep(1)
 
