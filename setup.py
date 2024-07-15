@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 install_requirements = [
     "black==24.4.2",
     "bumpversion",
-    "ccxt==4.3.58",
+    "ccxt==4.3.61",
     "coverage",
     "dash[testing]==2.17.1",
     "dash_bootstrap_components==1.6.0",
