@@ -12,6 +12,9 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
     get_figures,
 )
+from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
+    select_or_clear_all_by_table,
+)
 from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
@@ -32,53 +35,45 @@ def get_callbacks(app):
             return None, None, dash.html.H3(str(e))
 
     @app.callback(
-        Output("payouts-data", "data"),
+        Output("accuracy_chart", "children"),
+        Output("profit_chart", "children"),
+        Output("stake_chart", "children"),
         [
             Input("feeds_table", "selected_rows"),
             Input("predictoors_table", "selected_rows"),
-            Input("search-input-Feeds", "value"),
-            Input("search-input-Predictoors", "value"),
         ],
-        State("feeds-data", "data"),
-        State("predictoors-data", "data"),
         State("data-folder", "data"),
     )
     def get_display_data_from_db(
         feeds_table_selected_rows,
         predictoors_table_selected_rows,
-        search_value_feeds,
-        search_value_predictoors,
-        feeds_data,
-        predictoors_data,
         lake_dir,
     ):
         if (
             len(feeds_table_selected_rows) == 0
             or len(predictoors_table_selected_rows) == 0
         ):
-            return dash.no_update
+            accuracy_fig, profit_fig, stakes_fig = get_figures([], [], [])
+            return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
 
-        current_feeds_table_data = update_feeds_table_on_search(
-            search_value_feeds, feeds_data
-        )
+        feeds = ArgFeeds.from_table_data(feeds_table_selected_rows)
 
-        current_predictoors_table_data = update_predictoors_table_on_search(
-            search_value_predictoors, predictoors_data
-        )
+        predictoors_addrs = [row["user"] for row in predictoors_table_selected_rows]
 
         payouts = get_payouts_from_db(
-            [
-                current_feeds_table_data[i]["contract"]
-                for i in feeds_table_selected_rows
-            ],
-            [
-                current_predictoors_table_data[i]["user"]
-                for i in predictoors_table_selected_rows
-            ],
+            [row["contract"] for row in feeds_table_selected_rows],
+            predictoors_addrs,
             lake_dir,
         )
 
-        return payouts
+        # get figures
+        accuracy_fig, profit_fig, stakes_fig = get_figures(
+            payouts,
+            feeds,
+            predictoors_addrs,
+        )
+
+        return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
 
     @app.callback(
         Output("feeds_table", "columns"),
@@ -103,53 +98,6 @@ def get_callbacks(app):
             return dash.no_update
         columns = [{"name": col, "id": col} for col in predictoors_data[0].keys()]
         return columns
-
-    @app.callback(
-        Output("accuracy_chart", "children"),
-        Output("profit_chart", "children"),
-        Output("stake_chart", "children"),
-        Input("payouts-data", "data"),
-        Input("feeds_table", "selected_rows"),
-        Input("predictoors_table", "selected_rows"),
-        Input("search-input-Feeds", "value"),
-        Input("search-input-Predictoors", "value"),
-        State("feeds-data", "data"),
-        State("predictoors-data", "data"),
-    )
-    def create_charts(
-        payouts_data,
-        feeds_table_selected_rows,
-        predictoors_table_selected_rows,
-        search_value_feeds,
-        search_value_predictoors,
-        feeds_data,
-        predictoors_data,
-    ):
-        # calculate selected feeds
-        current_feeds_table_data = update_feeds_table_on_search(
-            search_value_feeds, feeds_data
-        )
-
-        feeds_data = ArgFeeds.from_table_data(
-            [current_feeds_table_data[i] for i in feeds_table_selected_rows]
-        )
-
-        # calculate selected predictoors addrs
-        current_predictoors_table_data = update_predictoors_table_on_search(
-            search_value_predictoors, predictoors_data
-        )
-
-        # get figures
-        accuracy_fig, profit_fig, stakes_fig = get_figures(
-            payouts_data,
-            feeds_data,
-            [
-                current_predictoors_table_data[i]["user"]
-                for i in predictoors_table_selected_rows
-            ],
-        )
-
-        return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
 
     @app.callback(
         Output("predictoors_table", "data"),
@@ -180,3 +128,37 @@ def get_callbacks(app):
         # filter feeds by pair address
         filtered_data = filter_objects_by_field(feeds_data, "pair", search_value)
         return filtered_data
+
+    @app.callback(
+        Output("feeds_table", "selected_rows"),
+        [
+            Input("select-all-feeds_table", "n_clicks"),
+            Input("clear-all-feeds_table", "n_clicks"),
+        ],
+        State("feeds_table", "data"),
+        prevent_initial_call=True,
+    )
+    def select_or_clear_all_feeds(_, __, rows):
+        """
+        Select or clear all rows in the feeds table.
+        """
+
+        ctx = dash.callback_context
+        return select_or_clear_all_by_table(ctx, "feeds_table", rows)
+
+    @app.callback(
+        Output("predictoors_table", "selected_rows"),
+        [
+            Input("select-all-predictoors_table", "n_clicks"),
+            Input("clear-all-predictoors_table", "n_clicks"),
+        ],
+        State("predictoors_table", "data"),
+        prevent_initial_call=True,
+    )
+    def select_or_clear_all_predictoors(_, __, rows):
+        """
+        Select or clear all rows in the predictoors table.
+        """
+
+        ctx = dash.callback_context
+        return select_or_clear_all_by_table(ctx, "predictoors_table", rows)

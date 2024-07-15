@@ -1,6 +1,8 @@
 import logging
+
 from typing import Union, List, Dict, Any
 from enforce_typing import enforce_types
+import dash
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.payout import Payout
@@ -79,10 +81,35 @@ def get_payouts_from_db(
     return _query_db(lake_dir, query)
 
 
-# Function to filter the list by field containing a given string
+@enforce_types
 def filter_objects_by_field(
     objects: List[Dict[str, Any]], field: str, search_string: str
 ) -> List[Dict[str, Any]]:
     return list(
         filter(lambda obj: search_string.lower() in obj[field].lower(), objects)
     )
+
+
+@enforce_types
+def select_or_clear_all_by_table(
+    ctx,
+    table_id: str,
+    rows: List[Dict[str, Any]],
+) -> Union[List[int], dash.no_update]:
+    """
+    Select or unselect all rows in a table.
+    Args:
+        ctx (dash.callback_context): Dash callback context.
+    Returns:
+        list: List of selected rows or dash.no_update.
+    """
+    if not ctx.triggered:
+        return dash.no_update
+
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    selected_rows = []
+    if button_id == f"select-all-{table_id}":
+        selected_rows = list(range(len(rows)))
+
+    return selected_rows
