@@ -5,8 +5,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_predictoors_data_from_db,
     get_payouts_from_db,
     filter_objects_by_field,
-    get_unique_payout_ids_based_on_predictoors_from_db,
-    filter_feeds_data_by_payout_IDs
+    get_feed_ids_based_on_predictoors_from_db,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
     get_graph,
@@ -130,27 +129,41 @@ def get_callbacks(app):
         [
             Input("search-input-Feeds", "value"),
             Input("feeds-data", "data"),
-            Input('toggle-switch-predictoor-feeds', 'value'),
+            Input("toggle-switch-predictoor-feeds", "value"),
             Input("predictoors_table", "selected_rows"),
         ],
         State("predictoors_table", "data"),
         State("data-folder", "data"),
     )
-    def update_feeds_table_on_search(search_value, feeds_data, predictoor_feeds_only, predictoors_table_selected_rows, predictoors_data, lake_dir):        
-        predictoors_addrs=[]
-        filtered_data = feeds_data 
-        
-        for i in predictoors_table_selected_rows:
-            predictoors_addrs.append(predictoors_data[i]["user"])
+    def update_feeds_table_on_search(
+        search_value,
+        feeds_data,
+        predictoor_feeds_only,
+        predictoors_table_selected_rows,
+        predictoors_data,
+        lake_dir,
+    ):
+        # Extract selected predictoor addresses
+        predictoors_addrs = [
+            predictoors_data[i]["user"] for i in predictoors_table_selected_rows
+        ]
 
         # filter feeds by pair address
-        if search_value:
-            filtered_data = filter_objects_by_field(feeds_data, "pair", search_value)
+        filtered_data = (
+            filter_objects_by_field(feeds_data, "pair", search_value)
+            if search_value
+            else feeds_data
+        )
 
-        if predictoor_feeds_only:
-            if len(predictoors_addrs) > 0:
-                feed_addrs_payout = get_unique_payout_ids_based_on_predictoors_from_db(lake_dir, predictoor_addrs=predictoors_addrs)
-                filtered_data = filter_feeds_data_by_payout_IDs(feeds_data, feed_addrs_payout)
+        # filter feeds by payouts from selected predictoors
+        if predictoor_feeds_only and (len(predictoors_addrs) > 0):
+            feed_ids = get_feed_ids_based_on_predictoors_from_db(
+                lake_dir,
+                predictoor_addrs=[
+                    predictoors_data[i]["user"] for i in predictoors_table_selected_rows
+                ],
+            )
+            filtered_data = [obj for obj in feeds_data if obj["contract"] in feed_ids]
 
         return filtered_data
 

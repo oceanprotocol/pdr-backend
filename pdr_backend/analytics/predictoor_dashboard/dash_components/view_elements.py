@@ -112,12 +112,16 @@ def get_table(table_id, table_name, searchable_field, columns, data):
             html.Div(
                 [
                     html.Span(table_name, style={"fontSize": "20px"}),
-                    dbc.Switch(
-                        id='toggle-switch-predictoor-feeds',
-                        label='Predictoor feeds only',
-                        value=True,
-                        style={'margin': '20px'}
-                    ) if table_name=="Feeds" else None,
+                    (
+                        dbc.Switch(
+                            id="toggle-switch-predictoor-feeds",
+                            label="Predictoor feeds only",
+                            value=True,
+                            style={"margin": "20px"},
+                        )
+                        if table_name == "Feeds"
+                        else None
+                    ),
                 ],
                 style={
                     "display": "flex",
