@@ -141,7 +141,7 @@ def get_figures_and_metrics(
         # only filter for this particular predictoor and feed pair
         # in order to properly group the data
         filtered_payouts = [
-            p for p in payouts if predictor in p["ID"] or feed.contract in p["ID"]
+            p for p in payouts if predictor in p["ID"] and feed.contract in p["ID"]
         ]
 
         slots, accuracies, profits, stakes = process_payouts(filtered_payouts)
