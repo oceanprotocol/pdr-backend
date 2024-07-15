@@ -14,7 +14,6 @@ def get_input_column():
                     data=None,
                 ),
                 id="predictoors_container",
-                style={"height": "50%"},
             ),
             html.Div(
                 get_table(
@@ -31,30 +30,71 @@ def get_input_column():
         style={
             "height": "100%",
             "width": "20%",
-            "marginTop": "8px",
+            "paddingTop": "8px",
             "display": "flex",
             "flexDirection": "column",
-            "justifyContent": "space-around",
+            "justifyContent": "space-between",
         },
     )
 
 
 def get_graphs_column():
     return html.Div(
-        [
-            html.Div(id="accuracy_chart"),
-            html.Div(id="profit_chart"),
-            html.Div(id="stake_chart"),
-        ],
+        [get_graphs_column_metrics_row(), get_graphs_column_plots_row()],
         id="graphs_container",
         style={
             "height": "100%",
             "width": "80%",
             "display": "flex",
             "flexDirection": "column",
-            "justifyContent": "space-around",
+            "justifyContent": "start",
             "paddingLeft": "40px",
         },
+    )
+
+
+def get_graphs_column_metrics_row():
+    return html.Div(
+        [
+            get_metric(label="Avg Accuracy", value="50%", value_id="accuracy_metric"),
+            get_metric(label="Total Profit", value="50%", value_id="profit_metric"),
+            get_metric(label="Avg Stake", value="50%", value_id="stake_metric"),
+        ],
+        id="metrics_container",
+        style={
+            "height": "12%",
+            "display": "flex",
+            "justifyContent": "space-between",
+        },
+    )
+
+
+def get_graphs_column_plots_row():
+    return html.Div(
+        [
+            html.Div(id="accuracy_chart"),
+            html.Div(id="profit_chart"),
+            html.Div(id="stake_chart"),
+        ],
+        id="plots_container",
+        style={
+            "height": "88%",
+            "display": "flex",
+            "flexDirection": "column",
+            "justifyContent": "space-between",
+        },
+    )
+
+
+def get_metric(label, value, value_id):
+    return html.Div(
+        [
+            html.Span(
+                label,
+            ),
+            html.Span(value, id=value_id, style={"fontWeight": "bold"}),
+        ],
+        style={"display": "flex", "flexDirection": "column", "font-size": "20px"},
     )
 
 
@@ -68,7 +108,12 @@ def get_layout():
             html.H1(
                 "Predictoor dashboard",
                 id="page_title",
-                style={"width": "100%", "textAlign": "center"},
+                style={
+                    "width": "100%",
+                    "textAlign": "center",
+                    "paddingTop": "10px",
+                    "paddingBottom": "20px",
+                },
             ),
             html.Div(
                 id="error-message",
@@ -85,12 +130,13 @@ def get_layout():
                 type="default",
                 children=get_main_container(),
                 style={
-                    "height": "100%",
+                    "height": "calc( 100vh - 105px )",
                     "width": "100%",
                 },
                 custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
             ),
         ],
+        style={"height": "100%"},
     )
 
 
@@ -98,7 +144,7 @@ def get_main_container():
     return html.Div(
         [get_input_column(), get_graphs_column()],
         style={
-            "height": "100%",
+            "height": "calc( 100vh - 105px )",
             "width": "100%",
             "display": "flex",
             "justifyContent": "space-between",
@@ -188,17 +234,16 @@ def get_table(table_id, table_name, searchable_field, columns, data):
                 sort_action="native",  # Enables data to be sorted
                 style_cell={"textAlign": "left"},
                 style_table={
-                    "height": "35vh",
+                    "height": "34vh",
                     "width": "100%",
                     "overflow": "auto",
-                    "marginTop": "5px",
+                    "paddingTop": "5px",
                 },
                 fill_width=True,
             ),
         ],
-        style={"marginBottom": "40px"},
     )
 
 
 def get_graph(figure):
-    return dcc.Graph(figure=figure, style={"width": "100%", "height": "30vh"})
+    return dcc.Graph(figure=figure, style={"width": "100%", "height": "25vh"})

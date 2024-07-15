@@ -11,11 +11,12 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
     get_graph,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
-    get_figures,
+    get_figures_and_metrics,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     select_or_clear_all_by_table,
 )
+from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
 # pylint: disable=too-many-statements
@@ -38,6 +39,9 @@ def get_callbacks(app):
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),
         Output("stake_chart", "children"),
+        Output("accuracy_metric", "children"),
+        Output("profit_metric", "children"),
+        Output("stake_metric", "children"),
         [
             Input("feeds_table", "selected_rows"),
             Input("predictoors_table", "selected_rows"),
@@ -53,37 +57,43 @@ def get_callbacks(app):
         predictoors_data,
         lake_dir,
     ):
-        feeds_addrs = []
-        feeds_display_data = []
-        predictoors_addrs = []
-        if (
-            len(feeds_table_selected_rows) == 0
-            or len(predictoors_table_selected_rows) == 0
-        ):
-            accuracy_fig, profit_fig, stakes_fig = get_figures([], [], [])
-            return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
+        # feeds_table_selected_rows is a list of ints
+        # feeds_data is a list of dicts
+        # get the feeds data for the selected rows
+        selected_feeds = [feeds_data[i] for i in feeds_table_selected_rows]
+        feeds = ArgFeeds.from_table_data(selected_feeds)
 
-        ## calculate selected feeds
-        for i in feeds_table_selected_rows:
-            feeds_addrs.append(feeds_data[i]["contract"])
-            feeds_display_data.append(
-                {
-                    "contract": feeds_data[i]["contract"],
-                    "feed_name": f"{feeds_data[i]['pair']}-{feeds_data[i]['timeframe']}",  # pylint: disable=line-too-long
-                }
+        selected_predictoors = [
+            predictoors_data[i] for i in predictoors_table_selected_rows
+        ]
+        predictoors_addrs = [row["user"] for row in selected_predictoors]
+
+        if len(selected_feeds) == 0 or len(selected_predictoors) == 0:
+            payouts = []
+        else:
+            payouts = get_payouts_from_db(
+                [row["contract"] for row in selected_feeds],
+                predictoors_addrs,
+                lake_dir,
             )
 
-        for i in predictoors_table_selected_rows:
-            predictoors_addrs.append(predictoors_data[i]["user"])
-
-        payouts = get_payouts_from_db(feeds_addrs, predictoors_addrs, lake_dir)
-
         # get figures
-        accuracy_fig, profit_fig, stakes_fig = get_figures(
-            payouts, feeds_display_data, predictoors_addrs
+        accuracy_fig, profit_fig, stakes_fig, avg_accuracy, total_profit, avg_stake = (
+            get_figures_and_metrics(
+                payouts,
+                feeds,
+                predictoors_addrs,
+            )
         )
 
-        return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
+        return (
+            get_graph(accuracy_fig),
+            get_graph(profit_fig),
+            get_graph(stakes_fig),
+            f"{round(avg_accuracy, 2)}%",
+            f"{round(total_profit, 2)} OCEAN",
+            f"{round(avg_stake, 2)} OCEAN",
+        )
 
     @app.callback(
         Output("feeds_table", "columns"),

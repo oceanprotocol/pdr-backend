@@ -306,5 +306,5 @@ def do_arima_plots(args, nested_args=None):
 
 @enforce_types
 # pylint: disable=unused-argument
-def do_predictoor_dashboard(args, nested_args=None):
+def do_dashboard(args, nested_args=None):
     predictoor_dash(args.PPSS, args.debug_mode)
