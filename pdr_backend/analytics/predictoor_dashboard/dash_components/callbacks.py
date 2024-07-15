@@ -4,6 +4,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_feeds_data_from_db,
     get_predictoors_data_from_db,
     get_payouts_from_db,
+    get_all_payouts_data_from_db,
     filter_objects_by_field,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
@@ -11,6 +12,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
     get_figures,
+    process_payouts_for_all_feeds
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     select_or_clear_all_by_table,
@@ -23,6 +25,7 @@ def get_callbacks(app):
     @app.callback(
         Output("feeds-data", "data"),
         Output("predictoors-data", "data"),
+        Output("all-payouts-data", "data"),
         Output("error-message", "children"),
         Input("data-folder", "data"),
     )
@@ -30,7 +33,8 @@ def get_callbacks(app):
         try:
             feeds_data = get_feeds_data_from_db(files_dir)
             predictoors_data = get_predictoors_data_from_db(files_dir)
-            return feeds_data, predictoors_data, None
+            all_payots_data = get_all_payouts_data_from_db(files_dir)
+            return feeds_data, predictoors_data, all_payots_data, None
         except Exception as e:
             return None, None, dash.html.H3(str(e))
 
@@ -104,15 +108,53 @@ def get_callbacks(app):
         [
             Input("search-input-Predictoors", "value"),
             Input("predictoors-data", "data"),
+            Input("all-payouts-data", "data"),
         ],
     )
-    def update_predictoors_table_on_search(search_value, predictoors_data):
-        if not search_value:
-            return predictoors_data
+    def update_predictoors_table_on_search(
+        search_value,
+        predictoors_data,
+        all_payouts_data
+    ):
+        """
+        Update and filter the predictoors table based on the search input, and
+        shorten user addresses for readability regardless of search input.
+        
+        Args:
+            search_value (str): The value entered in the search input.
+            predictoors_data (list): The original list of predictoors data.
+            all_payouts_data (list): The original list of all payouts data.
+        Returns:
+            list: The filtered or original predictoors data with shortened user addresses.
+        """
+        try:
+            # Filter predictoors by user address if search value is provided
+            if search_value:
+                filtered_data = filter_objects_by_field(predictoors_data, "user", search_value)
+            else:
+                filtered_data = predictoors_data
 
-        # filter predictoors by user address
-        filtered_data = filter_objects_by_field(predictoors_data, "user", search_value)
-        return filtered_data
+            # Shorten user addresses for readability
+            for row in filtered_data:
+                processed_data = []
+                if all_payouts_data:
+                    processed_data = process_payouts_for_all_feeds(all_payouts_data, row["user"])
+
+                user = row["user"]
+
+                row["total_profit"] = processed_data[4] if processed_data else 0
+                row["total_accuracy"] = processed_data[5] if processed_data else 0
+                row["avg_stake"] = processed_data[6] if processed_data else 0
+
+                if len(user) > 10:  # Check if the string is long enough to trim
+                    row["user"] = f"{user[:5]}...{user[-5:]}"  # Keep the first 5 and last 5 characters
+
+            return filtered_data
+        except Exception as e:
+            # Log the error or handle it as needed
+            print(f"Error updating predictoors table: {e}")
+            # Optionally, return an error message or empty data
+            return []
 
     @app.callback(
         Output("feeds_table", "data"),

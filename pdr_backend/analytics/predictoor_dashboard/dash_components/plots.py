@@ -9,25 +9,21 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
+def filter_payouts(payouts: List[dict], predictor: str, feed: Optional[str] = None) -> List[dict]:
     """
-    Process payouts data for a given predictor and feed.
-    Args:
-        payouts (list): List of payouts data.
-        predictor (str): Predictor address.
-        feed (str): Feed contract address.
-    Returns:
-        tuple: Tuple of slots, accuracies, profits, and stakes.
+    Filter payouts for a given predictor and optionally a specific feed.
+    """
+    return [p for p in payouts if predictor in p["ID"] and (feed is None or feed in p["ID"])]
+
+@enforce_types
+def calculate_stats(filtered_payouts: List[dict]) -> Tuple[List[str], List[float], List[float], List[float], float, float, float]:
+    """
+    Calculate statistics from the filtered payouts.
     """
     slots, accuracies, profits, stakes = [], [], [], []
     profit = predictions = correct_predictions = 0
 
-    for p in payouts:
-        # only filter for this particular predictoor and feed pair
-        # in order to properly group the data
-        if not (predictor in p["ID"] and feed in p["ID"]):
-            continue
-
+    for p in filtered_payouts:
         predictions += 1
         profit_change = max(p["payout"], 0) - p["stake"]
         profit += profit_change
@@ -37,11 +33,52 @@ def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
         accuracies.append((correct_predictions / predictions) * 100)
         profits.append(profit)
         stakes.append(p["stake"])
+
     slot_in_date_format = [
         UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
     ]
-    return slot_in_date_format, accuracies, profits, stakes
 
+    total_profit = profit
+    total_accuracy = (correct_predictions / predictions) * 100 if predictions > 0 else 0
+    avg_stake = sum(stakes) / len(stakes) if stakes else 0
+
+    return slot_in_date_format, accuracies, profits, stakes, total_profit, total_accuracy, avg_stake
+
+@enforce_types
+def process_payouts(
+    payouts: List[dict], 
+    predictor: str, 
+    feed: Optional[str] = None, 
+    aggregate: bool = False
+) -> Tuple[List[str], List[float], List[float], List[float], float, float, float]:
+    """
+    Process payouts data for a given predictor.
+    
+    Args:
+        payouts (list): List of payouts data.
+        predictor (str): Predictor address.
+        feed (str, optional): Feed contract address. If None, process all feeds.
+        aggregate (bool): If True, aggregate data across all feeds. Default is False.
+        
+    Returns:
+        tuple: Tuple of slots, accuracies, profits, stakes, total_profit, total_accuracy, avg_stake.
+    """
+    filtered_payouts = filter_payouts(payouts, predictor, feed if not aggregate else None)
+    return calculate_stats(filtered_payouts)
+
+@enforce_types
+def process_payouts_for_all_feeds(payouts: List[dict], predictor: str) -> Tuple[List[str], List[float], List[float], List[float], float, float, float]:
+    """
+    Process payouts data for a given predictor across all feeds.
+    
+    Args:
+        payouts (list): List of payouts data.
+        predictor (str): Predictor address.
+        
+    Returns:
+        tuple: Tuple of slots, accuracies, profits, stakes, total_profit, total_accuracy, avg_stake.
+    """
+    return process_payouts(payouts, predictor, aggregate=True)
 
 @enforce_types
 def create_figure(

@@ -64,7 +64,7 @@ def get_layout():
             dcc.Store(id="data-folder"),
             dcc.Store(id="feeds-data"),
             dcc.Store(id="predictoors-data"),
-            dcc.Store(id="predictoors-stake-data"),
+            dcc.Store(id="all-payouts-data"),
             html.H1(
                 "Predictoor dashboard",
                 id="page_title",
