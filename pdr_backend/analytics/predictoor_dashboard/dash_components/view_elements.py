@@ -12,6 +12,7 @@ def get_input_column():
                     searchable_field="pair",
                     columns=[],
                     data=None,
+                    default_sorting=[],
                 ),
                 id="feeds_container",
                 style={"height": "50%"},
@@ -23,6 +24,9 @@ def get_input_column():
                     searchable_field="user",
                     columns=[],
                     data=None,
+                    default_sorting=[
+                        {"column_id": "total_profit", "direction": "desc"}
+                    ],
                 ),
                 id="predictoors_container",
                 style={"height": "50%"},
@@ -106,7 +110,7 @@ def get_main_container():
     )
 
 
-def get_table(table_id, table_name, searchable_field, columns, data):
+def get_table(table_id, table_name, searchable_field, columns, data, default_sorting):
     return html.Div(
         [
             html.Div(
@@ -172,6 +176,7 @@ def get_table(table_id, table_name, searchable_field, columns, data):
             dash_table.DataTable(
                 id=table_id,
                 columns=[{"name": col, "id": col, "sortable": True} for col in columns],
+                sort_by=default_sorting,
                 data=data,
                 row_selectable="multi",  # Can be 'multi' for multiple rows
                 selected_rows=[],

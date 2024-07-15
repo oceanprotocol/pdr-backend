@@ -52,6 +52,7 @@ def get_predictoors_data_from_db(lake_dir: str):
         """,
     )
 
+
 @enforce_types
 def get_all_payouts_data_from_db(lake_dir: str):
     return _query_db(
@@ -60,6 +61,7 @@ def get_all_payouts_data_from_db(lake_dir: str):
             SELECT * FROM {Payout.get_lake_table_name()}
         """,
     )
+
 
 @enforce_types
 def get_payouts_from_db(

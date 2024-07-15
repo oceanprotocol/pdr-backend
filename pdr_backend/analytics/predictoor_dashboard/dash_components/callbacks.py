@@ -12,7 +12,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
     get_figures,
-    process_payouts_for_all_feeds
+    process_payouts_for_all_feeds,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     select_or_clear_all_by_table,
@@ -45,27 +45,39 @@ def get_callbacks(app):
         [
             Input("feeds_table", "selected_rows"),
             Input("predictoors_table", "selected_rows"),
+            Input("feeds-data", "data"),
+            Input("predictoors-data", "data"),
         ],
         State("data-folder", "data"),
     )
     def get_display_data_from_db(
         feeds_table_selected_rows,
         predictoors_table_selected_rows,
+        feeds_data,
+        predictoors_data,
         lake_dir,
     ):
         if (
             len(feeds_table_selected_rows) == 0
             or len(predictoors_table_selected_rows) == 0
         ):
-            accuracy_fig, profit_fig, stakes_fig = get_figures([], [], [])
+            accuracy_fig, profit_fig, stakes_fig = get_figures([], ArgFeeds([]), [])
             return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
 
-        feeds = ArgFeeds.from_table_data(feeds_table_selected_rows)
+        # feeds_table_selected_rows is a list of ints
+        # feeds_data is a list of dicts
+        # get the feeds data for the selected rows
+        selected_feeds = [feeds_data[i] for i in feeds_table_selected_rows]
 
-        predictoors_addrs = [row["user"] for row in predictoors_table_selected_rows]
+        feeds = ArgFeeds.from_table_data(selected_feeds)
+
+        selected_predictoors = [
+            predictoors_data[i] for i in predictoors_table_selected_rows
+        ]
+        predictoors_addrs = [row["user"] for row in selected_predictoors]
 
         payouts = get_payouts_from_db(
-            [row["contract"] for row in feeds_table_selected_rows],
+            [row["contract"] for row in selected_feeds],
             predictoors_addrs,
             lake_dir,
         )
@@ -73,7 +85,7 @@ def get_callbacks(app):
         # get figures
         accuracy_fig, profit_fig, stakes_fig = get_figures(
             payouts,
-            feeds,
+            ArgFeeds(feeds),
             predictoors_addrs,
         )
 
@@ -94,17 +106,8 @@ def get_callbacks(app):
         return columns
 
     @app.callback(
-        Output("predictoors_table", "columns"),
-        Input("predictoors-data", "data"),
-    )
-    def create_predictoors_table(predictoors_data):
-        if not predictoors_data:
-            return dash.no_update
-        columns = [{"name": col, "id": col} for col in predictoors_data[0].keys()]
-        return columns
-
-    @app.callback(
         Output("predictoors_table", "data"),
+        Output("predictoors_table", "columns"),
         [
             Input("search-input-Predictoors", "value"),
             Input("predictoors-data", "data"),
@@ -112,14 +115,12 @@ def get_callbacks(app):
         ],
     )
     def update_predictoors_table_on_search(
-        search_value,
-        predictoors_data,
-        all_payouts_data
+        search_value, predictoors_data, all_payouts_data
     ):
         """
         Update and filter the predictoors table based on the search input, and
         shorten user addresses for readability regardless of search input.
-        
+
         Args:
             search_value (str): The value entered in the search input.
             predictoors_data (list): The original list of predictoors data.
@@ -130,7 +131,9 @@ def get_callbacks(app):
         try:
             # Filter predictoors by user address if search value is provided
             if search_value:
-                filtered_data = filter_objects_by_field(predictoors_data, "user", search_value)
+                filtered_data = filter_objects_by_field(
+                    predictoors_data, "user", search_value
+                )
             else:
                 filtered_data = predictoors_data
 
@@ -138,7 +141,9 @@ def get_callbacks(app):
             for row in filtered_data:
                 processed_data = []
                 if all_payouts_data:
-                    processed_data = process_payouts_for_all_feeds(all_payouts_data, row["user"])
+                    processed_data = process_payouts_for_all_feeds(
+                        all_payouts_data, row["user"]
+                    )
 
                 user = row["user"]
 
@@ -147,14 +152,19 @@ def get_callbacks(app):
                 row["avg_stake"] = processed_data[6] if processed_data else 0
 
                 if len(user) > 10:  # Check if the string is long enough to trim
-                    row["user"] = f"{user[:5]}...{user[-5:]}"  # Keep the first 5 and last 5 characters
+                    row["user"] = (
+                        f"{user[:5]}...{user[-5:]}"  # Keep the first 5 and last 5 characters
+                    )
 
-            return filtered_data
+            columns = [{"name": col, "id": col} for col in filtered_data[0].keys()]
+            return filtered_data, columns
         except Exception as e:
             # Log the error or handle it as needed
             print(f"Error updating predictoors table: {e}")
             # Optionally, return an error message or empty data
-            return []
+            columns = [{"name": col, "id": col} for col in predictoors_data[0].keys()]
+
+            return [], columns
 
     @app.callback(
         Output("feeds_table", "data"),
