@@ -52,6 +52,17 @@ def get_predictoors_data_from_db(lake_dir: str):
         """,
     )
 
+@enforce_types
+def get_unique_payout_ids_based_on_predictoors_from_db(lake_dir: str, predictoor_addrs: List[str]):
+    # Constructing the SQL query
+    query = f"SELECT LEFT(ID, POSITION('-' IN ID) - 1)  AS feed_addr FROM {Payout.get_lake_table_name()} WHERE ID IN (SELECT MIN(ID) FROM {Payout.get_lake_table_name()} WHERE("
+    query += " OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])
+    query += ") GROUP BY LEFT(ID, POSITION('-' IN ID) - 1));"
+    return _query_db(
+        lake_dir,
+        query,
+    )
+
 
 @enforce_types
 def get_payouts_from_db(
@@ -88,6 +99,14 @@ def filter_objects_by_field(
     return list(
         filter(lambda obj: search_string.lower() in obj[field].lower(), objects)
     )
+
+@enforce_types
+def filter_feeds_data_by_payout_IDs(
+    feeds_data: List, feed_object_ids: List
+) -> List[Dict[str, Any]]:
+    feed_ids = [obj['feed_addr'] for obj in feed_object_ids]
+    filtere_feeds_data = [obj for obj in feeds_data if obj['contract'] in feed_ids]
+    return filtere_feeds_data
 
 
 @enforce_types

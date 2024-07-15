@@ -7,17 +7,6 @@ def get_input_column():
         [
             html.Div(
                 get_table(
-                    table_id="feeds_table",
-                    table_name="Feeds",
-                    searchable_field="pair",
-                    columns=[],
-                    data=None,
-                ),
-                id="feeds_container",
-                style={"height": "50%"},
-            ),
-            html.Div(
-                get_table(
                     table_id="predictoors_table",
                     table_name="Predictoors",
                     searchable_field="user",
@@ -25,6 +14,17 @@ def get_input_column():
                     data=None,
                 ),
                 id="predictoors_container",
+                style={"height": "50%"},
+            ),
+            html.Div(
+                get_table(
+                    table_id="feeds_table",
+                    table_name="Feeds",
+                    searchable_field="pair",
+                    columns=[],
+                    data=None,
+                ),
+                id="feeds_container",
                 style={"height": "50%"},
             ),
         ],
@@ -112,6 +112,12 @@ def get_table(table_id, table_name, searchable_field, columns, data):
             html.Div(
                 [
                     html.Span(table_name, style={"fontSize": "20px"}),
+                    dbc.Switch(
+                        id='toggle-switch-predictoor-feeds',
+                        label='Predictoor feeds only',
+                        value=True,
+                        style={'margin': '20px'}
+                    ) if table_name=="Feeds" else None,
                 ],
                 style={
                     "display": "flex",
