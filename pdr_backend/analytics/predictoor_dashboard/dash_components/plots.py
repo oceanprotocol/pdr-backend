@@ -9,7 +9,7 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
+def process_payouts(payouts: List[dict]) -> tuple:
     """
     Process payouts data for a given predictor and feed.
     Args:
@@ -23,11 +23,6 @@ def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
     profit = predictions = correct_predictions = 0
 
     for p in payouts:
-        # only filter for this particular predictoor and feed pair
-        # in order to properly group the data
-        if not (predictor in p["ID"] and feed in p["ID"]):
-            continue
-
         predictions += 1
         profit_change = max(p["payout"], 0) - p["stake"]
         profit += profit_change
@@ -37,9 +32,11 @@ def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
         accuracies.append((correct_predictions / predictions) * 100)
         profits.append(profit)
         stakes.append(p["stake"])
+
     slot_in_date_format = [
         UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
     ]
+
     return slot_in_date_format, accuracies, profits, stakes
 
 
@@ -141,9 +138,13 @@ def get_figures_and_metrics(
     avg_accuracy, total_profit, avg_stake = 0.0, 0.0, 0.0
 
     for predictor, feed in product(predictoors, feeds):
-        slots, accuracies, profits, stakes = process_payouts(
-            payouts, predictor, feed.contract
-        )
+        # only filter for this particular predictoor and feed pair
+        # in order to properly group the data
+        filtered_payouts = [
+            p for p in payouts if predictor in p["ID"] and feed.contract in p["ID"]
+        ]
+
+        slots, accuracies, profits, stakes = process_payouts(filtered_payouts)
 
         if not slots:
             continue

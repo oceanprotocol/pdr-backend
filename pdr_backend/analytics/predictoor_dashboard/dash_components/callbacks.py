@@ -44,8 +44,8 @@ def get_callbacks(app):
         [
             Input("feeds_table", "selected_rows"),
             Input("predictoors_table", "selected_rows"),
-            Input("feeds-data", "data"),
-            Input("predictoors-data", "data"),
+            Input("feeds_table", "data"),
+            Input("predictoors_table", "data"),
         ],
         State("data-folder", "data"),
     )
