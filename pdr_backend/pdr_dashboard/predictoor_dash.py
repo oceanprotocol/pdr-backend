@@ -4,10 +4,10 @@ import dash_bootstrap_components as dbc
 from dash import Dash
 from enforce_typing import enforce_types
 
-from pdr_backend.analytics.predictoor_dashboard.dash_components.callbacks import (
+from pdr_backend.pdr_dashboard.dash_components.callbacks import (
     get_callbacks,
 )
-from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
+from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_layout,
 )
 from pdr_backend.ppss.ppss import PPSS
