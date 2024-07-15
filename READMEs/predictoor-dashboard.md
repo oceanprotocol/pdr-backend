@@ -25,7 +25,7 @@ For more information on how the lake works and how to configure it, refer to [`t
 After fetching the chain data locally into the lake, the next step is to read, process, and display the data by running the dashboard with the following command:
 
 ```console
-pdr predictoor_dashboard ./my_ppss.yaml sapphire-mainnet
+pdr dashboard ./my_ppss.yaml sapphire-mainnet
 ```
 
 This command will open a browser window where you can select predictors and feeds to visualize their performance.
