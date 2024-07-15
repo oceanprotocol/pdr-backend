@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from enforce_typing import enforce_types
 
-from pdr_backend.predictoor_dashboard.dash_components.plots import (
+from pdr_backend.pdr_dashboard.dash_components.plots import (
     process_payouts,
     create_figure,
     get_figures,

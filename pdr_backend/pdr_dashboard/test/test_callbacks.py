@@ -5,13 +5,13 @@ from dash import Dash
 import dash_bootstrap_components as dbc
 from selenium.webdriver.common.keys import Keys
 
-from pdr_backend.predictoor_dashboard.dash_components.callbacks import (
+from pdr_backend.pdr_dashboard.dash_components.callbacks import (
     get_callbacks,
 )
-from pdr_backend.predictoor_dashboard.dash_components.view_elements import (
+from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_layout,
 )
-from pdr_backend.predictoor_dashboard.test.resources import (
+from pdr_backend.pdr_dashboard.test.resources import (
     _prepare_test_db,
     _clear_test_db,
 )
