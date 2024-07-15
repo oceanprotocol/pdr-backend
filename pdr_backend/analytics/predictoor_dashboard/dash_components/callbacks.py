@@ -15,6 +15,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     select_or_clear_all_by_table,
 )
+from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
 # pylint: disable=too-many-statements
@@ -40,21 +41,14 @@ def get_callbacks(app):
         [
             Input("feeds_table", "selected_rows"),
             Input("predictoors_table", "selected_rows"),
-            Input("feeds_table", "data"),
-            Input("predictoors_table", "data"),
         ],
         State("data-folder", "data"),
     )
     def get_display_data_from_db(
         feeds_table_selected_rows,
         predictoors_table_selected_rows,
-        feeds_data,
-        predictoors_data,
         lake_dir,
     ):
-        feeds_addrs = []
-        feeds_display_data = []
-        predictoors_addrs = []
         if (
             len(feeds_table_selected_rows) == 0
             or len(predictoors_table_selected_rows) == 0
@@ -62,24 +56,21 @@ def get_callbacks(app):
             accuracy_fig, profit_fig, stakes_fig = get_figures([], [], [])
             return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
 
-        ## calculate selected feeds
-        for i in feeds_table_selected_rows:
-            feeds_addrs.append(feeds_data[i]["contract"])
-            feeds_display_data.append(
-                {
-                    "contract": feeds_data[i]["contract"],
-                    "feed_name": f"{feeds_data[i]['pair']}-{feeds_data[i]['timeframe']}",  # pylint: disable=line-too-long
-                }
-            )
+        feeds = ArgFeeds.from_table_data(feeds_table_selected_rows)
 
-        for i in predictoors_table_selected_rows:
-            predictoors_addrs.append(predictoors_data[i]["user"])
+        predictoors_addrs = [row["user"] for row in predictoors_table_selected_rows]
 
-        payouts = get_payouts_from_db(feeds_addrs, predictoors_addrs, lake_dir)
+        payouts = get_payouts_from_db(
+            [row["contract"] for row in feeds_table_selected_rows],
+            predictoors_addrs,
+            lake_dir,
+        )
 
         # get figures
         accuracy_fig, profit_fig, stakes_fig = get_figures(
-            payouts, feeds_display_data, predictoors_addrs
+            payouts,
+            feeds,
+            predictoors_addrs,
         )
 
         return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)

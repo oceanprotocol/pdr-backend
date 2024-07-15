@@ -8,6 +8,8 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
     get_figures,
 )
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
 @enforce_types
@@ -120,9 +122,16 @@ def test_get_figures(
 ):
     ## convert List[Payout] to List[dict]
     payouts = [p.__dict__ for p in _sample_payouts]
-    sample_feeds = [
-        {"contract": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151", "feed_name": "Feed1"}
-    ]
+    sample_feeds = ArgFeeds(
+        [
+            ArgFeed(
+                contract="b0x18f54cc21b7a2fdd011bea06bba7801b280e315",
+                pair="BTC/USDT",
+                exchange="binance",
+                timeframe="1h",
+            ),
+        ]
+    )
     sample_predictoors = ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"]
 
     fig_accuracy, fig_profit, fig_costs = get_figures(

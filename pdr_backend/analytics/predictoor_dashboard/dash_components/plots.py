@@ -1,7 +1,10 @@
 from itertools import product
-from typing import Union, List, Tuple, Optional
+from typing import List, Optional, Tuple, Union
+
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
+
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -20,6 +23,8 @@ def process_payouts(payouts: List[dict], predictor: str, feed: str) -> tuple:
     profit = predictions = correct_predictions = 0
 
     for p in payouts:
+        # only filter for this particular predictoor and feed pair
+        # in order to properly group the data
         if not (predictor in p["ID"] and feed in p["ID"]):
             continue
 
@@ -81,9 +86,43 @@ def create_figure(
     return fig
 
 
+def _empty_accuracy_scatter() -> List[go.Scatter]:
+    return [go.Scatter(x=[], y=[], mode="lines", name="accuracy")]
+
+
+def _empty_profit_scatter() -> List[go.Scatter]:
+    return [go.Scatter(x=[], y=[], mode="lines", name="profit")]
+
+
+def _empty_stakes_bar() -> List[go.Bar]:
+    return [go.Bar(x=[], y=[], name="stakes", width=5)]
+
+
+def _empty_trio() -> Tuple[go.Figure, go.Figure, go.Figure]:
+    return _empty_accuracy_scatter(), _empty_profit_scatter(), _empty_stakes_bar()
+
+
+def _make_figures(fig_tup: Tuple) -> Tuple[go.Figure, go.Figure, go.Figure]:
+    accuracy_scatters, profit_scatters, stakes_scatters = fig_tup
+
+    fig_accuracy = create_figure(
+        accuracy_scatters, "Accuracy", "'%' accuracy over time"
+    )
+
+    fig_profit = create_figure(
+        profit_scatters, "Profit", "OCEAN profit over time", show_legend=False
+    )
+
+    fig_costs = create_figure(
+        stakes_scatters, "Costs", "Stake (OCEAN) at a time", show_legend=False
+    )
+
+    return fig_accuracy, fig_profit, fig_costs
+
+
 @enforce_types
 def get_figures(
-    payouts: Optional[List], feeds: List, predictoors: List[str]
+    payouts: Optional[List], feeds: ArgFeeds, predictoors: List[str]
 ) -> Tuple[go.Figure, go.Figure, go.Figure]:
     """
     Get figures for accuracy, profit, and costs.
@@ -94,40 +133,35 @@ def get_figures(
     Returns:
         tuple: Tuple of accuracy, profit, and costs figures.
     """
+    if not payouts:
+        return _make_figures(_empty_trio())
+
     accuracy_scatters, profit_scatters, stakes_scatters = [], [], []
 
-    if payouts:
-        for predictor, feed in product(predictoors, feeds):
-            slots, accuracies, profits, stakes = process_payouts(
-                payouts, predictor, feed["contract"]
-            )
-            if not slots:
-                continue
+    for predictor, feed in product(predictoors, feeds):
+        slots, accuracies, profits, stakes = process_payouts(
+            payouts, predictor, feed.contract
+        )
 
-            short_name = f"{predictor[:5]} - {feed['feed_name']}"
-            accuracy_scatters.append(
-                go.Scatter(x=slots, y=accuracies, mode="lines", name=short_name)
-            )
-            profit_scatters.append(
-                go.Scatter(x=slots, y=profits, mode="lines", name=short_name)
-            )
-            stakes_scatters.append(go.Bar(x=slots, y=stakes, name=short_name, width=5))
+        if not slots:
+            continue
+
+        short_name = f"{predictor[:5]} - {str(feed)}"
+        accuracy_scatters.append(
+            go.Scatter(x=slots, y=accuracies, mode="lines", name=short_name)
+        )
+        profit_scatters.append(
+            go.Scatter(x=slots, y=profits, mode="lines", name=short_name)
+        )
+        stakes_scatters.append(go.Bar(x=slots, y=stakes, name=short_name, width=5))
 
     if not accuracy_scatters:
-        accuracy_scatters.append(go.Scatter(x=[], y=[], mode="lines", name="accuracy"))
+        accuracy_scatters = _empty_accuracy_scatter()
+
     if not profit_scatters:
-        profit_scatters.append(go.Scatter(x=[], y=[], mode="lines", name="profit"))
+        profit_scatters = _empty_profit_scatter()
+
     if not stakes_scatters:
-        stakes_scatters.append(go.Bar(x=[], y=[], name="stakes", width=5))
+        stakes_scatters = _empty_stakes_bar()
 
-    fig_accuracy = create_figure(
-        accuracy_scatters, "Accuracy", "'%' accuracy over time"
-    )
-    fig_profit = create_figure(
-        profit_scatters, "Profit", "OCEAN profit over time", show_legend=False
-    )
-    fig_costs = create_figure(
-        stakes_scatters, "Costs", "Stake (OCEAN) at a time", show_legend=False
-    )
-
-    return fig_accuracy, fig_profit, fig_costs
+    return _make_figures((accuracy_scatters, profit_scatters, stakes_scatters))
