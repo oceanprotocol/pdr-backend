@@ -8,6 +8,7 @@ from typing import Dict, List
 import polars as pl
 from enforce_typing import enforce_types
 from polars.dataframe.frame import DataFrame
+
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 pl.Config.set_tbl_hide_dataframe_shape(True)
@@ -170,7 +171,12 @@ class ValidationOverview:
             (
                 counts_per_timedelta.group_by(["pair", "timeframe"])
                 .agg([(pl.sum("total_count").alias("sum_total_count"))])
-                .join(counts_per_timedelta, on=["pair", "timeframe"], how="left")
+                .join(
+                    counts_per_timedelta,
+                    on=["pair", "timeframe"],
+                    how="left",
+                    coalesce=True,
+                )
                 .with_columns(
                     [
                         (pl.col("total_count") / pl.col("sum_total_count") * 100).alias(

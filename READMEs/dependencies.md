@@ -67,6 +67,12 @@ If you upgrade selenium or dash[testing], you should check if these warnings are
 
 If you upgrade plotly, you should check if these warnings are still present and remove the ignore statement in `pytest.ini` if they are not.
 
+#### Warnings related to stopit
+- `ignore:.*pkg_resources is deprecated as an API.*:DeprecationWarning` -> due to usage of `stopit`, which is an older library and relies on older versions of `pkg_resources`.
+
+Stopit is a simple wrapper to stop function execution if it takes too long. It is only used in the Sim Plots Dashboard and we should look into removing it.
+If you remove the stopit dependency, you should check if these warnings are still present and remove the ignore statement in `pytest.ini` if they are not.
+
 ## Updating this document
 
 If dependency upgrades fix some issues, or if policies change and this document needs to be updated, please do so.

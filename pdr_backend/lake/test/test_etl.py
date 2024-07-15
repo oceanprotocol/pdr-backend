@@ -205,7 +205,7 @@ def test_drop_temp_sql_tables(setup_data):
 
     # Insert temp ETL tables w/ dummy data into DuckDB
     for table_name in _ETL_REGISTERED_TABLE_NAMES:
-        db.insert_to_table(
+        db.insert_from_df(
             pl.DataFrame([], schema=dummy_schema), TempTable(table_name).fullname
         )
 
@@ -232,7 +232,7 @@ def test_move_from_temp_tables_to_live(setup_data):
     temp_bronze_table_names = []
     dummy_schema = {"test_column": str}
     for table_name in _ETL_REGISTERED_TABLE_NAMES:
-        db.insert_to_table(
+        db.insert_from_df(
             pl.DataFrame([], schema=dummy_schema), TempTable(table_name).fullname
         )
         temp_bronze_table_names.append(TempTable(table_name).fullname)

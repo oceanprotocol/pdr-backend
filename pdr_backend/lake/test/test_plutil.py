@@ -86,7 +86,7 @@ def test_concat_next_df():
     cand_dtypes = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
     schema = {col: cand_dtypes[col] for col in TOHLCV_COLS}
 
-    next_df = pl.DataFrame(FOUR_ROWS_RAW_TOHLCV_DATA, schema=schema)
+    next_df = pl.DataFrame(FOUR_ROWS_RAW_TOHLCV_DATA, schema=schema, orient="row")
     assert len(next_df) == 4
 
     # add 4 rows to empty df
@@ -96,11 +96,11 @@ def test_concat_next_df():
     _assert_TOHLCVd_cols_and_types(df)
 
     # assert 1 more row
-    next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
+    next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema, orient="row")
     assert len(next_df) == 1
 
     # assert that concat verifies schemas match
-    next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
+    next_df = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema, orient="row")
     assert len(next_df) == 1
     assert "datetime" not in next_df.columns
 
@@ -164,7 +164,7 @@ def test_load_append(tmpdir):
 
     # verify: doing a manual concat is the same as the load
     schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
-    df_1_row = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema)
+    df_1_row = pl.DataFrame(ONE_ROW_RAW_TOHLCV_DATA, schema=schema, orient="row")
     df_5_rows = concat_next_df(df_4_rows, df_1_row)
     df_5_rows_loaded = load_rawohlcv_file(filename)
 
@@ -205,7 +205,7 @@ def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
     df = initialize_rawohlcv_df(TOHLCV_COLS)
 
     schema = dict(zip(TOHLCV_COLS, TOHLCV_DTYPES_PL))
-    next_df = pl.DataFrame(raw_data, schema=schema)
+    next_df = pl.DataFrame(raw_data, schema=schema, orient="row")
 
     df = concat_next_df(df, next_df)
     return df

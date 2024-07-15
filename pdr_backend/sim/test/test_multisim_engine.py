@@ -19,7 +19,7 @@ from pdr_backend.sim.sim_state import SimState
 def test_multisim1(tmpdir):
     constructor_d = _constructor_d_with_fast_runtime(tmpdir)
 
-    param = "predictoor_ss.aimodel_ss.autoregressive_n"
+    param = "predictoor_ss.aimodel_data_ss.autoregressive_n"
     d = multisim_ss_test_dict(sweep_params=[{param: "1, 2"}])
     constructor_d["multisim_ss"] = d
 
@@ -35,6 +35,7 @@ def test_multisim1(tmpdir):
     assert df.shape[0] == 2  # 2 runs
     assert df.shape[1] == len(target_columns)
     assert list(df.columns) == target_columns
+    assert df["pdr_profit_OCEAN"].is_unique
 
 
 @enforce_types
