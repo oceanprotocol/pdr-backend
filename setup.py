@@ -20,7 +20,7 @@ install_requirements = [
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.5.1",
-    "eth-typing==4.3.1",
+    "eth-typing==4.4.0",
     "flask==3.0.3",
     "imblearn",
     "kaleido==0.2.1",
