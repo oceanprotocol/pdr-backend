@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 install_requirements = [
     "black==24.4.2",
     "bumpversion",
-    "ccxt==4.3.58",
+    "ccxt==4.3.61",
     "coverage",
     "dash[testing]==2.17.1",
     "dash_bootstrap_components==1.6.0",
@@ -20,7 +20,7 @@ install_requirements = [
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.5.1",
-    "eth-typing==4.3.1",
+    "eth-typing==4.4.0",
     "flask==3.0.3",
     "imblearn",
     "kaleido==0.2.1",
