@@ -1,15 +1,15 @@
 from dash import Input, Output, State
 import dash
-from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
+from pdr_backend.pdr_dashboard.dash_components.util import (
     get_feeds_data_from_db,
     get_predictoors_data_from_db,
     get_payouts_from_db,
     filter_objects_by_field,
 )
-from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
+from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_graph,
 )
-from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
+from pdr_backend.pdr_dashboard.dash_components.plots import (
     get_figures,
 )
 
