@@ -121,9 +121,9 @@ def _make_figures(fig_tup: Tuple) -> Tuple[go.Figure, go.Figure, go.Figure]:
 
 
 @enforce_types
-def get_figures(
+def get_figures_and_metrics(
     payouts: Optional[List], feeds: ArgFeeds, predictoors: List[str]
-) -> Tuple[go.Figure, go.Figure, go.Figure]:
+) -> Tuple[go.Figure, go.Figure, go.Figure, float | None, float | None, float | None]:
     """
     Get figures for accuracy, profit, and costs.
     Args:
@@ -131,12 +131,14 @@ def get_figures(
         feeds (list): List of feeds data.
         predictoors (list): List of predictoors data.
     Returns:
-        tuple: Tuple of accuracy, profit, and costs figures.
+        tuple: Tuple of accuracy, profit, and costs figures, avg accuracy, total profit, avg stake
     """
     if not payouts:
-        return _make_figures(_empty_trio())
+        figures = _make_figures(_empty_trio())
+        return figures[0], figures[1], figures[2], 0.0, 0.0, 0.0
 
     accuracy_scatters, profit_scatters, stakes_scatters = [], [], []
+    avg_accuracy, total_profit, avg_stake = 0.0, 0.0, 0.0
 
     for predictor, feed in product(predictoors, feeds):
         slots, accuracies, profits, stakes = process_payouts(
@@ -145,6 +147,12 @@ def get_figures(
 
         if not slots:
             continue
+
+        avg_stake = ((stakes[-1] + avg_stake) / 2) if avg_stake else stakes[-1]
+        total_profit = (profits[-1] + total_profit) if total_profit else profits[-1]
+        avg_accuracy = (
+            ((accuracies[-1] + avg_accuracy) / 2) if avg_accuracy else accuracies[-1]
+        )
 
         short_name = f"{predictor[:5]} - {str(feed)}"
         accuracy_scatters.append(
@@ -164,4 +172,5 @@ def get_figures(
     if not stakes_scatters:
         stakes_scatters = _empty_stakes_bar()
 
-    return _make_figures((accuracy_scatters, profit_scatters, stakes_scatters))
+    figures = _make_figures((accuracy_scatters, profit_scatters, stakes_scatters))
+    return (figures[0], figures[1], figures[2], avg_accuracy, total_profit, avg_stake)

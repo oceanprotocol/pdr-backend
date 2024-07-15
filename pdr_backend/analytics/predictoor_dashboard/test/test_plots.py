@@ -5,7 +5,7 @@ from enforce_typing import enforce_types
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
     process_payouts,
     create_figure,
-    get_figures,
+    get_figures_and_metrics,
 )
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.cli.arg_feed import ArgFeed
@@ -117,7 +117,7 @@ def test_create_figure():
 
 @enforce_types
 @patch("plotly.graph_objects.Figure", new=MockFigure)
-def test_get_figures(
+def test_get_figures_and_metrics(
     _sample_payouts,
 ):
     ## convert List[Payout] to List[dict]
@@ -134,8 +134,8 @@ def test_get_figures(
     )
     sample_predictoors = ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"]
 
-    fig_accuracy, fig_profit, fig_costs = get_figures(
-        payouts, sample_feeds, sample_predictoors
+    fig_accuracy, fig_profit, fig_costs, avg_accuracy, total_profit, avg_stake = (
+        get_figures_and_metrics(payouts, sample_feeds, sample_predictoors)
     )
 
     # Check if figures are instances of MockFigure
@@ -159,3 +159,12 @@ def test_get_figures(
     assert fig_accuracy.update_layout_called == 1
     assert fig_profit.update_layout_called == 1
     assert fig_costs.update_layout_called == 1
+
+    # Check metrics
+    assert avg_accuracy is not None
+    assert total_profit is not None
+    assert avg_stake is not None
+
+    assert isinstance(avg_accuracy, float)
+    assert isinstance(total_profit, float)
+    assert isinstance(avg_stake, float)
