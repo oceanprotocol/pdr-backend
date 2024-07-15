@@ -12,6 +12,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
     get_figures,
 )
+from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
 # pylint: disable=too-many-statements
@@ -129,13 +130,9 @@ def get_callbacks(app):
             search_value_feeds, feeds_data
         )
 
-        feeds_data = [
-            {
-                "contract": current_feeds_table_data[i]["contract"],
-                "feed_name": f"{current_feeds_table_data[i]['pair']}-{current_feeds_table_data[i]['timeframe']}",  # pylint: disable=line-too-long
-            }
-            for i in feeds_table_selected_rows
-        ]
+        feeds_data = ArgFeeds.from_table_data(
+            [current_feeds_table_data[i] for i in feeds_table_selected_rows]
+        )
 
         # calculate selected predictoors addrs
         current_predictoors_table_data = update_predictoors_table_on_search(

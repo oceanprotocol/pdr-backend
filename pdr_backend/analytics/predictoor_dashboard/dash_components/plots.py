@@ -1,7 +1,10 @@
 from itertools import product
-from typing import Union, List, Tuple, Optional
+from typing import List, Optional, Tuple, Union
+
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
+
+from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -119,7 +122,7 @@ def _make_figures(fig_tup: Tuple) -> Tuple[go.Figure, go.Figure, go.Figure]:
 
 @enforce_types
 def get_figures(
-    payouts: Optional[List], feeds: List, predictoors: List[str]
+    payouts: Optional[List], feeds: ArgFeeds, predictoors: List[str]
 ) -> Tuple[go.Figure, go.Figure, go.Figure]:
     """
     Get figures for accuracy, profit, and costs.
@@ -137,13 +140,13 @@ def get_figures(
 
     for predictor, feed in product(predictoors, feeds):
         slots, accuracies, profits, stakes = process_payouts(
-            payouts, predictor, feed["contract"]
+            payouts, predictor, feed.contract
         )
 
         if not slots:
             continue
 
-        short_name = f"{predictor[:5]} - {feed['feed_name']}"
+        short_name = f"{predictor[:5]} - {str(feed)}"
         accuracy_scatters.append(
             go.Scatter(x=slots, y=accuracies, mode="lines", name=short_name)
         )
