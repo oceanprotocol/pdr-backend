@@ -21,11 +21,11 @@ def test_process_payouts(
 
     user = "0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"
     feed = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
-    result = process_payouts(payouts, user, feed)
 
     ## filter payouts by user and feed
     filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
     filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
+    result = process_payouts(filtered_payouts)
 
     assert len(result) == 4
 
