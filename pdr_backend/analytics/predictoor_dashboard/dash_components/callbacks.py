@@ -135,21 +135,35 @@ def get_callbacks(app):
 
     @app.callback(
         Output("feeds_table", "data"),
+        Output("feeds_table", "selected_rows"),
         [
             Input("search-input-Feeds", "value"),
+            Input("feeds_table", "selected_rows"),
+            Input("feeds_table", "data"),
             Input("feeds-data", "data"),
         ],
     )
-    def update_feeds_table_on_search(search_value, feeds_data):
-        if not search_value:
-            return feeds_data
+    def update_feeds_table_on_search(
+        search_value, selected_rows, feeds_table, feeds_data
+    ):
+        selected_feeds = [feeds_table[i] for i in selected_rows]
 
-        # filter feeds by pair address
-        filtered_data = filter_objects_by_field(feeds_data, "pair", search_value)
-        return filtered_data
+        if not search_value:
+            filtered_data = feeds_data
+        else:
+            # filter feeds by pair address
+            filtered_data = filter_objects_by_field(
+                feeds_data, "pair", search_value, selected_feeds
+            )
+
+        selected_feed_indices = [
+            i for i, feed in enumerate(filtered_data) if feed in selected_feeds
+        ]
+
+        return filtered_data, selected_feed_indices
 
     @app.callback(
-        Output("feeds_table", "selected_rows"),
+        Output("feeds_table", "selected_rows", allow_duplicate=True),
         [
             Input("select-all-feeds_table", "n_clicks"),
             Input("clear-all-feeds_table", "n_clicks"),
