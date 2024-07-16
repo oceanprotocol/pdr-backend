@@ -39,7 +39,7 @@ def get_callbacks(app):
             user_payout_stats = get_user_payouts_stats_from_db(files_dir)
             return feeds_data, predictoors_data, user_payout_stats, None
         except Exception as e:
-            return None, None, dash.html.H3(str(e))
+            return None, None, None, dash.html.H3(str(e))
 
     @app.callback(
         Output("accuracy_chart", "children"),
