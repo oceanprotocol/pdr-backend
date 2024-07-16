@@ -1,6 +1,6 @@
 import logging
 
-from typing import Union, List, Dict, Any
+from typing import Union, List, Dict, Any, Optional
 from enforce_typing import enforce_types
 import dash
 
@@ -112,11 +112,19 @@ def get_payouts_from_db(
 
 @enforce_types
 def filter_objects_by_field(
-    objects: List[Dict[str, Any]], field: str, search_string: str
+    objects: List[Dict[str, Any]],
+    field: str,
+    search_string: str,
+    previous_objects: Optional[List] = None,
 ) -> List[Dict[str, Any]]:
-    return list(
-        filter(lambda obj: search_string.lower() in obj[field].lower(), objects)
-    )
+    if previous_objects is None:
+        previous_objects = []
+
+    return [
+        obj
+        for obj in objects
+        if search_string.lower() in obj[field].lower() or obj in previous_objects
+    ]
 
 
 @enforce_types

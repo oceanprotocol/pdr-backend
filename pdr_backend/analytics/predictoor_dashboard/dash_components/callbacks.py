@@ -121,23 +121,42 @@ def get_callbacks(app):
 
     @app.callback(
         Output("predictoors_table", "data"),
+        Output("predictoors_table", "selected_rows"),
         [
             Input("search-input-Predictoors", "value"),
+            Input("predictoors_table", "selected_rows"),
+            Input("predictoors_table", "data"),
             Input("predictoors-data", "data"),
         ],
     )
-    def update_predictoors_table_on_search(search_value, predictoors_data):
-        if not search_value:
-            return predictoors_data
+    def update_predictoors_table_on_search(
+        search_value, selected_rows, predictoors_table, predictoors_data
+    ):
+        selected_predictoors = [predictoors_table[i] for i in selected_rows]
 
-        # filter predictoors by user address
-        filtered_data = filter_objects_by_field(predictoors_data, "user", search_value)
-        return filtered_data
+        if not search_value:
+            filtered_data = predictoors_data
+        else:
+            # filter predictoors by user address
+            filtered_data = filter_objects_by_field(
+                predictoors_data, "user", search_value, selected_predictoors
+            )
+
+        selected_predictoor_indices = [
+            i
+            for i, predictoor in enumerate(filtered_data)
+            if predictoor in selected_predictoors
+        ]
+
+        return filtered_data, selected_predictoor_indices
 
     @app.callback(
         Output("feeds_table", "data"),
+        Output("feeds_table", "selected_rows"),
         [
             Input("search-input-Feeds", "value"),
+            Input("feeds_table", "selected_rows"),
+            Input("feeds_table", "data"),
             Input("feeds-data", "data"),
             Input("toggle-switch-predictoor-feeds", "value"),
             Input("predictoors_table", "selected_rows"),
@@ -147,20 +166,23 @@ def get_callbacks(app):
     )
     def update_feeds_table_on_search(
         search_value,
+        selected_rows,
+        feeds_table,
         feeds_data,
         predictoor_feeds_only,
         predictoors_table_selected_rows,
-        predictoors_data,
+        predictoors_table,
         lake_dir,
     ):
+        selected_feeds = [feeds_table[i] for i in selected_rows]
         # Extract selected predictoor addresses
         predictoors_addrs = [
-            predictoors_data[i]["user"] for i in predictoors_table_selected_rows
+            predictoors_table[i]["user"] for i in predictoors_table_selected_rows
         ]
 
         # filter feeds by pair address
         filtered_data = (
-            filter_objects_by_field(feeds_data, "pair", search_value)
+            filter_objects_by_field(feeds_data, "pair", search_value, selected_feeds)
             if search_value
             else feeds_data
         )
@@ -170,15 +192,19 @@ def get_callbacks(app):
             feed_ids = get_feed_ids_based_on_predictoors_from_db(
                 lake_dir,
                 predictoor_addrs=[
-                    predictoors_data[i]["user"] for i in predictoors_table_selected_rows
+                    predictoors_table[i]["user"] for i in predictoors_table_selected_rows
                 ],
             )
             filtered_data = [obj for obj in feeds_data if obj["contract"] in feed_ids]
 
-        return filtered_data
+        selected_feed_indices = [
+            i for i, feed in enumerate(filtered_data) if feed in selected_feeds
+        ]
+
+        return filtered_data, selected_feed_indices
 
     @app.callback(
-        Output("feeds_table", "selected_rows"),
+        Output("feeds_table", "selected_rows", allow_duplicate=True),
         [
             Input("select-all-feeds_table", "n_clicks"),
             Input("clear-all-feeds_table", "n_clicks"),
@@ -195,7 +221,7 @@ def get_callbacks(app):
         return select_or_clear_all_by_table(ctx, "feeds_table", rows)
 
     @app.callback(
-        Output("predictoors_table", "selected_rows"),
+        Output("predictoors_table", "selected_rows", allow_duplicate=True),
         [
             Input("select-all-predictoors_table", "n_clicks"),
             Input("clear-all-predictoors_table", "n_clicks"),
