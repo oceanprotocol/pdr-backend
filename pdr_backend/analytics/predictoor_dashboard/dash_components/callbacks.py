@@ -145,17 +145,17 @@ def get_callbacks(app):
             predictoor
             for predictoor in predictoors_data
             if predictoor["user"] in app.favourite_addresses
-            or predictoor in selected_predictoors
         ]
 
         if "true" in show_favourite_addresses:
             selected_predictoors += custom_predictoors
         else:
-            selected_predictoors = [
-                predictoor
-                for predictoor in selected_predictoors
-                if predictoor not in custom_predictoors
-            ]
+            if dash.callback_context.triggered_id == "show-favourite-addresses":
+                selected_predictoors = [
+                    predictoor
+                    for predictoor in selected_predictoors
+                    if predictoor not in custom_predictoors
+                ]
 
         if search_value:
             # filter predictoors by user address
