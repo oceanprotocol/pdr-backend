@@ -5,6 +5,12 @@ from dash import dcc, html, dash_table
 def get_input_column():
     return html.Div(
         [
+            dcc.Checklist(
+                id="show-favourite-addresses",
+                options=[{"label": "Toggle select my predictors", "value": "true"}],
+                value=[],
+                labelStyle={"display": "inline-block"},
+            ),
             html.Div(
                 get_table(
                     table_id="feeds_table",

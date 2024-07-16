@@ -25,4 +25,5 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
         webbrowser.open(f"http://127.0.0.1:{port}/")
     folder = ppss.lake_ss.lake_dir
     app.layout.children[0].data = folder
+    app.favourite_addresses = ppss.predictoor_ss.my_addresses
     app.run(debug=debug_mode, port=port)

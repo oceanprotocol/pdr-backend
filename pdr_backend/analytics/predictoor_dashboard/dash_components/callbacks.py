@@ -24,15 +24,17 @@ def get_callbacks(app):
         Output("feeds-data", "data"),
         Output("predictoors-data", "data"),
         Output("error-message", "children"),
+        Output("show-favourite-addresses", "value"),
         Input("data-folder", "data"),
     )
     def get_input_data_from_db(files_dir):
+        show_favourite_addresses = ["true"] if app.favourite_addresses else []
         try:
             feeds_data = get_feeds_data_from_db(files_dir)
             predictoors_data = get_predictoors_data_from_db(files_dir)
-            return feeds_data, predictoors_data, None
+            return feeds_data, predictoors_data, None, show_favourite_addresses
         except Exception as e:
-            return None, None, dash.html.H3(str(e))
+            return None, None, dash.html.H3(str(e)), show_favourite_addresses
 
     @app.callback(
         Output("accuracy_chart", "children"),
@@ -126,19 +128,39 @@ def get_callbacks(app):
             Input("predictoors_table", "selected_rows"),
             Input("predictoors_table", "data"),
             Input("predictoors-data", "data"),
+            Input("show-favourite-addresses", "value"),
         ],
     )
     def update_predictoors_table_on_search(
-        search_value, selected_rows, predictoors_table, predictoors_data
+        search_value,
+        selected_rows,
+        predictoors_table,
+        predictoors_data,
+        show_favourite_addresses,
     ):
         selected_predictoors = [predictoors_table[i] for i in selected_rows]
+        filtered_data = predictoors_data
 
-        if not search_value:
-            filtered_data = predictoors_data
+        custom_predictoors = [
+            predictoor
+            for predictoor in predictoors_data
+            if predictoor["user"] in app.favourite_addresses
+            or predictoor in selected_predictoors
+        ]
+
+        if "true" in show_favourite_addresses:
+            selected_predictoors += custom_predictoors
         else:
+            selected_predictoors = [
+                predictoor
+                for predictoor in selected_predictoors
+                if predictoor not in custom_predictoors
+            ]
+
+        if search_value:
             # filter predictoors by user address
             filtered_data = filter_objects_by_field(
-                predictoors_data, "user", search_value, selected_predictoors
+                filtered_data, "user", search_value, selected_predictoors
             )
 
         selected_predictoor_indices = [
