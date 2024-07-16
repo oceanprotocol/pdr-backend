@@ -142,16 +142,16 @@ def get_callbacks(app):
         selected_predictoors = [predictoors_table[i] for i in selected_rows]
         filtered_data = predictoors_data
 
-        custom_predictoors = [
-            predictoor
-            for predictoor in predictoors_data
-            if predictoor["user"] in app.favourite_addresses
-        ]
+        if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
+            custom_predictoors = [
+                predictoor
+                for predictoor in predictoors_data
+                if predictoor["user"] in app.favourite_addresses
+            ]
 
-        if show_favourite_addresses:
-            selected_predictoors += custom_predictoors
-        else:
-            if dash.callback_context.triggered_id == "show-favourite-addresses":
+            if show_favourite_addresses:
+                selected_predictoors += custom_predictoors
+            else:
                 selected_predictoors = [
                     predictoor
                     for predictoor in selected_predictoors

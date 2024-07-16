@@ -5,11 +5,6 @@ from dash import dcc, html, dash_table
 def get_input_column():
     return html.Div(
         [
-            dbc.Switch(
-                id="show-favourite-addresses",
-                label="Toggle my predictoor feeds",
-                value=True,
-            ),
             html.Div(
                 get_table(
                     table_id="predictoors_table",
@@ -173,7 +168,11 @@ def get_table(table_id, table_name, searchable_field, columns, data):
                         value=True,
                     )
                     if table_name == "Feeds"
-                    else None
+                    else dbc.Switch(
+                        id="show-favourite-addresses",
+                        label="Toggle my predictoor feeds",
+                        value=True,
+                    )
                 ),
             ],
             style={
