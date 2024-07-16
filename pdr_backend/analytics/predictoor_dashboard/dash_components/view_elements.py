@@ -7,17 +7,6 @@ def get_input_column():
         [
             html.Div(
                 get_table(
-                    table_id="feeds_table",
-                    table_name="Feeds",
-                    searchable_field="pair",
-                    columns=[],
-                    data=None,
-                    default_sorting=[],
-                ),
-                id="feeds_container",
-            ),
-            html.Div(
-                get_table(
                     table_id="predictoors_table",
                     table_name="Predictoors",
                     searchable_field="user",
@@ -29,11 +18,27 @@ def get_input_column():
                 ),
                 id="predictoors_container",
             ),
+            html.Div(
+                get_table(
+                    table_id="feeds_table",
+                    table_name="Feeds",
+                    searchable_field="pair",
+                    columns=[],
+                    data=None,
+                    default_sorting=[],
+                ),
+                id="feeds_container",
+                style={
+                    "height": "50%",
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "justifyContent": "flex-end",
+                },
+            ),
         ],
         style={
             "height": "100%",
-            "width": "20%",
-            "paddingTop": "8px",
+            "width": "25%",
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "space-between",
@@ -47,7 +52,7 @@ def get_graphs_column():
         id="graphs_container",
         style={
             "height": "100%",
-            "width": "80%",
+            "width": "75%",
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "start",
@@ -161,12 +166,17 @@ def get_table(table_id, table_name, searchable_field, columns, data, default_sor
             html.Div(
                 [
                     html.Span(table_name, style={"fontSize": "20px"}),
+                    (
+                        dbc.Switch(
+                            id="toggle-switch-predictoor-feeds",
+                            label="Predictoor feeds only",
+                            value=True,
+                        )
+                        if table_name == "Feeds"
+                        else None
+                    ),
                 ],
-                style={
-                    "display": "flex",
-                    "justifyContent": "space-between",
-                    "alignItems": "center",
-                },
+                className="table_title",
             ),
             html.Div(
                 [
@@ -203,20 +213,10 @@ def get_table(table_id, table_name, searchable_field, columns, data, default_sor
                                 },
                             ),
                         ],
-                        style={
-                            "display": "flex",
-                            "justifyContent": "space-between",
-                            "alignItems": "center",
-                            "gap": "10px",
-                        },
+                        className="wrap_with_gap",
                     ),
                 ],
-                style={
-                    "display": "flex",
-                    "justifyContent": "space-between",
-                    "alignItems": "center",
-                    "gap": "10px",
-                },
+                className="wrap_with_gap",
             ),
             dash_table.DataTable(
                 id=table_id,

@@ -71,6 +71,27 @@ def get_user_payouts_stats_from_db(lake_dir: str):
     )
 
 
+def get_feed_ids_based_on_predictoors_from_db(
+    lake_dir: str, predictoor_addrs: List[str]
+):
+    # Constructing the SQL query
+    query = f"""
+        SELECT LIST(LEFT(ID, POSITION('-' IN ID) - 1)) as feed_addrs
+        FROM {Payout.get_lake_table_name()}
+        WHERE ID IN (
+            SELECT MIN(ID)
+            FROM {Payout.get_lake_table_name()}
+            WHERE (
+                {" OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])}
+            )
+            GROUP BY LEFT(ID, POSITION('-' IN ID) - 1)
+        );
+    """
+
+    # Execute the query
+    return _query_db(lake_dir, query)[0]["feed_addrs"]
+
+
 @enforce_types
 def get_payouts_from_db(
     feed_addrs: List[str], predictoor_addrs: List[str], lake_dir: str

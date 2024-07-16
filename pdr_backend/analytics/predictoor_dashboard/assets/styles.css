@@ -10,3 +10,20 @@ body{
 #predictoors_container .show-hide {
     display: none;
 }
+
+.form-check-label, .form-switch{
+    margin: 0;
+}
+
+.wrap_with_gap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.table_title {    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
