@@ -7,16 +7,6 @@ def get_input_column():
         [
             html.Div(
                 get_table(
-                    table_id="feeds_table",
-                    table_name="Feeds",
-                    searchable_field="pair",
-                    columns=[],
-                    data=None,
-                ),
-                id="feeds_container",
-            ),
-            html.Div(
-                get_table(
                     table_id="predictoors_table",
                     table_name="Predictoors",
                     searchable_field="user",
@@ -25,11 +15,26 @@ def get_input_column():
                 ),
                 id="predictoors_container",
             ),
+            html.Div(
+                get_table(
+                    table_id="feeds_table",
+                    table_name="Feeds",
+                    searchable_field="pair",
+                    columns=[],
+                    data=None,
+                ),
+                id="feeds_container",
+                style={
+                    "height": "50%",
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "justifyContent": "flex-end",
+                },
+            ),
         ],
         style={
             "height": "100%",
-            "width": "20%",
-            "paddingTop": "8px",
+            "width": "25%",
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "space-between",
@@ -43,7 +48,7 @@ def get_graphs_column():
         id="graphs_container",
         style={
             "height": "100%",
-            "width": "80%",
+            "width": "75%",
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "start",
@@ -152,86 +157,93 @@ def get_main_container():
 
 
 def get_table(table_id, table_name, searchable_field, columns, data):
-    return html.Div(
-        [
-            html.Div(
-                [
-                    html.Span(table_name, style={"fontSize": "20px"}),
-                ],
-                style={
-                    "display": "flex",
-                    "justifyContent": "space-between",
-                    "alignItems": "center",
-                },
-            ),
-            html.Div(
-                [
-                    dcc.Input(
-                        id=f"search-input-{table_name}",
-                        type="text",
-                        placeholder=f"Search for {searchable_field}",
-                        debounce=True,  # Trigger the input event after user stops typing
-                        style={"fontSize": "15px", "min-width": "100px"},
-                    ),
-                    html.Div(
-                        [
-                            html.Button(
-                                "Select All",
-                                id=f"select-all-{table_id}",
-                                n_clicks=0,
-                                style={
-                                    "border": "0",
-                                    "min-width": "90px",
-                                    "fontSize": "15px",
-                                    "backgroundColor": "#dedede",
-                                    "borderRadius": "3px",
-                                },
-                            ),
-                            html.Button(
-                                "Clear",
-                                id=f"clear-all-{table_id}",
-                                n_clicks=0,
-                                style={
-                                    "border": "0",
-                                    "fontSize": "15px",
-                                    "backgroundColor": "#dedede",
-                                    "borderRadius": "3px",
-                                },
-                            ),
-                        ],
-                        style={
-                            "display": "flex",
-                            "justifyContent": "space-between",
-                            "alignItems": "center",
-                            "gap": "10px",
-                        },
-                    ),
-                ],
-                style={
-                    "display": "flex",
-                    "justifyContent": "space-between",
-                    "alignItems": "center",
-                    "gap": "10px",
-                },
-            ),
-            dash_table.DataTable(
-                id=table_id,
-                columns=[{"name": col, "id": col, "sortable": True} for col in columns],
-                data=data,
-                row_selectable="multi",  # Can be 'multi' for multiple rows
-                selected_rows=[],
-                sort_action="native",  # Enables data to be sorted
-                style_cell={"textAlign": "left"},
-                style_table={
-                    "height": "34vh",
-                    "width": "100%",
-                    "overflow": "auto",
-                    "paddingTop": "5px",
-                },
-                fill_width=True,
-            ),
-        ],
-    )
+    return [
+        html.Div(
+            [
+                html.Span(table_name, style={"fontSize": "20px"}),
+                (
+                    dbc.Switch(
+                        id="toggle-switch-predictoor-feeds",
+                        label="Predictoor feeds only",
+                        value=True,
+                    )
+                    if table_name == "Feeds"
+                    else None
+                ),
+            ],
+            style={
+                "display": "flex",
+                "justifyContent": "space-between",
+                "alignItems": "center",
+            },
+        ),
+        html.Div(
+            [
+                dcc.Input(
+                    id=f"search-input-{table_name}",
+                    type="text",
+                    placeholder=f"Search for {searchable_field}",
+                    debounce=True,  # Trigger the input event after user stops typing
+                    style={"fontSize": "15px", "min-width": "100px"},
+                ),
+                html.Div(
+                    [
+                        html.Button(
+                            "Select All",
+                            id=f"select-all-{table_id}",
+                            n_clicks=0,
+                            style={
+                                "border": "0",
+                                "min-width": "90px",
+                                "fontSize": "15px",
+                                "backgroundColor": "#dedede",
+                                "borderRadius": "3px",
+                            },
+                        ),
+                        html.Button(
+                            "Clear",
+                            id=f"clear-all-{table_id}",
+                            n_clicks=0,
+                            style={
+                                "border": "0",
+                                "fontSize": "15px",
+                                "backgroundColor": "#dedede",
+                                "borderRadius": "3px",
+                            },
+                        ),
+                    ],
+                    style={
+                        "display": "flex",
+                        "justifyContent": "space-between",
+                        "alignItems": "center",
+                        "gap": "10px",
+                    },
+                ),
+            ],
+            style={
+                "display": "flex",
+                "justifyContent": "space-between",
+                "alignItems": "center",
+                "gap": "10px",
+            },
+        ),
+        dash_table.DataTable(
+            id=table_id,
+            columns=[{"name": col, "id": col, "sortable": True} for col in columns],
+            data=data,
+            row_selectable="multi",  # Can be 'multi' for multiple rows
+            selected_rows=[],
+            sort_action="native",  # Enables data to be sorted
+            style_cell={"textAlign": "left"},
+            style_table={
+                "height": "34vh",
+                "width": "100%",
+                "overflow": "auto",
+                "paddingTop": "5px",
+            },
+            fill_width=True,
+        ),
+    ]
 
 
 def get_graph(figure):
