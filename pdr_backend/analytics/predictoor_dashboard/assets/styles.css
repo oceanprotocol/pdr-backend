@@ -8,12 +8,12 @@ body{
 }
 
 /* Hide the default radio circle */
-#radio-items input[type="radio"] {
+#date-period-radio-items input[type="radio"] {
     display: none;
 }
 
 /* Style the label as buttons */
-#radio-items label {
+#date-period-radio-items label {
     display: inline-block;
     padding: 8px 16px;
     margin-right: 10px;
@@ -25,12 +25,12 @@ body{
 }
 
 /* Style for selected label */
-#radio-items label :has(:first-child(:checked)) {
+#date-period-radio-items label:has(input:checked) {
     background-color: #00254d; /* Selected button background color */
     border-color: #0056b3; /* Selected button border color */
 }
 
 /* Optional: Adjust spacing */
-#radio-items {
+#date-period-radio-items {
     margin-bottom: 10px; /* Bottom margin for the whole RadioItems component */
 }

@@ -1,5 +1,6 @@
 import logging
 
+from datetime import datetime, timedelta
 from typing import Union, List, Dict, Any, Optional
 from enforce_typing import enforce_types
 import dash
@@ -55,7 +56,7 @@ def get_predictoors_data_from_db(lake_dir: str):
 
 @enforce_types
 def get_payouts_from_db(
-    feed_addrs: List[str], predictoor_addrs: List[str], lake_dir: str
+    feed_addrs: List[str], predictoor_addrs: List[str], start_date: int, lake_dir: str
 ) -> List[dict]:
     """
     Get payouts data for the given feed and predictoor addresses.
@@ -76,7 +77,10 @@ def get_payouts_from_db(
 
     # Adding conditions for the second list
     query += " OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])
-    query += ");"
+    query += ")"
+    if start_date != 0:
+        query += f"AND (slot > {start_date})"
+    query += ";"
 
     return _query_db(lake_dir, query)
 
@@ -121,3 +125,7 @@ def select_or_clear_all_by_table(
         selected_rows = list(range(len(rows)))
 
     return selected_rows
+
+
+def get_start_date_from_period(period: int):
+    return int((datetime.now() - timedelta(days=period)).timestamp())

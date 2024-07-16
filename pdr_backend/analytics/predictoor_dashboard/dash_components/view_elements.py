@@ -59,13 +59,14 @@ def get_graphs_column_metrics_row():
             get_metric(label="Total Profit", value="50%", value_id="profit_metric"),
             get_metric(label="Avg Stake", value="50%", value_id="stake_metric"),
             dcc.RadioItems(
-                id="radio-items",
+                id="date-period-radio-items",
                 options=[
-                    {"label": "Button 1", "value": "1"},
-                    {"label": "Button 2", "value": "2"},
-                    {"label": "Button 3", "value": "3"},
+                    {"label": "1D", "value": "1"},
+                    {"label": "1W", "value": "7"},
+                    {"label": "1M", "value": "30"},
+                    {"label": "ALL", "value": "0"},
                 ],
-                value="1",  # default selected value
+                value="0",  # default selected value
                 labelStyle={"display": "inline-block", "margin-right": "10px"},
             ),
         ],
