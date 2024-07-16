@@ -28,7 +28,7 @@ def get_callbacks(app):
         Input("data-folder", "data"),
     )
     def get_input_data_from_db(files_dir):
-        show_favourite_addresses = ["true"] if app.favourite_addresses else []
+        show_favourite_addresses = True if app.favourite_addresses else []
         try:
             feeds_data = get_feeds_data_from_db(files_dir)
             predictoors_data = get_predictoors_data_from_db(files_dir)
@@ -147,7 +147,7 @@ def get_callbacks(app):
             if predictoor["user"] in app.favourite_addresses
         ]
 
-        if "true" in show_favourite_addresses:
+        if show_favourite_addresses:
             selected_predictoors += custom_predictoors
         else:
             if dash.callback_context.triggered_id == "show-favourite-addresses":
