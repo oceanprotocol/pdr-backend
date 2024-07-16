@@ -192,7 +192,8 @@ def get_callbacks(app):
             feed_ids = get_feed_ids_based_on_predictoors_from_db(
                 lake_dir,
                 predictoor_addrs=[
-                    predictoors_table[i]["user"] for i in predictoors_table_selected_rows
+                    predictoors_table[i]["user"]
+                    for i in predictoors_table_selected_rows
                 ],
             )
             filtered_data = [obj for obj in feeds_data if obj["contract"] in feed_ids]
