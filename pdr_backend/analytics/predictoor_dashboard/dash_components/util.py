@@ -59,7 +59,7 @@ def get_feed_ids_based_on_predictoors_from_db(
 ):
     # Constructing the SQL query
     query = f"""
-        SELECT LEFT(ID, POSITION('-' IN ID) - 1) AS feed_addr
+        SELECT LIST(LEFT(ID, POSITION('-' IN ID) - 1)) as feed_addrs
         FROM {Payout.get_lake_table_name()}
         WHERE ID IN (
             SELECT MIN(ID)
@@ -72,14 +72,7 @@ def get_feed_ids_based_on_predictoors_from_db(
     """
 
     # Execute the query
-    resp = _query_db(
-        lake_dir,
-        query,
-    )
-
-    # Extract feed addresses from the response
-    feed_ids = [obj["feed_addr"] for obj in resp]
-    return feed_ids
+    return _query_db(lake_dir, query)[0]["feed_addrs"]
 
 
 @enforce_types
