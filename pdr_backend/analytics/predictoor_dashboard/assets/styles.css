@@ -6,3 +6,31 @@ html, body, #root {
 body{
     padding: 10px;
 }
+
+/* Hide the default radio circle */
+#radio-items input[type="radio"] {
+    display: none;
+}
+
+/* Style the label as buttons */
+#radio-items label {
+    display: inline-block;
+    padding: 8px 16px;
+    margin-right: 10px;
+    background-color: #007BFF; /* Button background color */
+    color: white; /* Button text color */
+    border: 1px solid #007BFF; /* Button border */
+    border-radius: 4px; /* Button border radius */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+/* Style for selected label */
+#radio-items label :has(:first-child(:checked)) {
+    background-color: #00254d; /* Selected button background color */
+    border-color: #0056b3; /* Selected button border color */
+}
+
+/* Optional: Adjust spacing */
+#radio-items {
+    margin-bottom: 10px; /* Bottom margin for the whole RadioItems component */
+}
