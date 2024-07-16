@@ -4,18 +4,21 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_feeds_data_from_db,
     get_predictoors_data_from_db,
     get_payouts_from_db,
-    get_all_payouts_data_from_db,
+    get_user_payouts_stats_from_db,
     filter_objects_by_field,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
     get_graph,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
-    get_figures,
-    process_payouts_for_all_feeds,
+    get_figures_and_metrics,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     select_or_clear_all_by_table,
+)
+from pdr_backend.analytics.predictoor_dashboard.dash_components.app_constants import (
+    PREDICTOOR_TABLE_COLUMNS,
+    PREDICTOOR_TABLE_HIDDEN_COLUMNS,
 )
 from pdr_backend.cli.arg_feeds import ArgFeeds
 
@@ -25,7 +28,7 @@ def get_callbacks(app):
     @app.callback(
         Output("feeds-data", "data"),
         Output("predictoors-data", "data"),
-        Output("all-payouts-data", "data"),
+        Output("user-payout-stats", "data"),
         Output("error-message", "children"),
         Input("data-folder", "data"),
     )
@@ -33,8 +36,8 @@ def get_callbacks(app):
         try:
             feeds_data = get_feeds_data_from_db(files_dir)
             predictoors_data = get_predictoors_data_from_db(files_dir)
-            all_payots_data = get_all_payouts_data_from_db(files_dir)
-            return feeds_data, predictoors_data, all_payots_data, None
+            user_payout_stats = get_user_payouts_stats_from_db(files_dir)
+            return feeds_data, predictoors_data, user_payout_stats, None
         except Exception as e:
             return None, None, dash.html.H3(str(e))
 
@@ -42,11 +45,14 @@ def get_callbacks(app):
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),
         Output("stake_chart", "children"),
+        Output("accuracy_metric", "children"),
+        Output("profit_metric", "children"),
+        Output("stake_metric", "children"),
         [
             Input("feeds_table", "selected_rows"),
             Input("predictoors_table", "selected_rows"),
-            Input("feeds-data", "data"),
-            Input("predictoors-data", "data"),
+            Input("feeds_table", "data"),
+            Input("predictoors_table", "data"),
         ],
         State("data-folder", "data"),
     )
@@ -57,18 +63,10 @@ def get_callbacks(app):
         predictoors_data,
         lake_dir,
     ):
-        if (
-            len(feeds_table_selected_rows) == 0
-            or len(predictoors_table_selected_rows) == 0
-        ):
-            accuracy_fig, profit_fig, stakes_fig = get_figures([], ArgFeeds([]), [])
-            return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
-
         # feeds_table_selected_rows is a list of ints
         # feeds_data is a list of dicts
         # get the feeds data for the selected rows
         selected_feeds = [feeds_data[i] for i in feeds_table_selected_rows]
-
         feeds = ArgFeeds.from_table_data(selected_feeds)
 
         selected_predictoors = [
@@ -76,20 +74,32 @@ def get_callbacks(app):
         ]
         predictoors_addrs = [row["user"] for row in selected_predictoors]
 
-        payouts = get_payouts_from_db(
-            [row["contract"] for row in selected_feeds],
-            predictoors_addrs,
-            lake_dir,
-        )
+        if len(selected_feeds) == 0 or len(selected_predictoors) == 0:
+            payouts = []
+        else:
+            payouts = get_payouts_from_db(
+                [row["contract"] for row in selected_feeds],
+                predictoors_addrs,
+                lake_dir,
+            )
 
         # get figures
-        accuracy_fig, profit_fig, stakes_fig = get_figures(
-            payouts,
-            ArgFeeds(feeds),
-            predictoors_addrs,
+        accuracy_fig, profit_fig, stakes_fig, avg_accuracy, total_profit, avg_stake = (
+            get_figures_and_metrics(
+                payouts,
+                feeds,
+                predictoors_addrs,
+            )
         )
 
-        return get_graph(accuracy_fig), get_graph(profit_fig), get_graph(stakes_fig)
+        return (
+            get_graph(accuracy_fig),
+            get_graph(profit_fig),
+            get_graph(stakes_fig),
+            f"{round(avg_accuracy, 2)}%",
+            f"{round(total_profit, 2)} OCEAN",
+            f"{round(avg_stake, 2)} OCEAN",
+        )
 
     @app.callback(
         Output("feeds_table", "columns"),
@@ -107,82 +117,108 @@ def get_callbacks(app):
 
     @app.callback(
         Output("predictoors_table", "data"),
+        Output("predictoors_table", "selected_rows"),
         Output("predictoors_table", "columns"),
+        Output("predictoors_table", "hidden_columns"),
         [
             Input("search-input-Predictoors", "value"),
+            Input("predictoors_table", "selected_rows"),
+            Input("predictoors_table", "data"),
             Input("predictoors-data", "data"),
-            Input("all-payouts-data", "data"),
+            Input("user-payout-stats", "data"),
         ],
     )
     def update_predictoors_table_on_search(
-        search_value, predictoors_data, all_payouts_data
+        search_value,
+        selected_rows,
+        predictoors_table,
+        predictoors_data,
+        user_payout_stats,
     ):
-        """
-        Update and filter the predictoors table based on the search input, and
-        shorten user addresses for readability regardless of search input.
+        selected_predictoors = [predictoors_table[i] for i in selected_rows]
+        if not search_value:
+            filtered_data = predictoors_data
+        else:
+            # filter predictoors by user address
+            filtered_data = filter_objects_by_field(
+                predictoors_data, "user", search_value, selected_predictoors
+            )
 
-        Args:
-            search_value (str): The value entered in the search input.
-            predictoors_data (list): The original list of predictoors data.
-            all_payouts_data (list): The original list of all payouts data.
-        Returns:
-            list: The filtered or original predictoors data with shortened user addresses.
-        """
-        try:
-            # Filter predictoors by user address if search value is provided
-            if search_value:
-                filtered_data = filter_objects_by_field(
-                    predictoors_data, "user", search_value
-                )
-            else:
-                filtered_data = predictoors_data
+        if user_payout_stats:
+            # Her bir data elemanı için, eşleşen user_payout_stat bulunur ve güncellenir.
+            # Eşleşme yoksa, orijinal data elemanı korunur.
+            filtered_data = [
+                {
+                    **data,
+                    **next(
+                        (
+                            user_payout_stat
+                            for user_payout_stat in user_payout_stats
+                            if user_payout_stat["user"] == data["user"]
+                        ),
+                        {},
+                    ),
+                }
+                for data in filtered_data
+            ]
 
-            # Shorten user addresses for readability
-            for row in filtered_data:
-                processed_data = []
-                if all_payouts_data:
-                    processed_data = process_payouts_for_all_feeds(
-                        all_payouts_data, row["user"]
-                    )
+            # shorten the user address
+            for data in filtered_data:
+                new_data = {
+                    "user_address": data["user"][:5] + "..." + data["user"][-5:],
+                    "total_profit": round(data["total_profit"], 2),
+                    "avg_accuracy": round(data["avg_accuracy"], 2),
+                    "avg_stake": round(data["avg_stake"], 2),
+                    "user": data["user"],
+                }
 
-                user = row["user"]
+                data.clear()
+                data.update(new_data)
 
-                row["total_profit"] = processed_data[4] if processed_data else 0
-                row["total_accuracy"] = processed_data[5] if processed_data else 0
-                row["avg_stake"] = processed_data[6] if processed_data else 0
+        selected_predictoor_indices = [
+            i
+            for i, predictoor in enumerate(filtered_data)
+            if predictoor in selected_predictoors
+        ]
 
-                if len(user) > 10:  # Check if the string is long enough to trim
-                    row["user"] = (
-                        f"{user[:5]}...{user[-5:]}"  # Keep the first 5 and last 5 characters
-                    )
-
-            columns = [{"name": col, "id": col} for col in filtered_data[0].keys()]
-            return filtered_data, columns
-        except Exception as e:
-            # Log the error or handle it as needed
-            print(f"Error updating predictoors table: {e}")
-            # Optionally, return an error message or empty data
-            columns = [{"name": col, "id": col} for col in predictoors_data[0].keys()]
-
-            return [], columns
+        return (
+            filtered_data,
+            selected_predictoor_indices,
+            PREDICTOOR_TABLE_COLUMNS,
+            PREDICTOOR_TABLE_HIDDEN_COLUMNS,
+        )
 
     @app.callback(
         Output("feeds_table", "data"),
+        Output("feeds_table", "selected_rows"),
         [
             Input("search-input-Feeds", "value"),
+            Input("feeds_table", "selected_rows"),
+            Input("feeds_table", "data"),
             Input("feeds-data", "data"),
         ],
     )
-    def update_feeds_table_on_search(search_value, feeds_data):
-        if not search_value:
-            return feeds_data
+    def update_feeds_table_on_search(
+        search_value, selected_rows, feeds_table, feeds_data
+    ):
+        selected_feeds = [feeds_table[i] for i in selected_rows]
 
-        # filter feeds by pair address
-        filtered_data = filter_objects_by_field(feeds_data, "pair", search_value)
-        return filtered_data
+        if not search_value:
+            filtered_data = feeds_data
+        else:
+            # filter feeds by pair address
+            filtered_data = filter_objects_by_field(
+                feeds_data, "pair", search_value, selected_feeds
+            )
+
+        selected_feed_indices = [
+            i for i, feed in enumerate(filtered_data) if feed in selected_feeds
+        ]
+
+        return filtered_data, selected_feed_indices
 
     @app.callback(
-        Output("feeds_table", "selected_rows"),
+        Output("feeds_table", "selected_rows", allow_duplicate=True),
         [
             Input("select-all-feeds_table", "n_clicks"),
             Input("clear-all-feeds_table", "n_clicks"),
@@ -199,7 +235,7 @@ def get_callbacks(app):
         return select_or_clear_all_by_table(ctx, "feeds_table", rows)
 
     @app.callback(
-        Output("predictoors_table", "selected_rows"),
+        Output("predictoors_table", "selected_rows", allow_duplicate=True),
         [
             Input("select-all-predictoors_table", "n_clicks"),
             Input("clear-all-predictoors_table", "n_clicks"),

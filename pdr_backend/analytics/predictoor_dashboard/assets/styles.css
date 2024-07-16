@@ -1,0 +1,12 @@
+html, body, #root {
+    margin: 0;
+    height: 100vh;
+}
+
+body{
+    padding: 10px;
+}
+
+#predictoors_container .show-hide {
+    display: none;
+}

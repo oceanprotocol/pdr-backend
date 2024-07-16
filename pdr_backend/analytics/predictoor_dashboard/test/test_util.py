@@ -8,6 +8,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_predictoors_data_from_db,
     get_payouts_from_db,
     select_or_clear_all_by_table,
+    get_user_payouts_stats_from_db,
 )
 
 from pdr_backend.analytics.predictoor_dashboard.test.resources import (
@@ -127,3 +128,30 @@ def test_unrelated_trigger(sample_table_rows):
     assert (
         result == []
     ), "The function should return an empty list for unrelated triggers."
+
+
+def test_get_user_payouts_stats_from_db(
+    tmpdir,
+    _sample_payouts,
+):
+    ppss, _ = _prepare_test_db(
+        tmpdir, _sample_payouts, table_name=Payout.get_lake_table_name()
+    )
+
+    result = get_user_payouts_stats_from_db(ppss.lake_ss.lake_dir)
+
+    print("result--->", result)
+    assert isinstance(result, list)
+    assert len(result) == 5
+
+    test_row = [
+        row
+        for row in result
+        if row["user"] == "0x02e9d2eede4c5347e55346860c8a8988117bde9e"
+    ][0]
+
+    assert test_row["user"] == "0x02e9d2eede4c5347e55346860c8a8988117bde9e"
+    assert test_row["avg_accuracy"] == 100.0
+    assert test_row["avg_stake"] == 1.9908170679122585
+
+    _clear_test_db(ppss.lake_ss.lake_dir)

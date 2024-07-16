@@ -1,6 +1,6 @@
 import logging
 
-from typing import Union, List, Dict, Any
+from typing import Union, List, Dict, Any, Optional
 from enforce_typing import enforce_types
 import dash
 
@@ -64,6 +64,24 @@ def get_all_payouts_data_from_db(lake_dir: str):
 
 
 @enforce_types
+def get_user_payouts_stats_from_db(lake_dir: str):
+    return _query_db(
+        lake_dir,
+        f"""
+            SELECT 
+                "user",
+                SUM(payout - stake) AS total_profit,
+                SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+                AVG(stake) AS avg_stake
+            FROM 
+                {Payout.get_lake_table_name()}
+            GROUP BY 
+                "user" 
+        """,
+    )
+
+
+@enforce_types
 def get_payouts_from_db(
     feed_addrs: List[str], predictoor_addrs: List[str], lake_dir: str
 ) -> List[dict]:
@@ -93,11 +111,19 @@ def get_payouts_from_db(
 
 @enforce_types
 def filter_objects_by_field(
-    objects: List[Dict[str, Any]], field: str, search_string: str
+    objects: List[Dict[str, Any]],
+    field: str,
+    search_string: str,
+    previous_objects: Optional[List] = None,
 ) -> List[Dict[str, Any]]:
-    return list(
-        filter(lambda obj: search_string.lower() in obj[field].lower(), objects)
-    )
+    if previous_objects is None:
+        previous_objects = []
+
+    return [
+        obj
+        for obj in objects
+        if search_string.lower() in obj[field].lower() or obj in previous_objects
+    ]
 
 
 @enforce_types

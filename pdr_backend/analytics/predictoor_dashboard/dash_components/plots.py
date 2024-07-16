@@ -9,28 +9,20 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-def filter_payouts(
-    payouts: List[dict], predictor: str, feed: Optional[str] = None
-) -> List[dict]:
+def process_payouts(payouts: List[dict]) -> tuple:
     """
-    Filter payouts for a given predictor and optionally a specific feed.
-    """
-    return [
-        p for p in payouts if predictor in p["ID"] and (feed is None or feed in p["ID"])
-    ]
-
-
-@enforce_types
-def calculate_stats(
-    filtered_payouts: List[dict],
-) -> Tuple[List[str], List[float], List[float], List[float], float, float, float]:
-    """
-    Calculate statistics from the filtered payouts.
+    Process payouts data for a given predictor and feed.
+    Args:
+        payouts (list): List of payouts data.
+        predictor (str): Predictor address.
+        feed (str): Feed contract address.
+    Returns:
+        tuple: Tuple of slots, accuracies, profits, and stakes.
     """
     slots, accuracies, profits, stakes = [], [], [], []
-    profit = predictions = correct_predictions = 0.0  # Ensure profit is a float
+    profit = predictions = correct_predictions = 0
 
-    for p in filtered_payouts:
+    for p in payouts:
         predictions += 1
         profit_change = max(p["payout"], 0) - p["stake"]
         profit += profit_change
@@ -38,73 +30,14 @@ def calculate_stats(
 
         slots.append(p["slot"])
         accuracies.append((correct_predictions / predictions) * 100)
-        profits.append(profit)  # profit is already a float
+        profits.append(profit)
         stakes.append(p["stake"])
 
     slot_in_date_format = [
         UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
     ]
 
-    # Ensure total_profit and avg_stake are floats
-    total_profit = round(profit, 2)
-    total_accuracy = round(
-        (correct_predictions / predictions) * 100 if predictions > 0 else 0, 2
-    )
-    avg_stake = round(sum(stakes) / len(stakes) if stakes else 0, 2)
-
-    return (
-        slot_in_date_format,
-        accuracies,
-        [
-            float(profit) for profit in profits
-        ],  # Convert each profit to float explicitly if not already
-        [float(stake) for stake in stakes],  # Ensure stakes are floats
-        float(total_profit),  # Explicitly cast to float
-        float(total_accuracy),  # Explicitly cast to float
-        float(avg_stake),  # Explicitly cast to float
-    )
-
-
-@enforce_types
-def process_payouts(
-    payouts: List[dict],
-    predictor: str,
-    feed: Optional[str] = None,
-    aggregate: bool = False,
-) -> Tuple[List[str], List[float], List[float], List[float], float, float, float]:
-    """
-    Process payouts data for a given predictor.
-
-    Args:
-        payouts (list): List of payouts data.
-        predictor (str): Predictor address.
-        feed (str, optional): Feed contract address. If None, process all feeds.
-        aggregate (bool): If True, aggregate data across all feeds. Default is False.
-
-    Returns:
-        tuple: Tuple of slots, accuracies, profits, stakes, total_profit, total_accuracy, avg_stake.
-    """
-    filtered_payouts = filter_payouts(
-        payouts, predictor, feed if not aggregate else None
-    )
-    return calculate_stats(filtered_payouts)
-
-
-@enforce_types
-def process_payouts_for_all_feeds(
-    payouts: List[dict], predictor: str
-) -> Tuple[List[str], List[float], List[float], List[float], float, float, float]:
-    """
-    Process payouts data for a given predictor across all feeds.
-
-    Args:
-        payouts (list): List of payouts data.
-        predictor (str): Predictor address.
-
-    Returns:
-        tuple: Tuple of slots, accuracies, profits, stakes, total_profit, total_accuracy, avg_stake.
-    """
-    return process_payouts(payouts, predictor, aggregate=True)
+    return slot_in_date_format, accuracies, profits, stakes
 
 
 @enforce_types
@@ -185,9 +118,9 @@ def _make_figures(fig_tup: Tuple) -> Tuple[go.Figure, go.Figure, go.Figure]:
 
 
 @enforce_types
-def get_figures(
+def get_figures_and_metrics(
     payouts: Optional[List], feeds: ArgFeeds, predictoors: List[str]
-) -> Tuple[go.Figure, go.Figure, go.Figure]:
+) -> Tuple[go.Figure, go.Figure, go.Figure, float | None, float | None, float | None]:
     """
     Get figures for accuracy, profit, and costs.
     Args:
@@ -195,20 +128,32 @@ def get_figures(
         feeds (list): List of feeds data.
         predictoors (list): List of predictoors data.
     Returns:
-        tuple: Tuple of accuracy, profit, and costs figures.
+        tuple: Tuple of accuracy, profit, and costs figures, avg accuracy, total profit, avg stake
     """
     if not payouts:
-        return _make_figures(_empty_trio())
+        figures = _make_figures(_empty_trio())
+        return figures[0], figures[1], figures[2], 0.0, 0.0, 0.0
 
     accuracy_scatters, profit_scatters, stakes_scatters = [], [], []
+    avg_accuracy, total_profit, avg_stake = 0.0, 0.0, 0.0
 
     for predictor, feed in product(predictoors, feeds):
-        slots, accuracies, profits, stakes, *_ = process_payouts(
-            payouts, predictor, feed.contract
-        )
+        # only filter for this particular predictoor and feed pair
+        # in order to properly group the data
+        filtered_payouts = [
+            p for p in payouts if predictor in p["ID"] and feed.contract in p["ID"]
+        ]
+
+        slots, accuracies, profits, stakes = process_payouts(filtered_payouts)
 
         if not slots:
             continue
+
+        avg_stake = ((stakes[-1] + avg_stake) / 2) if avg_stake else stakes[-1]
+        total_profit = (profits[-1] + total_profit) if total_profit else profits[-1]
+        avg_accuracy = (
+            ((accuracies[-1] + avg_accuracy) / 2) if avg_accuracy else accuracies[-1]
+        )
 
         short_name = f"{predictor[:5]} - {str(feed)}"
         accuracy_scatters.append(
@@ -228,4 +173,5 @@ def get_figures(
     if not stakes_scatters:
         stakes_scatters = _empty_stakes_bar()
 
-    return _make_figures((accuracy_scatters, profit_scatters, stakes_scatters))
+    figures = _make_figures((accuracy_scatters, profit_scatters, stakes_scatters))
+    return (figures[0], figures[1], figures[2], avg_accuracy, total_profit, avg_stake)
