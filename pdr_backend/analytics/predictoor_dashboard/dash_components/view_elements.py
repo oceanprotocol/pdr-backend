@@ -139,6 +139,7 @@ def get_layout():
                 },
                 custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
             ),
+            dcc.Input(id="is-loading", type="hidden", value=1),
         ],
         style={"height": "100%"},
     )

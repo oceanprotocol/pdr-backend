@@ -26,6 +26,7 @@ def get_callbacks(app):
         Output("predictoors-data", "data"),
         Output("error-message", "children"),
         Output("show-favourite-addresses", "value"),
+        Output("is-loading", "value"),
         Input("data-folder", "data"),
     )
     def get_input_data_from_db(files_dir):
@@ -33,9 +34,9 @@ def get_callbacks(app):
         try:
             feeds_data = get_feeds_data_from_db(files_dir)
             predictoors_data = get_predictoors_data_from_db(files_dir)
-            return feeds_data, predictoors_data, None, show_favourite_addresses
+            return feeds_data, predictoors_data, None, show_favourite_addresses, 0
         except Exception as e:
-            return None, None, dash.html.H3(str(e)), show_favourite_addresses
+            return None, None, dash.html.H3(str(e)), show_favourite_addresses, 0
 
     @app.callback(
         Output("accuracy_chart", "children"),
@@ -176,6 +177,7 @@ def get_callbacks(app):
         Output("feeds_table", "data"),
         Output("feeds_table", "selected_rows"),
         [
+            Input("is-loading", "value"),
             Input("search-input-Feeds", "value"),
             Input("feeds_table", "selected_rows"),
             Input("feeds_table", "data"),
@@ -187,6 +189,7 @@ def get_callbacks(app):
         State("data-folder", "data"),
     )
     def update_feeds_table_on_search(
+        is_loading,
         search_value,
         selected_rows,
         feeds_table,
@@ -216,6 +219,9 @@ def get_callbacks(app):
                 predictoors_addrs,
             )
             filtered_data = [obj for obj in feeds_data if obj["contract"] in feed_ids]
+
+        if "is-loading.value" in dash.callback_context.triggered_prop_ids:
+            return filtered_data, list(range(len(filtered_data)))
 
         selected_feed_indices = [
             i for i, feed in enumerate(filtered_data) if feed in selected_feeds
