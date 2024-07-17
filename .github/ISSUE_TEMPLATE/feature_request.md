@@ -1,38 +1,20 @@
-<!--
-Copyright 2024 Ocean Protocol Foundation
-SPDX-License-Identifier: Apache-2.0
--->
----
-name: Enhancement
-about: 'Benefit_yyy, via building_xxx'
-title: '[Component name] Benefit_yyy, via building_xxx'
-labels: 'Type: Enhancement'
-assignees: ''
+Title: 
+[Component name] Problem to solve, maybe how
 
----
 
+
+Body:
 ### Background / motivation
 
-Parent epic: [#foo](https://github.com/oceanprotocol/pdr-backend/issues/foo)
+(Optional) link to epic: [#xyz](https://github.com/oceanprotocol/pdr-backend/issues/xyz)
 
-The problem is / the opportunity is: bar. 
+<Write background / motivation>
 
-Here's further context: baz
+### TODOs
 
-Candidate approaches: (a) xxx, (b) yyy, and (c) zzz.
+- [ ] <item 1>
+- [ ] <item 2>
 
-We'll use approach (a or b or c).
+### Appendix: foo
 
-### TODOs / DoD
-
-Implement approach (a or b or c): xyz.
-
-Tasks:
-- [ ] aaa
-- [ ] bbb
-- [ ] ccc
-
-### Related github issues
-
-- [#mmm](https://github.com/oceanprotocol/pdr-backend/issues/mmm)
-- [#nnn](https://github.com/oceanprotocol/pdr-backend/issues/nnn)
+Bar
