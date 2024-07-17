@@ -9,6 +9,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_payouts_from_db,
     select_or_clear_all_by_table,
     get_user_payouts_stats_from_db,
+    process_user_payout_stats,
 )
 
 from pdr_backend.analytics.predictoor_dashboard.test.resources import (
@@ -154,3 +155,36 @@ def test_get_user_payouts_stats_from_db(
     assert test_row["avg_stake"] == 1.9908170679122585
 
     _clear_test_db(ppss.lake_ss.lake_dir)
+
+
+def test_process_user_payout_stats():
+    user_payout_stats = [
+        {
+            "user": "0x02e9d2eede4c5347e55346860c8a8988117bde9e",
+            "total_profit": 0.0,
+            "avg_accuracy": 100.0,
+            "avg_stake": 1.9908170679122585,
+        },
+        {
+            "user": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+            "total_profit": 0.0,
+            "avg_accuracy": 100.0,
+            "avg_stake": 1.9908170679122585,
+        },
+    ]
+
+    result = process_user_payout_stats(user_payout_stats)
+
+    assert isinstance(result, list)
+    assert len(result) == 2
+
+    test_row = [
+        row
+        for row in result
+        if row["user"] == "0x02e9d2eede4c5347e55346860c8a8988117bde9e"
+    ][0]
+
+    assert test_row["user_address"] == "0x02e...bde9e"
+    assert test_row["total_profit"] == 0.0
+    assert test_row["avg_accuracy"] == 100.0
+    assert test_row["avg_stake"] == 1.99

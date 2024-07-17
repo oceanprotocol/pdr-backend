@@ -116,33 +116,17 @@ def get_layout():
             html.H1(
                 "Predictoor dashboard",
                 id="page_title",
-                style={
-                    "width": "100%",
-                    "textAlign": "center",
-                    "paddingTop": "10px",
-                    "paddingBottom": "20px",
-                },
             ),
             html.Div(
                 id="error-message",
-                style={
-                    "display": "flex",
-                    "width": "100%",
-                    "justifyContent": "center",
-                    "alignItems": "center",
-                    "textAlign": "center",
-                },
             ),
             dcc.Loading(
                 id="loading",
                 type="default",
                 children=get_main_container(),
-                style={
-                    "height": "calc( 100vh - 105px )",
-                    "width": "100%",
-                },
                 custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
             ),
+            dcc.Input(id="is-loading", type="hidden", value=1),
         ],
         style={"height": "100%"},
     )
@@ -151,12 +135,7 @@ def get_layout():
 def get_main_container():
     return html.Div(
         [get_input_column(), get_graphs_column()],
-        style={
-            "height": "calc( 100vh - 105px )",
-            "width": "100%",
-            "display": "flex",
-            "justifyContent": "space-between",
-        },
+        className="main-container",
     )
 
 
@@ -173,10 +152,14 @@ def get_table(table_id, table_name, searchable_field, columns, data, default_sor
                             value=True,
                         )
                         if table_name == "Feeds"
-                        else None
+                        else dbc.Switch(
+                            id="show-favourite-addresses",
+                            label="Select configured predictoors",
+                            value=True,
+                        )
                     ),
                 ],
-                className="table_title",
+                className="table-title",
             ),
             html.Div(
                 [
@@ -193,30 +176,19 @@ def get_table(table_id, table_name, searchable_field, columns, data, default_sor
                                 "Select All",
                                 id=f"select-all-{table_id}",
                                 n_clicks=0,
-                                style={
-                                    "border": "0",
-                                    "min-width": "90px",
-                                    "fontSize": "15px",
-                                    "backgroundColor": "#dedede",
-                                    "borderRadius": "3px",
-                                },
+                                className="button-select-all",
                             ),
                             html.Button(
                                 "Clear",
                                 id=f"clear-all-{table_id}",
                                 n_clicks=0,
-                                style={
-                                    "border": "0",
-                                    "fontSize": "15px",
-                                    "backgroundColor": "#dedede",
-                                    "borderRadius": "3px",
-                                },
+                                className="button-clear-all",
                             ),
                         ],
-                        className="wrap_with_gap",
+                        className="wrap-with-gap",
                     ),
                 ],
-                className="wrap_with_gap",
+                className="wrap-with-gap",
             ),
             dash_table.DataTable(
                 id=table_id,
