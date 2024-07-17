@@ -7,6 +7,37 @@ body{
     padding: 10px;
 }
 
+.main-container {
+    height: calc( 100vh - 105px );
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+#page_title {
+    width: 100%;
+    text-align: center;
+    padding-top: 10px;
+    padding-bottom: 20px;
+}
+
+#error_message {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+#loading {
+    height: calc( 100vh - 105px );
+    width: 100%;
+}
+
+#predictoors_container .show-hide {
+    display: none;
+}
+
 /* Hide the default radio circle */
 #date-period-radio-items input[type="radio"] {
     display: none;
@@ -37,4 +68,32 @@ button{
 
 .form-check-label, .form-switch{
     margin: 0;
+}
+
+.wrap-with-gap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.table-title {    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.button-select-all {
+    border: 0;
+    min-width: 90px;
+    font-size: 15px;
+    background-color: #dedede;
+    border-radius: 3px;
+}
+
+.button-clear-all {
+    border: 0;
+    font-size: 15px;
+    background-color: #dedede;
+    border-radius: 3px;
 }

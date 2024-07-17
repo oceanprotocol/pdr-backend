@@ -2,12 +2,13 @@ from dash import Input, Output, State
 import dash
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_feeds_data_from_db,
-    get_predictoors_data_from_db,
     get_payouts_from_db,
+    get_user_payouts_stats_from_db,
     filter_objects_by_field,
     get_start_date_from_period,
     get_date_period_text,
     get_feed_ids_based_on_predictoors_from_db,
+    get_predictoors_data_from_payouts,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
     get_graph,
@@ -17,6 +18,10 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     select_or_clear_all_by_table,
+)
+from pdr_backend.analytics.predictoor_dashboard.dash_components.app_constants import (
+    PREDICTOOR_TABLE_COLUMNS,
+    PREDICTOOR_TABLE_HIDDEN_COLUMNS,
 )
 from pdr_backend.cli.arg_feeds import ArgFeeds
 
@@ -35,8 +40,17 @@ def get_callbacks(app):
         show_favourite_addresses = True if app.favourite_addresses else []
         try:
             feeds_data = get_feeds_data_from_db(files_dir)
-            predictoors_data = get_predictoors_data_from_db(files_dir)
-            return feeds_data, predictoors_data, None, show_favourite_addresses, 0
+            predictoors_data = get_predictoors_data_from_payouts(
+                get_user_payouts_stats_from_db(files_dir)
+            )
+
+            return (
+                feeds_data,
+                predictoors_data,
+                None,
+                show_favourite_addresses,
+                0,
+            )
         except Exception as e:
             return None, None, dash.html.H3(str(e)), show_favourite_addresses, 0
 
@@ -135,18 +149,10 @@ def get_callbacks(app):
         return columns
 
     @app.callback(
-        Output("predictoors_table", "columns"),
-        Input("predictoors-data", "data"),
-    )
-    def create_predictoors_table(predictoors_data):
-        if not predictoors_data:
-            return dash.no_update
-        columns = [{"name": col, "id": col} for col in predictoors_data[0].keys()]
-        return columns
-
-    @app.callback(
         Output("predictoors_table", "data"),
         Output("predictoors_table", "selected_rows"),
+        Output("predictoors_table", "columns"),
+        Output("predictoors_table", "hidden_columns"),
         [
             Input("search-input-Predictoors", "value"),
             Input("predictoors_table", "selected_rows"),
@@ -193,7 +199,12 @@ def get_callbacks(app):
             if predictoor in selected_predictoors
         ]
 
-        return filtered_data, selected_predictoor_indices
+        return (
+            filtered_data,
+            selected_predictoor_indices,
+            PREDICTOOR_TABLE_COLUMNS,
+            PREDICTOOR_TABLE_HIDDEN_COLUMNS,
+        )
 
     @app.callback(
         Output("feeds_table", "data"),
