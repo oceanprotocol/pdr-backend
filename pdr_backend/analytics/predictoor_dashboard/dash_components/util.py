@@ -1,5 +1,6 @@
 import logging
 
+from datetime import datetime, timedelta
 from typing import Union, List, Dict, Any, Optional
 from enforce_typing import enforce_types
 import dash
@@ -94,7 +95,7 @@ def get_feed_ids_based_on_predictoors_from_db(
 
 @enforce_types
 def get_payouts_from_db(
-    feed_addrs: List[str], predictoor_addrs: List[str], lake_dir: str
+    feed_addrs: List[str], predictoor_addrs: List[str], start_date: int, lake_dir: str
 ) -> List[dict]:
     """
     Get payouts data for the given feed and predictoor addresses.
@@ -115,7 +116,10 @@ def get_payouts_from_db(
 
     # Adding conditions for the second list
     query += " OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])
-    query += ");"
+    query += ")"
+    if start_date != 0:
+        query += f"AND (slot >= {start_date})"
+    query += ";"
 
     return _query_db(lake_dir, query)
 
@@ -187,3 +191,19 @@ def process_user_payout_stats(
         data.update(new_data)
 
     return user_payout_stats
+
+
+def get_start_date_from_period(period: int):
+    return int((datetime.now() - timedelta(days=period)).timestamp())
+
+
+def get_date_period_text(payouts: List):
+    if not payouts:
+        return "there is no data available"
+    start_date = payouts[0]["slot"] if len(payouts) > 0 else 0
+    end_date = payouts[-1]["slot"] if len(payouts) > 0 else 0
+    date_period_text = f"""
+        available {datetime.fromtimestamp(start_date).strftime('%d-%m-%Y')}
+        - {datetime.fromtimestamp(end_date).strftime('%d-%m-%Y')}
+    """
+    return date_period_text

@@ -27,10 +27,12 @@ def test_process_payouts(
     filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
     result = process_payouts(filtered_payouts)
 
-    assert len(result) == 4
+    assert len(result) == 6
 
-    slots, accuracies, profits, stakes = result
+    slots, accuracies, profits, stakes, correct_predictions, predictions = result
 
+    assert correct_predictions == 0
+    assert predictions == 2
     assert len(slots) == len(filtered_payouts)
     assert slots[0] == UnixTimeS(
         filtered_payouts[0]["slot"]

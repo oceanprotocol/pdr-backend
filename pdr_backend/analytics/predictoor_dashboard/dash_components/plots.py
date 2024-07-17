@@ -37,7 +37,14 @@ def process_payouts(payouts: List[dict]) -> tuple:
         UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
     ]
 
-    return slot_in_date_format, accuracies, profits, stakes
+    return (
+        slot_in_date_format,
+        accuracies,
+        profits,
+        stakes,
+        correct_predictions,
+        predictions,
+    )
 
 
 @enforce_types
@@ -137,6 +144,9 @@ def get_figures_and_metrics(
     accuracy_scatters, profit_scatters, stakes_scatters = [], [], []
     avg_accuracy, total_profit, avg_stake = 0.0, 0.0, 0.0
 
+    all_stakes = []
+    prediction_count = 0
+    correct_prediction_count = 0
     for predictor, feed in product(predictoors, feeds):
         # only filter for this particular predictoor and feed pair
         # in order to properly group the data
@@ -144,16 +154,18 @@ def get_figures_and_metrics(
             p for p in payouts if predictor in p["ID"] and feed.contract in p["ID"]
         ]
 
-        slots, accuracies, profits, stakes = process_payouts(filtered_payouts)
+        slots, accuracies, profits, stakes, correct_predictions, predictions = (
+            process_payouts(filtered_payouts)
+        )
 
         if not slots:
             continue
 
-        avg_stake = ((stakes[-1] + avg_stake) / 2) if avg_stake else stakes[-1]
+        all_stakes.extend(stakes)
+        prediction_count += predictions
+        correct_prediction_count += correct_predictions
+
         total_profit = (profits[-1] + total_profit) if total_profit else profits[-1]
-        avg_accuracy = (
-            ((accuracies[-1] + avg_accuracy) / 2) if avg_accuracy else accuracies[-1]
-        )
 
         short_name = f"{predictor[:5]} - {str(feed)}"
         accuracy_scatters.append(
@@ -163,6 +175,11 @@ def get_figures_and_metrics(
             go.Scatter(x=slots, y=profits, mode="lines", name=short_name)
         )
         stakes_scatters.append(go.Bar(x=slots, y=stakes, name=short_name, width=5))
+
+    avg_stake = sum(all_stakes) / len(all_stakes) if all_stakes else 0.0
+    avg_accuracy = (
+        (correct_prediction_count / prediction_count) * 100 if prediction_count else 0.0
+    )
 
     if not accuracy_scatters:
         accuracy_scatters = _empty_accuracy_scatter()

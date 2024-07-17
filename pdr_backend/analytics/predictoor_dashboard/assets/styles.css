@@ -38,6 +38,34 @@ body{
     display: none;
 }
 
+/* Hide the default radio circle */
+#date-period-radio-items input[type="radio"] {
+    display: none;
+}
+
+button{
+    background-color: #007BFF !important;
+    color: white;
+}
+
+/* Style the label as buttons */
+#date-period-radio-items label {
+    display: inline-block;
+    padding: 5px 14px;
+    margin-right: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: 1px solid #007BFF;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Style for selected label */
+#date-period-radio-items label:has(input:checked) {
+    background-color: #00254d;
+    border-color: #0056b3;
+}
+
 .form-check-label, .form-switch{
     margin: 0;
 }

@@ -38,7 +38,7 @@ def get_input_column():
         ],
         style={
             "height": "100%",
-            "width": "25%",
+            "width": "30%",
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "space-between",
@@ -52,11 +52,11 @@ def get_graphs_column():
         id="graphs_container",
         style={
             "height": "100%",
-            "width": "75%",
+            "width": "70%",
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "start",
-            "paddingLeft": "40px",
+            "paddingLeft": "50px",
         },
     )
 
@@ -67,6 +67,7 @@ def get_graphs_column_metrics_row():
             get_metric(label="Avg Accuracy", value="50%", value_id="accuracy_metric"),
             get_metric(label="Total Profit", value="50%", value_id="profit_metric"),
             get_metric(label="Avg Stake", value="50%", value_id="stake_metric"),
+            get_date_period_selection_component(),
         ],
         id="metrics_container",
         style={
@@ -74,6 +75,25 @@ def get_graphs_column_metrics_row():
             "display": "flex",
             "justifyContent": "space-between",
         },
+    )
+
+
+def get_date_period_selection_component():
+    return html.Div(
+        [
+            dcc.RadioItems(
+                id="date-period-radio-items",
+                options=[
+                    {"label": "1D", "value": "1"},
+                    {"label": "1W", "value": "7"},
+                    {"label": "1M", "value": "30"},
+                    {"label": "ALL", "value": "0"},
+                ],
+                value="0",  # default selected value
+                labelStyle={"display": "inline-block", "margin-right": "10px"},
+            ),
+            html.Span("there is no data available", id="available_data_period_text"),
+        ]
     )
 
 
