@@ -1,13 +1,8 @@
 import pytest
+from selenium.webdriver.chrome.options import Options
 
-from pdr_backend.lake.prediction import (
-    mock_first_predictions,
-    mock_daily_predictions,
-)
-from pdr_backend.lake.payout import (
-    mock_payouts,
-    mock_payouts_related_with_predictions,
-)
+from pdr_backend.lake.payout import mock_payouts, mock_payouts_related_with_predictions
+from pdr_backend.lake.prediction import mock_daily_predictions, mock_first_predictions
 
 
 @pytest.fixture()
@@ -40,3 +35,10 @@ def sample_table_rows():
         {"name": "David", "age": 34, "city": "Chicago"},
         {"name": "Eve", "age": 28, "city": "Los Angeles"},
     ]
+
+
+def pytest_setup_options():
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
+    return options

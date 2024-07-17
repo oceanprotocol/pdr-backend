@@ -34,3 +34,7 @@ button{
     background-color: #00254d; /* Selected button background color */
     border-color: #0056b3; /* Selected button border color */
 }
+
+.form-check-label, .form-switch{
+    margin: 0;
+}

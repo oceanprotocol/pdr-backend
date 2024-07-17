@@ -46,6 +46,8 @@ predictoor_ss:
     train_every_n_epochs: 1
     calc_imps: True
 
+  my_addresses: []
+
 exchange_mgr_ss: # used by trader and sim
   timeout: 30000
   ccxt_params:
