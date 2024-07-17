@@ -171,7 +171,7 @@ def get_table(table_id, table_name, searchable_field, columns, data):
                     if table_name == "Feeds"
                     else dbc.Switch(
                         id="show-favourite-addresses",
-                        label="Toggle configured predictoors",
+                        label="Select configured predictoors",
                         value=True,
                     )
                 ),
