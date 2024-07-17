@@ -188,6 +188,7 @@ def get_callbacks(app):
         State("predictoors_table", "data"),
         State("data-folder", "data"),
     )
+    # pylint: disable=unused-argument
     def update_feeds_table_on_search(
         is_loading,
         search_value,
@@ -220,7 +221,10 @@ def get_callbacks(app):
             )
             filtered_data = [obj for obj in feeds_data if obj["contract"] in feed_ids]
 
-        if "is-loading.value" in dash.callback_context.triggered_prop_ids:
+        if (
+            app.favourite_addresses
+            and "is-loading.value" in dash.callback_context.triggered_prop_ids
+        ):
             return filtered_data, list(range(len(filtered_data)))
 
         selected_feed_indices = [
