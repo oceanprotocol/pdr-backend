@@ -139,6 +139,7 @@ def get_layout():
                 },
                 custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
             ),
+            dcc.Input(id="is-loading", type="hidden", value=1),
         ],
         style={"height": "100%"},
     )
@@ -168,7 +169,11 @@ def get_table(table_id, table_name, searchable_field, columns, data):
                         value=True,
                     )
                     if table_name == "Feeds"
-                    else None
+                    else dbc.Switch(
+                        id="show-favourite-addresses",
+                        label="Select configured predictoors",
+                        value=True,
+                    )
                 ),
             ],
             style={

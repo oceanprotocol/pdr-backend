@@ -51,6 +51,7 @@ def test_get_input_data_from_db(
     app.layout = get_layout()
     get_callbacks(app)
     app.layout.children[0].data = ppss.lake_ss.lake_dir
+    app.favourite_addresses = ppss.predictoor_ss.my_addresses
 
     dash_duo.start_server(app)
     dash_duo.wait_for_element("#feeds_table")

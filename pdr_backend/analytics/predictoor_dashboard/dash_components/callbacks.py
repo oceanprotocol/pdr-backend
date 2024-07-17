@@ -25,15 +25,18 @@ def get_callbacks(app):
         Output("feeds-data", "data"),
         Output("predictoors-data", "data"),
         Output("error-message", "children"),
+        Output("show-favourite-addresses", "value"),
+        Output("is-loading", "value"),
         Input("data-folder", "data"),
     )
     def get_input_data_from_db(files_dir):
+        show_favourite_addresses = True if app.favourite_addresses else []
         try:
             feeds_data = get_feeds_data_from_db(files_dir)
             predictoors_data = get_predictoors_data_from_db(files_dir)
-            return feeds_data, predictoors_data, None
+            return feeds_data, predictoors_data, None, show_favourite_addresses, 0
         except Exception as e:
-            return None, None, dash.html.H3(str(e))
+            return None, None, dash.html.H3(str(e)), show_favourite_addresses, 0
 
     @app.callback(
         Output("accuracy_chart", "children"),
@@ -127,19 +130,39 @@ def get_callbacks(app):
             Input("predictoors_table", "selected_rows"),
             Input("predictoors_table", "data"),
             Input("predictoors-data", "data"),
+            Input("show-favourite-addresses", "value"),
         ],
     )
     def update_predictoors_table_on_search(
-        search_value, selected_rows, predictoors_table, predictoors_data
+        search_value,
+        selected_rows,
+        predictoors_table,
+        predictoors_data,
+        show_favourite_addresses,
     ):
         selected_predictoors = [predictoors_table[i] for i in selected_rows]
+        filtered_data = predictoors_data
 
-        if not search_value:
-            filtered_data = predictoors_data
-        else:
+        if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
+            custom_predictoors = [
+                predictoor
+                for predictoor in predictoors_data
+                if predictoor["user"] in app.favourite_addresses
+            ]
+
+            if show_favourite_addresses:
+                selected_predictoors += custom_predictoors
+            else:
+                selected_predictoors = [
+                    predictoor
+                    for predictoor in selected_predictoors
+                    if predictoor not in custom_predictoors
+                ]
+
+        if search_value:
             # filter predictoors by user address
             filtered_data = filter_objects_by_field(
-                predictoors_data, "user", search_value, selected_predictoors
+                filtered_data, "user", search_value, selected_predictoors
             )
 
         selected_predictoor_indices = [
@@ -154,6 +177,7 @@ def get_callbacks(app):
         Output("feeds_table", "data"),
         Output("feeds_table", "selected_rows"),
         [
+            Input("is-loading", "value"),
             Input("search-input-Feeds", "value"),
             Input("feeds_table", "selected_rows"),
             Input("feeds_table", "data"),
@@ -164,7 +188,9 @@ def get_callbacks(app):
         State("predictoors_table", "data"),
         State("data-folder", "data"),
     )
+    # pylint: disable=unused-argument
     def update_feeds_table_on_search(
+        is_loading,
         search_value,
         selected_rows,
         feeds_table,
@@ -194,6 +220,12 @@ def get_callbacks(app):
                 predictoors_addrs,
             )
             filtered_data = [obj for obj in feeds_data if obj["contract"] in feed_ids]
+
+        if (
+            app.favourite_addresses
+            and "is-loading.value" in dash.callback_context.triggered_prop_ids
+        ):
+            return filtered_data, list(range(len(filtered_data)))
 
         selected_feed_indices = [
             i for i, feed in enumerate(filtered_data) if feed in selected_feeds
