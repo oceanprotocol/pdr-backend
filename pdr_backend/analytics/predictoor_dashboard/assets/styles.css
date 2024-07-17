@@ -34,8 +34,3 @@ button{
     background-color: #00254d; /* Selected button background color */
     border-color: #0056b3; /* Selected button border color */
 }
-
-/* Optional: Adjust spacing */
-#date-period-radio-items {
-    margin-bottom: 10px; /* Bottom margin for the whole RadioItems component */
-}

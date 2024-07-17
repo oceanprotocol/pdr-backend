@@ -1,4 +1,3 @@
-from datetime import datetime
 from dash import Input, Output, State
 import dash
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
@@ -7,6 +6,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_payouts_from_db,
     filter_objects_by_field,
     get_start_date_from_period,
+    get_date_period_text,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
     get_graph,
@@ -96,15 +96,15 @@ def get_callbacks(app):
             )
         )
 
-        date_period_text = ""
-        # get available period date
-        if len(payouts) > 0:
-            start_date = payouts[0]["slot"] if len(payouts) > 0 else 0
-            end_date = payouts[-1]["slot"] if len(payouts) > 0 else 0
-            date_period_text = f"""
-                available {datetime.fromtimestamp(start_date).strftime('%d-%m-%Y')}
-                - {datetime.fromtimestamp(end_date).strftime('%d-%m-%Y')}
-            """
+        # get available period date text
+        date_period_text = (
+            get_date_period_text(payouts)
+            if (
+                int(date_period) == 0
+                and (len(selected_feeds) > 0 or len(selected_predictoors) > 0)
+            )
+            else dash.no_update
+        )
 
         return (
             get_graph(accuracy_fig),

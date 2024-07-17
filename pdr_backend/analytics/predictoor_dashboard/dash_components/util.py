@@ -129,3 +129,15 @@ def select_or_clear_all_by_table(
 
 def get_start_date_from_period(period: int):
     return int((datetime.now() - timedelta(days=period)).timestamp())
+
+
+def get_date_period_text(payouts: List):
+    if not payouts:
+        return "there is no data available"
+    start_date = payouts[0]["slot"] if len(payouts) > 0 else 0
+    end_date = payouts[-1]["slot"] if len(payouts) > 0 else 0
+    date_period_text = f"""
+        available {datetime.fromtimestamp(start_date).strftime('%d-%m-%Y')}
+        - {datetime.fromtimestamp(end_date).strftime('%d-%m-%Y')}
+    """
+    return date_period_text

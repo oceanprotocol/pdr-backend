@@ -83,7 +83,7 @@ def get_date_period_selection_component():
                 value="0",  # default selected value
                 labelStyle={"display": "inline-block", "margin-right": "10px"},
             ),
-            html.Span("available", id="available_data_period_text"),
+            html.Span("there is no data available", id="available_data_period_text"),
         ]
     )
 
