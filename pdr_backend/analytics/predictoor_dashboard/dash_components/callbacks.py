@@ -7,6 +7,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_user_payouts_stats_from_db,
     filter_objects_by_field,
     get_feed_ids_based_on_predictoors_from_db,
+    merge_payout_stats_with_predictoors,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
     get_graph,
@@ -36,8 +37,12 @@ def get_callbacks(app):
     def get_input_data_from_db(files_dir):
         try:
             feeds_data = get_feeds_data_from_db(files_dir)
-            predictoors_data = get_predictoors_data_from_db(files_dir)
             user_payout_stats = get_user_payouts_stats_from_db(files_dir)
+
+            predictoors_data = merge_payout_stats_with_predictoors(
+                user_payout_stats, get_predictoors_data_from_db(files_dir)
+            )
+
             return feeds_data, predictoors_data, user_payout_stats, None
         except Exception as e:
             return None, None, None, dash.html.H3(str(e))
@@ -126,7 +131,6 @@ def get_callbacks(app):
             Input("predictoors_table", "selected_rows"),
             Input("predictoors_table", "data"),
             Input("predictoors-data", "data"),
-            Input("user-payout-stats", "data"),
         ],
     )
     def update_predictoors_table_on_search(
@@ -134,7 +138,6 @@ def get_callbacks(app):
         selected_rows,
         predictoors_table,
         predictoors_data,
-        user_payout_stats,
     ):
         selected_predictoors = [predictoors_table[i] for i in selected_rows]
         if not search_value:
@@ -144,37 +147,6 @@ def get_callbacks(app):
             filtered_data = filter_objects_by_field(
                 predictoors_data, "user", search_value, selected_predictoors
             )
-
-        if user_payout_stats:
-            # Her bir data elemanı için, eşleşen user_payout_stat bulunur ve güncellenir.
-            # Eşleşme yoksa, orijinal data elemanı korunur.
-            filtered_data = [
-                {
-                    **data,
-                    **next(
-                        (
-                            user_payout_stat
-                            for user_payout_stat in user_payout_stats
-                            if user_payout_stat["user"] == data["user"]
-                        ),
-                        {},
-                    ),
-                }
-                for data in filtered_data
-            ]
-
-            # shorten the user address
-            for data in filtered_data:
-                new_data = {
-                    "user_address": data["user"][:5] + "..." + data["user"][-5:],
-                    "total_profit": round(data["total_profit"], 2),
-                    "avg_accuracy": round(data["avg_accuracy"], 2),
-                    "avg_stake": round(data["avg_stake"], 2),
-                    "user": data["user"],
-                }
-
-                data.clear()
-                data.update(new_data)
 
         selected_predictoor_indices = [
             i

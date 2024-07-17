@@ -160,3 +160,50 @@ def select_or_clear_all_by_table(
         selected_rows = list(range(len(rows)))
 
     return selected_rows
+
+
+@enforce_types
+def merge_payout_stats_with_predictoors(
+    user_payout_stats: List[Dict[str, Any]],
+    predictoors_data: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    Process the user payouts stats data.
+    Args:
+        user_payout_stats (list): List of user payouts stats data.
+    Returns:
+        list: List of processed user payouts stats data.
+    """
+
+    if user_payout_stats:
+        # For each data element, matching user_payout_stat is found and updated.
+        # If there is no match, the original data element is preserved.
+        predictoors_data = [
+            {
+                **data,
+                **next(
+                    (
+                        user_payout_stat
+                        for user_payout_stat in user_payout_stats
+                        if user_payout_stat["user"] == data["user"]
+                    ),
+                    {},
+                ),
+            }
+            for data in predictoors_data
+        ]
+
+        # shorten the user address
+        for data in predictoors_data:
+            new_data = {
+                "user_address": data["user"][:5] + "..." + data["user"][-5:],
+                "total_profit": round(data["total_profit"], 2),
+                "avg_accuracy": round(data["avg_accuracy"], 2),
+                "avg_stake": round(data["avg_stake"], 2),
+                "user": data["user"],
+            }
+
+            data.clear()
+            data.update(new_data)
+
+    return predictoors_data

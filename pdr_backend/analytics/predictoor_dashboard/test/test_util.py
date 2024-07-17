@@ -140,7 +140,6 @@ def test_get_user_payouts_stats_from_db(
 
     result = get_user_payouts_stats_from_db(ppss.lake_ss.lake_dir)
 
-    print("result--->", result)
     assert isinstance(result, list)
     assert len(result) == 5
 

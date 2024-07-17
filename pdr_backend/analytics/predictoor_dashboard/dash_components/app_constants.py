@@ -1,8 +1,8 @@
 PREDICTOOR_TABLE_COLUMNS = [
-    {"name": "User Addr", "id": "user_address"},
+    {"name": "User Address", "id": "user_address"},
     {"name": "Profit", "id": "total_profit"},
-    {"name": "AVG Accuracy", "id": "avg_accuracy"},
-    {"name": "AVG Stake", "id": "avg_stake"},
+    {"name": "Accuracy", "id": "avg_accuracy"},
+    {"name": "Stake", "id": "avg_stake"},
     {"name": "User", "id": "user"},
 ]
 
