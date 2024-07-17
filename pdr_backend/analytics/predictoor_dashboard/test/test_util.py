@@ -77,13 +77,14 @@ def test_get_payouts_from_db(
         tmpdir, _sample_payouts, table_name=Payout.get_lake_table_name()
     )
 
-    result = get_payouts_from_db([], [], ppss.lake_ss.lake_dir)
+    result = get_payouts_from_db([], [], 1721198763, ppss.lake_ss.lake_dir)
 
     assert len(result) == 0
 
     result = get_payouts_from_db(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"],
+        1721198763,
         ppss.lake_ss.lake_dir,
     )
 

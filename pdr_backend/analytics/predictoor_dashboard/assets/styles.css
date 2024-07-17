@@ -12,6 +12,11 @@ body{
     display: none;
 }
 
+button{
+    background-color: #007BFF !important;
+    color: white;
+}
+
 /* Style the label as buttons */
 #date-period-radio-items label {
     display: inline-block;

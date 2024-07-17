@@ -58,6 +58,20 @@ def get_graphs_column_metrics_row():
             get_metric(label="Avg Accuracy", value="50%", value_id="accuracy_metric"),
             get_metric(label="Total Profit", value="50%", value_id="profit_metric"),
             get_metric(label="Avg Stake", value="50%", value_id="stake_metric"),
+            get_date_period_selection_component(),
+        ],
+        id="metrics_container",
+        style={
+            "height": "12%",
+            "display": "flex",
+            "justifyContent": "space-between",
+        },
+    )
+
+
+def get_date_period_selection_component():
+    return html.Div(
+        [
             dcc.RadioItems(
                 id="date-period-radio-items",
                 options=[
@@ -69,13 +83,8 @@ def get_graphs_column_metrics_row():
                 value="0",  # default selected value
                 labelStyle={"display": "inline-block", "margin-right": "10px"},
             ),
-        ],
-        id="metrics_container",
-        style={
-            "height": "12%",
-            "display": "flex",
-            "justifyContent": "space-between",
-        },
+            html.Span("available", id="available_data_period_text"),
+        ]
     )
 
 
@@ -194,7 +203,6 @@ def get_table(table_id, table_name, searchable_field, columns, data):
                                     "border": "0",
                                     "min-width": "90px",
                                     "fontSize": "15px",
-                                    "backgroundColor": "#dedede",
                                     "borderRadius": "3px",
                                 },
                             ),
@@ -205,7 +213,6 @@ def get_table(table_id, table_name, searchable_field, columns, data):
                                 style={
                                     "border": "0",
                                     "fontSize": "15px",
-                                    "backgroundColor": "#dedede",
                                     "borderRadius": "3px",
                                 },
                             ),

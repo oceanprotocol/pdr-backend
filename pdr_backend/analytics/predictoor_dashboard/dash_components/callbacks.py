@@ -1,3 +1,4 @@
+from datetime import datetime
 from dash import Input, Output, State
 import dash
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
@@ -42,6 +43,7 @@ def get_callbacks(app):
         Output("accuracy_metric", "children"),
         Output("profit_metric", "children"),
         Output("stake_metric", "children"),
+        Output("available_data_period_text", "children"),
         [
             Input("feeds_table", "selected_rows"),
             Input("predictoors_table", "selected_rows"),
@@ -94,6 +96,16 @@ def get_callbacks(app):
             )
         )
 
+        date_period_text = ""
+        # get available period date
+        if len(payouts) > 0:
+            start_date = payouts[0]["slot"] if len(payouts) > 0 else 0
+            end_date = payouts[-1]["slot"] if len(payouts) > 0 else 0
+            date_period_text = f"""
+                available {datetime.fromtimestamp(start_date).strftime('%d-%m-%Y')}
+                - {datetime.fromtimestamp(end_date).strftime('%d-%m-%Y')}
+            """
+
         return (
             get_graph(accuracy_fig),
             get_graph(profit_fig),
@@ -101,6 +113,7 @@ def get_callbacks(app):
             f"{round(avg_accuracy, 2)}%",
             f"{round(total_profit, 2)} OCEAN",
             f"{round(avg_stake, 2)} OCEAN",
+            date_period_text,
         )
 
     @app.callback(
