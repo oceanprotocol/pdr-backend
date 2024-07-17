@@ -8,7 +8,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_start_date_from_period,
     get_date_period_text,
     get_feed_ids_based_on_predictoors_from_db,
-    process_user_payout_stats,
+    get_predictoors_data_from_payouts,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
     get_graph,
@@ -40,7 +40,7 @@ def get_callbacks(app):
         show_favourite_addresses = True if app.favourite_addresses else []
         try:
             feeds_data = get_feeds_data_from_db(files_dir)
-            predictoors_data = process_user_payout_stats(
+            predictoors_data = get_predictoors_data_from_payouts(
                 get_user_payouts_stats_from_db(files_dir)
             )
 

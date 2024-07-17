@@ -167,7 +167,7 @@ def select_or_clear_all_by_table(
 
 
 @enforce_types
-def process_user_payout_stats(
+def get_predictoors_data_from_payouts(
     user_payout_stats: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
     """

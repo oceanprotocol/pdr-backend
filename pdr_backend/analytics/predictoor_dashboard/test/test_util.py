@@ -9,7 +9,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_payouts_from_db,
     select_or_clear_all_by_table,
     get_user_payouts_stats_from_db,
-    process_user_payout_stats,
+    get_predictoors_data_from_payouts,
 )
 
 from pdr_backend.analytics.predictoor_dashboard.test.resources import (
@@ -174,7 +174,7 @@ def test_get_user_payouts_stats_from_db(
     _clear_test_db(ppss.lake_ss.lake_dir)
 
 
-def test_process_user_payout_stats():
+def test_get_predictoors_data_from_payouts():
     user_payout_stats = [
         {
             "user": "0x02e9d2eede4c5347e55346860c8a8988117bde9e",
@@ -190,7 +190,7 @@ def test_process_user_payout_stats():
         },
     ]
 
-    result = process_user_payout_stats(user_payout_stats)
+    result = get_predictoors_data_from_payouts(user_payout_stats)
 
     assert isinstance(result, list)
     assert len(result) == 2
