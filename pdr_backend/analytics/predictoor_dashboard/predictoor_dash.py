@@ -7,6 +7,10 @@ from enforce_typing import enforce_types
 from pdr_backend.analytics.predictoor_dashboard.dash_components.callbacks import (
     get_callbacks,
 )
+from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
+    get_feeds_data_from_db,
+    get_predictoors_data_from_db,
+)
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
     get_layout,
 )
@@ -24,6 +28,8 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
     if not debug_mode:
         webbrowser.open(f"http://127.0.0.1:{port}/")
     folder = ppss.lake_ss.lake_dir
-    app.layout.children[0].data = folder
+    app.lake_dir = folder
+    app.feeds_data = get_feeds_data_from_db(folder)
+    app.predictoors_data = get_predictoors_data_from_db(folder)
     app.favourite_addresses = ppss.predictoor_ss.my_addresses
     app.run(debug=debug_mode, port=port)
