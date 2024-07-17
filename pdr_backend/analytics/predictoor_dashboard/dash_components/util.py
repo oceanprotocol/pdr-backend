@@ -101,7 +101,7 @@ def get_payouts_from_db(
     query += " OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])
     query += ")"
     if start_date != 0:
-        query += f"AND (slot > {start_date})"
+        query += f"AND (slot >= {start_date})"
     query += ";"
 
     return _query_db(lake_dir, query)

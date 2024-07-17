@@ -34,7 +34,7 @@ def get_input_column():
         ],
         style={
             "height": "100%",
-            "width": "25%",
+            "width": "30%",
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "space-between",
@@ -48,11 +48,11 @@ def get_graphs_column():
         id="graphs_container",
         style={
             "height": "100%",
-            "width": "75%",
+            "width": "70%",
             "display": "flex",
             "flexDirection": "column",
             "justifyContent": "start",
-            "paddingLeft": "40px",
+            "paddingLeft": "50px",
         },
     )
 

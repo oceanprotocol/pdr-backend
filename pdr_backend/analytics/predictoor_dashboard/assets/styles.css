@@ -20,19 +20,19 @@ button{
 /* Style the label as buttons */
 #date-period-radio-items label {
     display: inline-block;
-    padding: 8px 16px;
+    padding: 5px 14px;
     margin-right: 10px;
-    background-color: #007BFF; /* Button background color */
-    color: white; /* Button text color */
-    border: 1px solid #007BFF; /* Button border */
-    border-radius: 4px; /* Button border radius */
-    cursor: pointer; /* Pointer cursor on hover */
+    background-color: #007BFF;
+    color: white;
+    border: 1px solid #007BFF;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 /* Style for selected label */
 #date-period-radio-items label:has(input:checked) {
-    background-color: #00254d; /* Selected button background color */
-    border-color: #0056b3; /* Selected button border color */
+    background-color: #00254d;
+    border-color: #0056b3;
 }
 
 .form-check-label, .form-switch{

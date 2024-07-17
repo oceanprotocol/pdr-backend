@@ -77,18 +77,34 @@ def test_get_payouts_from_db(
         tmpdir, _sample_payouts, table_name=Payout.get_lake_table_name()
     )
 
-    result = get_payouts_from_db([], [], 1721198763, ppss.lake_ss.lake_dir)
-
+    result = get_payouts_from_db([], [], 1704152700, ppss.lake_ss.lake_dir)
     assert len(result) == 0
 
     result = get_payouts_from_db(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"],
-        1721198763,
+        1704152700,
         ppss.lake_ss.lake_dir,
     )
-
     assert isinstance(result, list)
+    assert len(result) == 2
+
+    # start date after all payouts should return an empty list
+    result = get_payouts_from_db(
+        ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+        ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"],
+        1704154000,
+        ppss.lake_ss.lake_dir,
+    )
+    assert len(result) == 0
+
+    # start date 0 should not filter on start date
+    result = get_payouts_from_db(
+        ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
+        ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"],
+        0,
+        ppss.lake_ss.lake_dir,
+    )
     assert len(result) == 2
 
     _clear_test_db(ppss.lake_ss.lake_dir)
