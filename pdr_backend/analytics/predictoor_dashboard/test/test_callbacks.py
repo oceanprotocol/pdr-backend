@@ -106,7 +106,10 @@ def test_predictoors_feed_only_switch(setup_app, dash_duo):
     feeds_table_len = len(dash_duo.find_elements("#feeds_table tbody tr"))
     assert feeds_table_len == 2
 
-    dash_duo.find_element("#toggle-switch-predictoor-feeds").click()
+    # Scroll the toggle switch into view and click using JavaScript
+    toggle_switch = dash_duo.find_element("#toggle-switch-predictoor-feeds")
+    dash_duo.driver.execute_script("arguments[0].scrollIntoView(true);", toggle_switch)
+    dash_duo.driver.execute_script("arguments[0].click();", toggle_switch)
     time.sleep(2)
 
     feeds_table_len = len(dash_duo.find_elements("#feeds_table tbody tr"))
