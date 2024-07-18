@@ -39,8 +39,26 @@ def _clear_test_db(directory: str):
 
 
 def _input_action(dash_duo, input_id, table_id, input_value, expected_rows):
+    """
+    Helper function to test the search input in the tables
+    It sends the input_value to the search input and checks
+    if the number of rows in the table is as expected
+    """
+
     search_input = dash_duo.find_element(input_id)
     search_input.clear()
     search_input.send_keys(input_value + Keys.ENTER)
     time.sleep(2)
     assert len(dash_duo.find_elements(f"{table_id} tbody tr")) == expected_rows
+
+
+def start_server_and_wait(dash_duo, app):
+    """
+    Start the server and wait for the elements to be rendered.
+    """
+
+    dash_duo.start_server(app)
+    dash_duo.wait_for_element("#feeds_table")
+    dash_duo.wait_for_element("#predictoors_table")
+    dash_duo.wait_for_element("#feeds_table tbody tr")
+    dash_duo.wait_for_element("#predictoors_table tbody tr")

@@ -1,6 +1,7 @@
 import time
 from pdr_backend.analytics.predictoor_dashboard.test.resources import (
     _input_action,
+    start_server_and_wait,
 )
 
 
@@ -9,15 +10,12 @@ def test_get_input_data_from_db(setup_app, dash_duo):
     start_server_and_wait(dash_duo, app)
 
 
-def start_server_and_wait(dash_duo, app):
-    dash_duo.start_server(app)
-    dash_duo.wait_for_element("#feeds_table")
-    dash_duo.wait_for_element("#predictoors_table")
-    dash_duo.wait_for_element("#feeds_table tbody tr")
-    dash_duo.wait_for_element("#predictoors_table tbody tr")
-
-
 def test_feeds_search_input(setup_app, dash_duo):
+    """
+    Test the search input in the "Feeds" table.
+    The search input is used to filter the feeds by their name.
+    """
+
     app = setup_app
     start_server_and_wait(dash_duo, app)
     _input_action(dash_duo, "#search-input-Feeds", "#feeds_table", "OCEAN", 1)
@@ -26,6 +24,11 @@ def test_feeds_search_input(setup_app, dash_duo):
 
 
 def test_predictoors_search_input(setup_app, dash_duo):
+    """
+    Test the search input in the "Predictoors" table.
+    The search input is used to filter the predictoors by their name.
+    """
+
     app = setup_app
     start_server_and_wait(dash_duo, app)
 
@@ -38,6 +41,10 @@ def test_predictoors_search_input(setup_app, dash_duo):
 
 
 def test_checkbox_selection(setup_app, dash_duo):
+    """
+    Test the selection of checkboxes in the "Feeds" and "Predictoors" tables.
+    """
+
     app = setup_app
     start_server_and_wait(dash_duo, app)
 
@@ -49,6 +56,13 @@ def test_checkbox_selection(setup_app, dash_duo):
 
 
 def test_timeframe_metrics(setup_app, dash_duo):
+    """
+    Test the metrics that are displayed when a predictoor is selected.
+    It takes the predictoor row from the table and compares with the top metrics.
+
+    The metrics are: Profit, Accuract, Stake
+    """
+
     app = setup_app
     start_server_and_wait(dash_duo, app)
 
@@ -78,6 +92,11 @@ def test_timeframe_metrics(setup_app, dash_duo):
 
 
 def test_predictoors_feed_only_switch(setup_app, dash_duo):
+    """
+    Test the switch that toggles between showing only the feeds that are
+    associated with the selected predictoor and all feeds.
+    """
+
     app = setup_app
     start_server_and_wait(dash_duo, app)
 
