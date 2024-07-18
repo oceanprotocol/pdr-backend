@@ -13,7 +13,8 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements im
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_feeds_data_from_db,
-    get_predictoors_data_from_db,
+    get_predictoors_data_from_payouts,
+    get_user_payouts_stats_from_db,
 )
 from pdr_backend.analytics.predictoor_dashboard.test.resources import (
     _prepare_test_db,
@@ -55,7 +56,9 @@ def test_get_input_data_from_db(
     app.layout = get_layout()
     app.lake_dir = ppss.lake_ss.lake_dir
     app.feeds_data = get_feeds_data_from_db(ppss.lake_ss.lake_dir)
-    app.predictoors_data = get_predictoors_data_from_db(ppss.lake_ss.lake_dir)
+    app.predictoors_data = get_predictoors_data_from_payouts(
+        get_user_payouts_stats_from_db(ppss.lake_ss.lake_dir)
+    )
     app.favourite_addresses = ppss.predictoor_ss.my_addresses
     get_callbacks(app)
 

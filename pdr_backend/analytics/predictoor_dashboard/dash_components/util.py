@@ -1,5 +1,6 @@
 import logging
 
+from datetime import datetime, timedelta
 from typing import Union, List, Dict, Any, Optional
 from enforce_typing import enforce_types
 import dash
@@ -54,6 +55,23 @@ def get_predictoors_data_from_db(lake_dir: str):
 
 
 @enforce_types
+def get_user_payouts_stats_from_db(lake_dir: str):
+    return _query_db(
+        lake_dir,
+        f"""
+            SELECT 
+                "user",
+                SUM(payout - stake) AS total_profit,
+                SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+                AVG(stake) AS avg_stake
+            FROM 
+                {Payout.get_lake_table_name()}
+            GROUP BY 
+                "user" 
+        """,
+    )
+
+
 def get_feed_ids_based_on_predictoors_from_db(
     lake_dir: str, predictoor_addrs: List[str]
 ):
@@ -77,7 +95,7 @@ def get_feed_ids_based_on_predictoors_from_db(
 
 @enforce_types
 def get_payouts_from_db(
-    feed_addrs: List[str], predictoor_addrs: List[str], lake_dir: str
+    feed_addrs: List[str], predictoor_addrs: List[str], start_date: int, lake_dir: str
 ) -> List[dict]:
     """
     Get payouts data for the given feed and predictoor addresses.
@@ -98,7 +116,10 @@ def get_payouts_from_db(
 
     # Adding conditions for the second list
     query += " OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])
-    query += ");"
+    query += ")"
+    if start_date != 0:
+        query += f"AND (slot >= {start_date})"
+    query += ";"
 
     return _query_db(lake_dir, query)
 
@@ -143,3 +164,46 @@ def select_or_clear_all_by_table(
         selected_rows = list(range(len(rows)))
 
     return selected_rows
+
+
+@enforce_types
+def get_predictoors_data_from_payouts(
+    user_payout_stats: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    Process the user payouts stats data.
+    Args:
+        user_payout_stats (list): List of user payouts stats data.
+    Returns:
+        list: List of processed user payouts stats data.
+    """
+
+    for data in user_payout_stats:
+        new_data = {
+            "user_address": data["user"][:5] + "..." + data["user"][-5:],
+            "total_profit": round(data["total_profit"], 2),
+            "avg_accuracy": round(data["avg_accuracy"], 2),
+            "avg_stake": round(data["avg_stake"], 2),
+            "user": data["user"],
+        }
+
+        data.clear()
+        data.update(new_data)
+
+    return user_payout_stats
+
+
+def get_start_date_from_period(period: int):
+    return int((datetime.now() - timedelta(days=period)).timestamp())
+
+
+def get_date_period_text(payouts: List):
+    if not payouts:
+        return "there is no data available"
+    start_date = payouts[0]["slot"] if len(payouts) > 0 else 0
+    end_date = payouts[-1]["slot"] if len(payouts) > 0 else 0
+    date_period_text = f"""
+        available {datetime.fromtimestamp(start_date).strftime('%d-%m-%Y')}
+        - {datetime.fromtimestamp(end_date).strftime('%d-%m-%Y')}
+    """
+    return date_period_text

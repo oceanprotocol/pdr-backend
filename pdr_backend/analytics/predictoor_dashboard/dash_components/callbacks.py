@@ -3,13 +3,19 @@ import copy
 import dash
 from dash import Input, Output, State
 
+from pdr_backend.analytics.predictoor_dashboard.dash_components.app_constants import (
+    PREDICTOOR_TABLE_COLUMNS,
+    PREDICTOOR_TABLE_HIDDEN_COLUMNS,
+)
 from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
     get_figures_and_metrics,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     filter_objects_by_field,
+    get_date_period_text,
     get_feed_ids_based_on_predictoors_from_db,
     get_payouts_from_db,
+    get_start_date_from_period,
     select_or_clear_all_by_table,
 )
 from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
@@ -40,11 +46,13 @@ def get_callbacks(app):
         Output("accuracy_metric", "children"),
         Output("profit_metric", "children"),
         Output("stake_metric", "children"),
+        Output("available_data_period_text", "children"),
         [
             Input("feeds_table", "selected_rows"),
             Input("predictoors_table", "selected_rows"),
             Input("feeds_table", "data"),
             Input("predictoors_table", "data"),
+            Input("date-period-radio-items", "value"),
         ],
     )
     def get_display_data_from_db(
@@ -52,6 +60,7 @@ def get_callbacks(app):
         predictoors_table_selected_rows,
         feeds_table,
         predictoors_table,
+        date_period,
     ):
         # feeds_table_selected_rows is a list of ints
         # feeds_data is a list of dicts
@@ -67,9 +76,15 @@ def get_callbacks(app):
         if len(selected_feeds) == 0 or len(selected_predictoors) == 0:
             payouts = []
         else:
+            start_date = (
+                get_start_date_from_period(int(date_period))
+                if int(date_period) > 0
+                else 0
+            )
             payouts = get_payouts_from_db(
                 [row["contract"] for row in selected_feeds],
                 predictoors_addrs,
+                start_date,
                 app.lake_dir,
             )
 
@@ -82,6 +97,16 @@ def get_callbacks(app):
             )
         )
 
+        # get available period date text
+        date_period_text = (
+            get_date_period_text(payouts)
+            if (
+                int(date_period) == 0
+                and (len(selected_feeds) > 0 or len(selected_predictoors) > 0)
+            )
+            else dash.no_update
+        )
+
         return (
             get_graph(accuracy_fig),
             get_graph(profit_fig),
@@ -89,6 +114,7 @@ def get_callbacks(app):
             f"{round(avg_accuracy, 2)}%",
             f"{round(total_profit, 2)} OCEAN",
             f"{round(avg_stake, 2)} OCEAN",
+            date_period_text,
         )
 
     @app.callback(
@@ -124,6 +150,8 @@ def get_callbacks(app):
     @app.callback(
         Output("predictoors_table", "data", allow_duplicate=True),
         Output("predictoors_table", "selected_rows"),
+        Output("predictoors_table", "columns", allow_duplicate=True),
+        Output("predictoors_table", "hidden_columns"),
         [
             Input("search-input-Predictoors", "value"),
             Input("predictoors_table", "selected_rows"),
@@ -169,7 +197,12 @@ def get_callbacks(app):
             if predictoor in selected_predictoors
         ]
 
-        return filtered_data, selected_predictoor_indices
+        return (
+            filtered_data,
+            selected_predictoor_indices,
+            PREDICTOOR_TABLE_COLUMNS,
+            PREDICTOOR_TABLE_HIDDEN_COLUMNS,
+        )
 
     @app.callback(
         Output("feeds_table", "data", allow_duplicate=True),
