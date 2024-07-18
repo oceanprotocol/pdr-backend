@@ -30,3 +30,11 @@ class BaseDataStore:
     @classmethod
     def clear_instances(cls):
         cls._instances = {}
+
+    @enforce_types
+    def delete_own_instance(self):
+        read_only_key = "0" if self.read_only is False else "1"
+        pattern_key = f"{self.base_path}_{read_only_key}"
+
+        if pattern_key in self._instances:
+            del self._instances[pattern_key]

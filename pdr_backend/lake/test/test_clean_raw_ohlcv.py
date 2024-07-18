@@ -4,6 +4,7 @@
 #
 from enforce_typing import enforce_types
 import polars as pl
+import pytest
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.lake.constants import TOHLCV_SCHEMA_PL
@@ -76,7 +77,11 @@ def test_schema_interpreter_float_as_integer():
     assert isinstance(tohlcv_df, pl.DataFrame)
 
     # Try to create DataFrame with floating-point decimal timestamp instead of integer
-    try:
+    # Timestamp written as a float "1624003200000.00" raises error
+    with pytest.raises(
+        TypeError,
+        match="unexpected value while building Series of type Int64; found value of type Float64",
+    ):
         tohlcv_data = [
             [
                 1624003200000.00,
@@ -92,9 +97,6 @@ def test_schema_interpreter_float_as_integer():
             [1.0, 2.0, 3.0, 4.0, 5.0],
         ]
         tohlcv_df = pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
-    except TypeError as e:
-        # Timestamp written as a float "1624003200000.00" raises error
-        assert str(e) == "'float' object cannot be interpreted as an integer"
 
 
 @enforce_types
@@ -111,5 +113,5 @@ def test_fix_schema_interpreter_float_as_integer():
     assert type(uts[0]) == int
 
     tohlcv_data = _filter_within_timerange([RAW_TOHLCV], UnixTimeMs(T1), UnixTimeMs(T1))
-    tohlcv_df = pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL)
+    tohlcv_df = pl.DataFrame(tohlcv_data, schema=TOHLCV_SCHEMA_PL, orient="row")
     assert isinstance(tohlcv_df, pl.DataFrame)

@@ -6,6 +6,7 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from enforce_typing import enforce_types
+from pdr_backend.sim.sim_plotter import empty_fig
 
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 
@@ -138,6 +139,8 @@ def _plot_lineplot_1var(aimodel_plotdata: AimodelPlotdata):
     # line plot: regressor response, training data
     if d.model.do_regr:
         assert mesh_ycont_hat is not None
+        assert y_thr is not None
+        assert ycont is not None
         fig.add_trace(
             go.Scatter(
                 x=mesh_chosen_x,
@@ -342,7 +345,11 @@ def plot_aimodel_varimps(d: AimodelPlotdata):
     @arguments
       d -- AimodelPlotdata
     """
-    imps_avg, imps_stddev = d.model.importance_per_var(include_stddev=True)
+    try:
+        imps_avg, imps_stddev = d.model.importance_per_var(include_stddev=True)
+    except Exception:
+        return empty_fig("Can't plot var imp for chain data")
+
     imps_avg = imps_avg + 1e-15  # give imp > 0, so before dummy vars in plot
     varnames = d.colnames
     n = len(varnames)

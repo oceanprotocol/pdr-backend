@@ -333,7 +333,6 @@ def test_etl_do_incremental_broken_date_bronze_step(_sample_etl):
     bronze_prediction_table = Table.from_dataclass(BronzePrediction).table_name
 
     def _step1():
-        print(">>>>>> _step1")
         # Step 1: 00:00 - 00:40
         # payouts -> 361
         # predictions -> 544
@@ -380,7 +379,6 @@ def test_etl_do_incremental_broken_date_bronze_step(_sample_etl):
         assert prod_null_payouts + prod_valid_payouts == len(expected_rows)
 
     def _step2_introduce_error_in_date():
-        print(">>>>>> _step2_introduce_error_in_date")
         # Step 2: 00:00 - 00:35
         # new_payouts -> 0
         # new_predictions -> 0

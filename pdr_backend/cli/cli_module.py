@@ -33,6 +33,7 @@ from pdr_backend.sim.multisim_engine import MultisimEngine
 from pdr_backend.sim.sim_dash import sim_dash
 from pdr_backend.sim.sim_engine import SimEngine
 from pdr_backend.statutil.arima_dash import arima_dash
+from pdr_backend.pdr_dashboard.predictoor_dash import predictoor_dash
 from pdr_backend.trader.approach1.trader_agent1 import TraderAgent1
 from pdr_backend.trader.approach2.trader_agent2 import TraderAgent2
 from pdr_backend.trueval.trueval_agent import TruevalAgent
@@ -91,6 +92,12 @@ def do_sim(args, nested_args=None):
         network="development",
         nested_override_args=nested_args,
     )
+    if not ppss.sim_ss.use_own_model:
+        ppss = PPSS(
+            yaml_filename=args.PPSS_FILE,
+            network="sapphire-mainnet",
+            nested_override_args=nested_args,
+        )
     feedset = ppss.predictoor_ss.predict_train_feedsets[0]
     if len(ppss.predictoor_ss.predict_train_feedsets) > 0:
         logger.warning("Multiple predict feeds provided, using the first one")
@@ -302,3 +309,9 @@ def do_arima_plots(args, nested_args=None):
         nested_override_args=nested_args,
     )
     arima_dash(ppss, args.debug_mode)
+
+
+@enforce_types
+# pylint: disable=unused-argument
+def do_dashboard(args, nested_args=None):
+    predictoor_dash(args.PPSS, args.debug_mode)

@@ -38,7 +38,7 @@ predictoor_ss:
     transform: None # None -> raw value of signal; RelDiff -> rel % diff
     
   aimodel_ss: # used by AimodelFactory
-    approach: ClassifLinearRidge # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVC | ClassifGaussianProcess | ClassifXgboost | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrGaussianProcess | RegrXgboost | RegrConstant
+    approach: ClassifLinearRidge # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVM | ClassifGaussianProcess | ClassifXgboost | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrGaussianProcess | RegrXgboost | RegrConstant
     weight_recent: 10x_5x # 10x_5x | 10000x | None
     balance_classes: None # SMOTE | RandomOverSampler | None
     calibrate_probs: CalibratedClassifierCV_Sigmoid # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
@@ -70,13 +70,14 @@ sim_ss: # sim only
   log_dir: logs
   test_n: 5000 # number of epochs to simulate
   tradetype: histmock # histmock | livemock | livereal
+  use_own_model: True # use own model predictions signals if true, else use chain signals
 
 multisim_ss:
   approach: SimpleSweep # SimpleSweep | FastSweep (future) | ..
   sweep_params:
-  - trader_ss.buy_amt: 1000 USD, 2000 USD
-  - predictoor_ss.aimodel_ss.max_n_train: 500, 1000, 1500
-  - predictoor_ss.aimodel_ss.autoregressive_n: 1, 2
+  - trader_ss.buy_amt: 1000 USD
+  - predictoor_ss.aimodel_data_ss.max_n_train: 500, 1000, 1500
+  - predictoor_ss.aimodel_data_ss.autoregressive_n: 1, 2
   - predictoor_ss.predict_train_feedsets:
     -
       - predict: binance BTC/USDT c 5m

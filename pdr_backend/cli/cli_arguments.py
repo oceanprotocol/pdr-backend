@@ -26,6 +26,7 @@ Main tools:
   pdr sim PPSS_FILE
   pdr sim_plots [--run_id RUN_ID] [--port PORT] [--debug_mode False]
   pdr predictoor PPSS_FILE NETWORK
+  pdr dashboard PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
   pdr claim_ROSE PPSS_FILE
@@ -39,14 +40,6 @@ Detailed help:
 
 HELP_SIGN = """
 Transactions are signed with envvar 'PRIVATE_KEY`.
-"""
-
-HELP_DOT = """
-To pass args down to ppss, use dot notation.
-Example: pdr lake raw|etl update ppss.yaml sapphire-mainnet
-pdr lake raw|etl drop ppss.yaml sapphire-mainnet 2023-06-01
-pdr lake describe --HTML ppss.yaml sapphire-mainnet
-pdr lake validate ppss.yaml sapphire-mainnet
 """
 
 HELP_OTHER_TOOLS = """
@@ -83,7 +76,7 @@ Tools for core team:
 
 HELP_SHORT = HELP_TOP + HELP_MAIN + HELP_HELP + HELP_SIGN
 
-HELP_LONG = HELP_TOP + HELP_MAIN + HELP_HELP + HELP_OTHER_TOOLS + HELP_SIGN + HELP_DOT
+HELP_LONG = HELP_TOP + HELP_MAIN + HELP_HELP + HELP_OTHER_TOOLS + HELP_SIGN
 
 
 # ========================================================================
@@ -642,6 +635,19 @@ class ArimaPlotsArgParser(CustomArgParser, PPSS_Mixin, DEBUG_Mixin):
         )
 
 
+class PredictoorDashboardArgParser(
+    CustomArgParser, PPSS_Mixin, NETWORK_Mixin, DEBUG_Mixin
+):
+    # pylint: disable=unused-argument
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+
+        self.add_arguments_bulk(
+            command_name,
+            ["PPSS", "NETWORK", "DEBUG"],
+        )
+
+
 # below, list each entry in defined_parsers in same order as HELP_LONG
 defined_parsers = {
     # main tools
@@ -688,6 +694,9 @@ defined_parsers = {
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
     "do_sim_plots": SimPlotsArgParser("Visualize simulation data", "sim_plots"),
     "do_arima_plots": ArimaPlotsArgParser("Visualize ARIMA data", "arima_plots"),
+    "do_dashboard": PredictoorDashboardArgParser(
+        "Visualize Predictoor data", "dashboard"
+    ),
 }
 
 

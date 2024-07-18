@@ -3,8 +3,6 @@ Copyright 2024 Ocean Protocol Foundation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-> 📢 _Do you love AI, Python, and competitive games? The Predictoor team is hiring. [Learn more](https://github.com/oceanprotocol/jobs/blob/main/datascience.md)_.
-
 # pdr-backend
 
 ## Run bots (agents)
@@ -66,6 +64,7 @@ Main tools:
   - [VPS dev flow](READMEs/vps.md)
   - [Release process](READMEs/release-process.md)
   - [Clean code guidelines](READMEs/clean-code.md)
+  - [Dependency management](READMEs/dependencies.md)
 - [Run dfbuyer bot](READMEs/dfbuyer.md) - runs Predictoor DF rewards
 - [Run publisher](READMEs/publisher.md) - publish new feeds
 - [Run trueval](READMEs/trueval.md) - run trueval bot

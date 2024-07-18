@@ -14,6 +14,7 @@ This README shows how to earn $ by running a predictoor bot on mainnet.
 1. **[Run bot on testnet](#3-run-predictoor-bot-on-sapphire-testnet)**
 1. **[Run bot on mainnet](#4-run-predictoor-bot-on-sapphire-mainnet)**
 1. **[Claim payout](#5-claim-payout)**
+1. **[Run dashboard to monitor and analyze performance](#6-run-dashboard)**
 
 Once you're done the main flow, you can go beyond, with any of:
 
@@ -23,6 +24,10 @@ Once you're done the main flow, you can go beyond, with any of:
 - [Run many bots](#run-many-bots). Steps: [give keys](#many-bots-give-keys), [templates](#many-bots-generate-templates), [deploy agents](#many-bots-deploy-agents), [monitor agents](#many-bots-monitor-agents), [destroy agents](#many-bots-destroy-agents)
 
 ## 1. Install pdr-backend Repo
+
+Prerequisites:
+- Python 3.12. Earlier _will_ fail, e.g. can't find `UTC`. [Details](https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated)
+- Ubuntu MacOS. _Not_ Windows.
 
 In a new console:
 
@@ -54,7 +59,11 @@ curl https://raw.githubusercontent.com/oceanprotocol/contracts/main/addresses/ad
 If you're running MacOS, then in console:
 
 ```console
+# so that sapphire.py works. Details in #66
 codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
+
+# so that xgboost works. Details in #1339
+brew install libomp
 ```
 
 ## 2. Simulate Modeling and Trading
@@ -208,6 +217,14 @@ When running predictoors on mainnet, you have the potential to earn $.
 **[Here](payout.md)** are instructions to claim your earnings.
 
 Congrats! You've gone through all the essential steps to earn $ by running a predictoor bot on mainnet.
+
+## 6. Run Dashboard
+
+After running your predictor bot, you may **monitor and analyze its performance**.
+
+To assist with this, pdr_backend provides a dashboard that utilizes **live blockchain data** to visualize key performance metrics such as **accuracy, profit, and costs over a specific period**.
+
+Please refer to this **[setup guide](predictoor-dashboard.md)** for detailed instructions on how to set up, configure, and **run the dashboard** to visualize real-time data from the blockchain.
 
 The next sections describe how to go beyond, by optimizing the model and more.
 

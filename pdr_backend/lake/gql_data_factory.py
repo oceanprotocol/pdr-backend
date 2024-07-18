@@ -170,7 +170,7 @@ class GQLDataFactory:
 
         buffer_df = pl.DataFrame([], schema=dataclass.get_lake_schema())
 
-        DuckDBDataStore(self.ppss.lake_ss.lake_dir).create_table_if_not_exists(
+        DuckDBDataStore(self.ppss.lake_ss.lake_dir).create_empty(
             new_events_table.table_name,
             dataclass.get_lake_schema(),
         )
@@ -222,6 +222,8 @@ class GQLDataFactory:
                     schema=dataclass.get_lake_schema(),
                 )
                 save_backoff_count = 0
+                if len(df["timestamp"]) == 0:
+                    return
                 if df["timestamp"][0] > df["timestamp"][len(df) - 1]:
                     return
 

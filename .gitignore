@@ -181,6 +181,9 @@ sim_state
 # pdr_backend accuracy output
 pdr_backend/accuracy/output/*.json
 
+# lakeinfo output
+validate_duplicate_rows.csv
+
 # agent deployer
 .keys.json
 .deployments/

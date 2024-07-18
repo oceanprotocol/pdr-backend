@@ -1,12 +1,3 @@
-import io
-from unittest.mock import MagicMock
-
-from enforce_typing import enforce_types
-import polars as pl
-
-from pdr_backend.lake.test.resources import _gql_data_factory
-from pdr_backend.lake.lake_validate import LakeValidate
-
 csv_string = """
 pair,timeframe,slot,datetime,timedelta,count
 ADA/USDT,1h,1714413600,29-04-2024 11:00,,1
@@ -168,36 +159,3 @@ ADA/USDT,5m,1711974900,01-04-2024 05:35,300,1
 ADA/USDT,5m,1711975200,01-04-2024 05:40,300,1
 ADA/USDT,5m,1711975500,01-04-2024 05:45,300,1
 """
-
-
-@enforce_types
-def test_validate_lake_mock_sql_failure(tmpdir):
-    sql_result = pl.read_csv(io.StringIO(csv_string))
-    assert isinstance(sql_result, pl.DataFrame)
-
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
-
-    ppss, _ = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    lake_validate = LakeValidate(ppss)
-
-    # mock duckDB
-    mock_pds = MagicMock()
-    mock_pds.query_data.return_value = sql_result
-    lake_validate.db = mock_pds
-
-    result = lake_validate.validate_lake_bronze_predictions_gaps()
-
-    # assert that the function called the query_data method
-    mock_pds.query_data.assert_called_once()
-
-    # assert that the data validation failed as we would expect it to
-    # review the logs and verify the data is what we expect to see
-    assert isinstance(result, list)
-    assert len(result) == 0

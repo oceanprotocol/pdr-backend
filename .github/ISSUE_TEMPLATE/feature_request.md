@@ -4,8 +4,8 @@ SPDX-License-Identifier: Apache-2.0
 -->
 ---
 name: Enhancement
-about: 'Benefit_yyy, via building_xxx'
-title: '[Component name] Benefit_yyy, via building_xxx'
+about: 'Solve a specific problem'
+title: '[Component name] Problem to solve, maybe how'
 labels: 'Type: Enhancement'
 assignees: ''
 
@@ -13,26 +13,15 @@ assignees: ''
 
 ### Background / motivation
 
-Parent epic: [#foo](https://github.com/oceanprotocol/pdr-backend/issues/foo)
+(Optional) link to epic: [#xyz](https://github.com/oceanprotocol/pdr-backend/issues/xyz)
 
-The problem is / the opportunity is: bar. 
-
-Here's further context: baz
-
-Candidate approaches: (a) xxx, (b) yyy, and (c) zzz.
-
-We'll use approach (a or b or c).
+<Write background / motivation>
 
 ### TODOs / DoD
 
-Implement approach (a or b or c): xyz.
+- [ ] <item 1>
+- [ ] <item 2>
 
-Tasks:
-- [ ] aaa
-- [ ] bbb
-- [ ] ccc
+### Appendix: foo
 
-### Related github issues
-
-- [#mmm](https://github.com/oceanprotocol/pdr-backend/issues/mmm)
-- [#nnn](https://github.com/oceanprotocol/pdr-backend/issues/nnn)
+Bar
