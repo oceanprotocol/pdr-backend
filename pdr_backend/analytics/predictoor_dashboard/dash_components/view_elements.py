@@ -1,5 +1,5 @@
 import dash_bootstrap_components as dbc
-from dash import dcc, html, dash_table
+from dash import dash_table, dcc, html
 
 
 def get_input_column():
@@ -129,16 +129,10 @@ def get_metric(label, value, value_id):
 def get_layout():
     return html.Div(
         [
-            dcc.Store(id="data-folder"),
-            dcc.Store(id="feeds-data"),
-            dcc.Store(id="predictoors-data"),
             dcc.Store(id="user-payout-stats"),
             html.H1(
                 "Predictoor dashboard",
                 id="page_title",
-            ),
-            html.Div(
-                id="error-message",
             ),
             dcc.Loading(
                 id="loading",
