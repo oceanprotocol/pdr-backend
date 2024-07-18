@@ -31,7 +31,7 @@ def _test_analytics_app():
     return app
 
 
-def test_get_input_data_from_db(
+def test_startup(
     tmpdir,
     _sample_daily_predictions,
     _sample_payouts_related_with_predictions,

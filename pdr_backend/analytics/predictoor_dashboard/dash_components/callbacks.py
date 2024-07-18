@@ -28,16 +28,15 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 def get_callbacks(app):
     @app.callback(
         [
-            Output("error-message", "children"),
             Output("show-favourite-addresses", "value"),
             Output("is-loading", "value"),
         ],
         Input("is-loading", "value"),
     )
     # pylint: disable=unused-argument
-    def get_input_data_from_db(is_loading):
+    def startup(is_loading):
         show_favourite_addresses = True if app.favourite_addresses else []
-        return None, show_favourite_addresses, 0
+        return show_favourite_addresses, 0
 
     @app.callback(
         Output("accuracy_chart", "children"),

@@ -30,9 +30,17 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
         webbrowser.open(f"http://127.0.0.1:{port}/")
     folder = ppss.lake_ss.lake_dir
     app.lake_dir = folder
-    app.feeds_data = get_feeds_data_from_db(folder)
-    app.predictoors_data = get_predictoors_data_from_payouts(
-        get_user_payouts_stats_from_db(folder)
-    )
+    try:
+        app.feeds_data = get_feeds_data_from_db(folder)
+        app.predictoors_data = get_predictoors_data_from_payouts(
+            get_user_payouts_stats_from_db(folder)
+        )
+    except Exception as e:
+        print(
+            f"""ERROR: Please make sure there is data in the lake.
+            Full error: {e}"""
+        )
+        return
+
     app.favourite_addresses = ppss.predictoor_ss.my_addresses
     app.run(debug=debug_mode, port=port)

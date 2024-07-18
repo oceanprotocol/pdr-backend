@@ -129,15 +129,10 @@ def get_metric(label, value, value_id):
 def get_layout():
     return html.Div(
         [
-            dcc.Store(id="feeds-data"),
-            dcc.Store(id="predictoors-data"),
             dcc.Store(id="user-payout-stats"),
             html.H1(
                 "Predictoor dashboard",
                 id="page_title",
-            ),
-            html.Div(
-                id="error-message",
             ),
             dcc.Loading(
                 id="loading",
