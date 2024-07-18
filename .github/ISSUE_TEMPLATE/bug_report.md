@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 ---
 name: Bug report
 about: Create a report to help us improve
-title: [Component name] Problem to solve, maybe how
+title: [Component name] Undesired behavior observed, maybe the culprit
 labels: 'Type: Bug'
 assignees: ''
 
@@ -15,11 +15,14 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 ### To Reproduce
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+Steps to reproduce:
+1. Run "pytest pdr_backend/foo/test_bar.py"
+2. See it fail
+
+Or:
+1. Change my_ppss.yaml to have setting "x=y"
+2. Run "pdr sim my_ppss.yaml"
+3. See it fail
 
 ### Expected behavior
 A clear and concise description of what you expected to happen.
@@ -30,12 +33,6 @@ If applicable, add screenshots to help explain your problem.
 ### Desktop (please complete the following information):
  - OS: [e.g. iOS]
  - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
-
-### Smartphone (please complete the following information):
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
  - Version [e.g. 22]
 
 ### Additional context
