@@ -1,4 +1,7 @@
+import time
+
 from enforce_typing import enforce_types
+from selenium.webdriver.common.keys import Keys
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.ppss.ppss import mock_ppss
@@ -33,3 +36,11 @@ def _clear_test_db(directory: str):
     db.drop_table(Payout.get_lake_table_name())
     db.drop_table(Prediction.get_lake_table_name())
     db.duckdb_conn.close()
+
+
+def _input_action(dash_duo, input_id, table_id, input_value, expected_rows):
+    search_input = dash_duo.find_element(input_id)
+    search_input.clear()
+    search_input.send_keys(input_value + Keys.ENTER)
+    time.sleep(2)
+    assert len(dash_duo.find_elements(f"{table_id} tbody tr")) == expected_rows
