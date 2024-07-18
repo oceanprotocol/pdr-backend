@@ -1,20 +1,42 @@
-Title: 
-[Component name] Problem to solve, maybe how
+<!--
+Copyright 2024 Ocean Protocol Foundation
+SPDX-License-Identifier: Apache-2.0
+-->
+---
+name: Bug report
+about: Create a report to help us improve
+title: [Component name] Problem to solve, maybe how
+labels: 'Type: Bug'
+assignees: ''
 
+---
 
+### Describe the bug
+A clear and concise description of what the bug is.
 
-Body:
-### Background / motivation
+### To Reproduce
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
 
-(Optional) link to epic: [#xyz](https://github.com/oceanprotocol/pdr-backend/issues/xyz)
+### Expected behavior
+A clear and concise description of what you expected to happen.
 
-<Write background / motivation>
+### Screenshots
+If applicable, add screenshots to help explain your problem.
 
-### TODOs
+### Desktop (please complete the following information):
+ - OS: [e.g. iOS]
+ - Browser [e.g. chrome, safari]
+ - Version [e.g. 22]
 
-- [ ] <item 1>
-- [ ] <item 2>
+### Smartphone (please complete the following information):
+ - Device: [e.g. iPhone6]
+ - OS: [e.g. iOS8.1]
+ - Browser [e.g. stock browser, safari]
+ - Version [e.g. 22]
 
-### Appendix: foo
-
-Bar
+### Additional context
+Add any other context about the problem here.

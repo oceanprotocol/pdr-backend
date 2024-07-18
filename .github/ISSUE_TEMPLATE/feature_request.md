@@ -1,16 +1,23 @@
-Title: 
-[Component name] Problem to solve, maybe how
+<!--
+Copyright 2024 Ocean Protocol Foundation
+SPDX-License-Identifier: Apache-2.0
+-->
+---
+name: Enhancement
+about: 'Solve a specific problem'
+title: '[Component name] Problem to solve, maybe how'
+labels: 'Type: Enhancement'
+assignees: ''
 
+---
 
-
-Body:
 ### Background / motivation
 
 (Optional) link to epic: [#xyz](https://github.com/oceanprotocol/pdr-backend/issues/xyz)
 
 <Write background / motivation>
 
-### TODOs
+### TODOs / DoD
 
 - [ ] <item 1>
 - [ ] <item 2>
