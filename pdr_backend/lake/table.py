@@ -29,10 +29,10 @@ class TableType(Enum):
 def is_etl_table(table_name: str) -> bool:
     table_name = table_name.removeprefix("_")
     table_name = table_name.removeprefix("temp_")
-    
-    for prefix in [TableType]: 
+
+    for prefix in [TableType]:
         table_name = table_name.removeprefix(prefix.lower() + "_")
-        
+
     return (
         table_name.startswith("bronze_")
         or table_name.startswith("silver_")
