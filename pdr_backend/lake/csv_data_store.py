@@ -311,14 +311,9 @@ class CSVDataStore:
         @returns:
             pl.DataFrame - data read from the csv file
         """
-<<<<<<< HEAD
         data = self.read_all(
             schema=schema, filters={"from": start_time, "to": end_time}
         )
-=======
-        data = self.read_all(schema=schema)
-
->>>>>>> 9dff3eb (updating tests to improve coverage/tests/validations)
         # if the data is empty, return
         if len(data) == 0:
             return data
