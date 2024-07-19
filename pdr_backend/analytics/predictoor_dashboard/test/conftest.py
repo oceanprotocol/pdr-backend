@@ -17,6 +17,9 @@ from pdr_backend.analytics.predictoor_dashboard.test.resources import (
     _prepare_test_db,
     _clear_test_db,
 )
+from pdr_backend.analytics.predictoor_dashboard.predictoor_dash import (
+    setup_app as setup_app_main,
+)
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 
@@ -116,13 +119,7 @@ def setup_app(
     """
 
     app.layout = get_layout()
-    app.lake_dir = ppss.lake_ss.lake_dir
-    app.feeds_data = get_feeds_data_from_db(ppss.lake_ss.lake_dir)
-    app.predictoors_data = get_predictoors_data_from_payouts(
-        get_user_payouts_stats_from_db(ppss.lake_ss.lake_dir)
-    )
-    app.favourite_addresses = ppss.predictoor_ss.my_addresses
+    setup_app_main(app, ppss)
     get_callbacks(app)
-    app.favourite_addresses = ppss.predictoor_ss.my_addresses
 
     return app
