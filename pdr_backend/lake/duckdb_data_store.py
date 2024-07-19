@@ -164,6 +164,47 @@ class _StoreCRUD:
             self.insert_from_df(df, table_name)
 
     @enforce_types
+    def move_table_data(self, from_table, to_table):
+        """
+        Move the table data from one table to another.
+        @arguments:
+            from_table - where we'll be taking data from
+            to_table - wehere we'll be inserting data
+        @example:
+            move_table_data("temp_people", "people")
+        """
+
+        # Check if the table exists
+        move_table_query = self.get_query_move_table_data(from_table, to_table)
+        self.execute_sql(move_table_query)
+
+    @enforce_types
+    def update_data(self, df: pl.DataFrame, table_name: str, column_name: str):
+        """
+        Update the table with the provided DataFrame.
+        @arguments:
+            df - The Polars DataFrame to update.
+            table_name - A unique name for the table.
+            column_name - The column to use as the index for the update.
+        @example:
+            df = pl.DataFrame({
+                "id": [1, 2, 3],
+                "name": ["John", "Jane", "Doe"],
+                "age": [25, 30, 35]
+            })
+            update_data(df, "people", "id")
+        """
+
+        update_columns = ", ".join(
+            [f"{column} = {df[column]}" for column in df.columns]
+        )
+        self.execute_sql(
+            f"""UPDATE {table_name}
+            SET {update_columns}
+            WHERE {column_name} = {df[column_name]}"""
+        )
+
+    @enforce_types
     def drop_table(self, table_name: str):
         """
         Drop the table.
@@ -261,7 +302,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
 
         # Return the query string
         return f"""
-        DELETE FROM {drop_table_name} 
+        DELETE FROM {drop_table_name}
         WHERE ID IN (
             SELECT DISTINCT ID 
             FROM {ref_table_name}
@@ -307,65 +348,6 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         # Move the data from the temporary table to the permanent table
         return (
             f"INSERT INTO {to_table.table_name} SELECT * FROM {from_table.table_name};"
-        )
-
-    @enforce_types
-    def move_table_data(self, from_table, to_table):
-        """
-        Move the table data from the temporary storage to the permanent storage.
-        @arguments:
-            from_table - where we'll be taking data from
-            to_table - wehere we'll be inserting data
-        @example:
-            move_table_data("temp_people", "people")
-        """
-
-        # Check if the table exists
-        move_table_query = self.get_query_move_table_data(from_table, to_table)
-        self.execute_sql(move_table_query)
-
-    @enforce_types
-    def fill_table_from_csv(self, table_name: str, csv_folder_path: str):
-        """
-        Insert to table from CSV files.
-        @arguments:
-            table_name - A unique name for the table.
-            csv_folder_path - The path to the folder containing the CSV files.
-        @example:
-            fill_table_from_csv("data/csv", "people")
-        """
-
-        csv_files = glob.glob(os.path.join(csv_folder_path, "*.csv"))
-
-        logger.info("csv_files %s", csv_files)
-        for csv_file in csv_files:
-            df = pl.read_csv(csv_file)
-            self.insert_to_table(df, table_name)
-
-    @enforce_types
-    def update_data(self, df: pl.DataFrame, table_name: str, column_name: str):
-        """
-        Update the table with the provided DataFrame.
-        @arguments:
-            df - The Polars DataFrame to update.
-            table_name - A unique name for the table.
-            column_name - The column to use as the index for the update.
-        @example:
-            df = pl.DataFrame({
-                "id": [1, 2, 3],
-                "name": ["John", "Jane", "Doe"],
-                "age": [25, 30, 35]
-            })
-            update_data(df, "people", "id")
-        """
-
-        update_columns = ", ".join(
-            [f"{column} = {df[column]}" for column in df.columns]
-        )
-        self.execute_sql(
-            f"""UPDATE {table_name}
-            SET {update_columns}
-            WHERE {column_name} = {df[column_name]}"""
         )
 
     @enforce_types

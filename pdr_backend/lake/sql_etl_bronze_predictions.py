@@ -10,6 +10,7 @@ from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 
 # pylint: disable=unused-argument
+# pylint: disable=line-too-long
 def _do_sql_bronze_predictions(
     db: DuckDBDataStore, st_ms: UnixTimeMs, fin_ms: UnixTimeMs, first_run: bool = False
 ) -> None:
@@ -64,7 +65,7 @@ def _do_sql_bronze_predictions(
         revenue = COALESCE({new_events_bronze_prediction_table.table_name}.revenue, u.revenue),
         payout = COALESCE({new_events_bronze_prediction_table.table_name}.payout, u.payout),
         last_event_timestamp = COALESCE(
-            {new_events_bronze_prediction_table.table_name}.last_event_timestamp, 
+            {new_events_bronze_prediction_table.table_name}.last_event_timestamp,
             u.last_event_timestamp
         )
     FROM _update as u
