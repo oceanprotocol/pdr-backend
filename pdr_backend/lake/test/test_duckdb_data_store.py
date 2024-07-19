@@ -233,7 +233,7 @@ def test_etl_view(tmpdir):
     other_df = pl.DataFrame(
         {"timestamp": ["2022-04-01", "2022-05-01", "2022-06-01"], "value": [40, 50, 60]}
     )
-    db.insert_from_df(other_df, TempTable(table_name).fullname)
+    db.insert_from_df(other_df, TempTable(table_name).table_name)
 
     # Assemble view query and create the view
     view_name = "_update"

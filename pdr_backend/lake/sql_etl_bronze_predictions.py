@@ -108,7 +108,7 @@ def _do_sql_bronze_predictions(
     DROP VIEW _update;
     """
 
-    db.create_table_if_not_exists(
+    db.create_empty(
         temp_update_bronze_prediction_table.table_name,
         BronzePrediction.get_lake_schema(),
     )
