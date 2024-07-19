@@ -86,8 +86,6 @@ def test_favorite_addresses_search_input(setup_app_with_favourite_addresses, das
     assert len(p_all) == 6
     assert len(p_sel) == 0
 
-    # TODO: clear all, select all
-
 
 def test_checkbox_selection(setup_app, dash_duo):
     """

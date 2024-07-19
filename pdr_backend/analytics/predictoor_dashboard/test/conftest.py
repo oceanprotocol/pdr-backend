@@ -23,12 +23,6 @@ from pdr_backend.analytics.predictoor_dashboard.predictoor_dash import (
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 
-from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
-    get_feeds_data_from_db,
-    get_predictoors_data_from_payouts,
-    get_user_payouts_stats_from_db,
-)
-
 
 @pytest.fixture()
 def _sample_first_predictions():
@@ -67,6 +61,8 @@ def pytest_setup_options():
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
+    # TODO: Check if this is necessary in CI
+    options.add_argument("--start-maximized")
 
     return options
 
