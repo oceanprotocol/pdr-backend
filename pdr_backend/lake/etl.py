@@ -100,7 +100,7 @@ class ETL:
 
             if not db.table_exists(update_events_table.table_name):
                 continue
-            
+
             # Insert new records into live tables
             # We don't know if the table exists or not, so get the query string
             temp_to_prod_query = db.get_query_move_table_data(
