@@ -34,15 +34,15 @@ After fetching the chain data locally into the lake, the next step is to read, p
 pdr dashboard ./my_ppss.yaml sapphire-mainnet
 ```
 
-This command will open a browser window where you can select predictors and feeds to visualize their performance.
+This command will open a browser window where you can select predictoors and feeds to visualize their performance.
 
 ## **How to use**
 
-By default, if ppss is not configured with predictoor addresses, the plots will be empty because no predictors or feeds are selected. Otherwise you will see stats on the provided predictoor addresses.
+By default, if ppss is not configured with predictoor addresses, the plots will be empty until at least one predictoor and feed are selected. Otherwise you will see stats on the provided predictoor addresses.
 
 After **selecting one or more predictors and feeds combinations** where predictions has been submitted, and the payout method called, the plots and metrics will be populated with the relevant data.
 
-You can then observe how your predictor bots or others have been performing on different feeds and even compare them.
+You can then observe how your predictoor bots or others have been performing on different feeds and even compare them.
 
 **IMPORTANT: Only predictions data where the payout method has been called are visible.**
 
@@ -59,7 +59,7 @@ Furthermore, you can select different periods of time for the data calculation, 
 
 ## **How to contribute**
 
-We are constantly looking for ways to improve the Predictoor dashboard to help predictors become more profitable and are open to suggestions and ideas.
+We are constantly looking for ways to improve the Predictoor dashboard to help predictoors become more profitable and are open to suggestions and ideas.
 
-If you are a predictor and want to help us improve this tool, [join our Discord channel](https://discord.gg/Tvqd7Z648H) and drop a message, or open a GitHub issue.
+If you are a predictoor and want to help us improve this tool, [join our Discord channel](https://discord.gg/Tvqd7Z648H) and drop a message, or open a GitHub issue.
 
