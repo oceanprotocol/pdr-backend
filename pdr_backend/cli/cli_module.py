@@ -91,6 +91,12 @@ def do_sim(args, nested_args=None):
         network="development",
         nested_override_args=nested_args,
     )
+    if not ppss.sim_ss.use_own_model:
+        ppss = PPSS(
+            yaml_filename=args.PPSS_FILE,
+            network="sapphire-mainnet",
+            nested_override_args=nested_args,
+        )
     feedset = ppss.predictoor_ss.predict_train_feedsets[0]
     if len(ppss.predictoor_ss.predict_train_feedsets) > 0:
         logger.warning("Multiple predict feeds provided, using the first one")
