@@ -40,6 +40,22 @@ def test_predictoors_search_input(setup_app, dash_duo):
     )
 
 
+def _feed_count(dash_duo):
+    feed_rows = dash_duo.find_elements("#feeds_table tbody tr input")
+    feed_selected_rows = dash_duo.find_elements("#feeds_table tbody tr input:checked")
+
+    return feed_rows, feed_selected_rows
+
+
+def _predictoor_count(dash_duo):
+    predictoors_rows = dash_duo.find_elements("#predictoors_table tbody tr")
+    predictoors_selected_rows = dash_duo.find_elements(
+        "#predictoors_table tbody tr input:checked"
+    )
+
+    return predictoors_rows, predictoors_selected_rows
+
+
 def test_favorite_addresses_search_input(setup_app_with_favourite_addresses, dash_duo):
     app = setup_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
@@ -48,26 +64,29 @@ def test_favorite_addresses_search_input(setup_app_with_favourite_addresses, das
     all_feeds_toggle = dash_duo.find_element("#toggle-switch-predictoor-feeds")
 
     # default startup: one predictoor selected out of 6
-    # and one feed selected out of 6 (ADA/USDT)
-    predictoors_rows = dash_duo.find_elements("#predictoors_table tbody tr")
-    predictoors_selected_rows = dash_duo.find_elements(
-        "#predictoors_table tbody tr input:checked"
-    )
-    assert len(predictoors_rows) == 6
-    assert len(predictoors_selected_rows) == 1
+    # and its single feed selected out of 5 total (ADA/USDT)
+    p_all, p_sel = _predictoor_count(dash_duo)
+    assert len(p_all) == 6
+    assert len(p_sel) == 1
+    f_all, f_sel = _feed_count(dash_duo)
+    assert len(f_all) == 1
+    assert len(f_sel) == 1
 
-    feed_rows = dash_duo.find_elements("#feeds_table tr input:checked")
-    feed_selected_rows = dash_duo.find_elements("#feeds_table tbody tr input:checked")
-    assert len(feed_selected_rows) == 1
-    assert len(feed_rows) == 1
-
+    # click on all feeds toggle to show all feeds
     all_feeds_toggle.click()
     time.sleep(2)
-    feed_rows = dash_duo.find_elements("#feeds_table tr input:checked")
-    feed_selected_rows = dash_duo.find_elements("#feeds_table tbody tr input:checked")
-    assert len(feed_selected_rows) == 1
+    f_all, f_sel = _feed_count(dash_duo)
+    assert len(f_all) == 5
+    assert len(f_sel) == 1
 
-    # TODO: more cases, separate predictoor and feed selection with duo
+    # click on fav addr toggle to show all predictoors
+    fav_addr_toggle.click()
+    time.sleep(2)
+    p_all, p_sel = _predictoor_count(dash_duo)
+    assert len(p_all) == 6
+    assert len(p_sel) == 0
+
+    # TODO: clear all, select all
 
 
 def test_checkbox_selection(setup_app, dash_duo):

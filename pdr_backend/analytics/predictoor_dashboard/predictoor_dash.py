@@ -20,7 +20,6 @@ from pdr_backend.ppss.ppss import PPSS
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.config["suppress_callback_exceptions"] = True
 app.layout = get_layout()
-get_callbacks(app)
 
 
 @enforce_types
