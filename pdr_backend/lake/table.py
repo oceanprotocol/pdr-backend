@@ -31,7 +31,7 @@ def is_etl_table(table_name: str) -> bool:
     table_name = table_name.removeprefix("temp_")
 
     for prefix in [TableType]:
-        table_name = table_name.removeprefix(prefix.lower() + "_")
+        table_name = table_name.removeprefix(str(prefix).lower() + "_")
 
     return (
         table_name.startswith("bronze_")
