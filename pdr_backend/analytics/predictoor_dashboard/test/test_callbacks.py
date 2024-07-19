@@ -40,6 +40,35 @@ def test_predictoors_search_input(setup_app, dash_duo):
     )
 
 
+def test_favorite_addresses_search_input(setup_app_with_favourite_addresses, dash_duo):
+    app = setup_app_with_favourite_addresses
+    start_server_and_wait(dash_duo, app)
+
+    fav_addr_toggle = dash_duo.find_element("#show-favourite-addresses")
+    all_feeds_toggle = dash_duo.find_element("#toggle-switch-predictoor-feeds")
+
+    # default startup: one predictoor selected out of 6
+    # and one feed selected out of 6 (ADA/USDT)
+    predictoors_rows = dash_duo.find_elements("#predictoors_table tbody tr")
+    predictoors_selected_rows = dash_duo.find_elements(
+        "#predictoors_table tbody tr input:checked"
+    )
+    assert len(predictoors_rows) == 6
+    assert len(predictoors_selected_rows) == 1
+
+    feed_rows = dash_duo.find_elements("#feeds_table tr input:checked")
+    feed_selected_rows = dash_duo.find_elements("#feeds_table tbody tr input:checked")
+    assert len(feed_selected_rows) == 1
+    assert len(feed_rows) == 1
+
+    # TODO: fails in resizing issues
+    all_feeds_toggle.click()
+    feed_rows = dash_duo.find_elements("#feeds_table tr input:checked")
+    feed_selected_rows = dash_duo.find_elements("#feeds_table tbody tr input:checked")
+    assert len(feed_selected_rows) == 1
+    assert len(feed_rows) == 6
+
+
 def test_checkbox_selection(setup_app, dash_duo):
     """
     Test the selection of checkboxes in the "Feeds" and "Predictoors" tables.

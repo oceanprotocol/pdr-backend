@@ -66,30 +66,12 @@ def pytest_setup_options():
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
+    options.add_argument("--start-maximized")
+
     return options
 
 
-@pytest.fixture
-def setup_app(
-    tmpdir, _sample_daily_predictions, _sample_payouts_related_with_predictions
-):
-    _clear_test_db(str(tmpdir))
-
-    _prepare_test_db(
-        tmpdir,
-        _sample_payouts_related_with_predictions,
-        table_name=Payout.get_lake_table_name(),
-    )
-
-    ppss, _ = _prepare_test_db(
-        tmpdir,
-        _sample_daily_predictions,
-        table_name=Prediction.get_lake_table_name(),
-    )
-
-    app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-    app.config["suppress_callback_exceptions"] = True
-
+def _add_css(app):
     style_css = ""
     # read the styles.css file and add it to the assets folder
     # Read the styles.css file
@@ -118,6 +100,62 @@ def setup_app(
     </html>
     """
 
+    return app
+
+
+@pytest.fixture
+def setup_app(
+    tmpdir, _sample_daily_predictions, _sample_payouts_related_with_predictions
+):
+    _clear_test_db(str(tmpdir))
+
+    _prepare_test_db(
+        tmpdir,
+        _sample_payouts_related_with_predictions,
+        table_name=Payout.get_lake_table_name(),
+    )
+
+    ppss, _ = _prepare_test_db(
+        tmpdir,
+        _sample_daily_predictions,
+        table_name=Prediction.get_lake_table_name(),
+    )
+
+    app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+    app.config["suppress_callback_exceptions"] = True
+
+    app = _add_css(app)
+    app.layout = get_layout()
+
+    setup_app_main(app, ppss)
+    get_callbacks(app)
+
+    return app
+
+
+@pytest.fixture
+def setup_app_with_favourite_addresses(
+    tmpdir, _sample_daily_predictions, _sample_payouts_related_with_predictions
+):
+    _clear_test_db(str(tmpdir))
+
+    _prepare_test_db(
+        tmpdir,
+        _sample_payouts_related_with_predictions,
+        table_name=Payout.get_lake_table_name(),
+    )
+
+    ppss, _ = _prepare_test_db(
+        tmpdir,
+        _sample_daily_predictions,
+        table_name=Prediction.get_lake_table_name(),
+        my_addresses=["0x7149ceca72c61991018ed80788bea3f3f4540c3c"],
+    )
+
+    app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+    app.config["suppress_callback_exceptions"] = True
+
+    app = _add_css(app)
     app.layout = get_layout()
     setup_app_main(app, ppss)
     get_callbacks(app)

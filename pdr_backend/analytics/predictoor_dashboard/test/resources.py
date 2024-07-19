@@ -10,11 +10,12 @@ from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.payout import Payout
 
 
-def _prepare_test_db(tmpdir, sample_data, table_name):
+def _prepare_test_db(tmpdir, sample_data, table_name, my_addresses=None):
     ppss = mock_ppss(
         [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         str(tmpdir),
+        my_addresses=my_addresses if my_addresses else [],
     )
 
     db = DuckDBDataStore(str(ppss.lake_ss.lake_dir))
