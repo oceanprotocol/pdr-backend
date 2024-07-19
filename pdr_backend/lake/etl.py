@@ -98,41 +98,43 @@ class ETL:
             update_events_table = UpdateEventsTable.from_dataclass(table)
             temp_update_table = TempUpdateTable.from_dataclass(table)
 
-            if db.table_exists(update_events_table.table_name):
-                # Insert new records into live tables
-                # We don't know if the table exists or not, so get the query string
-                temp_to_prod_query = db.get_query_move_table_data(
-                    new_events_table, prod_table
+            if not db.table_exists(update_events_table.table_name):
+                continue
+            
+            # Insert new records into live tables
+            # We don't know if the table exists or not, so get the query string
+            temp_to_prod_query = db.get_query_move_table_data(
+                new_events_table, prod_table
+            )
+
+            # We'll also get the query string from the helper
+            drop_records_from_table_by_id_query = (
+                db.get_query_drop_records_from_table_by_id(
+                    prod_table.table_name, temp_update_table.table_name
                 )
+            )
 
-                # We'll also get the query string from the helper
-                drop_records_from_table_by_id_query = (
-                    db.get_query_drop_records_from_table_by_id(
-                        prod_table.table_name, temp_update_table.table_name
-                    )
-                )
+            # Here, the table needs to exist. So we'll build our own insert statement.
+            temp_update_to_prod_query = f"""
+            INSERT INTO {prod_table.table_name} SELECT * FROM {temp_update_table.table_name};
+            """
 
-                # Here, the table needs to exist. So we'll build our own insert statement.
-                temp_update_to_prod_query = f"""
-                INSERT INTO {prod_table.table_name} SELECT * FROM {temp_update_table.table_name};
-                """
+            # We then need to drop the rows after all the ETL is complete
+            cleanup_query = f"""
+            DROP TABLE IF EXISTS {new_events_table.table_name};
+            DROP TABLE IF EXISTS {update_events_table.table_name};
+            DROP TABLE IF EXISTS {temp_update_table.table_name};
+            """
 
-                # We then need to drop the rows after all the ETL is complete
-                cleanup_query = f"""
-                DROP TABLE IF EXISTS {new_events_table.table_name};
-                DROP TABLE IF EXISTS {update_events_table.table_name};
-                DROP TABLE IF EXISTS {temp_update_table.table_name};
-                """
+            # Assemble and execute final transaction
+            final_query = f"""
+            {temp_to_prod_query}
+            {drop_records_from_table_by_id_query}
+            {temp_update_to_prod_query}
+            {cleanup_query}
+            """
 
-                # Assemble and execute final transaction
-                final_query = f"""
-                {temp_to_prod_query}
-                {drop_records_from_table_by_id_query}
-                {temp_update_to_prod_query}
-                {cleanup_query}
-                """
-
-                db.execute_sql(final_query)
+            db.execute_sql(final_query)
 
     def do_etl(self):
         """
