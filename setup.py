@@ -34,7 +34,7 @@ install_requirements = [
     "pyarrow==17.0.0",
     "pylint==3.2.5",
     "pytest",
-    "pytest-asyncio==0.21.1",
+    "pytest-asyncio==0.23.8",
     "pytest-env",
     "pyyaml",
     "requests==2.32.3",
