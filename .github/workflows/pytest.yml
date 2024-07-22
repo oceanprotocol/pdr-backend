@@ -56,4 +56,4 @@ jobs:
       - name: Test with pytest
         id: pytest
         run: |
-          pytest pdr_backend/lake/test/test_duckdb_data_store.py --verbose
+          pytest pdr_backend --verbose
