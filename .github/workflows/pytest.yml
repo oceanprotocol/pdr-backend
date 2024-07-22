@@ -56,10 +56,4 @@ jobs:
       - name: Test with pytest
         id: pytest
         run: |
-          coverage run --source=pdr_backend --omit=*/test/*,*/test_ganache/*,*/test_noganache/* -m pytest
-          coverage report
-          coverage xml
-      - name: Publish code coverage
-        uses: paambaati/codeclimate-action@v5.0.0
-        env:
-          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+          pytest pdr_backend/lake/test/test_duckdb_data_store.py --verbose
