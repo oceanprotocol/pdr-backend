@@ -86,7 +86,7 @@ def create_figure(
         bargap=0.1,
         barmode="stack",
         legend=legend_config,
-        yaxis=dict(range=yaxis_range if yaxis_range else None, title=yaxis_title),
+        yaxis={"range": yaxis_range if yaxis_range else None, "title": yaxis_title},
     )
     return fig
 
