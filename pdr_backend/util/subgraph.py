@@ -342,7 +342,7 @@ def get_pending_slots(
 
             info = {}
             info["pair"] = contract["token"]["name"]
-            info["timeframe"] = "5m" if int(contract["secondsPerSubscription"]) == 300 else "1h"
+            info["timeframe"] = "5m" if int(contract["secondsPerEpoch"]) == 300 else "1h"
             info["source"] = "binance"
             assert info["pair"], "need a pair"
             assert info["timeframe"], "need a timeframe"
