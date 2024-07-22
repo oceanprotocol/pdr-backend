@@ -31,7 +31,7 @@ install_requirements = [
     "plotly==5.22.0",
     "polars==1.1.0",
     "polars[timezone]",
-    "pyarrow==16.1.0",
+    "pyarrow==17.0.0",
     "pylint==3.2.5",
     "pytest",
     "pytest-asyncio==0.21.1",
