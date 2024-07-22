@@ -1,0 +1,99 @@
+html, body, #root {
+    margin: 0;
+    height: 100vh;
+}
+
+body{
+    padding: 10px;
+}
+
+.main-container {
+    height: calc( 100vh - 105px );
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+#page_title {
+    width: 100%;
+    text-align: center;
+    padding-top: 10px;
+    padding-bottom: 20px;
+}
+
+#error_message {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+#loading {
+    height: calc( 100vh - 105px );
+    width: 100%;
+}
+
+#predictoors_container .show-hide {
+    display: none;
+}
+
+/* Hide the default radio circle */
+#date-period-radio-items input[type="radio"] {
+    display: none;
+}
+
+button{
+    background-color: #007BFF !important;
+    color: white;
+}
+
+/* Style the label as buttons */
+#date-period-radio-items label {
+    display: inline-block;
+    padding: 5px 14px;
+    margin-right: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: 1px solid #007BFF;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Style for selected label */
+#date-period-radio-items label:has(input:checked) {
+    background-color: #00254d;
+    border-color: #0056b3;
+}
+
+.form-check-label, .form-switch{
+    margin: 0;
+}
+
+.wrap-with-gap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.table-title {    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.button-select-all {
+    border: 0;
+    min-width: 90px;
+    font-size: 15px;
+    background-color: #dedede;
+    border-radius: 3px;
+}
+
+.button-clear-all {
+    border: 0;
+    font-size: 15px;
+    background-color: #dedede;
+    border-radius: 3px;
+}

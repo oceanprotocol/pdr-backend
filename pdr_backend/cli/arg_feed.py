@@ -24,6 +24,7 @@ class ArgFeed:
         signal: Union[ArgSignal, str, None] = None,
         pair: Union[ArgPair, str, None] = None,
         timeframe: Optional[Union[ArgTimeframe, str]] = None,
+        contract: Optional[str] = None,
     ):
         if signal is not None:
             self.signal = ArgSignal(signal) if isinstance(signal, str) else signal
@@ -43,6 +44,8 @@ class ArgFeed:
             self.timeframe = ArgTimeframe(timeframe)
         else:
             self.timeframe = timeframe
+
+        self.contract = contract
 
     def __str__(self):
         feed_str = f"{self.exchange} {self.pair}"
