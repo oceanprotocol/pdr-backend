@@ -56,4 +56,4 @@ jobs:
       - name: Test with pytest
         id: pytest
         run: |
-          pytest pdr_backend --verbose
+          pytest pdr_backend --verbose -x
