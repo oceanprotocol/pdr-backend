@@ -325,60 +325,88 @@ def get_pending_slots(
             offset,
             chunk_size,
         )
-
         offset += chunk_size
-        try:
-            result = query_subgraph(subgraph_url, query)
-            if not "data" in result:
-                print("No data in result")
-                break
-            slot_list = result["data"]["predictSlots"]
-            if slot_list == []:
-                break
-            for slot in slot_list:
-                if slot["trueValues"] != []:
-                    continue
-
-                contract = slot["predictContract"]
-                info725 = contract["token"]["nft"]["nftData"]
-                info = info_from_725(info725)
-                assert info["pair"], "need a pair"
-                assert info["timeframe"], "need a timeframe"
-                assert info["source"], "need a source"
-
-                owner_id = contract["token"]["nft"]["owner"]["id"]
-                if owners and (owner_id not in owners):
-                    continue
-
-                if pair_filter and (info["pair"] not in pair_filter):
-                    continue
-
-                if timeframe_filter and (info["timeframe"] not in timeframe_filter):
-                    continue
-
-                if source_filter and (info["source"] not in source_filter):
-                    continue
-
-                feed = Feed(
-                    name=contract["token"]["name"],
-                    address=contract["id"],
-                    symbol=contract["token"]["symbol"],
-                    seconds_per_epoch=int(contract["secondsPerEpoch"]),
-                    seconds_per_subscription=int(contract["secondsPerSubscription"]),
-                    trueval_submit_timeout=int(contract["truevalSubmitTimeout"]),
-                    owner=contract["token"]["nft"]["owner"]["id"],
-                    pair=info["pair"],
-                    timeframe=info["timeframe"],
-                    source=info["source"],
-                )
-
-                slot_number = int(slot["slot"])
-                slot = Slot(slot_number, feed)
-                slots.append(slot)
-
-        except Exception as e:
-            print(e)
+        result = query_subgraph(subgraph_url, query)
+        if not "data" in result:
+            print("No data in result")
             break
+        slot_list = result["data"]["predictSlots"]
+        if slot_list == []:
+            break
+        for slot in slot_list:
+            if slot["trueValues"] != []:
+                continue
+
+            contract = slot["predictContract"]
+
+
+            info = {}
+            info["pair"] = contract["token"]["name"]
+            info["timeframe"] = "5m" if int(contract["secondsPerSubscription"]) == 300 else "1h"
+            info["source"] = "binance"
+            assert info["pair"], "need a pair"
+            assert info["timeframe"], "need a timeframe"
+            assert info["source"], "need a source"
+
+            whitelist = [
+            '0x18f54cc21b7a2fdd011bea06bba7801b280e3151',
+            '0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152',
+            '0x30f1c55e72fe105e4a1fbecdff3145fc14177695',
+            '0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd',
+            '0x3fb744c3702ff2237fc65f261046ead36656f3bc',
+            '0x55c6c33514f80b51a1f1b63c8ba229feb132cedb',
+            '0x74a61f733bd9a2ce40d2e39738fe4912925c06dd',
+            '0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553',
+            '0x93f9d558ccde9ea371a20d36bd3ba58c7218b48f',
+            '0x9c4a2406e5aa0f908d6e816e5318b9fc8a507e1f',
+            '0xa2d9dbbdf21c30bb3e63d16ba75f644ac11a0cf0',
+            '0xaa6515c138183303b89b98aea756b54f711710c5',
+            '0xb1c55346023dee4d8b0d7b10049f0c8854823766',
+            '0xbe09c6e3f2341a79f74898b8d68c4b5818a2d434',
+            '0xd41ffee162905b45b65fa6b6e4468599f0490065',
+            '0xd49cbfd694f4556c00023ddd3559c36af3ae0a80',
+            '0xe66421fd29fc2d27d0724f161f01b8cbdcd69690',
+            '0xf28c94c55d8c5e1d70ca3a82744225a4f7570b30',
+            '0xf8c34175fc1f1d373ec67c4fd1f1ce57c69c3fb3',
+            '0xfa69b2c1224cebb3b6a36fb5b8c3c419afab08dd'
+            ]
+
+            if contract["id"] not in whitelist:
+                print(contract["id"], "not in whitelist")
+                continue
+
+
+            owner_id = "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703"
+            if owners and (owner_id not in owners):
+                continue
+
+            if pair_filter and (info["pair"] not in pair_filter):
+                continue
+
+            if timeframe_filter and (info["timeframe"] not in timeframe_filter):
+                continue
+
+            if source_filter and (info["source"] not in source_filter):
+                continue
+
+            feed = Feed(
+                name=contract["token"]["name"],
+                address=contract["id"],
+                symbol=contract["token"]["symbol"],
+                seconds_per_epoch=int(contract["secondsPerEpoch"]),
+                seconds_per_subscription=int(contract["secondsPerSubscription"]),
+                trueval_submit_timeout=int(contract["truevalSubmitTimeout"]),
+                owner=owner_id,
+                pair=info["pair"],
+                timeframe=info["timeframe"],
+                source=info["source"],
+            )
+
+            slot_number = int(slot["slot"])
+            slot = Slot(slot_number, feed)
+            slots.append(slot)
+
+
 
     return slots
 
