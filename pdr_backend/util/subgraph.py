@@ -290,7 +290,7 @@ def get_pending_slots(
     while True:
         query = """
         {
-            predictSlots(where: {slot_gt: %s, slot_lte: %s, status: "Pending"}, skip:%s, first:%s, orderBy: slot, orderDirection: desc){
+            predictSlots(where: {slot_gt: %s, slot_lte: %s, status: "Pending"}, skip:%s, first:%s, orderBy: slot, orderDirection: asc){
                 id
                 slot
                 status
