@@ -277,7 +277,7 @@ def get_pending_slots(
     timeframe_filter: Optional[List[str]] = None,
     source_filter: Optional[List[str]] = None,
 ):
-    chunk_size = 1000
+    chunk_size = 100
     offset = 0
     owners: Optional[List[str]] = owner_addresses
 
@@ -290,7 +290,7 @@ def get_pending_slots(
     while True:
         query = """
         {
-            predictSlots(where: {slot_gt: %s, slot_lte: %s, status: "Pending"}, skip:%s, first:%s){
+            predictSlots(where: {slot_gt: %s, slot_lte: %s, status: "Pending"}, skip:%s, first:%s, orderBy: slot, orderDirection: desc){
                 id
                 slot
                 status
@@ -344,6 +344,7 @@ def get_pending_slots(
             info["pair"] = contract["token"]["name"]
             info["timeframe"] = "5m" if int(contract["secondsPerEpoch"]) == 300 else "1h"
             info["source"] = "binance"
+            print(info)
             assert info["pair"], "need a pair"
             assert info["timeframe"], "need a timeframe"
             assert info["source"], "need a source"
@@ -405,7 +406,7 @@ def get_pending_slots(
             slot_number = int(slot["slot"])
             slot = Slot(slot_number, feed)
             slots.append(slot)
-
+        break
 
 
     return slots
