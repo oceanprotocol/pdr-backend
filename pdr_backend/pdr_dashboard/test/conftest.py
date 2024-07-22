@@ -68,7 +68,7 @@ def _add_css(app):
     style_css = ""
     # read the styles.css file and add it to the assets folder
     # Read the styles.css file
-    with open("pdr_backend/analytics/predictoor_dashboard/assets/styles.css", "r") as f:
+    with open("pdr_backend/pdr_dashboard/assets/styles.css", "r") as f:
         style_css = f.read()
 
     # Manually link the CSS file by embedding its contents in a <style> tag
