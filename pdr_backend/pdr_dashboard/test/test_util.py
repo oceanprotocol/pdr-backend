@@ -2,7 +2,7 @@ from unittest.mock import patch, Mock
 import dash
 
 from enforce_typing import enforce_types
-from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
+from pdr_backend.pdr_dashboard.dash_components.util import (
     _query_db,
     get_feeds_data_from_db,
     get_predictoors_data_from_db,
@@ -12,7 +12,7 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_predictoors_data_from_payouts,
 )
 
-from pdr_backend.analytics.predictoor_dashboard.test.resources import (
+from pdr_backend.pdr_dashboard.test.resources import (
     _prepare_test_db,
     _clear_test_db,
 )
@@ -21,9 +21,7 @@ from pdr_backend.lake.payout import Payout
 
 
 @enforce_types
-@patch(
-    "pdr_backend.analytics.predictoor_dashboard.dash_components.util.DuckDBDataStore"
-)
+@patch("pdr_backend.pdr_dashboard.dash_components.util.DuckDBDataStore")
 def test_query_db(
     mock_duckdb_data_store,
 ):

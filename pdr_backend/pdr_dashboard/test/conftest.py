@@ -7,17 +7,17 @@ from selenium.webdriver.chrome.options import Options
 from pdr_backend.lake.payout import mock_payouts, mock_payouts_related_with_predictions
 from pdr_backend.lake.prediction import mock_daily_predictions, mock_first_predictions
 
-from pdr_backend.analytics.predictoor_dashboard.dash_components.callbacks import (
+from pdr_backend.pdr_dashboard.dash_components.callbacks import (
     get_callbacks,
 )
-from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
+from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_layout,
 )
-from pdr_backend.analytics.predictoor_dashboard.test.resources import (
+from pdr_backend.pdr_dashboard.test.resources import (
     _prepare_test_db,
     _clear_test_db,
 )
-from pdr_backend.analytics.predictoor_dashboard.predictoor_dash import (
+from pdr_backend.pdr_dashboard.predictoor_dash import (
     setup_app as setup_app_main,
 )
 from pdr_backend.lake.payout import Payout

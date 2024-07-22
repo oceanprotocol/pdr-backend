@@ -1,16 +1,18 @@
 import copy
 
 import dash
+
 from dash import Input, Output, State
 
-from pdr_backend.analytics.predictoor_dashboard.dash_components.app_constants import (
+from pdr_backend.pdr_dashboard.dash_components.app_constants import (
     PREDICTOOR_TABLE_COLUMNS,
     PREDICTOOR_TABLE_HIDDEN_COLUMNS,
 )
-from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
+from pdr_backend.pdr_dashboard.dash_components.plots import (
     get_figures_and_metrics,
 )
-from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
+
+from pdr_backend.pdr_dashboard.dash_components.util import (
     filter_objects_by_field,
     get_date_period_text,
     get_feed_ids_based_on_predictoors_from_db,
@@ -18,9 +20,10 @@ from pdr_backend.analytics.predictoor_dashboard.dash_components.util import (
     get_start_date_from_period,
     select_or_clear_all_by_table,
 )
-from pdr_backend.analytics.predictoor_dashboard.dash_components.view_elements import (
+from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_graph,
 )
+
 from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
