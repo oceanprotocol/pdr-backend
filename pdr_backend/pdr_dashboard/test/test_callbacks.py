@@ -121,19 +121,19 @@ def test_timeframe_metrics(setup_app, dash_duo):
     time.sleep(2)
 
     table_profit = dash_duo.find_element(
-        "#predictoors_table tbody tr:nth-child(3) td:nth-child(3)"
+        "#predictoors_table tbody tr:nth-child(2) td:nth-child(3)"
     ).text
     metric_profit = dash_duo.find_element("#profit_metric").text
     assert table_profit + " OCEAN" == metric_profit
 
     table_accuracy = dash_duo.find_element(
-        "#predictoors_table tbody tr:nth-child(3) td:nth-child(4)"
+        "#predictoors_table tbody tr:nth-child(2) td:nth-child(4)"
     ).text
     metric_accuracy = dash_duo.find_element("#accuracy_metric").text
     assert table_accuracy + ".0%" == metric_accuracy
 
     table_stake = dash_duo.find_element(
-        "#predictoors_table tbody tr:nth-child(3) td:nth-child(5)"
+        "#predictoors_table tbody tr:nth-child(2) td:nth-child(5)"
     ).text
     metric_stake = dash_duo.find_element("#stake_metric").text
     assert table_stake + " OCEAN" == metric_stake
