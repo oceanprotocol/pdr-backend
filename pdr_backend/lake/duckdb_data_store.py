@@ -288,7 +288,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             raise e
 
     @enforce_types
-    def get_query_drop_records_from_table_by_id(
+    def get_query_drop_common_records_by_id(
         self, drop_table_name: str, ref_table_name: str
     ):
         """
@@ -297,7 +297,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             drop_table_name - The table to drop records from.
             ref_table_name - The table to reference for the IDs to drop.
         @example:
-            get_query_drop_records_from_table_by_id("bronze_pdr_slots", "update_pdr_slots")
+            get_query_drop_common_records_by_id("bronze_pdr_slots", "update_pdr_slots")
         """
 
         # Return the query string
@@ -310,16 +310,16 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         """
 
     @enforce_types
-    def drop_records_from_table_by_id(self, drop_table_name: str, ref_table_name: str):
+    def drop_common_records_by_id(self, drop_table_name: str, ref_table_name: str):
         """
-        Drop the records from the table by the provided IDs.
+        Drp common records between two tables by ID
         @arguments:
-            table_name - A unique name for the table.
-            ids - The list of IDs to drop.
+            drop_table_name - The table to drop records from
+            ref_table_name - The table to reference for the IDs to drop
         @example:
-            drop_records_from_table_by_id("bronze_pdr_slots", "update_pdr_slots")
+            drop_common_records_by_id("bronze_pdr_slots", "update_pdr_slots")
         """
-        query = self.get_query_drop_records_from_table_by_id(
+        query = self.get_query_drop_common_records_by_id(
             drop_table_name, ref_table_name
         )
         self.execute_sql(query)
