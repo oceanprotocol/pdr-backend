@@ -29,7 +29,15 @@ def test_process_payouts(
 
     assert len(result) == 6
 
-    slots, accuracies, profits, stakes, correct_predictions, predictions = result
+    (
+        slots,
+        accuracies,
+        profits,
+        stakes,
+        correct_predictions,
+        predictions,
+        acc_intervals,
+    ) = result
 
     assert correct_predictions == 0
     assert predictions == 2
@@ -71,6 +79,12 @@ def test_process_payouts(
     # check if stakes are the same
     for i, stake in enumerate(stakes):
         assert stake == test_stakes[i]
+
+    assert len(acc_intervals) == len(test_stakes)
+
+    for i, acc_interval in enumerate(acc_intervals):
+        assert isinstance(acc_interval["acc_l"], float)
+        assert isinstance(acc_interval["acc_u"], float)
 
 
 class MockFigure:

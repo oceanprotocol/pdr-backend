@@ -3,6 +3,7 @@ from typing import List, Optional, Tuple, Union
 
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
+from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.util.time_types import UnixTimeS
@@ -17,9 +18,9 @@ def process_payouts(payouts: List[dict]) -> tuple:
         predictor (str): Predictor address.
         feed (str): Feed contract address.
     Returns:
-        tuple: Tuple of slots, accuracies, profits, and stakes.
+        tuple: Tuple of slots, accuracies, profits, stakes.
     """
-    slots, accuracies, profits, stakes = [], [], [], []
+    slots, accuracies, profits, stakes, acc_intervals = [[] for _ in range(5)]
     profit = predictions = correct_predictions = 0
 
     for p in payouts:
@@ -28,6 +29,14 @@ def process_payouts(payouts: List[dict]) -> tuple:
         profit += profit_change
         correct_predictions += p["payout"] > 0
 
+        acc_l, acc_u = proportion_confint(count=correct_predictions, nobs=predictions)
+
+        acc_intervals.append(
+            {
+                "acc_l": acc_l,
+                "acc_u": acc_u,
+            }
+        )
         slots.append(p["slot"])
         accuracies.append((correct_predictions / predictions) * 100)
         profits.append(profit)
@@ -44,6 +53,7 @@ def process_payouts(payouts: List[dict]) -> tuple:
         stakes,
         correct_predictions,
         predictions,
+        acc_intervals,
     )
 
 
@@ -158,9 +168,15 @@ def get_figures_and_metrics(
             p for p in payouts if predictor in p["ID"] and feed.contract in p["ID"]
         ]
 
-        slots, accuracies, profits, stakes, correct_predictions, predictions = (
-            process_payouts(filtered_payouts)
-        )
+        (
+            slots,
+            accuracies,
+            profits,
+            stakes,
+            correct_predictions,
+            predictions,
+            acc_intervals,
+        ) = process_payouts(filtered_payouts)
 
         if not slots:
             continue
@@ -172,9 +188,36 @@ def get_figures_and_metrics(
         total_profit = (profits[-1] + total_profit) if total_profit else profits[-1]
 
         short_name = f"{predictor[:5]} - {str(feed)}"
+
+        if len(predictoors) == 1 and len(feeds) == 1:
+
+            accuracy_scatters.append(
+                go.Scatter(
+                    x=slots,
+                    y=[acc["acc_l"] * 100 for acc in acc_intervals],
+                    mode="lines",
+                    name="accuracy_lowerbond",
+                    marker_color="#636EFA",
+                    showlegend=False,
+                )
+            )
+
+            accuracy_scatters.append(
+                go.Scatter(
+                    x=slots,
+                    y=[acc["acc_u"] * 100 for acc in acc_intervals],
+                    mode="lines",
+                    fill="tonexty",
+                    name="accuracy_upperbond",
+                    marker_color="#636EFA",
+                    showlegend=False,
+                )
+            )
+
         accuracy_scatters.append(
             go.Scatter(x=slots, y=accuracies, mode="lines", name=short_name)
         )
+
         profit_scatters.append(
             go.Scatter(x=slots, y=profits, mode="lines", name=short_name)
         )
