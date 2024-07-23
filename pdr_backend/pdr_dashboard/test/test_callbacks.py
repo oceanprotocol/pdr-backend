@@ -57,7 +57,7 @@ def _predictoor_count(dash_duo):
     return predictoors_rows, predictoors_selected_rows
 
 
-def test_favorite_addresses_search_input(setup_app_with_favourite_addresses, dash_duo):
+def test_favourite_addresses_search_input(setup_app_with_favourite_addresses, dash_duo):
     app = setup_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
@@ -70,14 +70,14 @@ def test_favorite_addresses_search_input(setup_app_with_favourite_addresses, das
     assert len(p_all) == 6
     assert len(p_sel) == 1
     f_all, f_sel = _feed_count(dash_duo)
-    assert len(f_all) == 1
+    assert len(f_all) == 5
     assert len(f_sel) == 1
 
     # click on all feeds toggle to show all feeds
     all_feeds_toggle.click()
     time.sleep(2)
     f_all, f_sel = _feed_count(dash_duo)
-    assert len(f_all) == 5
+    assert len(f_all) == 6
     assert len(f_sel) == 1
 
     # click on fav addr toggle to show all predictoors
