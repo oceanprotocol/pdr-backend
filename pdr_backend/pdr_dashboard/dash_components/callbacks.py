@@ -1,5 +1,3 @@
-import copy
-
 import dash
 
 from dash import Input, Output, State
@@ -29,18 +27,6 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 
 # pylint: disable=too-many-statements
 def get_callbacks(app):
-    @app.callback(
-        [
-            Output("show-favourite-addresses", "value"),
-            Output("is-loading", "value"),
-        ],
-        Input("is-loading", "value"),
-    )
-    # pylint: disable=unused-argument
-    def startup(is_loading):
-        show_favourite_addresses = True if app.favourite_addresses else []
-        return show_favourite_addresses, 0
-
     @app.callback(
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),
@@ -120,36 +106,6 @@ def get_callbacks(app):
         )
 
     @app.callback(
-        Output("feeds_table", "columns"),
-        Output("feeds_table", "data"),
-        Input("is-loading", "value"),
-    )
-    # pylint: disable=unused-argument
-    def create_feeds_table(is_loading):
-        if not app.feeds_data:
-            return dash.no_update
-
-        data = copy.deepcopy(app.feeds_data)
-        for feed in data:
-            del feed["contract"]
-
-        columns = [{"name": col, "id": col} for col in data[0].keys()]
-        return columns, data
-
-    @app.callback(
-        Output("predictoors_table", "columns"),
-        Output("predictoors_table", "data"),
-        Input("is-loading", "value"),
-    )
-    # pylint: disable=unused-argument
-    def create_predictoors_table(is_loading):
-        if not app.predictoors_data:
-            return dash.no_update
-        columns = [{"name": col, "id": col} for col in app.predictoors_data[0].keys()]
-
-        return columns, app.predictoors_data
-
-    @app.callback(
         Output("predictoors_table", "data", allow_duplicate=True),
         Output("predictoors_table", "selected_rows"),
         Output("predictoors_table", "columns", allow_duplicate=True),
@@ -192,12 +148,11 @@ def get_callbacks(app):
             filtered_data = filter_objects_by_field(
                 filtered_data, "user", search_value, selected_predictoors
             )
+        else:
+            filtered_data = [p for p in filtered_data if p not in selected_predictoors]
 
-        selected_predictoor_indices = [
-            i
-            for i, predictoor in enumerate(filtered_data)
-            if predictoor in selected_predictoors
-        ]
+        filtered_data = selected_predictoors + filtered_data
+        selected_predictoor_indices = list(range(len(selected_predictoors)))
 
         return (
             filtered_data,
@@ -210,7 +165,6 @@ def get_callbacks(app):
         Output("feeds_table", "data", allow_duplicate=True),
         Output("feeds_table", "selected_rows"),
         [
-            Input("is-loading", "value"),
             Input("search-input-Feeds", "value"),
             Input("feeds_table", "selected_rows"),
             Input("feeds_table", "data"),
@@ -222,7 +176,6 @@ def get_callbacks(app):
     )
     # pylint: disable=unused-argument
     def update_feeds_table_on_search(
-        is_loading,
         search_value,
         selected_rows,
         feeds_table,
@@ -255,15 +208,9 @@ def get_callbacks(app):
                 obj for obj in app.feeds_data if obj["contract"] in feed_ids
             ]
 
-        if (
-            app.favourite_addresses
-            and "is-loading.value" in dash.callback_context.triggered_prop_ids
-        ):
-            return filtered_data, list(range(len(filtered_data)))
+        filtered_data = selected_feeds + filtered_data
 
-        selected_feed_indices = [
-            i for i, feed in enumerate(filtered_data) if feed in selected_feeds
-        ]
+        selected_feed_indices = list(range(len(selected_feeds)))
 
         return filtered_data, selected_feed_indices
 
