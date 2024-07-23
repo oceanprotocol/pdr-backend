@@ -88,16 +88,14 @@ class Table:
 
     @property
     def table_name(self) -> str:
-        if self.table_type == TableType.NEW_EVENTS:
-            return f"_new_events_{self._base_table_name}"
-        if self.table_type == TableType.UPDATE_EVENTS:
-            return f"_update_events_{self._base_table_name}"
-        if self.table_type == TableType.TEMP:
-            return f"_temp_{self._base_table_name}"
-        if self.table_type == TableType.TEMP_UPDATE:
-            return f"_temp_update_{self._base_table_name}"
-
-        return self._base_table_name
+        table_type_mapping = {
+            TableType.NEW_EVENTS: "_new_events_",
+            TableType.UPDATE_EVENTS: "_update_events_",
+            TableType.TEMP: "_temp_",
+            TableType.TEMP_UPDATE: "_temp_update_",
+        }
+        
+        return table_type_mapping.get(self.table_type, "") + self._base_table_name
 
     @property
     def dataclass(self) -> Type[LakeMapper]:
