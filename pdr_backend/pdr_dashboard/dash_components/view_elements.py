@@ -44,9 +44,11 @@ def get_input_column(app):
             app.favourite_addresses,
         )
 
-        feed_data = [
-            feed for feed in app.feeds_data if feed["contract"] in feed_ids
-        ] + [feed for feed in app.feeds_data if feed["contract"] not in feed_ids]
+        if feed_ids:
+            feed_data = [
+                feed for feed in app.feeds_data if feed["contract"] in feed_ids
+            ]
+
         selected_feeds = list(range(len(feed_ids)))
     else:
         selected_feeds = []

@@ -70,7 +70,7 @@ def test_favourite_addresses_search_input(setup_app_with_favourite_addresses, da
     assert len(p_all) == 6
     assert len(p_sel) == 1
     f_all, f_sel = _feed_count(dash_duo)
-    assert len(f_all) == 5
+    assert len(f_all) == 1
     assert len(f_sel) == 1
 
     # click on all feeds toggle to show all feeds
