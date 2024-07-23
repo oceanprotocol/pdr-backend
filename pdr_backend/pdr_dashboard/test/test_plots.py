@@ -27,7 +27,7 @@ def test_process_payouts(
     filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
     result = process_payouts(filtered_payouts)
 
-    assert len(result) == 6
+    assert len(result) == 7
 
     (
         slots,
