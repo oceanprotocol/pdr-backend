@@ -158,7 +158,15 @@ def get_table(table_id, table_name, searchable_field, columns, data, default_sor
         [
             html.Div(
                 [
-                    html.Span(table_name, style={"fontSize": "20px"}),
+                    html.Div(
+                        [
+                            html.Span(table_name, style={"fontSize": "20px"}),
+                            html.Span(
+                                id=f"table-rows-count-{table_id}",
+                                style={"fontSize": "20px", "color": "gray"},
+                            ),
+                        ]
+                    ),
                     (
                         dbc.Switch(
                             id="toggle-switch-predictoor-feeds",
