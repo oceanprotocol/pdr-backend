@@ -43,6 +43,7 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
 
 @enforce_types
 def setup_app(app, ppss: PPSS):
+    app.web3_pp = ppss.web3_pp
     app.lake_dir = ppss.lake_ss.lake_dir
     app.feeds_data = get_feeds_data_from_db(ppss.lake_ss.lake_dir)
     app.predictoors_data = get_predictoors_data_from_payouts(

@@ -19,6 +19,7 @@ from pdr_backend.pdr_dashboard.dash_components.util import (
     get_payouts_from_db,
     get_start_date_from_period,
     select_or_clear_all_by_table,
+    calculate_gass_fee_costs,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_graph,
@@ -89,6 +90,10 @@ def get_callbacks(app):
                 start_date,
                 app.lake_dir,
             )
+
+        # get fee estimate
+        fee_cost = calculate_gass_fee_costs(app.web3_pp, feeds[0].contract)
+        print("fees", fee_cost)
 
         # get figures
         accuracy_fig, profit_fig, stakes_fig, avg_accuracy, total_profit, avg_stake = (
