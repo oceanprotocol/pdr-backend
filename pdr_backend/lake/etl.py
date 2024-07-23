@@ -108,8 +108,8 @@ class ETL:
             )
 
             # We'll also get the query string from the helper
-            drop_records_from_table_by_id_query = (
-                db.get_query_drop_records_from_table_by_id(
+            drop_common_records_by_id_query = (
+                db.get_query_drop_common_records_by_id(
                     prod_table.table_name, temp_update_table.table_name
                 )
             )
@@ -129,7 +129,7 @@ class ETL:
             # Assemble and execute final transaction
             final_query = f"""
             {temp_to_prod_query}
-            {drop_records_from_table_by_id_query}
+            {drop_common_records_by_id_query}
             {temp_update_to_prod_query}
             {cleanup_query}
             """
@@ -318,8 +318,6 @@ class ETL:
             st_timestamp == self.ppss.lake_ss.st_timestamp
             and fin_timestamp == self.ppss.lake_ss.fin_timestamp
         )
-
-        print(">>>> is_first_run", is_first_run)
 
         for etl_query in _ETL_REGISTERED_QUERIES:
             etl_query(

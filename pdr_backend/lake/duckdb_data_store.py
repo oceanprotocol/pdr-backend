@@ -310,21 +310,6 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         """
 
     @enforce_types
-    def drop_common_records_by_id(self, drop_table_name: str, ref_table_name: str):
-        """
-        Drp common records between two tables by ID
-        @arguments:
-            drop_table_name - The table to drop records from
-            ref_table_name - The table to reference for the IDs to drop
-        @example:
-            drop_common_records_by_id("bronze_pdr_slots", "update_pdr_slots")
-        """
-        query = self.get_query_drop_common_records_by_id(
-            drop_table_name, ref_table_name
-        )
-        self.execute_sql(query)
-
-    @enforce_types
     def get_query_move_table_data(self, from_table, to_table):
         """
         Builds the query string to perform the operation and returns it
