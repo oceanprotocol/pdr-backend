@@ -26,6 +26,7 @@ Main tools:
   pdr sim PPSS_FILE
   pdr sim_plots [--run_id RUN_ID] [--port PORT] [--debug_mode False]
   pdr predictoor PPSS_FILE NETWORK
+  pdr dashboard PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr claim_OCEAN PPSS_FILE
   pdr claim_ROSE PPSS_FILE
@@ -52,7 +53,7 @@ Power tools:
   pdr lake describe --HTML PPSS_FILE NETWORK
   pdr lake validate PPSS_FILE NETWORK
   pdr predictoor_dashboard PPSS_FILE NETWORK
-  
+
 Utilities:
   pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
   pdr get_predictions_info ST END PQDIR PPSS_FILE NETWORK --FEEDS
@@ -691,8 +692,8 @@ defined_parsers = {
     "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
     "do_sim_plots": SimPlotsArgParser("Visualize simulation data", "sim_plots"),
     "do_arima_plots": ArimaPlotsArgParser("Visualize ARIMA data", "arima_plots"),
-    "do_predictoor_dashboard": PredictoorDashboardArgParser(
-        "Visualize Predictoor data", "predictoor_dashboard"
+    "do_dashboard": PredictoorDashboardArgParser(
+        "Visualize Predictoor data", "dashboard"
     ),
 }
 

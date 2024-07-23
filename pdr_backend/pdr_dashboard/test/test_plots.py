@@ -2,12 +2,14 @@ from unittest.mock import patch
 
 from enforce_typing import enforce_types
 
-from pdr_backend.analytics.predictoor_dashboard.dash_components.plots import (
+from pdr_backend.pdr_dashboard.dash_components.plots import (
     process_payouts,
     create_figure,
-    get_figures,
+    get_figures_and_metrics,
 )
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.cli.arg_feed import ArgFeed
+from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
 @enforce_types
@@ -19,16 +21,18 @@ def test_process_payouts(
 
     user = "0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"
     feed = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
-    result = process_payouts(payouts, user, feed)
 
     ## filter payouts by user and feed
     filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
     filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
+    result = process_payouts(filtered_payouts)
 
-    assert len(result) == 4
+    assert len(result) == 6
 
-    slots, accuracies, profits, stakes = result
+    slots, accuracies, profits, stakes, correct_predictions, predictions = result
 
+    assert correct_predictions == 0
+    assert predictions == 2
     assert len(slots) == len(filtered_payouts)
     assert slots[0] == UnixTimeS(
         filtered_payouts[0]["slot"]
@@ -115,18 +119,25 @@ def test_create_figure():
 
 @enforce_types
 @patch("plotly.graph_objects.Figure", new=MockFigure)
-def test_get_figures(
+def test_get_figures_and_metrics(
     _sample_payouts,
 ):
     ## convert List[Payout] to List[dict]
     payouts = [p.__dict__ for p in _sample_payouts]
-    sample_feeds = [
-        {"contract": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151", "feed_name": "Feed1"}
-    ]
+    sample_feeds = ArgFeeds(
+        [
+            ArgFeed(
+                contract="b0x18f54cc21b7a2fdd011bea06bba7801b280e315",
+                pair="BTC/USDT",
+                exchange="binance",
+                timeframe="1h",
+            ),
+        ]
+    )
     sample_predictoors = ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"]
 
-    fig_accuracy, fig_profit, fig_costs = get_figures(
-        payouts, sample_feeds, sample_predictoors
+    fig_accuracy, fig_profit, fig_costs, avg_accuracy, total_profit, avg_stake = (
+        get_figures_and_metrics(payouts, sample_feeds, sample_predictoors)
     )
 
     # Check if figures are instances of MockFigure
@@ -150,3 +161,12 @@ def test_get_figures(
     assert fig_accuracy.update_layout_called == 1
     assert fig_profit.update_layout_called == 1
     assert fig_costs.update_layout_called == 1
+
+    # Check metrics
+    assert avg_accuracy is not None
+    assert total_profit is not None
+    assert avg_stake is not None
+
+    assert isinstance(avg_accuracy, float)
+    assert isinstance(total_profit, float)
+    assert isinstance(avg_stake, float)
