@@ -122,6 +122,7 @@ def get_callbacks(app):
     @app.callback(
         Output("feeds_table", "columns"),
         Output("feeds_table", "data"),
+        Output("table-rows-count-feeds_table", "children"),
         Input("is-loading", "value"),
     )
     # pylint: disable=unused-argument
@@ -134,11 +135,14 @@ def get_callbacks(app):
             del feed["contract"]
 
         columns = [{"name": col, "id": col} for col in data[0].keys()]
-        return columns, data
+
+        rows_text = f"({len(app.feeds_data)})"
+        return columns, data, rows_text
 
     @app.callback(
         Output("predictoors_table", "columns"),
         Output("predictoors_table", "data"),
+        Output("table-rows-count-predictoors_table", "children"),
         Input("is-loading", "value"),
     )
     # pylint: disable=unused-argument
@@ -147,7 +151,8 @@ def get_callbacks(app):
             return dash.no_update
         columns = [{"name": col, "id": col} for col in app.predictoors_data[0].keys()]
 
-        return columns, app.predictoors_data
+        rows_text = f"({len(app.predictoors_data)})"
+        return columns, app.predictoors_data, rows_text
 
     @app.callback(
         Output("predictoors_table", "data", allow_duplicate=True),
