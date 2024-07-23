@@ -75,19 +75,20 @@ def query_feed_contracts(
             if not contract_list:
                 break
             for contract in contract_list:
-                info725 = contract["token"]["nft"]["nftData"]
-                info = info725_to_info(info725)  # {"pair": "ETH/USDT", }
-
-                pair = info["pair"]
-                timeframe = info["timeframe"]
-                source = info["source"]
+                pair = contract['token']['name'].replace('/', '-')
+                timeframe = "5m" if contract["secondsPerSubscription"] == 300 else "1h"
+                source = "binance" # fix me
                 if None in (pair, timeframe, source):
                     continue
 
                 # filter out unwanted
-                owner_id = contract["token"]["nft"]["owner"]["id"]
-                if owners and (owner_id not in owners):
-                    continue
+                if not contract["token"]["nft"]:
+                    if not contract["id"] in whitelistopfmainnet:
+                        continue
+                else:
+                  owner_id = contract["token"]["nft"]["owner"]["id"]
+                  if owners and (owner_id not in owners):
+                      continue
 
                 # ok, add this one
                 feed = SubgraphFeed(
