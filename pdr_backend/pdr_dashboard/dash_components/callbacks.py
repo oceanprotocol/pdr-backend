@@ -45,6 +45,7 @@ def get_callbacks(app):
     @app.callback(
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),
+        Output("cost_chart", "children"),
         Output("stake_chart", "children"),
         Output("accuracy_metric", "children"),
         Output("profit_metric", "children"),
@@ -92,17 +93,18 @@ def get_callbacks(app):
             )
 
         # get fee estimate
-        fee_cost = calculate_gass_fee_costs(app.web3_pp, feeds[0].contract)
-        print("fees", fee_cost)
+        fee_cost = calculate_gass_fee_costs(app.web3_pp, feeds[0].contract, app.prices)
 
         # get figures
-        accuracy_fig, profit_fig, stakes_fig, avg_accuracy, total_profit, avg_stake = (
-            get_figures_and_metrics(
-                payouts,
-                feeds,
-                predictoors_addrs,
-            )
-        )
+        (
+            accuracy_fig,
+            profit_fig,
+            costs_fig,
+            stakes_fig,
+            avg_accuracy,
+            total_profit,
+            avg_stake,
+        ) = get_figures_and_metrics(payouts, feeds, predictoors_addrs, fee_cost)
 
         # get available period date text
         date_period_text = (
@@ -117,6 +119,7 @@ def get_callbacks(app):
         return (
             get_graph(accuracy_fig),
             get_graph(profit_fig),
+            get_graph(costs_fig),
             get_graph(stakes_fig),
             f"{round(avg_accuracy, 2)}%",
             f"{round(total_profit, 2)} OCEAN",

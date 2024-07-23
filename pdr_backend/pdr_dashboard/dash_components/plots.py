@@ -9,7 +9,7 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-def process_payouts(payouts: List[dict]) -> tuple:
+def process_payouts(payouts: List[dict], tx_fee_cost) -> tuple:
     """
     Process payouts data for a given predictor and feed.
     Args:
@@ -19,11 +19,13 @@ def process_payouts(payouts: List[dict]) -> tuple:
     Returns:
         tuple: Tuple of slots, accuracies, profits, and stakes.
     """
-    slots, accuracies, profits, stakes = [], [], [], []
+    slots, accuracies, profits, stakes, tx_costs = [], [], [], [], []
     profit = predictions = correct_predictions = 0
+    tx_cost = -tx_fee_cost
 
     for p in payouts:
         predictions += 1
+        tx_cost += tx_fee_cost
         profit_change = max(p["payout"], 0) - p["stake"]
         profit += profit_change
         correct_predictions += p["payout"] > 0
@@ -32,6 +34,7 @@ def process_payouts(payouts: List[dict]) -> tuple:
         accuracies.append((correct_predictions / predictions) * 100)
         profits.append(profit)
         stakes.append(p["stake"])
+        tx_costs.append(tx_cost)
 
     slot_in_date_format = [
         UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
@@ -41,6 +44,7 @@ def process_payouts(payouts: List[dict]) -> tuple:
         slot_in_date_format,
         accuracies,
         profits,
+        tx_costs,
         stakes,
         correct_predictions,
         predictions,
@@ -99,16 +103,25 @@ def _empty_profit_scatter() -> List[go.Scatter]:
     return [go.Scatter(x=[], y=[], mode="lines", name="profit")]
 
 
+def _empty_costs_bar() -> List[go.Bar]:
+    return [go.Scatter(x=[], y=[], name="costs", width=5)]
+
+
 def _empty_stakes_bar() -> List[go.Bar]:
     return [go.Bar(x=[], y=[], name="stakes", width=5)]
 
 
-def _empty_trio() -> Tuple[go.Figure, go.Figure, go.Figure]:
-    return _empty_accuracy_scatter(), _empty_profit_scatter(), _empty_stakes_bar()
+def _empty_trio() -> Tuple[go.Figure, go.Figure, go.Figure, go.Figure]:
+    return (
+        _empty_accuracy_scatter(),
+        _empty_profit_scatter(),
+        _empty_costs_bar(),
+        _empty_stakes_bar(),
+    )
 
 
-def _make_figures(fig_tup: Tuple) -> Tuple[go.Figure, go.Figure, go.Figure]:
-    accuracy_scatters, profit_scatters, stakes_scatters = fig_tup
+def _make_figures(fig_tup: Tuple) -> Tuple[go.Figure, go.Figure, go.Figure, go.Figure]:
+    accuracy_scatters, profit_scatters, stakes_scatters, costs_scatters = fig_tup
 
     fig_accuracy = create_figure(
         accuracy_scatters,
@@ -122,16 +135,22 @@ def _make_figures(fig_tup: Tuple) -> Tuple[go.Figure, go.Figure, go.Figure]:
     )
 
     fig_costs = create_figure(
-        stakes_scatters, title="Costs", yaxis_title="Stake(OCEAN)", show_legend=False
+        costs_scatters, title="Costs", yaxis_title="Fees(OCEAN)", show_legend=False
     )
 
-    return fig_accuracy, fig_profit, fig_costs
+    fig_stakes = create_figure(
+        stakes_scatters, title="Stakes", yaxis_title="Stake(OCEAN)", show_legend=False
+    )
+
+    return fig_accuracy, fig_profit, fig_costs, fig_stakes
 
 
 @enforce_types
 def get_figures_and_metrics(
-    payouts: Optional[List], feeds: ArgFeeds, predictoors: List[str]
-) -> Tuple[go.Figure, go.Figure, go.Figure, float | None, float | None, float | None]:
+    payouts: Optional[List], feeds: ArgFeeds, predictoors: List[str], fee_cost: float
+) -> Tuple[
+    go.Figure, go.Figure, go.Figure, go.Figure, float | None, float | None, float | None
+]:
     """
     Get figures for accuracy, profit, and costs.
     Args:
@@ -143,9 +162,9 @@ def get_figures_and_metrics(
     """
     if not payouts:
         figures = _make_figures(_empty_trio())
-        return figures[0], figures[1], figures[2], 0.0, 0.0, 0.0
+        return figures[0], figures[1], figures[2], figures[3], 0.0, 0.0, 0.0
 
-    accuracy_scatters, profit_scatters, stakes_scatters = [], [], []
+    accuracy_scatters, profit_scatters, stakes_scatters, costs_scatters = [], [], [], []
     avg_accuracy, total_profit, avg_stake = 0.0, 0.0, 0.0
 
     all_stakes = []
@@ -158,9 +177,15 @@ def get_figures_and_metrics(
             p for p in payouts if predictor in p["ID"] and feed.contract in p["ID"]
         ]
 
-        slots, accuracies, profits, stakes, correct_predictions, predictions = (
-            process_payouts(filtered_payouts)
-        )
+        (
+            slots,
+            accuracies,
+            profits,
+            tx_costs,
+            stakes,
+            correct_predictions,
+            predictions,
+        ) = process_payouts(filtered_payouts, tx_fee_cost=fee_cost)
 
         if not slots:
             continue
@@ -179,6 +204,9 @@ def get_figures_and_metrics(
             go.Scatter(x=slots, y=profits, mode="lines", name=short_name)
         )
         stakes_scatters.append(go.Bar(x=slots, y=stakes, name=short_name, width=5))
+        costs_scatters.append(
+            go.Scatter(x=slots, y=tx_costs, mode="lines", name=short_name)
+        )
 
     avg_stake = sum(all_stakes) / len(all_stakes) if all_stakes else 0.0
     avg_accuracy = (
@@ -194,5 +222,15 @@ def get_figures_and_metrics(
     if not stakes_scatters:
         stakes_scatters = _empty_stakes_bar()
 
-    figures = _make_figures((accuracy_scatters, profit_scatters, stakes_scatters))
-    return (figures[0], figures[1], figures[2], avg_accuracy, total_profit, avg_stake)
+    figures = _make_figures(
+        (accuracy_scatters, profit_scatters, stakes_scatters, costs_scatters)
+    )
+    return (
+        figures[0],
+        figures[1],
+        figures[2],
+        figures[3],
+        avg_accuracy,
+        total_profit,
+        avg_stake,
+    )

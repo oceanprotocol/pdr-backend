@@ -25,11 +25,12 @@ def test_process_payouts(
     ## filter payouts by user and feed
     filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
     filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
-    result = process_payouts(filtered_payouts)
+    tx_fee_cost = 0.2
+    result = process_payouts(filtered_payouts, tx_fee_cost)
 
-    assert len(result) == 6
+    assert len(result) == 7
 
-    slots, accuracies, profits, stakes, correct_predictions, predictions = result
+    slots, accuracies, profits, costs, stakes, correct_predictions, predictions = result
 
     assert correct_predictions == 0
     assert predictions == 2
@@ -135,31 +136,43 @@ def test_get_figures_and_metrics(
         ]
     )
     sample_predictoors = ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"]
+    fee_cost = 0.2
 
-    fig_accuracy, fig_profit, fig_costs, avg_accuracy, total_profit, avg_stake = (
-        get_figures_and_metrics(payouts, sample_feeds, sample_predictoors)
-    )
+    (
+        fig_accuracy,
+        fig_profit,
+        fig_costs,
+        fig_stakes,
+        avg_accuracy,
+        total_profit,
+        avg_stake,
+    ) = get_figures_and_metrics(payouts, sample_feeds, sample_predictoors, fee_cost)
 
     # Check if figures are instances of MockFigure
     assert isinstance(fig_accuracy, MockFigure)
     assert isinstance(fig_profit, MockFigure)
     assert isinstance(fig_costs, MockFigure)
+    assert isinstance(fig_stakes, MockFigure)
 
     # Check if the figures have the correct layout and data traces
     assert len(fig_accuracy.data_traces) == 1
     assert len(fig_profit.data_traces) == 1
     assert len(fig_costs.data_traces) == 1
+    assert len(fig_stakes.data_traces) == 1
 
     assert fig_accuracy.layout["title"] == "Accuracy"
     assert fig_profit.layout["title"] == "Profit"
     assert fig_costs.layout["title"] == "Costs"
+    assert fig_costs.layout["title"] == "Stakes"
 
     assert fig_accuracy.layout["yaxis"]["title"] == "Accuracy(%)"
     assert fig_profit.layout["yaxis"]["title"] == "Profit(OCEAN)"
+    assert fig_costs.layout["yaxis"]["title"] == "Fees(OCEAN)"
     assert fig_costs.layout["yaxis"]["title"] == "Stake(OCEAN)"
 
     assert fig_accuracy.update_layout_called == 1
     assert fig_profit.update_layout_called == 1
+    assert fig_costs.update_layout_called == 1
     assert fig_costs.update_layout_called == 1
 
     # Check metrics

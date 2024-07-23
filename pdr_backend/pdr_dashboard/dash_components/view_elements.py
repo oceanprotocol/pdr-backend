@@ -102,7 +102,17 @@ def get_graphs_column_plots_row():
         [
             html.Div(id="accuracy_chart"),
             html.Div(id="profit_chart"),
-            html.Div(id="stake_chart"),
+            html.Div(
+                [
+                    html.Div(id="cost_chart", style={"width": "48%"}),
+                    html.Div(id="stake_chart", style={"width": "48%"}),
+                ],
+                style={
+                    "width": "100%",
+                    "display": "flex",
+                    "justifyContent": "space-between",
+                },
+            ),
         ],
         id="plots_container",
         style={
