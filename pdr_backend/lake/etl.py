@@ -108,10 +108,8 @@ class ETL:
             )
 
             # We'll also get the query string from the helper
-            drop_common_records_by_id_query = (
-                db.get_query_drop_common_records_by_id(
-                    prod_table.table_name, temp_update_table.table_name
-                )
+            drop_common_records_by_id_query = db.get_query_drop_common_records_by_id(
+                prod_table.table_name, temp_update_table.table_name
             )
 
             # Here, the table needs to exist. So we'll build our own insert statement.

@@ -94,7 +94,7 @@ class Table:
             TableType.TEMP: "_temp_",
             TableType.TEMP_UPDATE: "_temp_update_",
         }
-        
+
         return table_type_mapping.get(self.table_type, "") + self._base_table_name
 
     @property

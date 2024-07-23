@@ -50,6 +50,55 @@ def do_lake_subcommand(args):
 
 # subcommands
 @enforce_types
+def do_lake_raw_update(_, ppss):
+    """
+    @description
+        This updates the raw lake data
+        1. All subgraph data will be fetched
+
+        Please use nested_args to control lake_ss
+        ie: st_timestr, fin_timestr, lake_dir
+    """
+    try:
+        gql_data_factory = GQLDataFactory(ppss)
+        gql_data_factory._update()
+    except Exception as e:
+        logger.error("Error updating raw lake data: %s", e)
+        print(e)
+
+
+@enforce_types
+def do_lake_etl_update(_, ppss):
+    """
+        @description
+            This runs all dependencies to build analytics
+            All raw, clean, and aggregate data will be generated
+            1. All subgraph data will be fetched
+            2. All analytic data will be built
+            3. Lake contains all required data
+            4. Dashboards read from lake
+    #
+            Please use nested_args to control lake_ss
+            ie: st_timestr, fin_timestr, lake_dir
+    """
+    gql_data_factory = GQLDataFactory(ppss)
+    etl = ETL(ppss, gql_data_factory)
+    etl.do_etl()
+
+
+@enforce_types
+def do_lake_raw_drop(args, ppss):
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
+    drop_tables_from_st(db, "raw", args.ST)
+
+
+@enforce_types
+def do_lake_etl_drop(args, ppss):
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
+    drop_tables_from_st(db, "etl", args.ST)
+
+
+@enforce_types
 def do_lake_describe(args, ppss):
     lake_info = LakeInfo(ppss, use_html=args.HTML)
     lake_info.run()
@@ -75,52 +124,3 @@ def do_lake_query(args, ppss):
     except Exception as e:
         logger.error("Error querying lake: %s", e)
         print(e)
-
-
-@enforce_types
-def do_lake_raw_drop(args, ppss):
-    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
-    drop_tables_from_st(db, "raw", args.ST)
-
-
-@enforce_types
-def do_lake_raw_update(_, ppss):
-    """
-    @description
-        This updates the raw lake data
-        1. All subgraph data will be fetched
-
-        Please use nested_args to control lake_ss
-        ie: st_timestr, fin_timestr, lake_dir
-    """
-    try:
-        gql_data_factory = GQLDataFactory(ppss)
-        gql_data_factory._update()
-    except Exception as e:
-        logger.error("Error updating raw lake data: %s", e)
-        print(e)
-
-
-@enforce_types
-def do_lake_etl_drop(args, ppss):
-    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
-    drop_tables_from_st(db, "etl", args.ST)
-
-
-@enforce_types
-def do_lake_etl_update(_, ppss):
-    """
-        @description
-            This runs all dependencies to build analytics
-            All raw, clean, and aggregate data will be generated
-            1. All subgraph data will be fetched
-            2. All analytic data will be built
-            3. Lake contains all required data
-            4. Dashboards read from lake
-    #
-            Please use nested_args to control lake_ss
-            ie: st_timestr, fin_timestr, lake_dir
-    """
-    gql_data_factory = GQLDataFactory(ppss)
-    etl = ETL(ppss, gql_data_factory)
-    etl.do_etl()
