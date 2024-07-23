@@ -63,6 +63,7 @@ def get_input_column(app):
                     columns=predictoor_cols,
                     selected_items=selected_predictoors,
                     data=predictoor_data,
+                    length=len(app.predictoors_data),
                 ),
                 id="predictoors_container",
             ),
@@ -74,6 +75,7 @@ def get_input_column(app):
                     columns=feed_cols,
                     data=feed_data,
                     selected_items=selected_feeds,
+                    length=len(app.feeds_data),
                 ),
                 id="feeds_container",
                 style={
@@ -207,12 +209,34 @@ def get_table(
     columns,
     data,
     selected_items=None,
+    length=0,
 ):
     return html.Div(
         [
             html.Div(
                 [
-                    html.Span(table_name, style={"fontSize": "20px"}),
+                    html.Div(
+                        [
+                            html.Span(
+                                table_name, style={"fontSize": "20px", "hight": "100%"}
+                            ),
+                            html.Span(
+                                id=f"table-rows-count-{table_id}",
+                                children=f"({length})",
+                                style={
+                                    "fontSize": "16px",
+                                    "color": "gray",
+                                    "hight": "100%",
+                                    "marginLeft": "4px",
+                                },
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "justifyContet": "center",
+                            "alignItems": "center",
+                        },
+                    ),
                     (
                         dbc.Switch(
                             id="toggle-switch-predictoor-feeds",
