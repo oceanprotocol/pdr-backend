@@ -337,5 +337,5 @@ class ValidationOverview:
             logger.info("No unmatched payouts found in the lake.")
             return violations
 
-        logger.info("Unmatched Payouts:\n%s", rows_df)
+        violations.append(f"Unmatched Payouts:\n{rows_df}")
         return violations
