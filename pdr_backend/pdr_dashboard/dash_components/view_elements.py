@@ -160,12 +160,24 @@ def get_table(table_id, table_name, searchable_field, columns, data, default_sor
                 [
                     html.Div(
                         [
-                            html.Span(table_name, style={"fontSize": "20px"}),
+                            html.Span(
+                                table_name, style={"fontSize": "20px", "hight": "100%"}
+                            ),
                             html.Span(
                                 id=f"table-rows-count-{table_id}",
-                                style={"fontSize": "20px", "color": "gray"},
+                                style={
+                                    "fontSize": "16px",
+                                    "color": "gray",
+                                    "hight": "100%",
+                                    "marginLeft": "4px",
+                                },
                             ),
-                        ]
+                        ],
+                        style={
+                            "display": "flex",
+                            "justifyContet": "center",
+                            "alignItems": "center",
+                        },
                     ),
                     (
                         dbc.Switch(
