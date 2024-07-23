@@ -205,7 +205,10 @@ def get_callbacks(app):
                 predictoors_addrs,
             )
             filtered_data = [
-                obj for obj in app.feeds_data if obj["contract"] in feed_ids
+                obj
+                for obj in app.feeds_data
+                if obj["contract"] in feed_ids
+                if obj not in selected_feeds
             ]
 
         filtered_data = selected_feeds + filtered_data
