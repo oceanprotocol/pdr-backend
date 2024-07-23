@@ -53,6 +53,7 @@ def create_figure(
     title: str,
     yaxis_title: str,
     show_legend: bool = True,
+    yaxis_range: Union[List, None] = None,
 ):
     """
     Create a figure with the given data traces.
@@ -79,13 +80,13 @@ def create_figure(
 
     fig.update_layout(
         title=title,
-        yaxis_title=yaxis_title,
         margin={"l": 20, "r": 0, "t": 50, "b": 0},
         showlegend=show_legend,
         xaxis_nticks=4,
         bargap=0.1,
         barmode="stack",
         legend=legend_config,
+        yaxis={"range": yaxis_range if yaxis_range else None, "title": yaxis_title},
     )
     return fig
 
@@ -110,15 +111,18 @@ def _make_figures(fig_tup: Tuple) -> Tuple[go.Figure, go.Figure, go.Figure]:
     accuracy_scatters, profit_scatters, stakes_scatters = fig_tup
 
     fig_accuracy = create_figure(
-        accuracy_scatters, "Accuracy", "'%' accuracy over time"
+        accuracy_scatters,
+        title="Accuracy",
+        yaxis_title="Accuracy(%)",
+        yaxis_range=[30, 70],
     )
 
     fig_profit = create_figure(
-        profit_scatters, "Profit", "OCEAN profit over time", show_legend=False
+        profit_scatters, title="Profit", yaxis_title="Profit(OCEAN)", show_legend=False
     )
 
     fig_costs = create_figure(
-        stakes_scatters, "Costs", "Stake (OCEAN) at a time", show_legend=False
+        stakes_scatters, title="Costs", yaxis_title="Stake(OCEAN)", show_legend=False
     )
 
     return fig_accuracy, fig_profit, fig_costs

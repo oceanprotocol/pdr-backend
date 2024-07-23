@@ -101,7 +101,6 @@ def test_create_figure():
         "bargap": 0.1,
         "barmode": "stack",
         "title": "title",
-        "yaxis_title": "yaxis_title",
         "margin": {"l": 20, "r": 0, "t": 50, "b": 0},
         "showlegend": True,
         "xaxis_nticks": 4,
@@ -112,6 +111,7 @@ def test_create_figure():
             "xanchor": "right",
             "x": 1,
         },
+        "yaxis": {"range": None, "title": "yaxis_title"},
     }
 
     assert result.update_layout_called == 1
@@ -154,9 +154,9 @@ def test_get_figures_and_metrics(
     assert fig_profit.layout["title"] == "Profit"
     assert fig_costs.layout["title"] == "Costs"
 
-    assert fig_accuracy.layout["yaxis_title"] == "'%' accuracy over time"
-    assert fig_profit.layout["yaxis_title"] == "OCEAN profit over time"
-    assert fig_costs.layout["yaxis_title"] == "Stake (OCEAN) at a time"
+    assert fig_accuracy.layout["yaxis"]["title"] == "Accuracy(%)"
+    assert fig_profit.layout["yaxis"]["title"] == "Profit(OCEAN)"
+    assert fig_costs.layout["yaxis"]["title"] == "Stake(OCEAN)"
 
     assert fig_accuracy.update_layout_called == 1
     assert fig_profit.update_layout_called == 1
