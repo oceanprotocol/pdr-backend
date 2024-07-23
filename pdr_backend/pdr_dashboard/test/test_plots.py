@@ -25,7 +25,7 @@ def test_process_payouts(
     ## filter payouts by user and feed
     filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
     filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
-    result = process_payouts(filtered_payouts)
+    result = process_payouts(filtered_payouts, True)
 
     assert len(result) == 7
 

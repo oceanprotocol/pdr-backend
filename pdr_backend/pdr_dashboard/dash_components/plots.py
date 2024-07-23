@@ -10,7 +10,7 @@ from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types
-def process_payouts(payouts: List[dict]) -> tuple:
+def process_payouts(payouts: List[dict], calculate_confint: bool = False) -> tuple:
     """
     Process payouts data for a given predictor and feed.
     Args:
@@ -29,14 +29,18 @@ def process_payouts(payouts: List[dict]) -> tuple:
         profit += profit_change
         correct_predictions += p["payout"] > 0
 
-        acc_l, acc_u = proportion_confint(count=correct_predictions, nobs=predictions)
+        if calculate_confint:
+            acc_l, acc_u = proportion_confint(
+                count=correct_predictions, nobs=predictions
+            )
 
-        acc_intervals.append(
-            {
-                "acc_l": acc_l,
-                "acc_u": acc_u,
-            }
-        )
+            acc_intervals.append(
+                {
+                    "acc_l": acc_l,
+                    "acc_u": acc_u,
+                }
+            )
+
         slots.append(p["slot"])
         accuracies.append((correct_predictions / predictions) * 100)
         profits.append(profit)
@@ -168,6 +172,8 @@ def get_figures_and_metrics(
             p for p in payouts if predictor in p["ID"] and feed.contract in p["ID"]
         ]
 
+        show_confidence_interval = len(predictoors) == 1 and len(feeds) == 1
+
         (
             slots,
             accuracies,
@@ -176,7 +182,7 @@ def get_figures_and_metrics(
             correct_predictions,
             predictions,
             acc_intervals,
-        ) = process_payouts(filtered_payouts)
+        ) = process_payouts(filtered_payouts, show_confidence_interval)
 
         if not slots:
             continue
@@ -189,7 +195,7 @@ def get_figures_and_metrics(
 
         short_name = f"{predictor[:5]} - {str(feed)}"
 
-        if len(predictoors) == 1 and len(feeds) == 1:
+        if show_confidence_interval:
 
             accuracy_scatters.append(
                 go.Scatter(
