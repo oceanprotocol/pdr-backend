@@ -92,11 +92,11 @@ Mid-level building blocks:
 
 - `cli` - implementation of CLI
 - `ppss` - implements settings
-- `aimodel` - AI/ML modeling engine
 
 Data-level building blocks:
 
 - `ohlcv` - financial data pipeline
+- `aimodel` - AI/ML modeling engine
 - `lake` - data lake and analytics tools
 - `subgraph` - blockchain queries, complements lake
 - `accuracy` - to report % correct in webapp
