@@ -10,9 +10,6 @@ from pdr_backend.lake.prediction import mock_daily_predictions, mock_first_predi
 from pdr_backend.pdr_dashboard.dash_components.callbacks import (
     get_callbacks,
 )
-from pdr_backend.pdr_dashboard.dash_components.view_elements import (
-    get_layout,
-)
 from pdr_backend.pdr_dashboard.test.resources import (
     _prepare_test_db,
     _clear_test_db,
@@ -118,8 +115,6 @@ def setup_app(
     app.config["suppress_callback_exceptions"] = True
 
     app = _add_css(app)
-    app.layout = get_layout()
-
     setup_app_main(app, ppss)
     get_callbacks(app)
 
@@ -149,7 +144,6 @@ def setup_app_with_favourite_addresses(
     app.config["suppress_callback_exceptions"] = True
 
     app = _add_css(app)
-    app.layout = get_layout()
     setup_app_main(app, ppss)
     get_callbacks(app)
 
