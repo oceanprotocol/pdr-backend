@@ -300,6 +300,20 @@ class ETL:
 
         return from_timestamp, to_timestamp
 
+    @enforce_types
+    def is_bronze_first_run(self, st_timestamp: UnixTimeMs, fin_timestamp: UnixTimeMs) -> bool:
+        """
+        @description
+            Check if it is the first run for the bronze tables based on timestamps
+        @returns
+            bool: True if it is the first run, False otherwise
+        """
+        return self._clamp_checkpoints_to_ppss is True or (
+            st_timestamp == self.ppss.lake_ss.st_timestamp
+            and fin_timestamp == self.ppss.lake_ss.fin_timestamp
+        )
+
+    @enforce_types
     def do_bronze_queries(self):
         """
         @description
@@ -311,15 +325,11 @@ class ETL:
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
 
-        # if st_ts or fin_ts != ppss, then we must have records somewhere
-        is_first_run: bool = self._clamp_checkpoints_to_ppss is True or (
-            st_timestamp == self.ppss.lake_ss.st_timestamp
-            and fin_timestamp == self.ppss.lake_ss.fin_timestamp
-        )
+        is_bronze_first_run = self.is_bronze_first_run(st_timestamp, fin_timestamp)
 
         for etl_query in _ETL_REGISTERED_QUERIES:
             etl_query(
-                db=db, st_ms=st_timestamp, fin_ms=fin_timestamp, first_run=is_first_run
+                db=db, st_ms=st_timestamp, fin_ms=fin_timestamp, first_run=is_bronze_first_run
             )
 
             logger.info(
