@@ -1,7 +1,7 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-title: [Component name] Undesired behavior observed, maybe the culprit
+about: 'Create a report to help us improve'
+title: '[Component name] Undesired behavior observed, maybe the culprit'
 labels: 'Type: Bug'
 assignees: ''
 ---
