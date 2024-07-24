@@ -1,5 +1,5 @@
 from itertools import product
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, NamedTuple
 
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
@@ -9,8 +9,34 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.util.time_types import UnixTimeS
 
 
+class FiguresAndMetricsResult(NamedTuple):
+    accuracy_figure: go.Figure
+    profit_figure: go.Figure
+    costs_figure: go.Figure
+    avg_accuracy: Optional[float]
+    total_profit: Optional[float]
+    avg_stake: Optional[float]
+
+
+class AccInterval(NamedTuple):
+    acc_l: float
+    acc_u: float
+
+
+class ProcessedPayouts(NamedTuple):
+    slot_in_date_format: List[str]
+    accuracies: List[float]
+    profits: List[float]
+    stakes: List[float]
+    correct_predictions: int
+    predictions: int
+    acc_intervals: List[AccInterval]
+
+
 @enforce_types
-def process_payouts(payouts: List[dict], calculate_confint: bool = False) -> tuple:
+def process_payouts(
+    payouts: List[dict], calculate_confint: bool = False
+) -> ProcessedPayouts:
     """
     Process payouts data for a given predictor and feed.
     Args:
@@ -21,11 +47,12 @@ def process_payouts(payouts: List[dict], calculate_confint: bool = False) -> tup
         tuple: Tuple of slots, accuracies, profits, stakes.
     """
     slots, accuracies, profits, stakes, acc_intervals = [[] for _ in range(5)]
-    profit = predictions = correct_predictions = 0
+    predictions = correct_predictions = 0
+    profit = 0.0
 
     for p in payouts:
         predictions += 1
-        profit_change = max(p["payout"], 0) - p["stake"]
+        profit_change = float(max(p["payout"], 0) - p["stake"])
         profit += profit_change
         correct_predictions += p["payout"] > 0
 
@@ -35,10 +62,10 @@ def process_payouts(payouts: List[dict], calculate_confint: bool = False) -> tup
             )
 
             acc_intervals.append(
-                {
-                    "acc_l": acc_l,
-                    "acc_u": acc_u,
-                }
+                AccInterval(
+                    acc_l,
+                    acc_u,
+                )
             )
 
         slots.append(p["slot"])
@@ -50,7 +77,7 @@ def process_payouts(payouts: List[dict], calculate_confint: bool = False) -> tup
         UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
     ]
 
-    return (
+    return ProcessedPayouts(
         slot_in_date_format,
         accuracies,
         profits,
@@ -144,90 +171,104 @@ def _make_figures(fig_tup: Tuple) -> Tuple[go.Figure, go.Figure, go.Figure]:
 
 @enforce_types
 def get_figures_and_metrics(
-    payouts: Optional[List], feeds: ArgFeeds, predictoors: List[str]
-) -> Tuple[go.Figure, go.Figure, go.Figure, float | None, float | None, float | None]:
+    payouts: Optional[List], feeds: ArgFeeds, predictors: List[str]
+) -> FiguresAndMetricsResult:
     """
     Get figures for accuracy, profit, and costs.
     Args:
         payouts (list): List of payouts data.
         feeds (list): List of feeds data.
-        predictoors (list): List of predictoors data.
+        predictors (list): List of predictors data.
     Returns:
-        tuple: Tuple of accuracy, profit, and costs figures, avg accuracy, total profit, avg stake
+        FiguresAndMetricsResult: Tuple of accuracy, profit, and
+        costs figures, avg accuracy, total profit, avg stake
     """
     if not payouts:
-        figures = _make_figures(_empty_trio())
-        return figures[0], figures[1], figures[2], 0.0, 0.0, 0.0
+        accuracy_fig, profit_fig, costs_fig = _make_figures(_empty_trio())
+        return FiguresAndMetricsResult(
+            accuracy_fig, profit_fig, costs_fig, 0.0, 0.0, 0.0
+        )
 
     accuracy_scatters, profit_scatters, stakes_scatters = [], [], []
-    avg_accuracy, total_profit, avg_stake = 0.0, 0.0, 0.0
-
     all_stakes = []
-    prediction_count = 0
+    total_profit = 0.0
     correct_prediction_count = 0
-    for predictor, feed in product(predictoors, feeds):
-        # only filter for this particular predictoor and feed pair
-        # in order to properly group the data
+    prediction_count = 0
+
+    for predictor, feed in product(predictors, feeds):
         filtered_payouts = [
             p for p in payouts if predictor in p["ID"] and feed.contract in p["ID"]
         ]
 
-        show_confidence_interval = len(predictoors) == 1 and len(feeds) == 1
-
-        (
-            slots,
-            accuracies,
-            profits,
-            stakes,
-            correct_predictions,
-            predictions,
-            acc_intervals,
-        ) = process_payouts(filtered_payouts, show_confidence_interval)
-
-        if not slots:
+        if not filtered_payouts:
             continue
 
-        all_stakes.extend(stakes)
-        prediction_count += predictions
-        correct_prediction_count += correct_predictions
+        show_confidence_interval = len(predictors) == 1 and len(feeds) == 1
 
-        total_profit = (profits[-1] + total_profit) if total_profit else profits[-1]
+        processed_data = process_payouts(
+            payouts=filtered_payouts, calculate_confint=show_confidence_interval
+        )
+
+        all_stakes.extend(processed_data.stakes)
+        correct_prediction_count += processed_data.correct_predictions
+        prediction_count += processed_data.predictions
+        total_profit += processed_data.profits[-1] if processed_data.profits else 0.0
 
         short_name = f"{predictor[:5]} - {str(feed)}"
 
         if show_confidence_interval:
-
             accuracy_scatters.append(
                 go.Scatter(
-                    x=slots,
-                    y=[acc["acc_l"] * 100 for acc in acc_intervals],
+                    x=processed_data.slot_in_date_format,
+                    y=[
+                        interval.acc_l * 100
+                        for interval in processed_data.acc_intervals
+                    ],
                     mode="lines",
-                    name="accuracy_lowerbond",
+                    name="accuracy_lowerbound",
                     marker_color="#636EFA",
                     showlegend=False,
                 )
             )
-
             accuracy_scatters.append(
                 go.Scatter(
-                    x=slots,
-                    y=[acc["acc_u"] * 100 for acc in acc_intervals],
+                    x=processed_data.slot_in_date_format,
+                    y=[
+                        interval.acc_u * 100
+                        for interval in processed_data.acc_intervals
+                    ],
                     mode="lines",
                     fill="tonexty",
-                    name="accuracy_upperbond",
+                    name="accuracy_upperbound",
                     marker_color="#636EFA",
                     showlegend=False,
                 )
             )
 
         accuracy_scatters.append(
-            go.Scatter(x=slots, y=accuracies, mode="lines", name=short_name)
+            go.Scatter(
+                x=processed_data.slot_in_date_format,
+                y=processed_data.accuracies,
+                mode="lines",
+                name=short_name,
+            )
         )
-
         profit_scatters.append(
-            go.Scatter(x=slots, y=profits, mode="lines", name=short_name)
+            go.Scatter(
+                x=processed_data.slot_in_date_format,
+                y=processed_data.profits,
+                mode="lines",
+                name=short_name,
+            )
         )
-        stakes_scatters.append(go.Bar(x=slots, y=stakes, name=short_name, width=5))
+        stakes_scatters.append(
+            go.Bar(
+                x=processed_data.slot_in_date_format,
+                y=processed_data.stakes,
+                name=short_name,
+                width=5,
+            )
+        )
 
     avg_stake = sum(all_stakes) / len(all_stakes) if all_stakes else 0.0
     avg_accuracy = (
@@ -236,12 +277,15 @@ def get_figures_and_metrics(
 
     if not accuracy_scatters:
         accuracy_scatters = _empty_accuracy_scatter()
-
     if not profit_scatters:
         profit_scatters = _empty_profit_scatter()
-
     if not stakes_scatters:
         stakes_scatters = _empty_stakes_bar()
 
-    figures = _make_figures((accuracy_scatters, profit_scatters, stakes_scatters))
-    return (figures[0], figures[1], figures[2], avg_accuracy, total_profit, avg_stake)
+    accuracy_fig, profit_fig, costs_fig = _make_figures(
+        (accuracy_scatters, profit_scatters, stakes_scatters)
+    )
+
+    return FiguresAndMetricsResult(
+        accuracy_fig, profit_fig, costs_fig, avg_accuracy, total_profit, avg_stake
+    )

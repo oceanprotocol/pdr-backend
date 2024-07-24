@@ -25,7 +25,7 @@ def test_process_payouts(
     ## filter payouts by user and feed
     filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
     filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
-    result = process_payouts(filtered_payouts, True)
+    result = process_payouts(payouts=filtered_payouts, calculate_confint=True)
 
     assert len(result) == 7
 
@@ -83,8 +83,8 @@ def test_process_payouts(
     assert len(acc_intervals) == len(test_stakes)
 
     for i, acc_interval in enumerate(acc_intervals):
-        assert isinstance(acc_interval["acc_l"], float)
-        assert isinstance(acc_interval["acc_u"], float)
+        assert isinstance(acc_interval.acc_l, float)
+        assert isinstance(acc_interval.acc_u, float)
 
 
 class MockFigure:
