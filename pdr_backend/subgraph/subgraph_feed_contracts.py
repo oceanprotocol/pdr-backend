@@ -8,8 +8,8 @@ from typing import Dict, Optional
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
-from pdr_backend.subgraph.info725 import info725_to_info
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
+from pdr_backend.util.constants import WHITELIST_FEEDS_MAINNET
 
 logger = logging.getLogger("subgraph")
 _N_ERRORS = {}  # exception_str : num_occurrences
@@ -75,20 +75,20 @@ def query_feed_contracts(
             if not contract_list:
                 break
             for contract in contract_list:
-                pair = contract['token']['name'].replace('/', '-')
+                pair = contract["token"]["name"].replace("/", "-")
                 timeframe = "5m" if contract["secondsPerSubscription"] == 300 else "1h"
-                source = "binance" # fix me
+                source = "binance"  # fix me
                 if None in (pair, timeframe, source):
                     continue
 
                 # filter out unwanted
                 if not contract["token"]["nft"]:
-                    if not contract["id"] in whitelistopfmainnet:
+                    if not contract["id"] in WHITELIST_FEEDS_MAINNET:
                         continue
                 else:
-                  owner_id = contract["token"]["nft"]["owner"]["id"]
-                  if owners and (owner_id not in owners):
-                      continue
+                    owner_id = contract["token"]["nft"]["owner"]["id"]
+                    if owners and (owner_id not in owners):
+                        continue
 
                 # ok, add this one
                 feed = SubgraphFeed(
