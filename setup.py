@@ -13,7 +13,7 @@ install_requirements = [
     "ccxt>=4.1.59",
     "coverage",
     "enforce_typing",
-    "eth-account=0.12.3",
+    "eth-account==0.12.3",
     "eth-keys",
     "matplotlib",
     "mypy",
