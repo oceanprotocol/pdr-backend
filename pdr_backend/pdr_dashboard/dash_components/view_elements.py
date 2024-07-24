@@ -86,7 +86,7 @@ def get_input_column(app):
                 ),
                 id="feeds_container",
                 style={
-                    "height": "50%",
+                    "marginTop": "20px",
                     "display": "flex",
                     "flexDirection": "column",
                     "justifyContent": "flex-end",
@@ -225,7 +225,7 @@ def get_table(
                     html.Div(
                         [
                             html.Span(
-                                table_name, style={"fontSize": "20px", "hight": "100%"}
+                                table_name, style={"fontSize": "20px", "height": "100%"}
                             ),
                             html.Span(
                                 id=f"table-rows-count-{table_id}",
