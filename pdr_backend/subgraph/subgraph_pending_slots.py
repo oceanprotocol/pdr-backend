@@ -87,7 +87,7 @@ def get_pending_slots(
 
                 contract = slot["predictContract"]
                 pair = contract["token"]["name"].replace("/", "-")
-                timeframe = "5m" if contract["secondsPerSubscription"] == 300 else "1h"
+                timeframe = "5m" if int(contract["secondsPerEpoch"]) == 300 else "1h"
                 source = "binance"  # fix me
                 if None in (pair, timeframe, source):
                     continue
