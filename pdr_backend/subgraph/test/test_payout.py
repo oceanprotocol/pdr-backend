@@ -31,4 +31,4 @@ def test_payouts():
     assert isinstance(payouts[0], Payout)
     assert isinstance(payouts[1], Payout)
     assert payouts[0].ID == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1704152700-0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"
-    assert payouts[1].ID == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1704152700-0xfb223c3583aa934273173a55c226d598a149441c",
+    assert payouts[1].ID == "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1704152700-0xfb223c3583aa934273173a55c226d598a149441c"
