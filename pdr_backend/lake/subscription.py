@@ -54,11 +54,13 @@ class Subscription(LakeMapper):
     def get_lake_table_name():
         return "pdr_subscriptions"
 
-    @staticmethod
     def get_fetch_function() -> Callable:
-        raise NotImplementedError(
-            "Subscription.get_fetch_function() not implemented yet"
+        # pylint: disable=import-outside-toplevel
+        from pdr_backend.subgraph.subgraph_subscriptions import (
+            fetch_filtered_subscriptions,
         )
+
+        return fetch_filtered_subscriptions
 
 
 # =========================================================================

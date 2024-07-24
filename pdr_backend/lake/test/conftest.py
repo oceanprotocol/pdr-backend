@@ -30,6 +30,7 @@ from pdr_backend.lake.test.resources import (
     get_filtered_timestamps_df,
 )
 from pdr_backend.lake.trueval import Trueval, mock_trueval, mock_truevals
+from pdr_backend.lake.subscription import Subscription
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -669,19 +670,27 @@ def _sample_raw_data(request):
     predictions_df = pl.read_csv(os.path.join(test_dir, "pdr_predictions.csv"))
     payouts_df = pl.read_csv(os.path.join(test_dir, "pdr_payouts.csv"))
     truevals_df = pl.read_csv(os.path.join(test_dir, "pdr_truevals.csv"))
+    subscriptions_df = pl.read_csv(os.path.join(test_dir, "pdr_subscriptions.csv"))
+    slots_df = pl.read_csv(os.path.join(test_dir, "pdr_slots.csv"))
 
     predictions_schema_order = list(Prediction.get_lake_schema().keys())
     payouts_schema_order = list(Payout.get_lake_schema().keys())
     truevals_schema_order = list(Trueval.get_lake_schema().keys())
+    subscriptions_schema_order = list(Subscription.get_lake_schema().keys())
+    slots_schema_order = list(Slot.get_lake_schema().keys())
 
     predictions_df = predictions_df[predictions_schema_order]
     payouts_df = payouts_df[payouts_schema_order]
     truevals_df = truevals_df[truevals_schema_order]
+    subscriptions_df = subscriptions_df[subscriptions_schema_order]
+    slots_df = slots_df[slots_schema_order]
 
     return {
         "pdr_predictions": predictions_df,
         "pdr_payouts": payouts_df,
         "pdr_truevals": truevals_df,
+        "pdr_subscriptions": subscriptions_df,
+        "pdr_slots": slots_df,
     }
 
 
@@ -714,6 +723,8 @@ def _sample_etl(
         "pdr_predictions": Table.from_dataclass(Prediction),
         "pdr_payouts": Table.from_dataclass(Payout),
         "pdr_truevals": Table.from_dataclass(Trueval),
+        "pdr_subscriptions": Table.from_dataclass(Subscription),
+        "pdr_slots": Table.from_dataclass(Slot),
     }
 
     # only add to storage the data that falls within the time range
@@ -736,9 +747,23 @@ def _sample_etl(
         .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
     )
 
+    _sample_subscriptions = (
+        _sample_raw_data["pdr_subscriptions"]
+        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
+        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
+    )
+
+    _sample_slots = (
+        _sample_raw_data["pdr_slots"]
+        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
+        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
+    )
+
     gql_tables["pdr_predictions"].append_to_storage(_sample_predictions, ppss)
     gql_tables["pdr_payouts"].append_to_storage(_sample_payouts, ppss)
     gql_tables["pdr_truevals"].append_to_storage(_sample_truevals, ppss)
+    gql_tables["pdr_subscriptions"].append_to_storage(_sample_subscriptions, ppss)
+    gql_tables["pdr_slots"].append_to_storage(_sample_slots, ppss)
 
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
