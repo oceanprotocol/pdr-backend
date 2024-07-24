@@ -675,9 +675,6 @@ def _sample_raw_data(request):
     predictions_df = predictions_df[predictions_schema_order]
     payouts_df = payouts_df[payouts_schema_order]
 
-    print(">>>>> _sample_raw_data predictions_df", predictions_df.dtypes)
-    print(">>>>> _sample_raw_data payouts_df", payouts_df.dtypes)
-
     return {"pdr_predictions": predictions_df, "pdr_payouts": payouts_df}
 
 

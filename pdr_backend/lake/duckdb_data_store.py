@@ -32,7 +32,7 @@ class DuckDBDataStore(BaseDataStore):
             base_path - The base directory to store the persistent data.
         """
         super().__init__(base_path, read_only)
-        print(f"base_path = {base_path}")
+        logger.info(f"base_path = {base_path}")
 
         self.duckdb_conn = duckdb.connect(
             database=f"{self.base_path}/duckdb.db", read_only=read_only

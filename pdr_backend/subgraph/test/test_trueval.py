@@ -22,7 +22,9 @@ def test_truevals():
         ("roundSumStakes", float),
     ]
 
-    assert truevals.shape[1] == len(expected_column_names_types), "unexpected number of columns"
+    assert truevals.shape[1] == len(
+        expected_column_names_types
+    ), "unexpected number of columns"
     for i, (name, dtype) in enumerate(expected_column_names_types):
         assert truevals.columns[i].name == name
         assert truevals.columns[i].dtype == dtype

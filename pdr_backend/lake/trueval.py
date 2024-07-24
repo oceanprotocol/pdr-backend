@@ -72,14 +72,14 @@ class Trueval(LakeMapper):
 @enforce_types
 def mock_trueval(trueval_tuple: tuple) -> Trueval:
     (
-        ID, 
+        ID,
         token,
         truevalue,
         slot,
         timestamp,
         revenue,
         roundSumStakesUp,
-        roundSumStakes
+        roundSumStakes,
     ) = trueval_tuple
 
     return Trueval(
