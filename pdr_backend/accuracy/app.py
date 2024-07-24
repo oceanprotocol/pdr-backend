@@ -13,7 +13,7 @@ from flask import Flask, jsonify
 
 from pdr_backend.subgraph.subgraph_predictions import (
     fetch_contract_id_and_spe,
-    get_all_contract_ids_by_owner,
+    #    get_all_contract_ids_by_owner,
     ContractIdAndSPE,
 )
 from pdr_backend.subgraph.legacy.subgraph_slot import (
@@ -21,6 +21,7 @@ from pdr_backend.subgraph.legacy.subgraph_slot import (
     PredictSlot,
 )
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.util.constants import WHITELIST_FEEDS_MAINNET
 
 app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/accuracy_data.json"
@@ -180,7 +181,6 @@ def calculate_statistics_for_all_assets(
         A dictionary mapping asset IDs to another dictionary with
         calculated statistics such as average accuracy and total staked amounts.
     """
-
     slots_by_asset = fetch_slots_for_all_assets(
         asset_ids, start_ts_param, end_ts_param, network
     )
@@ -281,9 +281,11 @@ def save_statistics_to_file():
         },
     ]
 
-    contract_addresses = get_all_contract_ids_by_owner(
-        "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param
-    )
+    # contract_addresses = get_all_contract_ids_by_owner(
+    #     "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param
+    # )
+
+    contract_addresses = WHITELIST_FEEDS_MAINNET
 
     contracts_list_unfiltered = fetch_contract_id_and_spe(
         contract_addresses,
