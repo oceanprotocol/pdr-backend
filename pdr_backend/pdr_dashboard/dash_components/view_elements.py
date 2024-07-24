@@ -1,4 +1,3 @@
-import copy
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 from pdr_backend.pdr_dashboard.dash_components.util import (
@@ -6,19 +5,27 @@ from pdr_backend.pdr_dashboard.dash_components.util import (
 )
 
 
+def col_to_human(col):
+    col = col.replace("avg_", "")
+    col = col.replace("total_", "")
+
+    return col.replace("_", " ").title()
+
+
 def get_feeds_data(app):
-    data = copy.deepcopy(app.feeds_data)
+    data = app.feeds_data
 
-    for feed in data:
-        del feed["contract"]
+    columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
+    hidden_columns = ["contract"]
 
-    columns = [{"name": col, "id": col} for col in data[0].keys()]
-
-    return columns, data
+    return (columns, hidden_columns), data
 
 
 def get_predictoors_data(app):
-    columns = [{"name": col, "id": col} for col in app.predictoors_data[0].keys()]
+    columns = [
+        {"name": col_to_human(col), "id": col} for col in app.predictoors_data[0].keys()
+    ]
+    hidden_columns = ["user"]
 
     if app.favourite_addresses:
         data = [
@@ -29,7 +36,7 @@ def get_predictoors_data(app):
     else:
         data = app.predictoors_data
 
-    return columns, data
+    return (columns, hidden_columns), data
 
 
 def get_input_column(app):
@@ -284,7 +291,8 @@ def get_table(
             ),
             dash_table.DataTable(
                 id=table_id,
-                columns=columns,
+                columns=columns[0],
+                hidden_columns=columns[1],
                 data=data,
                 row_selectable="multi",  # Can be 'multi' for multiple rows
                 selected_rows=selected_items if selected_items else [],
