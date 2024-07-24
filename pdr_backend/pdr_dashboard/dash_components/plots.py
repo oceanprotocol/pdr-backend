@@ -46,10 +46,18 @@ def process_payouts(
     Returns:
         tuple: Tuple of slots, accuracies, profits, stakes.
     """
-    slots, accuracies, profits, stakes, acc_intervals = [[] for _ in range(5)]
-    predictions = correct_predictions = 0
-    profit = 0.0
+    (
+        _,
+        accuracies,
+        profits,
+        stakes,
+        correct_predictions,
+        predictions,
+        acc_intervals,
+    ) = ProcessedPayouts([], [], [], [], 0, 0, [])
 
+    profit = 0.0
+    slots = []
     for p in payouts:
         predictions += 1
         profit_change = float(max(p["payout"], 0) - p["stake"])
