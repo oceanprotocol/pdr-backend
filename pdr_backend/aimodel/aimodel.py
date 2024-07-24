@@ -69,9 +69,11 @@ class Aimodel:
         else:
             X = self._scaler.transform(X)
             try:
-                T = self._sk_classif._predict_proba_lr(X)  # faster for linear regressions incl. LinearSVC
+                T = self._sk_classif._predict_proba_lr(
+                    X
+                )  # faster for linear regressions incl. LinearSVC
             except AttributeError:
-                T = self._sk_classif.predict_proba(X) # [sample_i][class_i]
+                T = self._sk_classif.predict_proba(X)  # [sample_i][class_i]
             N = T.shape[0]
             class_i = 1  # this is the class for "True"
             yptrue = np.array([T[i, class_i] for i in range(N)])
