@@ -189,14 +189,7 @@ def get_callbacks(app):
             predictoors_table[i]["user"] for i in predictoors_table_selected_rows
         ]
 
-        # filter feeds by pair address
-        filtered_data = (
-            filter_objects_by_field(
-                app.feeds_data, "pair", search_value, selected_feeds
-            )
-            if search_value
-            else app.feeds_data
-        )
+        filtered_data = app.feeds_data
 
         # filter feeds by payouts from selected predictoors
         if predictoor_feeds_only and (len(predictoors_addrs) > 0):
@@ -206,10 +199,19 @@ def get_callbacks(app):
             )
             filtered_data = [
                 obj
-                for obj in app.feeds_data
+                for obj in filtered_data
                 if obj["contract"] in feed_ids
                 if obj not in selected_feeds
             ]
+
+        # filter feeds by pair address
+        filtered_data = (
+            filter_objects_by_field(
+                app.feeds_data, "pair", search_value, selected_feeds
+            )
+            if search_value
+            else filtered_data
+        )
 
         filtered_data = selected_feeds + filtered_data
 
