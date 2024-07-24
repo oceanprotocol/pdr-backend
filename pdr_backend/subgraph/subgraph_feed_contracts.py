@@ -85,11 +85,11 @@ def query_feed_contracts(
                 if not contract["token"]["nft"]:
                     if not contract["id"] in WHITELIST_FEEDS_MAINNET:
                         continue
+                    owner_id = "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703"
                 else:
                     owner_id = contract["token"]["nft"]["owner"]["id"]
                     if owners and (owner_id not in owners):
                         continue
-
                 # ok, add this one
                 feed = SubgraphFeed(
                     name=contract["token"]["name"],
