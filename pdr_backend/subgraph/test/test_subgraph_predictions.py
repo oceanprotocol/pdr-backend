@@ -45,9 +45,10 @@ _PREDICTION = {
         "slot": 1698527100,
         "predictContract": {
             "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+            "secondsPerEpoch": "300",
             "token": {
                 "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
-                "name": "ADA/USDT",
+                "name": "ADA-USDT",
                 "nft": {
                     "nftData": [
                         {
