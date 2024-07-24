@@ -132,7 +132,7 @@ def fetch_filtered_predictions(
 
     for prediction_sg_dict in data:
         contract = prediction_sg_dict["slot"]["predictContract"]
-        pair = contract["token"]["name"].replace("/", "-")
+        pair = contract["token"]["name"]
         timeframe = "5m" if int(contract["secondsPerEpoch"]) == 300 else "1h"
         source = "binance"  # fix me
         timestamp = UnixTimeS(int(prediction_sg_dict["timestamp"]))
