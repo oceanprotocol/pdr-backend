@@ -1,14 +1,9 @@
-<!--
-Copyright 2024 Ocean Protocol Foundation
-SPDX-License-Identifier: Apache-2.0
--->
 ---
 name: Bug report
 about: Create a report to help us improve
 title: [Component name] Undesired behavior observed, maybe the culprit
 labels: 'Type: Bug'
 assignees: ''
-
 ---
 
 ### Describe the bug
