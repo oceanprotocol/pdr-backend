@@ -105,7 +105,7 @@ def fetch_filtered_subscriptions(
 
     for subscription_sg_dict in data:
         contract = subscription_sg_dict["predictContract"]
-        pair = contract["token"]["name"].replace("/", "-")
+        pair = contract["token"]["name"]
         timeframe = "5m" if int(contract["secondsPerEpoch"]) == 300 else "1h"
         source = "binance"  # fix me
         timestamp = UnixTimeS(int(subscription_sg_dict["timestamp"]))
