@@ -301,7 +301,9 @@ class ETL:
         return from_timestamp, to_timestamp
 
     @enforce_types
-    def is_bronze_first_run(self, st_timestamp: UnixTimeMs, fin_timestamp: UnixTimeMs) -> bool:
+    def is_bronze_first_run(
+        self, st_timestamp: UnixTimeMs, fin_timestamp: UnixTimeMs
+    ) -> bool:
         """
         @description
             Check if it is the first run for the bronze tables based on timestamps
@@ -329,7 +331,10 @@ class ETL:
 
         for etl_query in _ETL_REGISTERED_QUERIES:
             etl_query(
-                db=db, st_ms=st_timestamp, fin_ms=fin_timestamp, first_run=is_bronze_first_run
+                db=db,
+                st_ms=st_timestamp,
+                fin_ms=fin_timestamp,
+                first_run=is_bronze_first_run,
             )
 
             logger.info(
