@@ -2,10 +2,6 @@ import dash
 
 from dash import Input, Output, State
 
-from pdr_backend.pdr_dashboard.dash_components.app_constants import (
-    PREDICTOOR_TABLE_COLUMNS,
-    PREDICTOOR_TABLE_HIDDEN_COLUMNS,
-)
 from pdr_backend.pdr_dashboard.dash_components.plots import (
     get_figures_and_metrics,
 )
@@ -116,8 +112,6 @@ def get_callbacks(app):
     @app.callback(
         Output("predictoors_table", "data", allow_duplicate=True),
         Output("predictoors_table", "selected_rows"),
-        Output("predictoors_table", "columns", allow_duplicate=True),
-        Output("predictoors_table", "hidden_columns"),
         [
             Input("search-input-Predictoors", "value"),
             Input("predictoors_table", "selected_rows"),
@@ -162,12 +156,7 @@ def get_callbacks(app):
         filtered_data = selected_predictoors + filtered_data
         selected_predictoor_indices = list(range(len(selected_predictoors)))
 
-        return (
-            filtered_data,
-            selected_predictoor_indices,
-            PREDICTOOR_TABLE_COLUMNS,
-            PREDICTOOR_TABLE_HIDDEN_COLUMNS,
-        )
+        return (filtered_data, selected_predictoor_indices)
 
     @app.callback(
         Output("feeds_table", "data", allow_duplicate=True),
