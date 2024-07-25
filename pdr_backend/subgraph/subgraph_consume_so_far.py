@@ -18,46 +18,28 @@ logger = logging.getLogger("subgraph")
 def get_consume_so_far_per_contract(
     subgraph_url: str,
     user_address: str,
-    since_timestamp: UnixTimeS,
+    since_timestamp: int,
     contract_addresses: List[str],
 ) -> Dict[str, float]:
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     consume_so_far: Dict[str, float] = defaultdict(float)
-    logger.info("Getting consume so far...")
-    while True:  # pylint: disable=too-many-nested-blocks
+    print("Getting consume so far...")
+    while True:
         query = """
         {
-            predictContracts(first:1000, where: {id_in: %s}){
+            predictSubscriptions(where: {timestamp_gt:%s, user_:{id: "%s"}}, first: %s, skip: %s){
                 id
-                token{
-                    id
-                    name
-                    symbol
-                    nft {
-                        owner {
-                            id
-                        }
-                        nftData {
-                            key
-                            value
-                        }
-                    }
-                    orders(where: {createdTimestamp_gt:%s, consumer_in:["%s"]}, first: %s, skip: %s){
-        		        createdTimestamp
-                        consumer {
-                            id
-                        }
-                        lastPriceValue
-                    }
+                timestamp
+                user {
+                id
                 }
-                secondsPerEpoch
-                secondsPerSubscription
-                truevalSubmitTimeout
+                predictContract {
+                id
+                }
             }
         }
         """ % (
-            str(contract_addresses).replace("'", '"'),
             since_timestamp,
             user_address.lower(),
             chunk_size,
@@ -65,25 +47,12 @@ def get_consume_so_far_per_contract(
         )
         offset += chunk_size
         result = query_subgraph(subgraph_url, query, 3, 30.0)
-        if "data" not in result or "predictContracts" not in result["data"]:
+        subscriptions = result["data"]["predictSubscriptions"]
+        if subscriptions == []:
             break
-        contracts = result["data"]["predictContracts"]
-        if contracts == []:
-            break
-        no_of_zeroes = 0
-        for contract in contracts:
-            contract_address = contract["id"]
+        for sub in subscriptions:
+            contract_address = sub["predictContract"]["id"]
             if contract_address not in contract_addresses:
-                no_of_zeroes += 1
                 continue
-            order_count = len(contract["token"]["orders"])
-            if order_count == 0:
-                no_of_zeroes += 1
-            for buy in contract["token"]["orders"]:
-                # 1.2 20% fee
-                # 0.001 0.01% community swap fee
-                consume_amt = float(buy["lastPriceValue"]) * 1.201
-                consume_so_far[contract_address] += consume_amt
-        if no_of_zeroes == len(contracts):
-            break
+            consume_so_far[contract_address] += 3.0
     return consume_so_far
