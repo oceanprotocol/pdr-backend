@@ -77,7 +77,7 @@ button{
     gap: 10px;
 }
 
-.table-title {    
+.table-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -96,4 +96,8 @@ button{
     font-size: 15px;
     background-color: #dedede;
     border-radius: 3px;
+}
+
+.show-hide {
+    display: none;
 }
