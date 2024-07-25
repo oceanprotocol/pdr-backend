@@ -34,7 +34,7 @@ def test_get_consume_so_far_per_contract():
         slot_data = SAMPLE_CONTRACT_DATA
 
         if call_count > 0:
-            slot_data[0]["token"]["orders"] = []
+            slot_data = []
 
         call_count += 1
         return {"data": {"predictSubscriptions": slot_data}}
