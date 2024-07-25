@@ -20,8 +20,7 @@ def process_payouts(payouts: List[dict], tx_fee_cost) -> tuple:
         tuple: Tuple of slots, accuracies, profits, and stakes.
     """
     slots, accuracies, profits, stakes, tx_costs = [], [], [], [], []
-    profit = predictions = correct_predictions = 0
-    tx_cost = -tx_fee_cost
+    profit = predictions = correct_predictions = tx_cost = 0
 
     for p in payouts:
         predictions += 1
@@ -149,7 +148,14 @@ def _make_figures(fig_tup: Tuple) -> Tuple[go.Figure, go.Figure, go.Figure, go.F
 def get_figures_and_metrics(
     payouts: Optional[List], feeds: ArgFeeds, predictoors: List[str], fee_cost: float
 ) -> Tuple[
-    go.Figure, go.Figure, go.Figure, go.Figure, float | None, float | None, float | None
+    go.Figure,
+    go.Figure,
+    go.Figure,
+    go.Figure,
+    float | None,
+    float | None,
+    float | None,
+    float | None,
 ]:
     """
     Get figures for accuracy, profit, and costs.
@@ -162,10 +168,13 @@ def get_figures_and_metrics(
     """
     if not payouts:
         figures = _make_figures(_empty_trio())
-        return figures[0], figures[1], figures[2], figures[3], 0.0, 0.0, 0.0
+        return figures[0], figures[1], figures[2], figures[3], 0.0, 0.0, 0.0, 0.0
 
     accuracy_scatters, profit_scatters, stakes_scatters, costs_scatters = [], [], [], []
-    avg_accuracy, total_profit, avg_stake = 0.0, 0.0, 0.0
+    avg_accuracy, total_profit, total_costs, avg_stake = 0.0, 0.0, 0.0, 0.0
+
+    # multiply by 2 to also cover prediction and payout txs
+    fee_cost = 2 * fee_cost
 
     all_stakes = []
     prediction_count = 0
@@ -195,6 +204,7 @@ def get_figures_and_metrics(
         correct_prediction_count += correct_predictions
 
         total_profit = (profits[-1] + total_profit) if total_profit else profits[-1]
+        total_costs = (tx_costs[-1] + total_costs) if total_costs else tx_costs[-1]
 
         short_name = f"{predictor[:5]} - {str(feed)}"
         accuracy_scatters.append(
@@ -232,5 +242,6 @@ def get_figures_and_metrics(
         figures[3],
         avg_accuracy,
         total_profit,
+        total_costs,
         avg_stake,
     )

@@ -33,6 +33,7 @@ def test_process_payouts(
     slots, accuracies, profits, costs, stakes, correct_predictions, predictions = result
 
     assert correct_predictions == 0
+    assert costs > 0
     assert predictions == 2
     assert len(slots) == len(filtered_payouts)
     assert slots[0] == UnixTimeS(
@@ -145,6 +146,7 @@ def test_get_figures_and_metrics(
         fig_stakes,
         avg_accuracy,
         total_profit,
+        total_costs,
         avg_stake,
     ) = get_figures_and_metrics(payouts, sample_feeds, sample_predictoors, fee_cost)
 
@@ -178,8 +180,10 @@ def test_get_figures_and_metrics(
     # Check metrics
     assert avg_accuracy is not None
     assert total_profit is not None
+    assert total_costs is not None
     assert avg_stake is not None
 
     assert isinstance(avg_accuracy, float)
     assert isinstance(total_profit, float)
+    assert isinstance(total_costs, float)
     assert isinstance(avg_stake, float)

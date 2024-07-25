@@ -211,13 +211,14 @@ def get_date_period_text(payouts: List):
     return date_period_text
 
 
-def calculate_gass_fee_costs(web3_pp, feed_contract_addr, prices):
+def calculate_tx_gass_fee_cost_in_OCEAN(web3_pp, feed_contract_addr, prices):
     web3 = Web3(Web3.HTTPProvider(web3_pp.rpc_url))
 
     # generic params
     predicted_value = True
     stake_amt_wei = Eth(10).to_wei().amt_wei
     prediction_ts = Eth(1721723066).to_wei().amt_wei
+    # predictoor_addr = "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"
 
     # gas price
     gas_price = web3.eth.gas_price
@@ -227,14 +228,24 @@ def calculate_gass_fee_costs(web3_pp, feed_contract_addr, prices):
         address=web3.to_checksum_address(feed_contract_addr),
         abi=web3_pp.get_contract_abi("ERC20Template3"),
     )
-    gas_estimate = contract.functions["submitPredval"](
+    gas_estimate_prediction = contract.functions["submitPredval"](
         predicted_value, stake_amt_wei, prediction_ts
     ).estimate_gas({"from": "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"})
 
     # cals tx fee cost
-    tx_fee = Wei(gas_estimate * gas_price).to_eth().amt_eth
+    tx_fee_rose_prediction = (
+        Wei(gas_estimate_prediction * gas_price).to_eth().amt_eth / 10
+    )
 
-    tx_fee_price_usdt = tx_fee * prices["ROSE"]
-    tx_fee_price_ocean = tx_fee_price_usdt * prices["OCEAN"]
+    tx_fee_price_usdt_prediction = tx_fee_rose_prediction * prices["ROSE"]
+    tx_fee_price_ocean_prediction = tx_fee_price_usdt_prediction / prices["OCEAN"]
 
-    return tx_fee_price_ocean
+    # gas_estimate_payout = contract.functions["payout"](
+    #    prediction_ts, predictoor_addr
+    # ).estimate_gas({"from": "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"})
+    # tx_fee_rose_payout = Wei(gas_estimate_payout * gas_price).to_eth().amt_eth
+    # tx_fee_price_usdt_payout = tx_fee_rose_payout * prices["ROSE"]
+    # tx_fee_price_ocean_payout = tx_fee_price_usdt_payout / prices["OCEAN"]
+    # print(tx_fee_price_ocean_prediction, tx_fee_price_ocean_payout)
+
+    return tx_fee_price_ocean_prediction
