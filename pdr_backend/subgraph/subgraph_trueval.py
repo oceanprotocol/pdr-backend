@@ -122,9 +122,9 @@ def fetch_truevals(
         ID = record["id"]
         token = record["slot"]["predictContract"]["token"]["name"]
         slot = UnixTimeS(int(record["id"].split("-")[1]))
-        revenue = (float(record["slot"]["revenue"]),)
-        roundSumStakesUp = (float(record["slot"]["roundSumStakesUp"]),)
-        roundSumStakes = (float(record["slot"]["roundSumStakes"]),)
+        revenue = float(record["slot"].get("revenue", 0))
+        roundSumStakesUp = float(record["slot"].get("roundSumStakesUp", 0))
+        roundSumStakes = float(record["slot"].get("roundSumStakes", 0))
 
         trueval = Trueval(
             ID=ID,
