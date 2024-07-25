@@ -7,11 +7,7 @@ from collections import OrderedDict
 from typing import Callable
 
 from polars import Boolean, Float64, Int64, Utf8
-
-from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.lake_mapper import LakeMapper
-from pdr_backend.lake.table import Table, TempTable
-from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("lake")
 
