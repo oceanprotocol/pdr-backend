@@ -1,5 +1,5 @@
 from itertools import product
-from typing import List, Optional, Tuple, Union, NamedTuple
+from typing import List, Optional, Union, NamedTuple
 
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
@@ -9,13 +9,40 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.util.time_types import UnixTimeS
 
 
-class FiguresAndMetricsResult(NamedTuple):
-    accuracy_figure: go.Figure
-    profit_figure: go.Figure
-    costs_figure: go.Figure
-    avg_accuracy: Optional[float]
-    total_profit: Optional[float]
-    avg_stake: Optional[float]
+class FiguresAndMetricsResult(object):
+    def __init__(self):
+        self.avg_accuracy = 0
+        self.total_profit = 0
+        self.avg_stake = 0
+
+        self.accuracy_scatters = []
+        self.fig_accuracy = None
+
+        self.profit_scatters = []
+        self.fig_profit = None
+
+        self.stakes_scatters = []
+        self.fig_costs = None
+
+    def make_figures(self):
+        accuracy_scatters = self.accuracy_scatters if self.accuracy_scatters else [go.Scatter(x=[], y=[], mode="lines", name="accuracy")]
+
+        self.fig_accuracy = create_figure(
+            accuracy_scatters,
+            title="Accuracy",
+            yaxis_title="Accuracy(%)",
+            yaxis_range=[30, 70],
+        )
+
+        profit_scatters = self.profit_scatters if self.profit_scatters else [go.Scatter(x=[], y=[], mode="lines", name="profit")]
+        self.fig_profit = create_figure(
+            profit_scatters, title="Profit", yaxis_title="Profit(OCEAN)", show_legend=False
+        )
+
+        stakes_scatters = self.stakes_scatters if self.stakes_scatters else [go.Bar(x=[], y=[], name="stakes", width=5)]
+        self.fig_costs = create_figure(
+            stakes_scatters, title="Costs", yaxis_title="Stake(OCEAN)", show_legend=False
+        )
 
 
 class AccInterval(NamedTuple):
@@ -23,14 +50,15 @@ class AccInterval(NamedTuple):
     acc_u: float
 
 
-class ProcessedPayouts(NamedTuple):
-    slot_in_date_format: List[str]
-    accuracies: List[float]
-    profits: List[float]
-    stakes: List[float]
-    correct_predictions: int
-    predictions: int
-    acc_intervals: List[AccInterval]
+class ProcessedPayouts(object):
+    def __init__(self):
+        self.slot_in_date_format = []
+        self.accuracies = []
+        self.profits = []
+        self.stakes = []
+        self.correct_predictions = 0
+        self.predictions = 0
+        self.acc_intervals = []
 
 
 @enforce_types
@@ -46,30 +74,24 @@ def process_payouts(
     Returns:
         tuple: Tuple of slots, accuracies, profits, stakes.
     """
-    (
-        _,
-        accuracies,
-        profits,
-        stakes,
-        correct_predictions,
-        predictions,
-        acc_intervals,
-    ) = ProcessedPayouts([], [], [], [], 0, 0, [])
+
+    processed = ProcessedPayouts()
 
     profit = 0.0
     slots = []
     for p in payouts:
-        predictions += 1
+        processed.predictions += 1
         profit_change = float(max(p["payout"], 0) - p["stake"])
         profit += profit_change
-        correct_predictions += p["payout"] > 0
+        processed.correct_predictions += p["payout"] > 0
 
         if calculate_confint:
             acc_l, acc_u = proportion_confint(
-                count=correct_predictions, nobs=predictions
+                count=processed.correct_predictions,
+                nobs=processed.predictions
             )
 
-            acc_intervals.append(
+            processed.acc_intervals.append(
                 AccInterval(
                     acc_l,
                     acc_u,
@@ -77,23 +99,15 @@ def process_payouts(
             )
 
         slots.append(p["slot"])
-        accuracies.append((correct_predictions / predictions) * 100)
-        profits.append(profit)
-        stakes.append(p["stake"])
+        processed.accuracies.append((processed.correct_predictions / processed.predictions) * 100)
+        processed.profits.append(profit)
+        processed.stakes.append(p["stake"])
 
-    slot_in_date_format = [
+    processed.slot_in_date_format = [
         UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
     ]
 
-    return ProcessedPayouts(
-        slot_in_date_format,
-        accuracies,
-        profits,
-        stakes,
-        correct_predictions,
-        predictions,
-        acc_intervals,
-    )
+    return processed
 
 
 @enforce_types
@@ -140,43 +154,6 @@ def create_figure(
     return fig
 
 
-def _empty_accuracy_scatter() -> List[go.Scatter]:
-    return [go.Scatter(x=[], y=[], mode="lines", name="accuracy")]
-
-
-def _empty_profit_scatter() -> List[go.Scatter]:
-    return [go.Scatter(x=[], y=[], mode="lines", name="profit")]
-
-
-def _empty_stakes_bar() -> List[go.Bar]:
-    return [go.Bar(x=[], y=[], name="stakes", width=5)]
-
-
-def _empty_trio() -> Tuple[go.Figure, go.Figure, go.Figure]:
-    return _empty_accuracy_scatter(), _empty_profit_scatter(), _empty_stakes_bar()
-
-
-def _make_figures(fig_tup: Tuple) -> Tuple[go.Figure, go.Figure, go.Figure]:
-    accuracy_scatters, profit_scatters, stakes_scatters = fig_tup
-
-    fig_accuracy = create_figure(
-        accuracy_scatters,
-        title="Accuracy",
-        yaxis_title="Accuracy(%)",
-        yaxis_range=[30, 70],
-    )
-
-    fig_profit = create_figure(
-        profit_scatters, title="Profit", yaxis_title="Profit(OCEAN)", show_legend=False
-    )
-
-    fig_costs = create_figure(
-        stakes_scatters, title="Costs", yaxis_title="Stake(OCEAN)", show_legend=False
-    )
-
-    return fig_accuracy, fig_profit, fig_costs
-
-
 @enforce_types
 def get_figures_and_metrics(
     payouts: Optional[List], feeds: ArgFeeds, predictors: List[str]
@@ -191,15 +168,12 @@ def get_figures_and_metrics(
         FiguresAndMetricsResult: Tuple of accuracy, profit, and
         costs figures, avg accuracy, total profit, avg stake
     """
-    if not payouts:
-        accuracy_fig, profit_fig, costs_fig = _make_figures(_empty_trio())
-        return FiguresAndMetricsResult(
-            accuracy_fig, profit_fig, costs_fig, 0.0, 0.0, 0.0
-        )
+    figs_metrics = FiguresAndMetricsResult()
 
-    accuracy_scatters, profit_scatters, stakes_scatters = [], [], []
+    if not payouts:
+        return figs_metrics
+
     all_stakes = []
-    total_profit = 0.0
     correct_prediction_count = 0
     prediction_count = 0
 
@@ -220,12 +194,12 @@ def get_figures_and_metrics(
         all_stakes.extend(processed_data.stakes)
         correct_prediction_count += processed_data.correct_predictions
         prediction_count += processed_data.predictions
-        total_profit += processed_data.profits[-1] if processed_data.profits else 0.0
+        figs_metrics.total_profit += processed_data.profits[-1] if processed_data.profits else 0.0
 
         short_name = f"{predictor[:5]} - {str(feed)}"
 
         if show_confidence_interval:
-            accuracy_scatters.append(
+            figs_metrics.accuracy_scatters.append(
                 go.Scatter(
                     x=processed_data.slot_in_date_format,
                     y=[
@@ -238,7 +212,7 @@ def get_figures_and_metrics(
                     showlegend=False,
                 )
             )
-            accuracy_scatters.append(
+            figs_metrics.accuracy_scatters.append(
                 go.Scatter(
                     x=processed_data.slot_in_date_format,
                     y=[
@@ -253,7 +227,7 @@ def get_figures_and_metrics(
                 )
             )
 
-        accuracy_scatters.append(
+        figs_metrics.accuracy_scatters.append(
             go.Scatter(
                 x=processed_data.slot_in_date_format,
                 y=processed_data.accuracies,
@@ -261,7 +235,7 @@ def get_figures_and_metrics(
                 name=short_name,
             )
         )
-        profit_scatters.append(
+        figs_metrics.profit_scatters.append(
             go.Scatter(
                 x=processed_data.slot_in_date_format,
                 y=processed_data.profits,
@@ -269,7 +243,7 @@ def get_figures_and_metrics(
                 name=short_name,
             )
         )
-        stakes_scatters.append(
+        figs_metrics.stakes_scatters.append(
             go.Bar(
                 x=processed_data.slot_in_date_format,
                 y=processed_data.stakes,
@@ -278,22 +252,10 @@ def get_figures_and_metrics(
             )
         )
 
-    avg_stake = sum(all_stakes) / len(all_stakes) if all_stakes else 0.0
-    avg_accuracy = (
+    figs_metrics.avg_stake = sum(all_stakes) / len(all_stakes) if all_stakes else 0.0
+    figs_metrics.avg_accuracy = (
         (correct_prediction_count / prediction_count) * 100 if prediction_count else 0.0
     )
+    figs_metrics.make_figures()
 
-    if not accuracy_scatters:
-        accuracy_scatters = _empty_accuracy_scatter()
-    if not profit_scatters:
-        profit_scatters = _empty_profit_scatter()
-    if not stakes_scatters:
-        stakes_scatters = _empty_stakes_bar()
-
-    accuracy_fig, profit_fig, costs_fig = _make_figures(
-        (accuracy_scatters, profit_scatters, stakes_scatters)
-    )
-
-    return FiguresAndMetricsResult(
-        accuracy_fig, profit_fig, costs_fig, avg_accuracy, total_profit, avg_stake
-    )
+    return figs_metrics
