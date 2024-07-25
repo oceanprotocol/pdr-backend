@@ -53,6 +53,7 @@ def test_get_consume_so_far_per_contract():
 
 @enforce_types
 def test_get_consume_so_far_per_contract_empty_data():
+    PATH = "pdr_backend.subgraph.subgraph_consume_so_far"
 
     def mock_query_subgraph(
         subgraph_url, query, tries, timeout
