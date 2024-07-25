@@ -24,7 +24,7 @@ def get_consume_so_far_per_contract(
     chunk_size = 1000  # max for subgraph = 1000
     offset = 0
     consume_so_far: Dict[str, float] = defaultdict(float)
-    print("Getting consume so far...")
+    logger.info("Getting consume so far...")
     while True:
         query = """
         {
