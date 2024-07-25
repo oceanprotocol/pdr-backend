@@ -215,7 +215,11 @@ def get_figures_and_metrics(
         )
         stakes_scatters.append(go.Bar(x=slots, y=stakes, name=short_name, width=5))
         costs_scatters.append(
-            go.Scatter(x=slots, y=tx_costs, mode="lines", name=short_name)
+            go.Bar(
+                x=[f"{feed.pair.base_str}-{feed.timeframe}-{predictor[:4]}"],
+                y=[tx_costs[-1]],
+                name=short_name,
+            )
         )
 
     avg_stake = sum(all_stakes) / len(all_stakes) if all_stakes else 0.0

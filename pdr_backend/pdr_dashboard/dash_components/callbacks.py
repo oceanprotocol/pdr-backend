@@ -13,7 +13,7 @@ from pdr_backend.pdr_dashboard.dash_components.util import (
     get_payouts_from_db,
     get_start_date_from_period,
     select_or_clear_all_by_table,
-    calculate_tx_gass_fee_cost_in_OCEAN,
+    calculate_tx_gas_fee_cost_in_OCEAN,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_graph,
@@ -76,7 +76,7 @@ def get_callbacks(app):
             )
 
         # get fee estimate
-        fee_cost = calculate_tx_gass_fee_cost_in_OCEAN(
+        fee_cost = calculate_tx_gas_fee_cost_in_OCEAN(
             app.web3_pp, feeds[0].contract, app.prices
         )
 
