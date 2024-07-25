@@ -29,7 +29,6 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
 
     app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
     app.config["suppress_callback_exceptions"] = True
-    app.layout = get_layout()
 
     try:
         setup_app(app, ppss)
@@ -53,6 +52,7 @@ def setup_app(app, ppss: PPSS):
         get_user_payouts_stats_from_db(ppss.lake_ss.lake_dir)
     )
     app.favourite_addresses = ppss.predictoor_ss.my_addresses
+    app.layout = get_layout(app)
 
     # fetch token prices
     current_date_ms = UnixTimeMs(int(datetime.now().timestamp()) * 1000 - 300000)

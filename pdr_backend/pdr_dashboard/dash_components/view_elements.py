@@ -1,8 +1,58 @@
+import copy
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
+from pdr_backend.pdr_dashboard.dash_components.util import (
+    get_feed_ids_based_on_predictoors_from_db,
+)
 
 
-def get_input_column():
+def get_feeds_data(app):
+    data = copy.deepcopy(app.feeds_data)
+
+    for feed in data:
+        del feed["contract"]
+
+    columns = [{"name": col, "id": col} for col in data[0].keys()]
+
+    return columns, data
+
+
+def get_predictoors_data(app):
+    columns = [{"name": col, "id": col} for col in app.predictoors_data[0].keys()]
+
+    if app.favourite_addresses:
+        data = [
+            p for p in app.predictoors_data if p["user"] in app.favourite_addresses
+        ] + [
+            p for p in app.predictoors_data if p["user"] not in app.favourite_addresses
+        ]
+    else:
+        data = app.predictoors_data
+
+    return columns, data
+
+
+def get_input_column(app):
+    feed_cols, feed_data = get_feeds_data(app)
+    predictoor_cols, predictoor_data = get_predictoors_data(app)
+
+    selected_predictoors = list(range(len(app.favourite_addresses)))
+
+    if app.favourite_addresses:
+        feed_ids = get_feed_ids_based_on_predictoors_from_db(
+            app.lake_dir,
+            app.favourite_addresses,
+        )
+
+        if feed_ids:
+            feed_data = [
+                feed for feed in app.feeds_data if feed["contract"] in feed_ids
+            ]
+
+        selected_feeds = list(range(len(feed_ids)))
+    else:
+        selected_feeds = []
+
     return html.Div(
         [
             html.Div(
@@ -10,11 +60,10 @@ def get_input_column():
                     table_id="predictoors_table",
                     table_name="Predictoors",
                     searchable_field="user",
-                    columns=[],
-                    data=None,
-                    default_sorting=[
-                        {"column_id": "total_profit", "direction": "desc"}
-                    ],
+                    columns=predictoor_cols,
+                    selected_items=selected_predictoors,
+                    data=predictoor_data,
+                    length=len(app.predictoors_data),
                 ),
                 id="predictoors_container",
             ),
@@ -23,9 +72,10 @@ def get_input_column():
                     table_id="feeds_table",
                     table_name="Feeds",
                     searchable_field="pair",
-                    columns=[],
-                    data=None,
-                    default_sorting=[],
+                    columns=feed_cols,
+                    data=feed_data,
+                    selected_items=selected_feeds,
+                    length=len(app.feeds_data),
                 ),
                 id="feeds_container",
                 style={
@@ -136,7 +186,7 @@ def get_metric(label, value, value_id):
     )
 
 
-def get_layout():
+def get_layout(app):
     return html.Div(
         [
             dcc.Store(id="user-payout-stats"),
@@ -147,28 +197,56 @@ def get_layout():
             dcc.Loading(
                 id="loading",
                 type="default",
-                children=get_main_container(),
+                children=get_main_container(app),
                 custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
             ),
-            dcc.Input(id="is-loading", type="hidden", value=1),
         ],
         style={"height": "100%"},
     )
 
 
-def get_main_container():
+def get_main_container(app):
     return html.Div(
-        [get_input_column(), get_graphs_column()],
+        [get_input_column(app), get_graphs_column()],
         className="main-container",
     )
 
 
-def get_table(table_id, table_name, searchable_field, columns, data, default_sorting):
+def get_table(
+    table_id,
+    table_name,
+    searchable_field,
+    columns,
+    data,
+    selected_items=None,
+    length=0,
+):
     return html.Div(
         [
             html.Div(
                 [
-                    html.Span(table_name, style={"fontSize": "20px"}),
+                    html.Div(
+                        [
+                            html.Span(
+                                table_name, style={"fontSize": "20px", "hight": "100%"}
+                            ),
+                            html.Span(
+                                id=f"table-rows-count-{table_id}",
+                                children=f"({length})",
+                                style={
+                                    "fontSize": "16px",
+                                    "color": "gray",
+                                    "hight": "100%",
+                                    "marginLeft": "4px",
+                                },
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "justifyContet": "center",
+                            "alignItems": "center",
+                        },
+                    ),
                     (
                         dbc.Switch(
                             id="toggle-switch-predictoor-feeds",
@@ -179,7 +257,7 @@ def get_table(table_id, table_name, searchable_field, columns, data, default_sor
                         else dbc.Switch(
                             id="show-favourite-addresses",
                             label="Select configured predictoors",
-                            value=True,
+                            value=bool(selected_items),
                         )
                     ),
                 ],
@@ -216,11 +294,10 @@ def get_table(table_id, table_name, searchable_field, columns, data, default_sor
             ),
             dash_table.DataTable(
                 id=table_id,
-                columns=[{"name": col, "id": col, "sortable": True} for col in columns],
-                sort_by=default_sorting,
+                columns=columns,
                 data=data,
                 row_selectable="multi",  # Can be 'multi' for multiple rows
-                selected_rows=[],
+                selected_rows=selected_items if selected_items else [],
                 sort_action="native",  # Enables data to be sorted
                 style_cell={"textAlign": "left"},
                 style_table={

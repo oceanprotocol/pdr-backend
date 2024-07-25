@@ -61,15 +61,15 @@ def get_user_payouts_stats_from_db(lake_dir: str):
     return _query_db(
         lake_dir,
         f"""
-            SELECT 
+            SELECT
                 "user",
                 SUM(payout - stake) AS total_profit,
                 SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
                 AVG(stake) AS avg_stake
-            FROM 
+            FROM
                 {Payout.get_lake_table_name()}
-            GROUP BY 
-                "user" 
+            GROUP BY
+                "user"
         """,
     )
 
@@ -139,7 +139,7 @@ def filter_objects_by_field(
     return [
         obj
         for obj in objects
-        if search_string.lower() in obj[field].lower() or obj in previous_objects
+        if search_string.lower() in obj[field].lower() and obj not in previous_objects
     ]
 
 
