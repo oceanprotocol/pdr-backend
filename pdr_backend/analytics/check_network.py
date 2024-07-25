@@ -55,7 +55,7 @@ def check_dfbuyer(
     token_amt: float,
 ):
     cur_ut = UnixTimeS.now()
-    start_ut = UnixTimeS(int((cur_ut // S_PER_WEEK) * S_PER_WEEK))
+    start_ut = UnixTimeS(int((cur_ut // S_PER_WEEK) * S_PER_WEEK - 3 * 60 * 60))
 
     contracts_sg_dict = contract_query_result["data"]["predictContracts"]
     contract_addresses = [
@@ -217,6 +217,6 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     if token_amt % 60 != 0:
         token_amt = ((token_amt // 60) + 1) * 60
 
-    # check_dfbuyer(dfbuyer_addr, result, web3_pp.subgraph_url, token_amt)
+    check_dfbuyer(dfbuyer_addr, result, web3_pp.subgraph_url, token_amt)
 
     check_subgraph(web3_pp)
