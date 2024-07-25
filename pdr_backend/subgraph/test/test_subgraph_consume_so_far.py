@@ -37,7 +37,7 @@ def test_get_consume_so_far_per_contract():
             slot_data[0]["token"]["orders"] = []
 
         call_count += 1
-        return {"data": {"predictContracts": slot_data}}
+        return {"data": {"predictSubscriptions": slot_data}}
 
     PATH = "pdr_backend.subgraph.subgraph_consume_so_far"
     with patch(f"{PATH}.query_subgraph", mock_query_subgraph):
@@ -74,7 +74,7 @@ def test_get_consume_so_far_per_contract_empty_data():
     def mock_query_subgraph_2(
         subgraph_url, query, tries, timeout
     ):  # pylint:disable=unused-argument
-        return {"data": {"predictContracts": []}}
+        return {"data": {"predictSubscriptions": []}}
 
     with patch(f"{PATH}.query_subgraph", mock_query_subgraph_2):
         consumes = get_consume_so_far_per_contract(
@@ -89,7 +89,7 @@ def test_get_consume_so_far_per_contract_empty_data():
     def mock_query_subgraph_3(
         subgraph_url, query, tries, timeout
     ):  # pylint:disable=unused-argument
-        return {"data": {"predictContracts": [{"id": "contract2"}]}}
+        return {"data": {"predictSubscriptions": [{"id": "contract2"}]}}
 
     with patch(f"{PATH}.query_subgraph", mock_query_subgraph_3):
         consumes = get_consume_so_far_per_contract(
