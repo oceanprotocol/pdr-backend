@@ -13,6 +13,7 @@ from enforce_typing import enforce_types
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.aimodel.ycont_to_ytrue import ycont_to_ytrue
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.contract.pred_submitter_mgr import PredSubmitterMgr
 from pdr_backend.contract.token import NativeToken, Token
@@ -425,7 +426,7 @@ class PredictoorAgent:
         else:  # transform = "RelDiff"
             y_thr = 0.0
 
-        ybool = data_f.ycont_to_ytrue(ytran, y_thr)
+        ybool = ycont_to_ytrue(ytran, y_thr)
 
         if (
             self.model is None

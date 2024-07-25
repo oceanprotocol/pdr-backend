@@ -110,6 +110,10 @@ class PredictoorSS(StrMixin):
     def min_payout_slots(self) -> int:
         return self.d["bot_only"].get("min_payout_slots", 0)
 
+    @property
+    def my_addresses(self) -> List[str]:
+        return self.d.get("my_addresses", [])
+
     # --------------------------------
     # setters (add as needed)
     @enforce_types
@@ -195,6 +199,7 @@ def predictoor_ss_test_dict(
     pred_submitter_mgr="",
     aimodel_data_ss_dict: Optional[dict] = None,
     aimodel_ss_dict: Optional[dict] = None,
+    my_addresses: Optional[List] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
     feedset_list = feedset_list or feedset_test_list()
@@ -203,7 +208,7 @@ def predictoor_ss_test_dict(
         "approach": 1,
         "stake_amount": 1,
         "sim_only": {
-            "others_stake": 2313,
+            "others_stake": 2313.0,
             "others_accuracy": 0.50001,
             "revenue": 0.93007,
         },
@@ -214,5 +219,6 @@ def predictoor_ss_test_dict(
         },
         "aimodel_data_ss": aimodel_data_ss_dict or aimodel_data_ss_test_dict(),
         "aimodel_ss": aimodel_ss_dict or aimodel_ss_test_dict(),
+        "my_addresses": my_addresses or [],
     }
     return d

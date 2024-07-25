@@ -98,41 +98,41 @@ class ETL:
             update_events_table = UpdateEventsTable.from_dataclass(table)
             temp_update_table = TempUpdateTable.from_dataclass(table)
 
-            if db.table_exists(update_events_table.table_name):
-                # Insert new records into live tables
-                # We don't know if the table exists or not, so get the query string
-                temp_to_prod_query = db.get_query_move_table_data(
-                    new_events_table, prod_table
-                )
+            if not db.table_exists(update_events_table.table_name):
+                continue
 
-                # We'll also get the query string from the helper
-                drop_records_from_table_by_id_query = (
-                    db.get_query_drop_records_from_table_by_id(
-                        prod_table.table_name, temp_update_table.table_name
-                    )
-                )
+            # Insert new records into live tables
+            # We don't know if the table exists or not, so get the query string
+            temp_to_prod_query = db.get_query_move_table_data(
+                new_events_table, prod_table
+            )
 
-                # Here, the table needs to exist. So we'll build our own insert statement.
-                temp_update_to_prod_query = f"""
-                INSERT INTO {prod_table.table_name} SELECT * FROM {temp_update_table.table_name};
-                """
+            # We'll also get the query string from the helper
+            drop_common_records_by_id_query = db.get_query_drop_common_records_by_id(
+                prod_table.table_name, temp_update_table.table_name
+            )
 
-                # We then need to drop the rows after all the ETL is complete
-                cleanup_query = f"""
-                DROP TABLE IF EXISTS {new_events_table.table_name};
-                DROP TABLE IF EXISTS {update_events_table.table_name};
-                DROP TABLE IF EXISTS {temp_update_table.table_name};
-                """
+            # Here, the table needs to exist. So we'll build our own insert statement.
+            temp_update_to_prod_query = f"""
+            INSERT INTO {prod_table.table_name} SELECT * FROM {temp_update_table.table_name};
+            """
 
-                # Assemble and execute final transaction
-                final_query = f"""
-                {temp_to_prod_query}
-                {drop_records_from_table_by_id_query}
-                {temp_update_to_prod_query}
-                {cleanup_query}
-                """
+            # We then need to drop the rows after all the ETL is complete
+            cleanup_query = f"""
+            DROP TABLE IF EXISTS {new_events_table.table_name};
+            DROP TABLE IF EXISTS {update_events_table.table_name};
+            DROP TABLE IF EXISTS {temp_update_table.table_name};
+            """
 
-                db.execute_sql(final_query)
+            # Assemble and execute final transaction
+            final_query = f"""
+            {temp_to_prod_query}
+            {drop_common_records_by_id_query}
+            {temp_update_to_prod_query}
+            {cleanup_query}
+            """
+
+            db.execute_sql(final_query)
 
     def do_etl(self):
         """
@@ -141,7 +141,7 @@ class ETL:
         """
 
         st_ts = time.time_ns() / 1e9
-        logger.info("do_etl - Start ETL.")
+        logger.info(">>>> REQUIRED ETL - do_etl - Start ETL.")
 
         try:
             # Drop any build tables if they already exist
@@ -173,7 +173,7 @@ class ETL:
             Now, let's build the bronze tables
             key tables: [bronze_pdr_predictions]
         """
-        logger.info("do_bronze_step - Build bronze tables.")
+        logger.info(">>>> REQUIRED ETL - do_bronze_step - Build bronze tables.")
 
         # Update bronze tables
         # let's keep track of time passed so we can log how long it takes for this step to complete
@@ -230,8 +230,6 @@ class ETL:
 
         final_query = " UNION ALL ".join(queries)
         result = DuckDBDataStore(self.ppss.lake_ss.lake_dir).query_data(final_query)
-
-        logger.info("_get_max_timestamp_values_from - result: %s", result)
 
         if result is None:
             return none_values
@@ -306,11 +304,18 @@ class ETL:
     def is_bronze_first_run(
         self, st_timestamp: UnixTimeMs, fin_timestamp: UnixTimeMs
     ) -> bool:
+        """
+        @description
+            Check if it is the first run for the bronze tables based on timestamps
+        @returns
+            bool: True if it is the first run, False otherwise
+        """
         return self._clamp_checkpoints_to_ppss is True or (
             st_timestamp == self.ppss.lake_ss.st_timestamp
             and fin_timestamp == self.ppss.lake_ss.fin_timestamp
         )
 
+    @enforce_types
     def do_bronze_queries(self):
         """
         @description
@@ -322,14 +327,14 @@ class ETL:
         st_timestamp, fin_timestamp = self._calc_bronze_start_end_ts()
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
 
-        _is_bronze_first_run = self.is_bronze_first_run(st_timestamp, fin_timestamp)
+        is_bronze_first_run = self.is_bronze_first_run(st_timestamp, fin_timestamp)
 
         for etl_query in _ETL_REGISTERED_QUERIES:
             etl_query(
                 db=db,
                 st_ms=st_timestamp,
                 fin_ms=fin_timestamp,
-                first_run=_is_bronze_first_run,
+                first_run=is_bronze_first_run,
             )
 
             logger.info(

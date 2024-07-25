@@ -230,12 +230,13 @@ def test_predictoor_agent_calc_stakes2_1feed(tmpdir, monkeypatch, pred_submitter
         ppss.web3_pp = Mock(spec=Web3PP)
         ppss.web3_pp.query_feed_contracts.return_value = feed_contracts
 
+        ar_n = 3
+        ppss.predictoor_ss.aimodel_data_ss.set_autoregressive_n(ar_n)
+        ppss.predictoor_ss.aimodel_data_ss.set_max_n_train(5)
+
         agent = PredictoorAgent(ppss)
         feed = ppss.predictoor_ss.predict_train_feedsets[0]
         agent.calc_stakes2(feed)
-
-        ar_n = ppss.predictoor_ss.aimodel_data_ss.autoregressive_n
-        assert ar_n == 3
 
         assert mock_model.last_X.shape == (1, 3) == (1, ar_n * 1)
         expected_X = np.array([BTC_CLOSE_VALS[-ar_n:]])  # [17.0, 18.0, 19.0]
@@ -270,6 +271,10 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch, pred_submitte
         ppss.web3_pp = Mock(spec=Web3PP)
         ppss.web3_pp.query_feed_contracts.return_value = feed_contracts
 
+        ar_n = 3
+        ppss.predictoor_ss.aimodel_data_ss.set_autoregressive_n(ar_n)
+        ppss.predictoor_ss.aimodel_data_ss.set_max_n_train(5)
+
         assert len(feeds) == 2
 
         # do prediction
@@ -277,9 +282,6 @@ def test_predictoor_agent_calc_stakes2_2feeds(tmpdir, monkeypatch, pred_submitte
         agent = PredictoorAgent(ppss)
         feed = ppss.predictoor_ss.predict_train_feedsets[0]
         agent.calc_stakes2(feed)
-
-        ar_n = ppss.predictoor_ss.aimodel_data_ss.autoregressive_n
-        assert ar_n == 3
 
         assert mock_model.last_X.shape == (1, 6) == (1, ar_n * 2)
 

@@ -29,11 +29,9 @@ class TableType(Enum):
 def is_etl_table(table_name: str) -> bool:
     table_name = table_name.removeprefix("_")
     table_name = table_name.removeprefix("temp_")
-    table_name = table_name.removeprefix("_")
-    table_name = table_name.removeprefix("new_events_")
-    table_name = table_name.removeprefix("update_events_")
-    table_name = table_name.removeprefix("temp_update_")
-    table_name = table_name.removeprefix("temp_")
+
+    for _, member in TableType.__members__.items():
+        table_name = table_name.removeprefix(str(member.value).lower() + "_")
 
     return (
         table_name.startswith("bronze_")
@@ -90,16 +88,14 @@ class Table:
 
     @property
     def table_name(self) -> str:
-        if self.table_type == TableType.NEW_EVENTS:
-            return f"_new_events_{self._base_table_name}"
-        if self.table_type == TableType.UPDATE_EVENTS:
-            return f"_update_events_{self._base_table_name}"
-        if self.table_type == TableType.TEMP:
-            return f"_temp_{self._base_table_name}"
-        if self.table_type == TableType.TEMP_UPDATE:
-            return f"_temp_update_{self._base_table_name}"
+        table_type_mapping = {
+            TableType.NEW_EVENTS: "_new_events_",
+            TableType.UPDATE_EVENTS: "_update_events_",
+            TableType.TEMP: "_temp_",
+            TableType.TEMP_UPDATE: "_temp_update_",
+        }
 
-        return self._base_table_name
+        return table_type_mapping.get(self.table_type, "") + self._base_table_name
 
     @property
     def dataclass(self) -> Type[LakeMapper]:
@@ -151,7 +147,7 @@ class Table:
         @arguments:
             data - The Polars DataFrame to save.
         """
-        DuckDBDataStore(ppss.lake_ss.lake_dir).insert_to_table(data, self.table_name)
+        DuckDBDataStore(ppss.lake_ss.lake_dir).insert_from_df(data, self.table_name)
         logger.info(
             "  Appended %s rows to db table: %s", data.shape[0], self.table_name
         )

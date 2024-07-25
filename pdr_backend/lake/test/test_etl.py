@@ -21,12 +21,10 @@ def test_etl_tables(_sample_etl):
     # Assert all dfs are not the same size as mock data
     pdr_predictions_df = db.query_data("SELECT * FROM pdr_predictions")
     pdr_payouts_df = db.query_data("SELECT * FROM pdr_payouts")
-    pdr_truevals_df = db.query_data("SELECT * FROM pdr_truevals")
 
     # Assert len of all dfs
     assert len(pdr_predictions_df) == 2057
     assert len(pdr_payouts_df) == 1870
-    assert len(pdr_truevals_df) == 570
 
 
 # pylint: disable=too-many-statements

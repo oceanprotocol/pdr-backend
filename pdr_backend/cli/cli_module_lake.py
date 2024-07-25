@@ -7,12 +7,11 @@ import logging
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS, LakeArgParser
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.etl import ETL
 from pdr_backend.lake.gql_data_factory import GQLDataFactory
-from pdr_backend.lake.lake_info import LakeInfo
-from pdr_backend.lake.lake_validate import LakeValidate
-from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import drop_tables_from_st
+from pdr_backend.lake_info.lake_info import LakeInfo
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -51,40 +50,6 @@ def do_lake_subcommand(args):
 
 # subcommands
 @enforce_types
-def do_lake_describe(args, ppss):
-    lake_info = LakeInfo(ppss, use_html=args.HTML)
-    lake_info.run()
-
-
-@enforce_types
-def do_lake_validate(_, ppss):
-    lake_validate = LakeValidate(ppss)
-    lake_validate.run()
-
-
-@enforce_types
-def do_lake_query(args, ppss):
-    """
-    @description
-        Query the lake for a table or view
-    """
-    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=True)
-    try:
-        df = db.query_data(args.QUERY)
-        print(df)
-        print("Rows:", len(df))
-    except Exception as e:
-        logger.error("Error querying lake: %s", e)
-        print(e)
-
-
-@enforce_types
-def do_lake_raw_drop(args, ppss):
-    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
-    drop_tables_from_st(db, "raw", args.ST)
-
-
-@enforce_types
 def do_lake_raw_update(_, ppss):
     """
     @description
@@ -100,12 +65,6 @@ def do_lake_raw_update(_, ppss):
     except Exception as e:
         logger.error("Error updating raw lake data: %s", e)
         print(e)
-
-
-@enforce_types
-def do_lake_etl_drop(args, ppss):
-    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
-    drop_tables_from_st(db, "etl", args.ST)
 
 
 @enforce_types
@@ -125,3 +84,43 @@ def do_lake_etl_update(_, ppss):
     gql_data_factory = GQLDataFactory(ppss)
     etl = ETL(ppss, gql_data_factory)
     etl.do_etl()
+
+
+@enforce_types
+def do_lake_raw_drop(args, ppss):
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
+    drop_tables_from_st(db, "raw", args.ST)
+
+
+@enforce_types
+def do_lake_etl_drop(args, ppss):
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=False)
+    drop_tables_from_st(db, "etl", args.ST)
+
+
+@enforce_types
+def do_lake_describe(args, ppss):
+    lake_info = LakeInfo(ppss, use_html=args.HTML)
+    lake_info.run()
+
+
+@enforce_types
+def do_lake_validate(_, ppss):
+    lake_info = LakeInfo(ppss)
+    lake_info.run_validation()
+
+
+@enforce_types
+def do_lake_query(args, ppss):
+    """
+    @description
+        Query the lake for a table or view
+    """
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir, read_only=True)
+    try:
+        df = db.query_data(args.QUERY)
+        print(df)
+        print("Rows:", len(df))
+    except Exception as e:
+        logger.error("Error querying lake: %s", e)
+        print(e)
