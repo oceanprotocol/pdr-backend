@@ -7,29 +7,19 @@ from unittest.mock import patch
 from enforce_typing import enforce_types
 from pytest import approx
 
-from pdr_backend.subgraph.info725 import key_to_key725, value_to_value725
 from pdr_backend.subgraph.subgraph_consume_so_far import get_consume_so_far_per_contract
 from pdr_backend.util.time_types import UnixTimeS
 
 
-
 SAMPLE_CONTRACT_DATA = [
-     {
-        "user": {
-          "id": "0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a"
-        },
-        "predictContract": {
-          "id": "contract1"
-        }
-      },
-      {
-        "user": {
-          "id": "0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a"
-        },
-        "predictContract": {
-          "id": "contract1"
-        }
-      }
+    {
+        "user": {"id": "0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a"},
+        "predictContract": {"id": "contract1"},
+    },
+    {
+        "user": {"id": "0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a"},
+        "predictContract": {"id": "contract1"},
+    },
 ]
 
 
