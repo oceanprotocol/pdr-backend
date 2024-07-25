@@ -86,9 +86,6 @@ def mock_payout(payout_tuple: tuple) -> Payout:
         slot=UnixTimeS(slot),
         payout=payout,
         predvalue=predvalue,
-        revenue=revenue,
-        roundSumStakesUp=roundSumStakesUp,
-        roundSumStakes=roundSumStakes,
         stake=stake,
     )
 
