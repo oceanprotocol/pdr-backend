@@ -9,11 +9,12 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.util.time_types import UnixTimeS
 
 
-class FiguresAndMetricsResult(object):
+# pylint: disable=too-many-instance-attributes
+class FiguresAndMetricsResult:
     def __init__(self):
-        self.avg_accuracy = 0
-        self.total_profit = 0
-        self.avg_stake = 0
+        self.avg_accuracy = 0.0
+        self.total_profit = 0.0
+        self.avg_stake = 0.0
 
         self.accuracy_scatters = []
         self.fig_accuracy = None
@@ -25,7 +26,11 @@ class FiguresAndMetricsResult(object):
         self.fig_costs = None
 
     def make_figures(self):
-        accuracy_scatters = self.accuracy_scatters if self.accuracy_scatters else [go.Scatter(x=[], y=[], mode="lines", name="accuracy")]
+        accuracy_scatters = (
+            self.accuracy_scatters
+            if self.accuracy_scatters
+            else [go.Scatter(x=[], y=[], mode="lines", name="accuracy")]
+        )
 
         self.fig_accuracy = create_figure(
             accuracy_scatters,
@@ -34,14 +39,28 @@ class FiguresAndMetricsResult(object):
             yaxis_range=[30, 70],
         )
 
-        profit_scatters = self.profit_scatters if self.profit_scatters else [go.Scatter(x=[], y=[], mode="lines", name="profit")]
+        profit_scatters = (
+            self.profit_scatters
+            if self.profit_scatters
+            else [go.Scatter(x=[], y=[], mode="lines", name="profit")]
+        )
         self.fig_profit = create_figure(
-            profit_scatters, title="Profit", yaxis_title="Profit(OCEAN)", show_legend=False
+            profit_scatters,
+            title="Profit",
+            yaxis_title="Profit(OCEAN)",
+            show_legend=False,
         )
 
-        stakes_scatters = self.stakes_scatters if self.stakes_scatters else [go.Bar(x=[], y=[], name="stakes", width=5)]
+        stakes_scatters = (
+            self.stakes_scatters
+            if self.stakes_scatters
+            else [go.Bar(x=[], y=[], name="stakes", width=5)]
+        )
         self.fig_costs = create_figure(
-            stakes_scatters, title="Costs", yaxis_title="Stake(OCEAN)", show_legend=False
+            stakes_scatters,
+            title="Costs",
+            yaxis_title="Stake(OCEAN)",
+            show_legend=False,
         )
 
 
@@ -50,7 +69,7 @@ class AccInterval(NamedTuple):
     acc_u: float
 
 
-class ProcessedPayouts(object):
+class ProcessedPayouts:
     def __init__(self):
         self.slot_in_date_format = []
         self.accuracies = []
@@ -87,8 +106,7 @@ def process_payouts(
 
         if calculate_confint:
             acc_l, acc_u = proportion_confint(
-                count=processed.correct_predictions,
-                nobs=processed.predictions
+                count=processed.correct_predictions, nobs=processed.predictions
             )
 
             processed.acc_intervals.append(
@@ -99,7 +117,9 @@ def process_payouts(
             )
 
         slots.append(p["slot"])
-        processed.accuracies.append((processed.correct_predictions / processed.predictions) * 100)
+        processed.accuracies.append(
+            (processed.correct_predictions / processed.predictions) * 100
+        )
         processed.profits.append(profit)
         processed.stakes.append(p["stake"])
 
@@ -171,6 +191,7 @@ def get_figures_and_metrics(
     figs_metrics = FiguresAndMetricsResult()
 
     if not payouts:
+        figs_metrics.make_figures()
         return figs_metrics
 
     all_stakes = []
@@ -194,7 +215,9 @@ def get_figures_and_metrics(
         all_stakes.extend(processed_data.stakes)
         correct_prediction_count += processed_data.correct_predictions
         prediction_count += processed_data.predictions
-        figs_metrics.total_profit += processed_data.profits[-1] if processed_data.profits else 0.0
+        figs_metrics.total_profit += (
+            processed_data.profits[-1] if processed_data.profits else 0.0
+        )
 
         short_name = f"{predictor[:5]} - {str(feed)}"
 

@@ -146,9 +146,7 @@ def test_get_figures_and_metrics(
     )
     sample_predictoors = ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"]
 
-    figs_metrics = (
-        get_figures_and_metrics(payouts, sample_feeds, sample_predictoors)
-    )
+    figs_metrics = get_figures_and_metrics(payouts, sample_feeds, sample_predictoors)
 
     fig_accuracy = figs_metrics.fig_accuracy
     fig_profit = figs_metrics.fig_profit
