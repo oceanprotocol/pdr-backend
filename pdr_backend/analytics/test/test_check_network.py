@@ -52,7 +52,7 @@ def test_check_dfbuyer(  # pylint: disable=unused-argument
     assert "got 120 consume for contract: 0x1, expected 100" in caplog.text
 
     cur_ut = MOCK_CUR_UT
-    start_ut = int((cur_ut // S_PER_WEEK) * S_PER_WEEK)
+    start_ut = int((cur_ut // S_PER_WEEK) * S_PER_WEEK) - 3 * 60 * 60
     mock_get_consume_so_far_per_contract_.assert_called_once_with(
         subgraph_url, dfbuyer_addr, start_ut, ["0x1"]
     )
