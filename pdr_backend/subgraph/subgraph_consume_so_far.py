@@ -18,7 +18,7 @@ logger = logging.getLogger("subgraph")
 def get_consume_so_far_per_contract(
     subgraph_url: str,
     user_address: str,
-    since_timestamp: int,
+    since_timestamp: UnixTimeS,
     contract_addresses: List[str],
 ) -> Dict[str, float]:
     chunk_size = 1000  # max for subgraph = 1000
