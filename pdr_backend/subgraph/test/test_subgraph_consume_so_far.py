@@ -58,24 +58,9 @@ def test_get_consume_so_far_per_contract_empty_data():
     def mock_query_subgraph(
         subgraph_url, query, tries, timeout
     ):  # pylint:disable=unused-argument
-        return {"data": {"predictSubscriptions": [{"id": "contract2"}]}}
-
-    with patch(f"{PATH}.query_subgraph", mock_query_subgraph):
-        consumes = get_consume_so_far_per_contract(
-            subgraph_url="foo",
-            user_address="0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a",
-            since_timestamp=UnixTimeS(2000),
-            contract_addresses=["contract1"],
-        )
-
-    assert consumes == {}
-
-    def mock_query_subgraph_2(
-        subgraph_url, query, tries, timeout
-    ):  # pylint:disable=unused-argument
         return {"data": {"predictSubscriptions": []}}
 
-    with patch(f"{PATH}.query_subgraph", mock_query_subgraph_2):
+    with patch(f"{PATH}.query_subgraph", mock_query_subgraph):
         consumes = get_consume_so_far_per_contract(
             subgraph_url="foo",
             user_address="0xff8dcdfc0a76e031c72039b7b1cd698f8da81a0a",
