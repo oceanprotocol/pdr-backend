@@ -56,11 +56,11 @@ class GQLDataFactory:
 
         # filter by feed contract address
         network = get_sapphire_postfix(ppss.web3_pp.network)
-        
+
         contract_list = []
         if network == "mainnet":
             contract_list = WHITELIST_FEEDS_MAINNET
-        else :
+        else:
             contract_list = get_all_contract_ids_by_owner(
                 owner_address=self.ppss.web3_pp.owner_addrs,
                 network=network,
