@@ -322,7 +322,7 @@ def get_figures_and_metrics(
 
         figs_metrics.costs_scatters.extend(
             processed_data.as_costs_scatters(
-                "{feed.pair.base_str}-{feed.timeframe}-{predictor[:4]}", short_name
+                f"{feed.pair.base_str}-{feed.timeframe}-{predictor[:4]}", short_name
             )
         )
 
