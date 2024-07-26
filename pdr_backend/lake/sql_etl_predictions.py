@@ -47,7 +47,7 @@ def _do_sql_predictions(
     FROM _predictions as p;
     """
 
-    db.create_table_if_not_exists(
+    db.create_empty(
         new_events_bronze_prediction_table.table_name,
         BronzePrediction.get_lake_schema(),
     )

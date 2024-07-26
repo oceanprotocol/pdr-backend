@@ -73,10 +73,10 @@ class Trueval(LakeMapper):
 def mock_trueval(trueval_tuple: tuple) -> Trueval:
     (
         ID,
+        timestamp,
         token,
         truevalue,
         slot,
-        timestamp,
         revenue,
         roundSumStakesUp,
         roundSumStakes,

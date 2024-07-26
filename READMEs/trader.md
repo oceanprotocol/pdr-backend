@@ -16,6 +16,11 @@ Then, you can [go beyond](#go-beyond): [optimize trading strategy](#optimize-tra
 
 ## Install pdr-backend Repo
 
+Prerequisites:
+- Python 3.12. Earlier _will_ fail, e.g. can't find `UTC`. [Details](https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated)
+- Ubuntu MacOS. _Not_ Windows.
+
+
 In a new console:
 
 ```console
@@ -46,7 +51,11 @@ curl https://github.com/oceanprotocol/contracts/blob/main/addresses/address.json
 If you're running MacOS, then in console:
 
 ```console
+# so that sapphire.py works. Details in #66
 codesign --force --deep --sign - venv/sapphirepy_bin/sapphirewrapper-arm64.dylib
+
+# so that xgboost works. Details in #1339
+brew install libomp
 ```
 
 ## Simulate Modeling and Trading
@@ -66,9 +75,9 @@ pdr sim my_ppss.yaml
 
 What the engine does does:
 1. Set simulation parameters.
-1. Grab historical price data from exchanges and stores in `lake_data/` dir. It re-uses any previously saved data.
-1. Run through many 5min epochs. At each epoch:
-   - Build a model
+2. Grab historical price data from exchanges and stores in `lake_data/` dir. It re-uses any previously saved data.
+3. Run through many 5 min epochs. At each epoch:
+   - Build a model or get predictions from chain
    - Predict
    - Trade
    - Log to console and `logs/out_<time>.txt`
@@ -166,6 +175,16 @@ Once you're familiar with the above, you can set your own trading strategy and o
 1. Fork `pdr-backend` repo.
 1. Change trader bot code as you wish, while iterating with simulation.
 1. Bring your trader bot to testnet then mainnet.
+
+
+## Source of predictions
+
+Choose the source of the predictions used as signals for trading:
+- Use the builtin model. `use_own_model=True`
+- Get the predictions from live feeds. `use_own_model=False`
+
+By default `use_own_model` is set to `True`, and can be changed inside `my_ppss.yaml` file.
+
 
 ## Run Bots Remotely
 

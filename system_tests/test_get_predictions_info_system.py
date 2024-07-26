@@ -55,7 +55,7 @@ def test_get_predictions_info_system(mock_get_feed_summary_stats, caplog):
     # DROP TABLE IF EXISTS
     DuckDBDataStore(ppss.lake_ss.lake_dir).drop_table("pdr_predictions")
 
-    DuckDBDataStore(ppss.lake_ss.lake_dir).insert_to_table(
+    DuckDBDataStore(ppss.lake_ss.lake_dir).insert_from_df(
         predictions_df, "pdr_predictions"
     )
 

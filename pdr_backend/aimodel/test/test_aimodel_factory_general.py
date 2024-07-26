@@ -12,13 +12,13 @@ from plotly.graph_objs._figure import Figure
 import pytest
 from pytest import approx
 
-from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
 from pdr_backend.aimodel.aimodel_plotter import (
     plot_aimodel_response,
     plot_aimodel_varimps,
 )
+from pdr_backend.aimodel.ycont_to_ytrue import ycont_to_ytrue
 from pdr_backend.ppss.aimodel_ss import (
     AimodelSS,
     aimodel_ss_test_dict,
@@ -232,7 +232,7 @@ def test_aimodel_classif_accuracy():
     ycont_trn = np.array([5.3, 6.4, 7.5, 8.6, 9.7])  # oldest  # newest
 
     y_thr = 7.0
-    ytrue_trn = AimodelDataFactory.ycont_to_ytrue(ycont_trn, y_thr)
+    ytrue_trn = ycont_to_ytrue(ycont_trn, y_thr)
 
     model = aimodel_factory.build(X_trn, ytrue_trn)
 

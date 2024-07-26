@@ -30,15 +30,21 @@ class SimSS(StrMixin):
             s = f"Couldn't find log dir, so created one at: {self.log_dir}"
             logger.warning(s)
 
-        # check test_n
-        test_n = d["test_n"]
+        # validate data
+        self.validate_test_n(self.test_n)
+        self.validate_tradetype(self.tradetype)
+
+    # --------------------------------
+    # validators
+    @staticmethod
+    def validate_test_n(test_n: int):
         if not isinstance(test_n, int):
             raise TypeError(test_n)
         if not 0 < test_n < np.inf:
             raise ValueError(test_n)
 
-        # check tradetype
-        tradetype = d["tradetype"]
+    @staticmethod
+    def validate_tradetype(tradetype: str):
         if not isinstance(tradetype, str):
             raise TypeError(tradetype)
         if tradetype not in TRADETYPE_OPTIONS:
@@ -62,6 +68,10 @@ class SimSS(StrMixin):
     def tradetype(self) -> str:
         return self.d.get("tradetype", "histmock")
 
+    @property
+    def use_own_model(self) -> bool:
+        return self.d["use_own_model"]
+
     # --------------------------------
     # derived methods
     def is_final_iter(self, iter_i: int) -> bool:
@@ -69,6 +79,16 @@ class SimSS(StrMixin):
         if iter_i < 0 or iter_i >= self.test_n:
             raise ValueError(iter_i)
         return (iter_i + 1) == self.test_n
+
+    # --------------------------------
+    # setters
+    def set_test_n(self, test_n: int):
+        self.validate_test_n(test_n)
+        self.d["test_n"] = test_n
+
+    def set_tradetype(self, tradetype: str):
+        self.validate_tradetype(tradetype)
+        self.d["tradetype"] = tradetype
 
 
 # =========================================================================
@@ -78,11 +98,13 @@ class SimSS(StrMixin):
 @enforce_types
 def sim_ss_test_dict(
     log_dir: str,
+    use_own_model: Optional[bool] = True,
     test_n: Optional[int] = None,
     tradetype: Optional[str] = None,
 ) -> dict:
     d = {
         "log_dir": log_dir,
+        "use_own_model": use_own_model,
         "test_n": test_n or 10,
         "tradetype": tradetype or "histmock",
     }

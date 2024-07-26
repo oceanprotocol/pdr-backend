@@ -35,7 +35,7 @@ def test_ArgFeed_main_constructor():
     # not ok - Type Error
     tups = [
         (),
-        ("binance", "open", "BTC/USDT", "", ""),
+        ("binance", "open", "BTC/USDT", "", "", ""),
     ]
     for feed_tup in tups:
         with pytest.raises(TypeError):

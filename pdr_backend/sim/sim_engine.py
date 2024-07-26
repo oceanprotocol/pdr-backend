@@ -5,7 +5,7 @@
 import logging
 import os
 import uuid
-from typing import Optional
+from typing import Optional, Dict
 
 import numpy as np
 import polars as pl
@@ -17,11 +17,13 @@ from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
+from pdr_backend.aimodel.ycont_to_ytrue import ycont_to_ytrue
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.sim.sim_chain_predictions import SimChainPredictions
 from pdr_backend.sim.sim_logger import SimLogLine
 from pdr_backend.sim.sim_plotter import SimPlotter
 from pdr_backend.sim.sim_trader import SimTrader
@@ -62,6 +64,8 @@ class SimEngine:
         else:
             self.multi_id = str(uuid.uuid4())
 
+        # timestamp -> prob up
+        self.chain_predictions_map: Dict[int, float] = {}
         self.model: Optional[Aimodel] = None
 
     @property
@@ -81,14 +85,32 @@ class SimEngine:
         logger.info("Initialize plot data.")
         self.sim_plotter.init_state(self.multi_id)
 
+        # fetch predictions data
+        if not self.ppss.sim_ss.use_own_model:
+            self.load_chain_prediction_data()
+
     @enforce_types
-    def run(self):
+    def load_chain_prediction_data(self):
+        SimChainPredictions.verify_use_chain_data_in_syms_dependencies(self.ppss)
+        if not SimChainPredictions.verify_prediction_data(self.ppss):
+            raise Exception("Couldn't get prediction data")
+        self.chain_predictions_map = SimChainPredictions.get_predictions_data(
+            UnixTimeMs(self.ppss.lake_ss.st_timestamp).to_seconds(),
+            UnixTimeMs(self.ppss.lake_ss.fin_timestamp).to_seconds(),
+            self.ppss,
+            self.predict_feed,
+        )
+
+    @enforce_types
+    def run(self, mergedohlcv_df: Optional[pl.DataFrame] = None):
         logger.info("Start run")
         self._init_loop_attributes()
 
+        if mergedohlcv_df is None:
+            f = OhlcvDataFactory(self.ppss.lake_ss)
+            mergedohlcv_df = f.get_mergedohlcv_df()
+
         # main loop!
-        f = OhlcvDataFactory(self.ppss.lake_ss)
-        mergedohlcv_df = f.get_mergedohlcv_df()
         for test_i in range(self.ppss.sim_ss.test_n):
             self.run_one_iter(test_i, mergedohlcv_df)
 
@@ -130,7 +152,7 @@ class SimEngine:
             y_thr = cur_close
         else:  # transform = "RelDiff"
             y_thr = 0.0
-        ytrue = data_f.ycont_to_ytrue(ytran, y_thr)
+        ytrue = ycont_to_ytrue(ytran, y_thr)
 
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
@@ -145,9 +167,17 @@ class SimEngine:
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
         timeframe: ArgTimeframe = predict_feed.timeframe  # type: ignore
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
-
+        prob_up: float = 0.0
         # predict price direction
-        prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+        if self.ppss.sim_ss.use_own_model:
+            prob_up = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+        else:
+            ut_seconds = ut.to_seconds()
+            if not ut_seconds in self.chain_predictions_map:
+                logger.error("No prediction found at time %s", ut_seconds)
+                return
+            prob_up = self.chain_predictions_map[ut_seconds]
+
         prob_down: float = 1.0 - prob_up
         conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
         conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]

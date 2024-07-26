@@ -101,9 +101,6 @@ _ETL_PAYOUT_TUPS = [
         0.0,  # payout
         True,  # predictedValue
         # False,  # trueValue
-        0.928046,  # revenue
-        15.629683,  # roundSumStakesUp
-        34.314841,  # roundSumStakes
         5.464642,  # stake
     ),
     (
@@ -115,9 +112,6 @@ _ETL_PAYOUT_TUPS = [
         10.928642693189679,  # payout
         False,  # predictedValue
         # False,  # trueValue
-        0.92804,  # revenue
-        45.62968,  # roundSumStakesUp
-        72.31484,  # roundSumStakes
         5.46464,  # stake
     ),
     (
@@ -129,9 +123,6 @@ _ETL_PAYOUT_TUPS = [
         7.041434095860760067,  # payout
         False,  # predictedValue
         # False,  # trueValue
-        0.93671,  # revenue
-        47.61968,  # roundSumStakesUp
-        72.31484,  # roundSumStakes
         3.4600000000000004,  # stake
     ),
     (
@@ -143,9 +134,6 @@ _ETL_PAYOUT_TUPS = [
         7.160056238874628619,  # payout
         True,  # predictedValue
         # True,  # trueValue
-        0.92804,  # revenue
-        38.09065,  # roundSumStakesUp
-        93.31532,  # roundSumStakes
         3.46000,  # stake
     ),
     (
@@ -157,9 +145,6 @@ _ETL_PAYOUT_TUPS = [
         0.0,  # payout
         True,  # predictedValue
         # False,  # trueValue
-        0.92804,  # revenue
-        47.71968,  # roundSumStakesUp
-        74.30484,  # roundSumStakes
         3.4600000000000004,  # stake
     ),
 ]
@@ -256,6 +241,9 @@ _ETL_TRUEVAL_TUPS = [
         "ETH/USDT",
         True,
         1698865200,  # Nov 01 2023 19:00:00 GMT
+        0.928046,  # revenue
+        15.629683,  # roundSumStakesUp
+        34.314841,  # roundSumStakes
     ),
     (
         "0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152-1698951600",
@@ -263,6 +251,9 @@ _ETL_TRUEVAL_TUPS = [
         "BTC/USDT",
         True,
         1698951600,  # Nov 02 2023 19:00:00 GMT
+        0.92804,  # revenue
+        45.62968,  # roundSumStakesUp
+        72.31484,  # roundSumStakes
     ),
     (
         "0x18f54cc21b7a2fdd011bea06bba7801b280e3151-1699038000",
@@ -270,6 +261,9 @@ _ETL_TRUEVAL_TUPS = [
         "ADA/USDT",
         False,
         1699038000,  # Nov 03 2023 19:00:00 GMT
+        0.93671,  # revenue
+        47.61968,  # roundSumStakesUp
+        72.31484,  # roundSumStakes
     ),
     (
         "0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd-1699124400",
@@ -277,6 +271,9 @@ _ETL_TRUEVAL_TUPS = [
         "BNB/USDT",
         True,
         1699124400,  # Nov 04 2023 19:00:00 GMT
+        0.92804,  # revenue
+        38.09065,  # roundSumStakesUp
+        93.31532,  # roundSumStakes
     ),
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699214300",
@@ -284,6 +281,9 @@ _ETL_TRUEVAL_TUPS = [
         "ETH/USDT",
         False,
         1699214300,  # Nov 05 2023 19:00:00 GMT
+        0.92804,  # revenue
+        47.71968,  # roundSumStakesUp
+        74.30484,  # roundSumStakes
     ),
     (
         "0x30f1c55e72fe105e4a1fbecdff3145fc14177695-1699300800",
@@ -291,6 +291,9 @@ _ETL_TRUEVAL_TUPS = [
         "ETH/USDT",
         False,
         1699300800,  # Nov 06 2023 19:00:00 GMT
+        0.92804,  # revenue
+        47.71968,  # roundSumStakesUp
+        74.30484,  # roundSumStakes
     ),
 ]
 

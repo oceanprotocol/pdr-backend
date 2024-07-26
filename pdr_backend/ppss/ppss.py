@@ -203,6 +203,7 @@ def mock_ppss(
     st_timestr: Optional[str] = "2023-06-18",
     fin_timestr: Optional[str] = "2023-06-21",
     pred_submitter_mgr: Optional[str] = None,
+    my_addresses: Optional[list] = None,
 ) -> PPSS:
     network = network or "development"
     yaml_str = fast_test_yaml_str(tmpdir)
@@ -226,6 +227,7 @@ def mock_ppss(
     d = predictoor_ss_test_dict(
         feedset_list=feedset_list,
         pred_submitter_mgr=pred_submitter_mgr,
+        my_addresses=my_addresses,
     )
     ppss.predictoor_ss = PredictoorSS(d)
 

@@ -102,7 +102,7 @@ def _df_from_raw_data(raw_data: list) -> pl.DataFrame:
     """Return a df for use in rawohlcv_dfs"""
     df = initialize_rawohlcv_df(TOHLCV_COLS)
 
-    next_df = pl.DataFrame(raw_data, schema=TOHLCV_SCHEMA_PL)
+    next_df = pl.DataFrame(raw_data, schema=TOHLCV_SCHEMA_PL, orient="row")
 
     df = concat_next_df(df, next_df)
 

@@ -7,11 +7,7 @@ from collections import OrderedDict
 from typing import Callable
 
 from polars import Boolean, Float64, Int64, Utf8
-
-from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.lake_mapper import LakeMapper
-from pdr_backend.lake.table import Table, TempTable
-from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("lake")
 
@@ -50,62 +46,4 @@ class BronzePrediction(LakeMapper):
 
     @staticmethod
     def get_fetch_function() -> Callable:
-        return get_bronze_pdr_predictions_data_with_SQL
-
-
-def get_bronze_pdr_predictions_data_with_SQL(
-    path: str, st_ms: UnixTimeMs, fin_ms: UnixTimeMs
-):
-    """
-    @description
-        Get the bronze pdr predictions data
-    """
-    pdr_predictions_table_name = Table("pdr_predictions").table_name
-    pdr_truevals_table_name = Table("pdr_truevals").table_name
-    pdr_payouts_table_name = Table("pdr_payouts").table_name
-    temp_bronze_pdr_predictions_table_name = TempTable.from_dataclass(
-        BronzePrediction
-    ).table_name
-
-    db = DuckDBDataStore(path)
-    logger.info("duckDB tables %s", db.get_table_names())
-
-    db.create_table_if_not_exists(
-        temp_bronze_pdr_predictions_table_name,
-        BronzePrediction.get_lake_schema(),
-    )
-
-    return db.execute_sql(
-        f"""
-        INSERT INTO {temp_bronze_pdr_predictions_table_name}
-        SELECT
-            {pdr_predictions_table_name}.ID as ID,
-            SPLIT_PART({pdr_predictions_table_name}.ID, '-', 1)
-                || '-' || SPLIT_PART({pdr_predictions_table_name}.ID, '-', 2) AS slot_id,
-            {pdr_predictions_table_name}.contract as contract,
-            {pdr_predictions_table_name}.slot as slot,
-            {pdr_predictions_table_name}.user as user,
-            {pdr_predictions_table_name}.pair as pair,
-            {pdr_predictions_table_name}.timeframe as timeframe,
-            {pdr_predictions_table_name}.source as source,
-            {pdr_payouts_table_name}.predvalue as predvalue,
-            {pdr_truevals_table_name}.truevalue as truevalue,
-            {pdr_payouts_table_name}.stake as stake,
-            {pdr_payouts_table_name}.revenue as revenue,
-            {pdr_payouts_table_name}.payout as payout,
-            {pdr_predictions_table_name}.timestamp as timestamp,
-            GREATEST({pdr_predictions_table_name}.timestamp,
-                {pdr_truevals_table_name}.timestamp, {pdr_payouts_table_name}.timestamp)
-                as last_event_timestamp,
-        FROM
-            {pdr_predictions_table_name}
-        LEFT JOIN {pdr_truevals_table_name}
-            ON {pdr_predictions_table_name}.slot = {pdr_truevals_table_name}.slot
-            AND {pdr_predictions_table_name}.contract =
-                SPLIT_PART({pdr_truevals_table_name}.ID, '-', 1)
-        LEFT JOIN {pdr_payouts_table_name}
-            ON {pdr_predictions_table_name}.ID = {pdr_payouts_table_name}.ID
-        WHERE {pdr_predictions_table_name}.timestamp >= {st_ms}
-            AND {pdr_predictions_table_name}.timestamp <= {fin_ms}
-    """
-    )
+        raise NotImplementedError("BronzePrediction does not have a fetch function")

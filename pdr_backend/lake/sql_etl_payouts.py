@@ -57,7 +57,7 @@ def _do_sql_payouts(
     FROM _payout as p;
     """
 
-    db.create_table_if_not_exists(
+    db.create_empty(
         update_events_bronze_prediction_table.table_name,
         BronzePrediction.get_lake_schema(),
     )

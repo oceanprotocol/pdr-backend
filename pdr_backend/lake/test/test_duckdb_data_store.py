@@ -23,10 +23,10 @@ def _setup_fixture(tmpdir):
     return [DuckDBDataStore(str(tmpdir)), example_df, table_name]
 
 
-def test_create_and_fill_table(tmpdir):
+def test_insert(tmpdir):
     db, example_df, table_name = _setup_fixture(tmpdir)
 
-    db._create_and_fill_table(example_df, table_name)
+    db.create_from_df(example_df, table_name)
 
     # Check if the table is registered
     table_exists = db.table_exists(table_name)
@@ -36,7 +36,7 @@ def test_create_and_fill_table(tmpdir):
 def test_insert_to_exist_table(tmpdir):
     db, example_df, table_name = _setup_fixture(tmpdir)
 
-    db._create_and_fill_table(example_df, table_name)
+    db.create_from_df(example_df, table_name)
 
     # Check if the table is registered
     table_exists = db.table_exists(table_name)
@@ -46,7 +46,7 @@ def test_insert_to_exist_table(tmpdir):
     example_df = pl.DataFrame(
         {"timestamp": ["2022-04-01", "2022-05-01", "2022-06-01"], "value": [40, 50, 60]}
     )
-    db.insert_to_table(example_df, table_name)
+    db.insert_from_df(example_df, table_name)
 
     # Check if the table is registered
     table_exists = db.table_exists(table_name)
@@ -66,7 +66,7 @@ def test_insert_to_exist_table(tmpdir):
 def test_insert_to_new_table(tmpdir):
     db, example_df, table_name = _setup_fixture(tmpdir)
 
-    db.insert_to_table(example_df, table_name)
+    db.insert_from_df(example_df, table_name)
 
     # Check if the table is registered
     table_exists = db.table_exists(table_name)
@@ -85,7 +85,7 @@ def test_insert_to_new_table(tmpdir):
 
 def test_query(tmpdir):
     db, example_df, table_name = _setup_fixture(tmpdir)
-    db.insert_to_table(example_df, table_name)
+    db.insert_from_df(example_df, table_name)
 
     # Check if the table is registered
     table_exists = db.table_exists(table_name)
@@ -99,7 +99,7 @@ def test_query(tmpdir):
 def test_drop_table(tmpdir):
     db, example_df, table_name = _setup_fixture(tmpdir)
 
-    db.insert_to_table(example_df, table_name)
+    db.insert_from_df(example_df, table_name)
 
     # Check if the table is registered
     table_exists = db.table_exists(table_name)
@@ -113,13 +113,13 @@ def test_drop_table(tmpdir):
     assert table_name not in table_names
 
 
-def test_fill_table_from_csv(tmpdir):
+def test_insert_from_csv(tmpdir):
     db, example_df, table_name = _setup_fixture(tmpdir)
     csv_folder_path = os.path.join(str(tmpdir), "csv_folder")
     os.makedirs(csv_folder_path, exist_ok=True)
     example_df.write_csv(os.path.join(str(csv_folder_path), "data.csv"))
 
-    db.fill_table_from_csv(table_name, csv_folder_path)
+    db.insert_from_csv(table_name, csv_folder_path)
 
     # Check if the table is registered
     table_exists = db.table_exists(table_name)
@@ -195,7 +195,7 @@ def test__duckdb_connection(tmpdir):
 
 def test_move_table_data(tmpdir):
     db, example_df, table_name = _setup_fixture(tmpdir)
-    db.insert_to_table(example_df, TempTable(table_name).table_name)
+    db.insert_from_df(example_df, TempTable(table_name).table_name)
 
     # Check if the table is registered
     table_exists = db.table_exists(TempTable(table_name).table_name)
@@ -224,6 +224,51 @@ def test_move_table_data(tmpdir):
 
     assert len(result) == 3
     assert result[0][0] == "2022-01-01"
+
+
+def test_etl_view(tmpdir):
+    db, example_df, table_name = _setup_fixture(tmpdir)
+    db.insert_from_df(example_df, Table(table_name).table_name)
+
+    other_df = pl.DataFrame(
+        {"timestamp": ["2022-04-01", "2022-05-01", "2022-06-01"], "value": [40, 50, 60]}
+    )
+    db.insert_from_df(other_df, TempTable(table_name).table_name)
+
+    # Assemble view query and create the view
+    view_name = "_update"
+    view_query = """
+    CREATE VIEW {} AS
+    (
+        SELECT * FROM {}
+        UNION ALL
+        SELECT * FROM {}
+    )""".format(
+        view_name,
+        Table(table_name).table_name,
+        TempTable(table_name).table_name,
+    )
+    db.query_data(view_query)
+
+    # Assert number of views is equal to 1
+    view_names = db.get_view_names()
+    assert len(view_names) == 1
+
+    # Assert view is registered
+    check_result = db.view_exists(view_name)
+    assert check_result
+
+    # Assert view returns the correct, min(timestamp)
+    result = db.duckdb_conn.execute(
+        f"SELECT min(timestamp) FROM {view_name}"
+    ).fetchall()
+    assert result[0][0] == "2022-01-01"
+
+    # Assert view returns the correct, max(timestamp)
+    result = db.duckdb_conn.execute(
+        f"SELECT max(timestamp) FROM {view_name}"
+    ).fetchall()
+    assert result[0][0] == "2022-06-01"
 
 
 def thread_with_return_value(db, table_name):
@@ -266,7 +311,7 @@ def test_multiple_thread_table_updates(tmpdir):
 
 def thread_function_write_to_db(csv_folder_path, tmpdir):
     db, _, table_name = _setup_fixture(tmpdir)
-    db.fill_table_from_csv(table_name, csv_folder_path)
+    db.insert_from_csv(table_name, csv_folder_path)
 
 
 def thread_function_read_from_db(csv_folder_path, tmpdir, thread_result):
@@ -287,7 +332,7 @@ def thread_function_read_from_db(csv_folder_path, tmpdir, thread_result):
     os.rmdir(csv_folder_path)
 
 
-def test_create_table_if_not_exists(tmpdir):
+def test_create_table(tmpdir):
     """
     Test create table if not exists.
     """
@@ -295,7 +340,7 @@ def test_create_table_if_not_exists(tmpdir):
 
     example_df_schema = example_df.schema
     # Create table
-    db.create_table_if_not_exists(table_name, example_df_schema)
+    db.create_empty(table_name, example_df_schema)
 
     # Check if the table is registered
     check_result = db.table_exists(table_name)
