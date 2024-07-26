@@ -566,7 +566,6 @@ MultisimArgParser = _ArgParser_PPSS
 DeployerArgPaser = _ArgParser_DEPLOYER
 OHLCVArgParser = _ArgParser_PPSS_NETWORK
 LakeArgParser = _ArgParser_PPSS_NETWORK
-AnalyticsArgParser = _ArgParser_PPSS_NETWORK
 
 # utilities
 GetPredictoorsInfoArgParser = _ArgParser_ST_END_PQDIR_NETWORK_PPSS_PDRS
