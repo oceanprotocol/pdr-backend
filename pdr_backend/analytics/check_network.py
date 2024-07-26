@@ -211,7 +211,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
     # ---------------- dfbuyer ----------------
 
     dfbuyer_addr = addresses["dfbuyer"].lower()
-    token_amt = 44940
+    token_amt = 44940.0
 
     check_dfbuyer(dfbuyer_addr, result, web3_pp.subgraph_url, token_amt)
 
