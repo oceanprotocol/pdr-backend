@@ -75,7 +75,7 @@ def query_feed_contracts(
             if not contract_list:
                 break
             for contract in contract_list:
-                pair = contract["token"]["name"].replace("/", "-")
+                pair = contract["token"]["name"]
                 timeframe = "5m" if int(contract["secondsPerEpoch"]) == 300 else "1h"
                 source = "binance"  # fix me
                 if None in (pair, timeframe, source):
