@@ -30,54 +30,53 @@ class FiguresAndMetricsResult:
         self.fig_costs = None
 
     def make_figures(self):
-        accuracy_scatters = (
-            self.accuracy_scatters
-            if self.accuracy_scatters
-            else [go.Scatter(x=[], y=[], mode="lines", name="accuracy")]
-        )
+        fig_config = {
+            "accuracy_scatters": {
+                "fallback": [go.Scatter(x=[], y=[], mode="lines", name="accuracy")],
+                "fig_attr": "fig_accuracy",
+                "args": {
+                    "title": "Accuracy",
+                    "yaxis_title": "Accuracy(%)",
+                    "yaxis_range": [30, 70],
+                },
+            },
+            "profit_scatters": {
+                "fallback": [go.Scatter(x=[], y=[], mode="lines", name="profit")],
+                "fig_attr": "fig_profit",
+                "args": {
+                    "title": "Profit",
+                    "yaxis_title": "Profit(OCEAN)",
+                    "show_legend": False,
+                },
+            },
+            "stakes_scatters": {
+                "fallback": [go.Bar(x=[], y=[], name="stakes", width=5)],
+                "fig_attr": "fig_stakes",
+                "args": {
+                    "title": "Stakes",
+                    "yaxis_title": "Stake(OCEAN)",
+                    "show_legend": False,
+                },
+            },
+            "costs_scatters": {
+                "fallback": [go.Bar(x=[], y=[], name="costs", width=5)],
+                "fig_attr": "fig_costs",
+                "args": {
+                    "title": "Costs",
+                    "yaxis_title": "Fees(OCEAN)",
+                    "show_legend": False,
+                },
+            },
+        }
 
-        self.fig_accuracy = create_figure(
-            accuracy_scatters,
-            title="Accuracy",
-            yaxis_title="Accuracy(%)",
-            yaxis_range=[30, 70],
-        )
+        for key, value in fig_config.items():
+            scatters = getattr(self, key) or value["fallback"]
 
-        profit_scatters = (
-            self.profit_scatters
-            if self.profit_scatters
-            else [go.Scatter(x=[], y=[], mode="lines", name="profit")]
-        )
-        self.fig_profit = create_figure(
-            profit_scatters,
-            title="Profit",
-            yaxis_title="Profit(OCEAN)",
-            show_legend=False,
-        )
-
-        stakes_scatters = (
-            self.stakes_scatters
-            if self.stakes_scatters
-            else [go.Bar(x=[], y=[], name="stakes", width=5)]
-        )
-        self.fig_stakes = create_figure(
-            stakes_scatters,
-            title="Stakes",
-            yaxis_title="Stake(OCEAN)",
-            show_legend=False,
-        )
-
-        costs_scatters = (
-            self.costs_scatters
-            if self.costs_scatters
-            else [go.Bar(x=[], y=[], name="costs", width=5)]
-        )
-        self.fig_costs = create_figure(
-            costs_scatters,
-            title="Costs",
-            yaxis_title="Fees(OCEAN)",
-            show_legend=False,
-        )
+            fig = create_figure(
+                scatters,
+                **value["args"],
+            )
+            setattr(self, value["fig_attr"], fig)
 
 
 class AccInterval(NamedTuple):
@@ -96,6 +95,68 @@ class ProcessedPayouts:
         self.acc_intervals = []
         self.tx_cost = 0.0
         self.tx_costs = []
+
+    def as_accuracy_scatters_bounds(self, short_name, show_confidence_interval: bool):
+        scatters = [
+            go.Scatter(
+                x=self.slot_in_date_format,
+                y=self.accuracies,
+                mode="lines",
+                name=short_name,
+            )
+        ]
+
+        if show_confidence_interval:
+            scatters = scatters + [
+                go.Scatter(
+                    x=self.slot_in_date_format,
+                    y=[interval.acc_l * 100 for interval in self.acc_intervals],
+                    mode="lines",
+                    name="accuracy_lowerbound",
+                    marker_color="#636EFA",
+                    showlegend=False,
+                ),
+                go.Scatter(
+                    x=self.slot_in_date_format,
+                    y=[interval.acc_u * 100 for interval in self.acc_intervals],
+                    mode="lines",
+                    fill="tonexty",
+                    name="accuracy_upperbound",
+                    marker_color="#636EFA",
+                    showlegend=False,
+                ),
+            ]
+
+        return scatters
+
+    def as_profit_scatters(self, short_name):
+        return [
+            go.Scatter(
+                x=self.slot_in_date_format,
+                y=self.profits,
+                mode="lines",
+                name=short_name,
+            )
+        ]
+
+    def as_stakes_scatters(self, short_name):
+        return [
+            go.Bar(
+                x=self.slot_in_date_format,
+                y=self.stakes,
+                name=short_name,
+                width=5,
+            )
+        ]
+
+    def as_costs_scatters(self, label, short_name):
+        return [
+            go.Bar(
+                x=[label],
+                y=[self.tx_costs[-1]],
+                name=short_name,
+            )
+        ]
 
 
 def process_payouts(
@@ -228,7 +289,9 @@ def get_figures_and_metrics(
         show_confidence_interval = len(predictors) == 1 and len(feeds) == 1
 
         processed_data = process_payouts(
-            payouts=filtered_payouts, tx_fee_cost=fee_cost, calculate_confint=show_confidence_interval
+            payouts=filtered_payouts,
+            tx_fee_cost=fee_cost,
+            calculate_confint=show_confidence_interval,
         )
 
         all_stakes.extend(processed_data.stakes)
@@ -243,64 +306,23 @@ def get_figures_and_metrics(
 
         short_name = f"{predictor[:5]} - {str(feed)}"
 
-        if show_confidence_interval:
-            figs_metrics.accuracy_scatters.append(
-                go.Scatter(
-                    x=processed_data.slot_in_date_format,
-                    y=[
-                        interval.acc_l * 100
-                        for interval in processed_data.acc_intervals
-                    ],
-                    mode="lines",
-                    name="accuracy_lowerbound",
-                    marker_color="#636EFA",
-                    showlegend=False,
-                )
+        figs_metrics.accuracy_scatters.extend(
+            processed_data.as_accuracy_scatters_bounds(
+                short_name, show_confidence_interval
             )
-            figs_metrics.accuracy_scatters.append(
-                go.Scatter(
-                    x=processed_data.slot_in_date_format,
-                    y=[
-                        interval.acc_u * 100
-                        for interval in processed_data.acc_intervals
-                    ],
-                    mode="lines",
-                    fill="tonexty",
-                    name="accuracy_upperbound",
-                    marker_color="#636EFA",
-                    showlegend=False,
-                )
-            )
+        )
 
-        figs_metrics.accuracy_scatters.append(
-            go.Scatter(
-                x=processed_data.slot_in_date_format,
-                y=processed_data.accuracies,
-                mode="lines",
-                name=short_name,
-            )
+        figs_metrics.profit_scatters.extend(
+            processed_data.as_profit_scatters(short_name)
         )
-        figs_metrics.profit_scatters.append(
-            go.Scatter(
-                x=processed_data.slot_in_date_format,
-                y=processed_data.profits,
-                mode="lines",
-                name=short_name,
-            )
+
+        figs_metrics.stakes_scatters.extend(
+            processed_data.as_stakes_scatters(short_name)
         )
-        figs_metrics.stakes_scatters.append(
-            go.Bar(
-                x=processed_data.slot_in_date_format,
-                y=processed_data.stakes,
-                name=short_name,
-                width=5,
-            )
-        )
-        figs_metrics.costs_scatters.append(
-            go.Bar(
-                x=[f"{feed.pair.base_str}-{feed.timeframe}-{predictor[:4]}"],
-                y=[processed_data.tx_costs[-1]],
-                name=short_name,
+
+        figs_metrics.costs_scatters.extend(
+            processed_data.as_costs_scatters(
+                "{feed.pair.base_str}-{feed.timeframe}-{predictor[:4]}", short_name
             )
         )
 

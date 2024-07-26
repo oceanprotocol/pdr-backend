@@ -27,7 +27,9 @@ def test_process_payouts(
     filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
     tx_fee_cost = 0.2
 
-    result = process_payouts(payouts=filtered_payouts, tx_fee_cost=tx_fee_cost, calculate_confint=True)
+    result = process_payouts(
+        payouts=filtered_payouts, tx_fee_cost=tx_fee_cost, calculate_confint=True
+    )
 
     slots = result.slot_in_date_format
     accuracies = result.accuracies
@@ -151,7 +153,9 @@ def test_get_figures_and_metrics(
     sample_predictoors = ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"]
     fee_cost = 0.2
 
-    figs_metrics = get_figures_and_metrics(payouts, sample_feeds, sample_predictoors, fee_cost)
+    figs_metrics = get_figures_and_metrics(
+        payouts, sample_feeds, sample_predictoors, fee_cost
+    )
 
     fig_accuracy = figs_metrics.fig_accuracy
     fig_profit = figs_metrics.fig_profit
