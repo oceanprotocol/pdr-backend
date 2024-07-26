@@ -212,6 +212,9 @@ def get_date_period_text(payouts: List):
 
 
 def calculate_tx_gas_fee_cost_in_OCEAN(web3_pp, feed_contract_addr, prices):
+    if not prices:
+        return 0.0
+
     web3 = Web3(Web3.HTTPProvider(web3_pp.rpc_url))
 
     # generic params

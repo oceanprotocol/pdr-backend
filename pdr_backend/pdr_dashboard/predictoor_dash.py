@@ -58,7 +58,9 @@ def setup_app(app, ppss: PPSS):
     current_date_ms = UnixTimeMs(int(datetime.now().timestamp()) * 1000 - 300000)
     rose_usdt = fetch_ohlcv("binance", "ROSE/USDT", "5m", current_date_ms, 1)
     fet_usdt = fetch_ohlcv("binance", "FET/USDT", "5m", current_date_ms, 1)
-
-    app.prices = {"ROSE": rose_usdt[0][1], "OCEAN": fet_usdt[0][1] * 0.433226}
+    if rose_usdt and fet_usdt:
+        app.prices = {"ROSE": rose_usdt[0][1], "OCEAN": fet_usdt[0][1] * 0.433226}
+    else:
+        app.prices = None
 
     return app
