@@ -707,6 +707,7 @@ def _sample_etl(
     # sample raw data
     st_timestr = request.param[0]
     fin_timestr = request.param[1]
+    enforce_null_values = request.param[2]
 
     ppss = None
     gql_data_factory = None
@@ -738,6 +739,7 @@ def _sample_etl(
         .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
     )
 
+    # when simulating prediction wokload, we are going to null payouts
     _sample_payouts = (
         _sample_raw_data["pdr_payouts"]
         .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
@@ -761,6 +763,15 @@ def _sample_etl(
         .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
         .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
     )
+
+    # don't cheat, verify we can recreate subgraph
+    if enforce_null_values is True:
+        _sample_predictions = _sample_predictions.with_columns(
+            pl.lit(None).alias("predvalue"),
+            pl.lit(None).alias("truevalue"),
+            pl.lit(None).alias("stake"),
+            pl.lit(None).alias("payout")
+        )
 
     gql_tables["pdr_predictions"].append_to_storage(_sample_predictions, ppss)
     gql_tables["pdr_payouts"].append_to_storage(_sample_payouts, ppss)

@@ -85,16 +85,16 @@ def fetch_filtered_subscriptions(
                             }}
                         }}
                     }}
+                    secondsPerEpoch
                 }}
             }}
         }}"""
-
+    
     result = query_subgraph(
         get_subgraph_url(network),
         query,
         timeout=20.0,
     )
-
     if "data" not in result or not result["data"]:
         return []
 
