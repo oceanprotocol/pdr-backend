@@ -81,16 +81,12 @@ def get_callbacks(app):
         )
 
         # get figures
-        (
-            accuracy_fig,
-            profit_fig,
-            costs_fig,
-            stakes_fig,
-            avg_accuracy,
-            total_profit,
-            total_costs,
-            avg_stake,
-        ) = get_figures_and_metrics(payouts, feeds, predictoors_addrs, fee_cost)
+        figs_metrics = get_figures_and_metrics(
+            payouts,
+            feeds,
+            predictoors_addrs,
+            fee_cost,
+        )
 
         # get available period date text
         date_period_text = (
@@ -103,14 +99,14 @@ def get_callbacks(app):
         )
 
         return (
-            get_graph(accuracy_fig),
-            get_graph(profit_fig),
-            get_graph(costs_fig),
-            get_graph(stakes_fig),
-            f"{round(avg_accuracy, 2)}%",
-            f"{round(total_profit, 2)} OCEAN",
-            f"~{round(total_costs, 2)} OCEAN",
-            f"{round(avg_stake, 2)} OCEAN",
+            get_graph(figs_metrics.fig_accuracy),
+            get_graph(figs_metrics.fig_profit),
+            get_graph(figs_metrics.fig_costs),
+            get_graph(figs_metrics.fig_stakes),
+            f"{round(figs_metrics.avg_accuracy, 2)}%",
+            f"{round(figs_metrics.total_profit, 2)} OCEAN",
+            f"~{round(figs_metrics.total_cost, 2)} OCEAN",
+            f"{round(figs_metrics.avg_stake, 2)} OCEAN",
             date_period_text,
         )
 
