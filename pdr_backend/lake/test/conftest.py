@@ -770,7 +770,7 @@ def _sample_etl(
             pl.lit(None).alias("predvalue"),
             pl.lit(None).alias("truevalue"),
             pl.lit(None).alias("stake"),
-            pl.lit(None).alias("payout")
+            pl.lit(None).alias("payout"),
         )
 
     gql_tables["pdr_predictions"].append_to_storage(_sample_predictions, ppss)

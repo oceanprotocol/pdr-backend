@@ -54,6 +54,7 @@ class Subscription(LakeMapper):
     def get_lake_table_name():
         return "pdr_subscriptions"
 
+    @staticmethod
     def get_fetch_function() -> Callable:
         # pylint: disable=import-outside-toplevel
         from pdr_backend.subgraph.subgraph_subscriptions import (

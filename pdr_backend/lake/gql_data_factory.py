@@ -29,13 +29,7 @@ logger = logging.getLogger("gql_data_factory")
 
 
 # Registered GQL fetches & tables
-_GQLDF_REGISTERED_LAKE_TABLES = [
-    Prediction,
-    Trueval,
-    Payout,
-    Subscription,
-    Slot
-]
+_GQLDF_REGISTERED_LAKE_TABLES = [Prediction, Trueval, Payout, Subscription, Slot]
 
 _GQLDF_REGISTERED_TABLE_NAMES = [
     t.get_lake_table_name() for t in _GQLDF_REGISTERED_LAKE_TABLES  # type: ignore[attr-defined]

@@ -14,7 +14,9 @@ from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 
 @enforce_types
-@pytest.mark.parametrize("_sample_etl", [("2024-07-26_00:00", "2024-07-26_02:00", False)], indirect=True)
+@pytest.mark.parametrize(
+    "_sample_etl", [("2024-07-26_00:00", "2024-07-26_02:00", False)], indirect=True
+)
 def test_etl_tables(_sample_etl):
     _, db, _ = _sample_etl
 
@@ -24,7 +26,7 @@ def test_etl_tables(_sample_etl):
     pdr_truevals_df = db.query_data("SELECT * FROM pdr_truevals")
     pdr_subscriptions_df = db.query_data("SELECT * FROM pdr_subscriptions")
     pdr_slots_df = db.query_data("SELECT * FROM pdr_slots")
-    
+
     # Assert len of all dfs
     assert len(pdr_predictions_df) == 2369
     assert len(pdr_payouts_df) == 2349
@@ -35,7 +37,9 @@ def test_etl_tables(_sample_etl):
 
 # pylint: disable=too-many-statements
 @enforce_types
-@pytest.mark.parametrize("_sample_etl", [("2024-07-26_00:00", "2024-07-26_02:00", True)], indirect=True)
+@pytest.mark.parametrize(
+    "_sample_etl", [("2024-07-26_00:00", "2024-07-26_02:00", True)], indirect=True
+)
 def test_etl_do_bronze_step(_sample_etl):
     etl, db, _ = _sample_etl
 
@@ -45,7 +49,7 @@ def test_etl_do_bronze_step(_sample_etl):
     pdr_predictions = db.query_data("SELECT * FROM {}".format(table_name))
     expected_pdr_predictions = len(pdr_predictions)
     assert expected_pdr_predictions == 2369
-    
+
     # all predictions have null payouts
     assert pdr_predictions["payout"].is_null().sum() == 2369
 
@@ -75,7 +79,11 @@ def test_etl_do_bronze_step(_sample_etl):
     # assert temp_bronze_pdr_predictions table that will be moved to production
     assert prod_bronze_pdr_predictions_null_payouts == 349
     assert prod_bronze_pdr_predictions_valid_payouts == 2020
-    assert prod_bronze_pdr_predictions_null_payouts + prod_bronze_pdr_predictions_valid_payouts == expected_pdr_predictions
+    assert (
+        prod_bronze_pdr_predictions_null_payouts
+        + prod_bronze_pdr_predictions_valid_payouts
+        == expected_pdr_predictions
+    )
 
     # move tables to production
     etl._do_bronze_swap_to_prod_atomic()
@@ -88,13 +96,21 @@ def test_etl_do_bronze_step(_sample_etl):
     assert bronze_pdr_predictions_records is not None
 
     # verify final production table
-    prod_bronze_pdr_predictions_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
-    prod_bronze_pdr_predictions_valid_payouts = bronze_pdr_predictions_records["payout"].is_not_null().sum()
+    prod_bronze_pdr_predictions_null_payouts = (
+        bronze_pdr_predictions_records["payout"].is_null().sum()
+    )
+    prod_bronze_pdr_predictions_valid_payouts = (
+        bronze_pdr_predictions_records["payout"].is_not_null().sum()
+    )
 
     # all predictions with valid payouts that can be joined, have been updated
     assert prod_bronze_pdr_predictions_null_payouts == 349
     assert prod_bronze_pdr_predictions_valid_payouts == 2020
-    assert prod_bronze_pdr_predictions_null_payouts + prod_bronze_pdr_predictions_valid_payouts == expected_pdr_predictions
+    assert (
+        prod_bronze_pdr_predictions_null_payouts
+        + prod_bronze_pdr_predictions_valid_payouts
+        == expected_pdr_predictions
+    )
 
 
 # pylint: disable=too-many-statements
