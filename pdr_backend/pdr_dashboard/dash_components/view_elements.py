@@ -12,6 +12,70 @@ def col_to_human(col):
     return col.replace("_", " ").title()
 
 
+def get_information_text(tooltip_id: str):
+    match tooltip_id:
+        case "tooltip-accuracy_metric":
+            return """This displays the average accuracy of predictions
+                within the selected timeframe and for the selected predictoors."""
+        case "tooltip-profit_metric":
+            return """This shows the total profit generated from predictions
+                within the selected timeframe and for the selected predictoors."""
+        case "tooltip-stake_metric":
+            return """This represents the average stake placed on each prediction
+                within the selected timeframe and for the selected predictoors."""
+        case "tooltip-switch-predictoors":
+            return """Toggle this switch to view only those predictoors
+                that are pre-configured in the ppss.yaml settings."""
+        case "tooltip-switch-feeds":
+            return """Toggle this switch to view only the feeds associated with
+                the selected predictoors."""
+        case _:
+            return ""
+
+
+def get_tooltip_and_button(value_id: str):
+    return html.Span(
+        [
+            dbc.Button(
+                "?", id=f"tooltip-target-{value_id}", className="tooltip-question-mark"
+            ),
+            dbc.Tooltip(
+                get_information_text(f"tooltip-{value_id}"),
+                target=f"tooltip-target-{value_id}",
+                placement="right",
+            ),
+        ]
+    )
+
+
+def get_feeds_switch():
+    return html.Div(
+        [
+            dbc.Switch(
+                id="toggle-switch-predictoor-feeds",
+                label="Predictoor feeds only",
+                value=True,
+            ),
+            get_tooltip_and_button("switch-feeds"),
+        ],
+        style={"display": "flex"},
+    )
+
+
+def get_predictoors_switch(selected_items):
+    return html.Div(
+        [
+            dbc.Switch(
+                id="show-favourite-addresses",
+                label="Select configured predictoors",
+                value=bool(selected_items),
+            ),
+            get_tooltip_and_button("switch-predictoors"),
+        ],
+        style={"display": "flex"},
+    )
+
+
 def get_feeds_data(app):
     data = app.feeds_data
 
@@ -175,7 +239,10 @@ def get_metric(label, value, value_id):
     return html.Div(
         [
             html.Span(
-                label,
+                [
+                    label,
+                    get_tooltip_and_button(value_id),
+                ]
             ),
             html.Span(value, id=value_id, style={"fontWeight": "bold"}),
         ],
@@ -245,17 +312,9 @@ def get_table(
                         },
                     ),
                     (
-                        dbc.Switch(
-                            id="toggle-switch-predictoor-feeds",
-                            label="Predictoor feeds only",
-                            value=True,
-                        )
+                        get_feeds_switch()
                         if table_name == "Feeds"
-                        else dbc.Switch(
-                            id="show-favourite-addresses",
-                            label="Select configured predictoors",
-                            value=bool(selected_items),
-                        )
+                        else get_predictoors_switch(selected_items=selected_items)
                     ),
                 ],
                 className="table-title",
