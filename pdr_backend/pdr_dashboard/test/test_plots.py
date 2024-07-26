@@ -25,11 +25,15 @@ def test_process_payouts(
     ## filter payouts by user and feed
     filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
     filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
-    result = process_payouts(filtered_payouts)
+    result = process_payouts(payouts=filtered_payouts, calculate_confint=True)
 
-    assert len(result) == 6
-
-    slots, accuracies, profits, stakes, correct_predictions, predictions = result
+    slots = result.slot_in_date_format
+    accuracies = result.accuracies
+    profits = result.profits
+    stakes = result.stakes
+    correct_predictions = result.correct_predictions
+    predictions = result.predictions
+    acc_intervals = result.acc_intervals
 
     assert correct_predictions == 0
     assert predictions == 2
@@ -71,6 +75,12 @@ def test_process_payouts(
     # check if stakes are the same
     for i, stake in enumerate(stakes):
         assert stake == test_stakes[i]
+
+    assert len(acc_intervals) == len(test_stakes)
+
+    for i, acc_interval in enumerate(acc_intervals):
+        assert isinstance(acc_interval.acc_l, float)
+        assert isinstance(acc_interval.acc_u, float)
 
 
 class MockFigure:
@@ -136,9 +146,11 @@ def test_get_figures_and_metrics(
     )
     sample_predictoors = ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"]
 
-    fig_accuracy, fig_profit, fig_costs, avg_accuracy, total_profit, avg_stake = (
-        get_figures_and_metrics(payouts, sample_feeds, sample_predictoors)
-    )
+    figs_metrics = get_figures_and_metrics(payouts, sample_feeds, sample_predictoors)
+
+    fig_accuracy = figs_metrics.fig_accuracy
+    fig_profit = figs_metrics.fig_profit
+    fig_costs = figs_metrics.fig_costs
 
     # Check if figures are instances of MockFigure
     assert isinstance(fig_accuracy, MockFigure)
@@ -163,10 +175,10 @@ def test_get_figures_and_metrics(
     assert fig_costs.update_layout_called == 1
 
     # Check metrics
-    assert avg_accuracy is not None
-    assert total_profit is not None
-    assert avg_stake is not None
+    assert figs_metrics.avg_accuracy is not None
+    assert figs_metrics.total_profit is not None
+    assert figs_metrics.avg_stake is not None
 
-    assert isinstance(avg_accuracy, float)
-    assert isinstance(total_profit, float)
-    assert isinstance(avg_stake, float)
+    assert isinstance(figs_metrics.avg_accuracy, float)
+    assert isinstance(figs_metrics.total_profit, float)
+    assert isinstance(figs_metrics.avg_stake, float)
