@@ -13,7 +13,6 @@ from flask import Flask, jsonify
 
 from pdr_backend.subgraph.subgraph_predictions import (
     fetch_contract_id_and_spe,
-    #    get_all_contract_ids_by_owner,
     ContractIdAndSPE,
 )
 from pdr_backend.subgraph.legacy.subgraph_slot import (
@@ -280,10 +279,6 @@ def save_statistics_to_file():
             "seconds_per_epoch": 3600,
         },
     ]
-
-    # contract_addresses = get_all_contract_ids_by_owner(
-    #     "0x4ac2e51f9b1b0ca9e000dfe6032b24639b172703", network_param
-    # )
 
     contract_addresses = WHITELIST_FEEDS_MAINNET
 
