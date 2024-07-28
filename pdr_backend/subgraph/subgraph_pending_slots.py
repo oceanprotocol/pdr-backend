@@ -87,7 +87,9 @@ def get_pending_slots(
                     continue
 
                 contract = slot["predictContract"]
-                pair, timeframe, source = get_pair_timeframe_source_from_contract(contract)
+                pair, timeframe, source = get_pair_timeframe_source_from_contract(
+                    contract
+                )
 
                 assert pair, "need a pair"
                 assert timeframe, "need a timeframe"

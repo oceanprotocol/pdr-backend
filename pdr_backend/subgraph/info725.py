@@ -106,7 +106,7 @@ def get_pair_timeframe_source_from_contract(contract):
     if contract["id"] in WHITELIST_FEEDS_MAINNET:
         pair = contract["token"]["name"]
         timeframe = "5m" if int(contract["secondsPerEpoch"]) == 300 else "1h"
-        source = "binance" # true for all mainnet contracts
+        source = "binance"  # true for all mainnet contracts
         return (pair, timeframe, source)
 
     raise Exception(f"Could not get pair, timeframe, source from contract: {contract}")

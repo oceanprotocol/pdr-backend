@@ -76,7 +76,9 @@ def query_feed_contracts(
             if not contract_list:
                 break
             for contract in contract_list:
-                pair, timeframe, source = get_pair_timeframe_source_from_contract(contract)
+                pair, timeframe, source = get_pair_timeframe_source_from_contract(
+                    contract
+                )
 
                 # filter out unwanted
                 if not contract["token"]["nft"]:
