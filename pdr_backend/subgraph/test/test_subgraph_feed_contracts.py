@@ -70,7 +70,7 @@ def test_query_feed_contracts__fullchain(monkeypatch):
     assert feed.seconds_per_subscription == 700
     assert feed.trueval_submit_timeout == 5
     assert feed.owner == "0xowner1"
-    assert feed.pair == "Name:contract1"
+    assert feed.pair == "BTC/USDT"
     assert feed.timeframe == "5m"
     assert feed.source == "binance"
     assert feed.seconds_per_epoch == 5 * 60
