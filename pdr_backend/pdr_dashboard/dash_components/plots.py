@@ -252,7 +252,7 @@ def create_figure(
                 "tickformat": "%m-%d %H:%M",
             }
             if not use_default_tick_format
-            else {}
+            else {"nticks": 4}
         ),
     )
     return fig
