@@ -4,10 +4,12 @@ from datetime import datetime, timedelta
 from typing import Union, List, Dict, Any, Optional
 from enforce_typing import enforce_types
 import dash
+from web3 import Web3
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
+from pdr_backend.util.currency_types import Eth, Wei
 
 logger = logging.getLogger("predictoor_dashboard_utils")
 
@@ -207,3 +209,37 @@ def get_date_period_text(payouts: List):
         - {datetime.fromtimestamp(end_date).strftime('%d-%m-%Y')}
     """
     return date_period_text
+
+
+def calculate_tx_gas_fee_cost_in_OCEAN(web3_pp, feed_contract_addr, prices):
+    if not prices:
+        return 0.0
+
+    web3 = Web3(Web3.HTTPProvider(web3_pp.rpc_url))
+
+    # generic params
+    predicted_value = True
+    stake_amt_wei = Eth(10).to_wei().amt_wei
+    prediction_ts = Eth(1721723066).to_wei().amt_wei
+
+    # gas price
+    gas_price = web3.eth.gas_price
+
+    # gas amount
+    contract = web3.eth.contract(
+        address=web3.to_checksum_address(feed_contract_addr),
+        abi=web3_pp.get_contract_abi("ERC20Template3"),
+    )
+    gas_estimate_prediction = contract.functions["submitPredval"](
+        predicted_value, stake_amt_wei, prediction_ts
+    ).estimate_gas({"from": "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"})
+
+    # cals tx fee cost
+    tx_fee_rose_prediction = (
+        Wei(gas_estimate_prediction * gas_price).to_eth().amt_eth / 10
+    )
+
+    tx_fee_price_usdt_prediction = tx_fee_rose_prediction * prices["ROSE"]
+    tx_fee_price_ocean_prediction = tx_fee_price_usdt_prediction / prices["OCEAN"]
+
+    return tx_fee_price_ocean_prediction

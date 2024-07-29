@@ -25,7 +25,11 @@ def test_process_payouts(
     ## filter payouts by user and feed
     filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
     filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
-    result = process_payouts(payouts=filtered_payouts, calculate_confint=True)
+    tx_fee_cost = 0.2
+
+    result = process_payouts(
+        payouts=filtered_payouts, tx_fee_cost=tx_fee_cost, calculate_confint=True
+    )
 
     slots = result.slot_in_unixts
     accuracies = result.accuracies
@@ -34,8 +38,10 @@ def test_process_payouts(
     correct_predictions = result.correct_predictions
     predictions = result.predictions
     acc_intervals = result.acc_intervals
+    costs = result.tx_cost
 
     assert correct_predictions == 0
+    assert costs > 0
     assert predictions == 2
     assert len(slots) == len(filtered_payouts)
     assert slots[0] == UnixTimeS(filtered_payouts[0]["slot"]).to_milliseconds()
@@ -146,40 +152,56 @@ def test_get_figures_and_metrics(
         ]
     )
     sample_predictoors = ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"]
+    fee_cost = 0.2
 
-    figs_metrics = get_figures_and_metrics(payouts, sample_feeds, sample_predictoors)
+    figs_metrics = get_figures_and_metrics(
+        payouts, sample_feeds, sample_predictoors, fee_cost
+    )
 
     fig_accuracy = figs_metrics.fig_accuracy
     fig_profit = figs_metrics.fig_profit
     fig_costs = figs_metrics.fig_costs
+    fig_stakes = figs_metrics.fig_stakes
 
     # Check if figures are instances of MockFigure
     assert isinstance(fig_accuracy, MockFigure)
     assert isinstance(fig_profit, MockFigure)
     assert isinstance(fig_costs, MockFigure)
+    assert isinstance(fig_stakes, MockFigure)
 
     # Check if the figures have the correct layout and data traces
     assert len(fig_accuracy.data_traces) == 1
     assert len(fig_profit.data_traces) == 1
     assert len(fig_costs.data_traces) == 1
+    assert len(fig_stakes.data_traces) == 1
 
     assert fig_accuracy.layout["title"] == "Accuracy"
     assert fig_profit.layout["title"] == "Profit"
     assert fig_costs.layout["title"] == "Costs"
+    assert fig_stakes.layout["title"] == "Stakes"
 
     assert fig_accuracy.layout["yaxis"]["title"] == "Accuracy(%)"
     assert fig_profit.layout["yaxis"]["title"] == "Profit(OCEAN)"
-    assert fig_costs.layout["yaxis"]["title"] == "Stake(OCEAN)"
+    assert fig_costs.layout["yaxis"]["title"] == "Fees(OCEAN)"
+    assert fig_stakes.layout["yaxis"]["title"] == "Stake(OCEAN)"
 
     assert fig_accuracy.update_layout_called == 1
     assert fig_profit.update_layout_called == 1
     assert fig_costs.update_layout_called == 1
+    assert fig_stakes.update_layout_called == 1
 
     # Check metrics
-    assert figs_metrics.avg_accuracy is not None
-    assert figs_metrics.total_profit is not None
-    assert figs_metrics.avg_stake is not None
+    avg_accuracy = figs_metrics.avg_accuracy
+    total_profit = figs_metrics.total_profit
+    total_cost = figs_metrics.total_cost
+    avg_stake = figs_metrics.avg_stake
 
-    assert isinstance(figs_metrics.avg_accuracy, float)
-    assert isinstance(figs_metrics.total_profit, float)
-    assert isinstance(figs_metrics.avg_stake, float)
+    assert avg_accuracy is not None
+    assert total_profit is not None
+    assert total_cost is not None
+    assert avg_stake is not None
+
+    assert isinstance(avg_accuracy, float)
+    assert isinstance(total_profit, float)
+    assert isinstance(total_cost, float)
+    assert isinstance(avg_stake, float)

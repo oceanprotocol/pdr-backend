@@ -13,6 +13,7 @@ from pdr_backend.pdr_dashboard.dash_components.util import (
     get_payouts_from_db,
     get_start_date_from_period,
     select_or_clear_all_by_table,
+    calculate_tx_gas_fee_cost_in_OCEAN,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_graph,
@@ -26,9 +27,11 @@ def get_callbacks(app):
     @app.callback(
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),
+        Output("cost_chart", "children"),
         Output("stake_chart", "children"),
         Output("accuracy_metric", "children"),
         Output("profit_metric", "children"),
+        Output("costs_metric", "children"),
         Output("stake_metric", "children"),
         Output("available_data_period_text", "children"),
         [
@@ -72,11 +75,21 @@ def get_callbacks(app):
                 app.lake_dir,
             )
 
+        # get fee estimate
+        fee_cost = (
+            calculate_tx_gas_fee_cost_in_OCEAN(
+                app.web3_pp, feeds[0].contract, app.prices
+            )
+            if feeds
+            else 0.0
+        )
+
         # get figures
         figs_metrics = get_figures_and_metrics(
             payouts,
             feeds,
             predictoors_addrs,
+            fee_cost,
         )
 
         # get available period date text
@@ -93,8 +106,10 @@ def get_callbacks(app):
             get_graph(figs_metrics.fig_accuracy),
             get_graph(figs_metrics.fig_profit),
             get_graph(figs_metrics.fig_costs),
+            get_graph(figs_metrics.fig_stakes),
             f"{round(figs_metrics.avg_accuracy, 2)}%",
             f"{round(figs_metrics.total_profit, 2)} OCEAN",
+            f"~{round(figs_metrics.total_cost, 2)} OCEAN",
             f"{round(figs_metrics.avg_stake, 2)} OCEAN",
             date_period_text,
         )
