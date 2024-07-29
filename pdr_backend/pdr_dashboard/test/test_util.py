@@ -206,12 +206,11 @@ def test_get_predictoors_data_from_payouts():
     assert test_row["avg_stake"] == 1.99
 
 
-def test_calculate_tx_gas_fee_cost_in_OCEAN():
-    # Mocking the prices dictionary
-    prices = {
-        "ROSE": 0.5,  # Example price of ROSE in USDT
-        "OCEAN": 1.0,  # Example price of OCEAN in USDT
-    }
+def test_calculate_tx_gas_fee_cost_in_OCEAN(setup_app):
+    app = setup_app
+    assert app.prices is not None
+    assert app.prices["ROSE"] > 0
+    assert app.prices["OCEAN"] > 0
 
     # Example feed_contract_addr
     feed_contract_addr = "0x1234567890abcdef1234567890abcdef12345678"
@@ -241,7 +240,7 @@ def test_calculate_tx_gas_fee_cost_in_OCEAN():
     assert result == 0.0
 
     # If prices, should return a value > 0
-    result = calculate_tx_gas_fee_cost_in_OCEAN(web3_pp, feed_contract_addr, prices)
+    result = calculate_tx_gas_fee_cost_in_OCEAN(web3_pp, feed_contract_addr, app.prices)
     assert isinstance(result, float)
     assert result > 0
     assert result < 0.001
