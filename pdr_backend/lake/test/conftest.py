@@ -99,7 +99,7 @@ _ETL_PAYOUT_TUPS = [
         1698865200,  # slot # Nov 01 2023 19:00:00 GMT
         0.0,  # payout
         True,  # predictedValue
-        # False,  # trueValue
+        False,  # trueValue
         0.928046,  # revenue
         15.629683,  # roundSumStakesUp
         34.314841,  # roundSumStakes
@@ -113,7 +113,7 @@ _ETL_PAYOUT_TUPS = [
         1698951600,  # slot # Nov 02 2023 19:00:00 GMT
         10.928642693189679,  # payout
         False,  # predictedValue
-        # False,  # trueValue
+        False,  # trueValue
         0.92804,  # revenue
         45.62968,  # roundSumStakesUp
         72.31484,  # roundSumStakes
@@ -127,7 +127,7 @@ _ETL_PAYOUT_TUPS = [
         1699038000,  # slot # Nov 03 2023 19:00:00 GMT
         7.041434095860760067,  # payout
         False,  # predictedValue
-        # False,  # trueValue
+        False,  # trueValue
         0.93671,  # revenue
         47.61968,  # roundSumStakesUp
         72.31484,  # roundSumStakes
@@ -141,7 +141,7 @@ _ETL_PAYOUT_TUPS = [
         1699124400,  # slot # Nov 04 2023 19:00:00 GMT
         7.160056238874628619,  # payout
         True,  # predictedValue
-        # True,  # trueValue
+        True,  # trueValue
         0.92804,  # revenue
         38.09065,  # roundSumStakesUp
         93.31532,  # roundSumStakes
@@ -155,7 +155,7 @@ _ETL_PAYOUT_TUPS = [
         1699300800,  # slot # Nov 06 2023 19:00:00 GMT
         0.0,  # payout
         True,  # predictedValue
-        # False,  # trueValue
+        False,  # trueValue
         0.92804,  # revenue
         47.71968,  # roundSumStakesUp
         74.30484,  # roundSumStakes

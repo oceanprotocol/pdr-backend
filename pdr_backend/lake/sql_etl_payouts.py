@@ -23,6 +23,7 @@ def _do_sql_payouts(
         {payout_table.table_name}.slot,
         {payout_table.table_name}.user,
         {payout_table.table_name}.predvalue,
+        {payout_table.table_name}.truevalue,
         {payout_table.table_name}.stake,
         {payout_table.table_name}.payout,
         {payout_table.table_name}.timestamp,
@@ -47,7 +48,7 @@ def _do_sql_payouts(
         null as timeframe,
         null as source,
         p.predvalue,
-        null as truevalue,
+        p.truevalue,
         p.stake,
         -- do not use revenue from payout, it's not correct
         null as revenue,

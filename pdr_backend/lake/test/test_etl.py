@@ -135,9 +135,19 @@ def test_etl_do_incremental_bronze_step(_sample_raw_data, _sample_etl):
             bronze_pdr_predictions_records["payout"].is_not_null().sum()
         )
 
+        prod_null_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_null().sum()
+        )
+        prod_valid_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_not_null().sum()
+        )
+
         # assert those numbers so we can track progress
         assert prod_null_payouts == 178
         assert prod_valid_payouts == 307
+
+        assert prod_null_truevalues == 178
+        assert prod_valid_truevalues == 307
 
         # validate that rows are equal to what we expected
         assert prod_null_payouts + prod_valid_payouts == len(expected_rows)
@@ -212,9 +222,19 @@ def test_etl_do_incremental_bronze_step(_sample_raw_data, _sample_etl):
             bronze_pdr_predictions_records["payout"].is_not_null().sum()
         )
 
+        prod_null_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_null().sum()
+        )
+        prod_valid_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_not_null().sum()
+        )
+
         # assert those numbers so we can track progress
         assert prod_null_payouts == 290
         assert prod_valid_payouts == 507
+
+        assert prod_null_truevalues == prod_null_payouts
+        assert prod_valid_truevalues == prod_valid_payouts
 
         # validate that rows are equal to what we expected
         assert prod_null_payouts + prod_valid_payouts == len(expected_rows)
@@ -286,9 +306,19 @@ def test_etl_do_incremental_bronze_step(_sample_raw_data, _sample_etl):
             bronze_pdr_predictions_records["payout"].is_not_null().sum()
         )
 
+        prod_null_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_null().sum()
+        )
+        prod_valid_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_not_null().sum()
+        )
+
         # assert those numbers so we can track progress
         assert prod_null_payouts == 247
         assert prod_valid_payouts == 528
+
+        assert prod_null_truevalues == prod_null_payouts
+        assert prod_valid_truevalues == prod_valid_payouts
 
         # validate that rows are equal to what we expected
         assert prod_null_payouts + prod_valid_payouts == len(expected_rows)
@@ -307,9 +337,17 @@ def test_etl_do_incremental_bronze_step(_sample_raw_data, _sample_etl):
     prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
     prod_valid_payouts = bronze_pdr_predictions_records["payout"].is_not_null().sum()
 
-    #
+    prod_null_truevalues = bronze_pdr_predictions_records["truevalue"].is_null().sum()
+    prod_valid_truevalues = (
+        bronze_pdr_predictions_records["truevalue"].is_not_null().sum()
+    )
+
+    # assert final ETL values
     assert prod_null_payouts == 379
     assert prod_valid_payouts == 1678
+    assert prod_null_truevalues == prod_null_payouts
+    assert prod_valid_truevalues == prod_valid_payouts
+
     assert bronze_pdr_predictions_records.shape[0] == 2057
     assert (
         prod_null_payouts + prod_valid_payouts
