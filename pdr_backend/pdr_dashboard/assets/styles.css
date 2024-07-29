@@ -101,3 +101,17 @@ button{
 .show-hide {
     display: none;
 }
+
+.tooltip-question-mark {
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    font-size: 12px;
+    padding: 0;
+    text-align: center;
+    color: white;
+    background-color: #6c757d !important;
+    border: 0px none;
+    margin-left: 10px;
+}
