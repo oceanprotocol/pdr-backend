@@ -9,6 +9,7 @@ from typing import List, Optional
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.contract.slot import Slot
 from pdr_backend.subgraph.core_subgraph import query_subgraph
+from pdr_backend.subgraph.info725 import get_pair_timeframe_source_from_contract
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.constants import WHITELIST_FEEDS_MAINNET
 from pdr_backend.util.time_types import UnixTimeS
@@ -86,11 +87,9 @@ def get_pending_slots(
                     continue
 
                 contract = slot["predictContract"]
-                pair = contract["token"]["name"]
-                timeframe = "5m" if int(contract["secondsPerEpoch"]) == 300 else "1h"
-                source = "binance"  # fix me
-                if None in (pair, timeframe, source):
-                    continue
+                pair, timeframe, source = get_pair_timeframe_source_from_contract(
+                    contract
+                )
 
                 assert pair, "need a pair"
                 assert timeframe, "need a timeframe"

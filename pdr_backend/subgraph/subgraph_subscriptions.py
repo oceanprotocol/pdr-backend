@@ -10,6 +10,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.subscription import Subscription
 from pdr_backend.subgraph.core_subgraph import query_subgraph
+from pdr_backend.subgraph.info725 import get_pair_timeframe_source_from_contract
 from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.util.time_types import UnixTimeS
 
@@ -105,9 +106,7 @@ def fetch_filtered_subscriptions(
 
     for subscription_sg_dict in data:
         contract = subscription_sg_dict["predictContract"]
-        pair = contract["token"]["name"]
-        timeframe = "5m" if int(contract["secondsPerEpoch"]) == 300 else "1h"
-        source = "binance"  # fix me
+        pair, timeframe, source = get_pair_timeframe_source_from_contract(contract)
         timestamp = UnixTimeS(int(subscription_sg_dict["timestamp"]))
         tx_id = subscription_sg_dict["txId"]
         last_price_value = (

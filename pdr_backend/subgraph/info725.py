@@ -7,6 +7,8 @@ from typing import Dict, Optional, Union
 from enforce_typing import enforce_types
 from web3 import Web3
 
+from pdr_backend.util.constants import WHITELIST_FEEDS_MAINNET
+
 
 @enforce_types
 def key_to_key725(key: str):
@@ -90,3 +92,21 @@ def info725_to_info(info725: list) -> Dict[str, Optional[str]]:
                 break
 
     return info
+
+
+def get_pair_timeframe_source_from_contract(contract):
+    if contract["token"]["nft"]:
+        info725 = contract["token"]["nft"]["nftData"]
+        info = info725_to_info(info725)  # {"pair": "ETH/USDT", }
+        pair = info["pair"]
+        timeframe = info["timeframe"]
+        source = info["source"]
+        return (pair, timeframe, source)
+
+    if contract["id"] in WHITELIST_FEEDS_MAINNET:
+        pair = contract["token"]["name"]
+        timeframe = "5m" if int(contract["secondsPerEpoch"]) == 300 else "1h"
+        source = "binance"  # true for all mainnet contracts
+        return (pair, timeframe, source)
+
+    raise Exception(f"Could not get pair, timeframe, source from contract: {contract}")
