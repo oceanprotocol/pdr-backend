@@ -76,8 +76,12 @@ def get_callbacks(app):
             )
 
         # get fee estimate
-        fee_cost = calculate_tx_gas_fee_cost_in_OCEAN(
-            app.web3_pp, feeds[0].contract, app.prices
+        fee_cost = (
+            calculate_tx_gas_fee_cost_in_OCEAN(
+                app.web3_pp, feeds[0].contract, app.prices
+            )
+            if feeds
+            else 0.0
         )
 
         # get figures
