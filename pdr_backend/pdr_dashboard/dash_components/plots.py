@@ -49,21 +49,22 @@ class FiguresAndMetricsResult:
                     "show_legend": False,
                 },
             },
-            "stakes_scatters": {
-                "fallback": [go.Bar(x=[], y=[], name="stakes", width=5)],
-                "fig_attr": "fig_stakes",
-                "args": {
-                    "title": "Stakes",
-                    "yaxis_title": "Stake(OCEAN)",
-                    "show_legend": False,
-                },
-            },
             "costs_scatters": {
-                "fallback": [go.Bar(x=[], y=[], name="costs", width=5)],
+                "fallback": [go.Bar(x=[], y=[], name="costs")],
                 "fig_attr": "fig_costs",
                 "args": {
                     "title": "Costs",
                     "yaxis_title": "Fees(OCEAN)",
+                    "show_legend": False,
+                    "use_default_tick_format": True,
+                },
+            },
+            "stakes_scatters": {
+                "fallback": [go.Histogram(x=[], y=[], name="stakes")],
+                "fig_attr": "fig_stakes",
+                "args": {
+                    "title": "Stakes",
+                    "yaxis_title": "Stake(OCEAN)",
                     "show_legend": False,
                 },
             },
@@ -210,6 +211,7 @@ def create_figure(
     yaxis_title: str,
     show_legend: bool = True,
     yaxis_range: Union[List, None] = None,
+    use_default_tick_format: bool = False,
 ):
     """
     Create a figure with the given data traces.
@@ -243,11 +245,15 @@ def create_figure(
         legend=legend_config,
         barmode="stack",
         yaxis={"range": yaxis_range if yaxis_range else None, "title": yaxis_title},
-        xaxis={
-            "type": "date",
-            "nticks": 5,
-            "tickformat": "%m-%d %H:%M",
-        },
+        xaxis=(
+            {
+                "type": "date",
+                "nticks": 5,
+                "tickformat": "%m-%d %H:%M",
+            }
+            if not use_default_tick_format
+            else {}
+        ),
     )
     return fig
 
