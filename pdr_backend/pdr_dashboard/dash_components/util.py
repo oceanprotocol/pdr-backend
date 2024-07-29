@@ -221,7 +221,6 @@ def calculate_tx_gas_fee_cost_in_OCEAN(web3_pp, feed_contract_addr, prices):
     predicted_value = True
     stake_amt_wei = Eth(10).to_wei().amt_wei
     prediction_ts = Eth(1721723066).to_wei().amt_wei
-    # predictoor_addr = "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"
 
     # gas price
     gas_price = web3.eth.gas_price
@@ -242,13 +241,5 @@ def calculate_tx_gas_fee_cost_in_OCEAN(web3_pp, feed_contract_addr, prices):
 
     tx_fee_price_usdt_prediction = tx_fee_rose_prediction * prices["ROSE"]
     tx_fee_price_ocean_prediction = tx_fee_price_usdt_prediction / prices["OCEAN"]
-
-    # gas_estimate_payout = contract.functions["payout"](
-    #    prediction_ts, predictoor_addr
-    # ).estimate_gas({"from": "0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"})
-    # tx_fee_rose_payout = Wei(gas_estimate_payout * gas_price).to_eth().amt_eth
-    # tx_fee_price_usdt_payout = tx_fee_rose_payout * prices["ROSE"]
-    # tx_fee_price_ocean_payout = tx_fee_price_usdt_payout / prices["OCEAN"]
-    # print(tx_fee_price_ocean_prediction, tx_fee_price_ocean_payout)
 
     return tx_fee_price_ocean_prediction
