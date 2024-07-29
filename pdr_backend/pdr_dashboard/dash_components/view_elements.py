@@ -12,19 +12,24 @@ def col_to_human(col):
     return col.replace("_", " ").title()
 
 
+# pylint: disable=too-many-return-statements
 def get_information_text(tooltip_id: str):
     match tooltip_id:
         case "tooltip-accuracy_metric":
-            return """This displays the average accuracy of predictions
-                within the selected timeframe and for the selected predictoors."""
+            return """Average accuracy of predictions
+                within the selected timeframe and for the selected predictoors and feeds."""
         case "tooltip-profit_metric":
-            return """This shows the total profit generated from predictions
-                within the selected timeframe and for the selected predictoors."""
+            return """Total profit generated from predictions
+                within the selected timeframe and for the selected predictoors and feeds."""
+        case "tooltip-costs_metric":
+            return """Transaction fee costs for predicting and claiming payouts
+                for each slot individually within the selected timeframe 
+                and for the selected predictoors and feeds."""
         case "tooltip-stake_metric":
-            return """This represents the average stake placed on each prediction
-                within the selected timeframe and for the selected predictoors."""
+            return """Average stake placed on each prediction
+                within the selected timeframe and for the selected predictoors and feeds."""
         case "tooltip-switch-predictoors":
-            return """Toggle this switch to view only those predictoors
+            return """Toggle this switch to automatically select predictoors
                 that are pre-configured in the ppss.yaml settings."""
         case "tooltip-switch-feeds":
             return """Toggle this switch to view only the feeds associated with
@@ -186,7 +191,7 @@ def get_graphs_column_metrics_row():
     return html.Div(
         [
             get_metric(label="Avg Accuracy", value="0%", value_id="accuracy_metric"),
-            get_metric(label="Total Profit", value="0 OCEAN", value_id="profit_metric"),
+            get_metric(label="Pred Profit", value="0 OCEAN", value_id="profit_metric"),
             get_metric(label="Tx Costs", value="0 OCEAN", value_id="costs_metric"),
             get_metric(label="Avg Stake", value="0 OCEAN", value_id="stake_metric"),
             get_date_period_selection_component(),
@@ -253,7 +258,12 @@ def get_metric(label, value, value_id):
                 [
                     label,
                     get_tooltip_and_button(value_id),
-                ]
+                ],
+                style={
+                    "display": "flex",
+                    "justifyContent": "center",
+                    "alignItems": "center",
+                },
             ),
             html.Span(value, id=value_id, style={"fontWeight": "bold"}),
         ],

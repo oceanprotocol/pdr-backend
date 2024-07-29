@@ -104,14 +104,14 @@ button{
 
 .tooltip-question-mark {
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    line-height: 20px;
-    font-size: 12px;
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+    font-size: 10px;
     padding: 0;
     text-align: center;
     color: white;
     background-color: #6c757d !important;
     border: 0px none;
-    margin-left: 10px;
+    margin-left: 5px;
 }
