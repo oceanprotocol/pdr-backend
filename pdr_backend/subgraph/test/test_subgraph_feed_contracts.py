@@ -50,7 +50,7 @@ def test_query_feed_contracts__fullchain(monkeypatch):
     # This test is a simple-as-possible happy path. Start here.
     # Then follow up with test_filter() below, which is complex but thorough
 
-    info = {"pair": "BTC/USDT", "timeframe": "5m", "source": "binance"}
+    info = {"pair": "BTC-USDT", "timeframe": "5m", "source": "binance"}
     contract = mock_contract(info, "contract1")
     contract_addr = contract["id"]
 
@@ -70,7 +70,7 @@ def test_query_feed_contracts__fullchain(monkeypatch):
     assert feed.seconds_per_subscription == 700
     assert feed.trueval_submit_timeout == 5
     assert feed.owner == "0xowner1"
-    assert feed.pair == "BTC/USDT"
+    assert feed.pair == "Name:contract1"
     assert feed.timeframe == "5m"
     assert feed.source == "binance"
     assert feed.seconds_per_epoch == 5 * 60

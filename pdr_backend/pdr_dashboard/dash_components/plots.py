@@ -86,7 +86,7 @@ class AccInterval(NamedTuple):
 
 class ProcessedPayouts:
     def __init__(self):
-        self.slot_in_date_format = []
+        self.slot_in_unixts = []
         self.accuracies = []
         self.profits = []
         self.stakes = []
@@ -99,7 +99,7 @@ class ProcessedPayouts:
     def as_accuracy_scatters_bounds(self, short_name, show_confidence_interval: bool):
         scatters = [
             go.Scatter(
-                x=self.slot_in_date_format,
+                x=self.slot_in_unixts,
                 y=self.accuracies,
                 mode="lines",
                 name=short_name,
@@ -109,7 +109,7 @@ class ProcessedPayouts:
         if show_confidence_interval:
             scatters = scatters + [
                 go.Scatter(
-                    x=self.slot_in_date_format,
+                    x=self.slot_in_unixts,
                     y=[interval.acc_l * 100 for interval in self.acc_intervals],
                     mode="lines",
                     name="accuracy_lowerbound",
@@ -117,7 +117,7 @@ class ProcessedPayouts:
                     showlegend=False,
                 ),
                 go.Scatter(
-                    x=self.slot_in_date_format,
+                    x=self.slot_in_unixts,
                     y=[interval.acc_u * 100 for interval in self.acc_intervals],
                     mode="lines",
                     fill="tonexty",
@@ -132,7 +132,7 @@ class ProcessedPayouts:
     def as_profit_scatters(self, short_name):
         return [
             go.Scatter(
-                x=self.slot_in_date_format,
+                x=self.slot_in_unixts,
                 y=self.profits,
                 mode="lines",
                 name=short_name,
@@ -141,11 +141,10 @@ class ProcessedPayouts:
 
     def as_stakes_scatters(self, short_name):
         return [
-            go.Bar(
-                x=self.slot_in_date_format,
+            go.Histogram(
+                x=self.slot_in_unixts,
                 y=self.stakes,
                 name=short_name,
-                width=5,
             )
         ]
 
@@ -174,7 +173,6 @@ def process_payouts(
     processed = ProcessedPayouts()
 
     profit = 0.0
-    slots = []
     for p in payouts:
         processed.predictions += 1
         processed.tx_cost += tx_fee_cost
@@ -194,17 +192,13 @@ def process_payouts(
                 )
             )
 
-        slots.append(p["slot"])
+        processed.slot_in_unixts.append(UnixTimeS(int(p["slot"])).to_milliseconds())
         processed.accuracies.append(
             (processed.correct_predictions / processed.predictions) * 100
         )
         processed.profits.append(profit)
         processed.stakes.append(p["stake"])
         processed.tx_costs.append(processed.tx_cost)
-
-    processed.slot_in_date_format = [
-        UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
-    ]
 
     return processed
 
@@ -224,6 +218,8 @@ def create_figure(
         title (str): Figure title.
         yaxis_title (str): Y-axis title.
         show_legend (bool): Show legend. Default is True.
+        yaxis_range (list, optional): Custom range for the y-axis.
+        xaxis_tickformat (str, optional): Custom format string for x-axis ticks.
     Returns:
         go.Figure: Plotly figure.
     """
@@ -244,11 +240,14 @@ def create_figure(
         title=title,
         margin={"l": 20, "r": 0, "t": 50, "b": 0},
         showlegend=show_legend,
-        xaxis_nticks=4,
-        bargap=0.1,
-        barmode="stack",
         legend=legend_config,
+        barmode="stack",
         yaxis={"range": yaxis_range if yaxis_range else None, "title": yaxis_title},
+        xaxis={
+            "type": "date",
+            "nticks": 5,
+            "tickformat": "%m-%d %H:%M",
+        },
     )
     return fig
 

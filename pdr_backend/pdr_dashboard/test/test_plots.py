@@ -31,7 +31,7 @@ def test_process_payouts(
         payouts=filtered_payouts, tx_fee_cost=tx_fee_cost, calculate_confint=True
     )
 
-    slots = result.slot_in_date_format
+    slots = result.slot_in_unixts
     accuracies = result.accuracies
     profits = result.profits
     stakes = result.stakes
@@ -44,9 +44,7 @@ def test_process_payouts(
     assert costs > 0
     assert predictions == 2
     assert len(slots) == len(filtered_payouts)
-    assert slots[0] == UnixTimeS(
-        filtered_payouts[0]["slot"]
-    ).to_milliseconds().to_dt().strftime("%m-%d %H:%M")
+    assert slots[0] == UnixTimeS(filtered_payouts[0]["slot"]).to_milliseconds()
 
     ## calculate accuracies
     test_accuracies = [
@@ -114,12 +112,10 @@ def test_create_figure():
     assert isinstance(result, MockFigure)
     assert result.data_traces == []
     assert result.layout == {
-        "bargap": 0.1,
         "barmode": "stack",
         "title": "title",
         "margin": {"l": 20, "r": 0, "t": 50, "b": 0},
         "showlegend": True,
-        "xaxis_nticks": 4,
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
@@ -128,6 +124,11 @@ def test_create_figure():
             "x": 1,
         },
         "yaxis": {"range": None, "title": "yaxis_title"},
+        "xaxis": {
+            "nticks": 5,
+            "tickformat": "%m-%d %H:%M",
+            "type": "date",
+        },
     }
 
     assert result.update_layout_called == 1
