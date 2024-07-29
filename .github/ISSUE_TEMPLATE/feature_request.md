@@ -1,14 +1,9 @@
-<!--
-Copyright 2024 Ocean Protocol Foundation
-SPDX-License-Identifier: Apache-2.0
--->
 ---
 name: Enhancement
 about: 'Solve a specific problem'
 title: '[Component name] Problem to solve, maybe how'
 labels: 'Type: Enhancement'
 assignees: ''
-
 ---
 
 ### Background / motivation

@@ -17,7 +17,7 @@ from pdr_backend.util.time_types import UnixTimeS
 SAMPLE_PREDICTION = Subscription(
     # pylint: disable=line-too-long
     ID="0x18f54cc21b7a2fdd011bea06bba7801b280e3151-0x00d1e4950e0de743fe88956f02f44b16d22a1827f8c29ff561b69716dbcc2677-14",
-    pair="ADA/USDT",
+    pair="ADA-USDT",
     timeframe="5m",
     source="binance",
     timestamp=UnixTimeS(1701129777),
@@ -36,7 +36,7 @@ MOCK_SUBSCRIPTIONS_RESPONSE_FIRST_CALL = {
                     "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
                     "token": {
                         "id": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
-                        "name": "ADA/USDT",
+                        "name": "ADA-USDT",
                         "nft": {
                             "nftData": [
                                 {
@@ -99,7 +99,7 @@ def test_fetch_filtered_subscriptions(mock_query_subgraph):
     assert len(subscriptions) == 1
     assert isinstance(subscriptions[0], Subscription)
     assert subscriptions[0].user == "0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d"
-    assert subscriptions[0].pair == "ADA/USDT"
+    assert subscriptions[0].pair == "ADA-USDT"
     assert mock_query_subgraph.call_count == 1
 
 
