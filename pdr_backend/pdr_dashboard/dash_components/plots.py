@@ -71,7 +71,7 @@ class AccInterval(NamedTuple):
 
 class ProcessedPayouts:
     def __init__(self):
-        self.slot_in_date_format = []
+        self.slot_in_unixts = []
         self.accuracies = []
         self.profits = []
         self.stakes = []
@@ -97,7 +97,6 @@ def process_payouts(
     processed = ProcessedPayouts()
 
     profit = 0.0
-    slots = []
     for p in payouts:
         processed.predictions += 1
         profit_change = float(max(p["payout"], 0) - p["stake"])
@@ -116,16 +115,12 @@ def process_payouts(
                 )
             )
 
-        slots.append(p["slot"])
+        processed.slot_in_unixts.append(UnixTimeS(int(p["slot"])).to_milliseconds())
         processed.accuracies.append(
             (processed.correct_predictions / processed.predictions) * 100
         )
         processed.profits.append(profit)
         processed.stakes.append(p["stake"])
-
-    processed.slot_in_date_format = [
-        UnixTimeS(ts).to_milliseconds().to_dt().strftime("%m-%d %H:%M") for ts in slots
-    ]
 
     return processed
 
@@ -145,6 +140,8 @@ def create_figure(
         title (str): Figure title.
         yaxis_title (str): Y-axis title.
         show_legend (bool): Show legend. Default is True.
+        yaxis_range (list, optional): Custom range for the y-axis.
+        xaxis_tickformat (str, optional): Custom format string for x-axis ticks.
     Returns:
         go.Figure: Plotly figure.
     """
@@ -165,11 +162,14 @@ def create_figure(
         title=title,
         margin={"l": 20, "r": 0, "t": 50, "b": 0},
         showlegend=show_legend,
-        xaxis_nticks=4,
-        bargap=0.1,
-        barmode="stack",
         legend=legend_config,
+        barmode="stack",
         yaxis={"range": yaxis_range if yaxis_range else None, "title": yaxis_title},
+        xaxis={
+            "type": "date",
+            "nticks": 5,
+            "tickformat": "%m-%d %H:%M",
+        },
     )
     return fig
 
@@ -224,7 +224,7 @@ def get_figures_and_metrics(
         if show_confidence_interval:
             figs_metrics.accuracy_scatters.append(
                 go.Scatter(
-                    x=processed_data.slot_in_date_format,
+                    x=processed_data.slot_in_unixts,
                     y=[
                         interval.acc_l * 100
                         for interval in processed_data.acc_intervals
@@ -237,7 +237,7 @@ def get_figures_and_metrics(
             )
             figs_metrics.accuracy_scatters.append(
                 go.Scatter(
-                    x=processed_data.slot_in_date_format,
+                    x=processed_data.slot_in_unixts,
                     y=[
                         interval.acc_u * 100
                         for interval in processed_data.acc_intervals
@@ -252,7 +252,7 @@ def get_figures_and_metrics(
 
         figs_metrics.accuracy_scatters.append(
             go.Scatter(
-                x=processed_data.slot_in_date_format,
+                x=processed_data.slot_in_unixts,
                 y=processed_data.accuracies,
                 mode="lines",
                 name=short_name,
@@ -260,18 +260,17 @@ def get_figures_and_metrics(
         )
         figs_metrics.profit_scatters.append(
             go.Scatter(
-                x=processed_data.slot_in_date_format,
+                x=processed_data.slot_in_unixts,
                 y=processed_data.profits,
                 mode="lines",
                 name=short_name,
             )
         )
         figs_metrics.stakes_scatters.append(
-            go.Bar(
-                x=processed_data.slot_in_date_format,
+            go.Histogram(
+                x=processed_data.slot_in_unixts,
                 y=processed_data.stakes,
                 name=short_name,
-                width=5,
             )
         )
 
