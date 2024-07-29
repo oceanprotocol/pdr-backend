@@ -104,6 +104,7 @@ def fetch_filtered_predictions(
                                 }}
                             }}
                         }}
+                        secondsPerEpoch
                     }}
                 }}
             }}
