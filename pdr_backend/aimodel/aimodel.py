@@ -71,7 +71,7 @@ class Aimodel:
             try:
                 T = self._sk_classif._predict_proba_lr(
                     X
-                )  # faster for linear regressions incl. LinearSVC
+                )  # required for LinearSVC() that is called by ClassifLinearSVM approach
             except AttributeError:
                 T = self._sk_classif.predict_proba(X)  # [sample_i][class_i]
             N = T.shape[0]
