@@ -25,18 +25,26 @@ def test_process_payouts(
     ## filter payouts by user and feed
     filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
     filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
-    result = process_payouts(filtered_payouts)
+    tx_fee_cost = 0.2
 
-    assert len(result) == 6
+    result = process_payouts(
+        payouts=filtered_payouts, tx_fee_cost=tx_fee_cost, calculate_confint=True
+    )
 
-    slots, accuracies, profits, stakes, correct_predictions, predictions = result
+    slots = result.slot_in_unixts
+    accuracies = result.accuracies
+    profits = result.profits
+    stakes = result.stakes
+    correct_predictions = result.correct_predictions
+    predictions = result.predictions
+    acc_intervals = result.acc_intervals
+    costs = result.tx_cost
 
     assert correct_predictions == 0
+    assert costs > 0
     assert predictions == 2
     assert len(slots) == len(filtered_payouts)
-    assert slots[0] == UnixTimeS(
-        filtered_payouts[0]["slot"]
-    ).to_milliseconds().to_dt().strftime("%m-%d %H:%M")
+    assert slots[0] == UnixTimeS(filtered_payouts[0]["slot"]).to_milliseconds()
 
     ## calculate accuracies
     test_accuracies = [
@@ -72,6 +80,12 @@ def test_process_payouts(
     for i, stake in enumerate(stakes):
         assert stake == test_stakes[i]
 
+    assert len(acc_intervals) == len(test_stakes)
+
+    for i, acc_interval in enumerate(acc_intervals):
+        assert isinstance(acc_interval.acc_l, float)
+        assert isinstance(acc_interval.acc_u, float)
+
 
 class MockFigure:
     def __init__(self, data_traces):
@@ -98,19 +112,22 @@ def test_create_figure():
     assert isinstance(result, MockFigure)
     assert result.data_traces == []
     assert result.layout == {
-        "bargap": 0.1,
         "barmode": "stack",
         "title": "title",
-        "yaxis_title": "yaxis_title",
         "margin": {"l": 20, "r": 0, "t": 50, "b": 0},
         "showlegend": True,
-        "xaxis_nticks": 4,
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
             "y": 1.02,
             "xanchor": "right",
             "x": 1,
+        },
+        "yaxis": {"range": None, "title": "yaxis_title"},
+        "xaxis": {
+            "nticks": 5,
+            "tickformat": "%m-%d %H:%M",
+            "type": "date",
         },
     }
 
@@ -135,38 +152,56 @@ def test_get_figures_and_metrics(
         ]
     )
     sample_predictoors = ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"]
+    fee_cost = 0.2
 
-    fig_accuracy, fig_profit, fig_costs, avg_accuracy, total_profit, avg_stake = (
-        get_figures_and_metrics(payouts, sample_feeds, sample_predictoors)
+    figs_metrics = get_figures_and_metrics(
+        payouts, sample_feeds, sample_predictoors, fee_cost
     )
+
+    fig_accuracy = figs_metrics.fig_accuracy
+    fig_profit = figs_metrics.fig_profit
+    fig_costs = figs_metrics.fig_costs
+    fig_stakes = figs_metrics.fig_stakes
 
     # Check if figures are instances of MockFigure
     assert isinstance(fig_accuracy, MockFigure)
     assert isinstance(fig_profit, MockFigure)
     assert isinstance(fig_costs, MockFigure)
+    assert isinstance(fig_stakes, MockFigure)
 
     # Check if the figures have the correct layout and data traces
     assert len(fig_accuracy.data_traces) == 1
     assert len(fig_profit.data_traces) == 1
     assert len(fig_costs.data_traces) == 1
+    assert len(fig_stakes.data_traces) == 1
 
     assert fig_accuracy.layout["title"] == "Accuracy"
     assert fig_profit.layout["title"] == "Profit"
     assert fig_costs.layout["title"] == "Costs"
+    assert fig_stakes.layout["title"] == "Stakes"
 
-    assert fig_accuracy.layout["yaxis_title"] == "'%' accuracy over time"
-    assert fig_profit.layout["yaxis_title"] == "OCEAN profit over time"
-    assert fig_costs.layout["yaxis_title"] == "Stake (OCEAN) at a time"
+    assert fig_accuracy.layout["yaxis"]["title"] == "Accuracy(%)"
+    assert fig_profit.layout["yaxis"]["title"] == "Profit(OCEAN)"
+    assert fig_costs.layout["yaxis"]["title"] == "Fees(OCEAN)"
+    assert fig_stakes.layout["yaxis"]["title"] == "Stake(OCEAN)"
 
     assert fig_accuracy.update_layout_called == 1
     assert fig_profit.update_layout_called == 1
     assert fig_costs.update_layout_called == 1
+    assert fig_stakes.update_layout_called == 1
 
     # Check metrics
+    avg_accuracy = figs_metrics.avg_accuracy
+    total_profit = figs_metrics.total_profit
+    total_cost = figs_metrics.total_cost
+    avg_stake = figs_metrics.avg_stake
+
     assert avg_accuracy is not None
     assert total_profit is not None
+    assert total_cost is not None
     assert avg_stake is not None
 
     assert isinstance(avg_accuracy, float)
     assert isinstance(total_profit, float)
+    assert isinstance(total_cost, float)
     assert isinstance(avg_stake, float)
