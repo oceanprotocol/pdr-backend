@@ -68,10 +68,8 @@ class Aimodel:
             yptrue = np.mean(Ycont > self._y_thr, axis=1)
         else:
             X = self._scaler.transform(X)
-            if hasattr(self._sk_classif, '_predict_proba_lr'):
-                T = self._sk_classif._predict_proba_lr(
-                    X
-                )  # required for LinearSVC()
+            if hasattr(self._sk_classif, "_predict_proba_lr"):
+                T = self._sk_classif._predict_proba_lr(X)  # required for LinearSVC()
             else:
                 T = self._sk_classif.predict_proba(X)  # [sample_i][class_i]
             N = T.shape[0]
