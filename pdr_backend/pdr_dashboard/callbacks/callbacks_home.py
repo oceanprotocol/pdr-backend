@@ -23,7 +23,7 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
 # pylint: disable=too-many-statements
-def get_callbacks(app):
+def get_callbacks_home(app):
     @app.callback(
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),

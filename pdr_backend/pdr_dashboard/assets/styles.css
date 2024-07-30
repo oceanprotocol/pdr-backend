@@ -115,3 +115,7 @@ button{
     border: 0px none;
     margin-left: 5px;
 }
+
+.ms-auto{
+    margin: 0 auto !important;
+}
