@@ -1,13 +1,7 @@
-import copy
-
 import dash
 
 from dash import Input, Output, State
 
-from pdr_backend.pdr_dashboard.dash_components.app_constants import (
-    PREDICTOOR_TABLE_COLUMNS,
-    PREDICTOOR_TABLE_HIDDEN_COLUMNS,
-)
 from pdr_backend.pdr_dashboard.dash_components.plots import (
     get_figures_and_metrics,
 )
@@ -19,6 +13,7 @@ from pdr_backend.pdr_dashboard.dash_components.util import (
     get_payouts_from_db,
     get_start_date_from_period,
     select_or_clear_all_by_table,
+    calculate_tx_gas_fee_cost_in_OCEAN,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_graph,
@@ -30,23 +25,13 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 # pylint: disable=too-many-statements
 def get_callbacks(app):
     @app.callback(
-        [
-            Output("show-favourite-addresses", "value"),
-            Output("is-loading", "value"),
-        ],
-        Input("is-loading", "value"),
-    )
-    # pylint: disable=unused-argument
-    def startup(is_loading):
-        show_favourite_addresses = True if app.favourite_addresses else []
-        return show_favourite_addresses, 0
-
-    @app.callback(
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),
+        Output("cost_chart", "children"),
         Output("stake_chart", "children"),
         Output("accuracy_metric", "children"),
         Output("profit_metric", "children"),
+        Output("costs_metric", "children"),
         Output("stake_metric", "children"),
         Output("available_data_period_text", "children"),
         [
@@ -90,13 +75,21 @@ def get_callbacks(app):
                 app.lake_dir,
             )
 
-        # get figures
-        accuracy_fig, profit_fig, stakes_fig, avg_accuracy, total_profit, avg_stake = (
-            get_figures_and_metrics(
-                payouts,
-                feeds,
-                predictoors_addrs,
+        # get fee estimate
+        fee_cost = (
+            calculate_tx_gas_fee_cost_in_OCEAN(
+                app.web3_pp, feeds[0].contract, app.prices
             )
+            if feeds
+            else 0.0
+        )
+
+        # get figures
+        figs_metrics = get_figures_and_metrics(
+            payouts,
+            feeds,
+            predictoors_addrs,
+            fee_cost,
         )
 
         # get available period date text
@@ -110,50 +103,20 @@ def get_callbacks(app):
         )
 
         return (
-            get_graph(accuracy_fig),
-            get_graph(profit_fig),
-            get_graph(stakes_fig),
-            f"{round(avg_accuracy, 2)}%",
-            f"{round(total_profit, 2)} OCEAN",
-            f"{round(avg_stake, 2)} OCEAN",
+            get_graph(figs_metrics.fig_accuracy),
+            get_graph(figs_metrics.fig_profit),
+            get_graph(figs_metrics.fig_costs),
+            get_graph(figs_metrics.fig_stakes),
+            f"{round(figs_metrics.avg_accuracy, 2)}%",
+            f"{round(figs_metrics.total_profit, 2)} OCEAN",
+            f"~{round(figs_metrics.total_cost, 2)} OCEAN",
+            f"{round(figs_metrics.avg_stake, 2)} OCEAN",
             date_period_text,
         )
 
     @app.callback(
-        Output("feeds_table", "columns"),
-        Output("feeds_table", "data"),
-        Input("is-loading", "value"),
-    )
-    # pylint: disable=unused-argument
-    def create_feeds_table(is_loading):
-        if not app.feeds_data:
-            return dash.no_update
-
-        data = copy.deepcopy(app.feeds_data)
-        for feed in data:
-            del feed["contract"]
-
-        columns = [{"name": col, "id": col} for col in data[0].keys()]
-        return columns, data
-
-    @app.callback(
-        Output("predictoors_table", "columns"),
-        Output("predictoors_table", "data"),
-        Input("is-loading", "value"),
-    )
-    # pylint: disable=unused-argument
-    def create_predictoors_table(is_loading):
-        if not app.predictoors_data:
-            return dash.no_update
-        columns = [{"name": col, "id": col} for col in app.predictoors_data[0].keys()]
-
-        return columns, app.predictoors_data
-
-    @app.callback(
         Output("predictoors_table", "data", allow_duplicate=True),
         Output("predictoors_table", "selected_rows"),
-        Output("predictoors_table", "columns", allow_duplicate=True),
-        Output("predictoors_table", "hidden_columns"),
         [
             Input("search-input-Predictoors", "value"),
             Input("predictoors_table", "selected_rows"),
@@ -192,25 +155,18 @@ def get_callbacks(app):
             filtered_data = filter_objects_by_field(
                 filtered_data, "user", search_value, selected_predictoors
             )
+        else:
+            filtered_data = [p for p in filtered_data if p not in selected_predictoors]
 
-        selected_predictoor_indices = [
-            i
-            for i, predictoor in enumerate(filtered_data)
-            if predictoor in selected_predictoors
-        ]
+        filtered_data = selected_predictoors + filtered_data
+        selected_predictoor_indices = list(range(len(selected_predictoors)))
 
-        return (
-            filtered_data,
-            selected_predictoor_indices,
-            PREDICTOOR_TABLE_COLUMNS,
-            PREDICTOOR_TABLE_HIDDEN_COLUMNS,
-        )
+        return (filtered_data, selected_predictoor_indices)
 
     @app.callback(
         Output("feeds_table", "data", allow_duplicate=True),
         Output("feeds_table", "selected_rows"),
         [
-            Input("is-loading", "value"),
             Input("search-input-Feeds", "value"),
             Input("feeds_table", "selected_rows"),
             Input("feeds_table", "data"),
@@ -222,7 +178,6 @@ def get_callbacks(app):
     )
     # pylint: disable=unused-argument
     def update_feeds_table_on_search(
-        is_loading,
         search_value,
         selected_rows,
         feeds_table,
@@ -236,14 +191,7 @@ def get_callbacks(app):
             predictoors_table[i]["user"] for i in predictoors_table_selected_rows
         ]
 
-        # filter feeds by pair address
-        filtered_data = (
-            filter_objects_by_field(
-                app.feeds_data, "pair", search_value, selected_feeds
-            )
-            if search_value
-            else app.feeds_data
-        )
+        filtered_data = app.feeds_data
 
         # filter feeds by payouts from selected predictoors
         if predictoor_feeds_only and (len(predictoors_addrs) > 0):
@@ -252,18 +200,24 @@ def get_callbacks(app):
                 predictoors_addrs,
             )
             filtered_data = [
-                obj for obj in app.feeds_data if obj["contract"] in feed_ids
+                obj
+                for obj in filtered_data
+                if obj["contract"] in feed_ids
+                if obj not in selected_feeds
             ]
 
-        if (
-            app.favourite_addresses
-            and "is-loading.value" in dash.callback_context.triggered_prop_ids
-        ):
-            return filtered_data, list(range(len(filtered_data)))
+        # filter feeds by pair address
+        filtered_data = (
+            filter_objects_by_field(
+                app.feeds_data, "pair", search_value, selected_feeds
+            )
+            if search_value
+            else filtered_data
+        )
 
-        selected_feed_indices = [
-            i for i, feed in enumerate(filtered_data) if feed in selected_feeds
-        ]
+        filtered_data = selected_feeds + filtered_data
+
+        selected_feed_indices = list(range(len(selected_feeds)))
 
         return filtered_data, selected_feed_indices
 

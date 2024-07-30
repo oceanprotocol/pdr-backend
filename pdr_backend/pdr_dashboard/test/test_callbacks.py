@@ -57,7 +57,7 @@ def _predictoor_count(dash_duo):
     return predictoors_rows, predictoors_selected_rows
 
 
-def test_favorite_addresses_search_input(setup_app_with_favourite_addresses, dash_duo):
+def test_favourite_addresses_search_input(setup_app_with_favourite_addresses, dash_duo):
     app = setup_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
@@ -77,7 +77,7 @@ def test_favorite_addresses_search_input(setup_app_with_favourite_addresses, das
     all_feeds_toggle.click()
     time.sleep(2)
     f_all, f_sel = _feed_count(dash_duo)
-    assert len(f_all) == 5
+    assert len(f_all) == 6
     assert len(f_sel) == 1
 
     # click on fav addr toggle to show all predictoors
@@ -121,19 +121,19 @@ def test_timeframe_metrics(setup_app, dash_duo):
     time.sleep(2)
 
     table_profit = dash_duo.find_element(
-        "#predictoors_table tbody tr:nth-child(3) td:nth-child(3)"
+        "#predictoors_table tbody tr:nth-child(2) td:nth-child(3)"
     ).text
     metric_profit = dash_duo.find_element("#profit_metric").text
     assert table_profit + " OCEAN" == metric_profit
 
     table_accuracy = dash_duo.find_element(
-        "#predictoors_table tbody tr:nth-child(3) td:nth-child(4)"
+        "#predictoors_table tbody tr:nth-child(2) td:nth-child(4)"
     ).text
     metric_accuracy = dash_duo.find_element("#accuracy_metric").text
     assert table_accuracy + ".0%" == metric_accuracy
 
     table_stake = dash_duo.find_element(
-        "#predictoors_table tbody tr:nth-child(3) td:nth-child(5)"
+        "#predictoors_table tbody tr:nth-child(2) td:nth-child(5)"
     ).text
     metric_stake = dash_duo.find_element("#stake_metric").text
     assert table_stake + " OCEAN" == metric_stake

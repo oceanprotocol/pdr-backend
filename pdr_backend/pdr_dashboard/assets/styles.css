@@ -77,7 +77,7 @@ button{
     gap: 10px;
 }
 
-.table-title {    
+.table-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -96,4 +96,22 @@ button{
     font-size: 15px;
     background-color: #dedede;
     border-radius: 3px;
+}
+
+.show-hide {
+    display: none;
+}
+
+.tooltip-question-mark {
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+    font-size: 10px;
+    padding: 0;
+    text-align: center;
+    color: white;
+    background-color: #6c757d !important;
+    border: 0px none;
+    margin-left: 5px;
 }
