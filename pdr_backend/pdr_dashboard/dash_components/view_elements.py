@@ -1,8 +1,134 @@
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
+from pdr_backend.pdr_dashboard.dash_components.util import (
+    get_feed_ids_based_on_predictoors_from_db,
+)
 
 
-def get_input_column():
+def col_to_human(col):
+    col = col.replace("avg_", "")
+    col = col.replace("total_", "")
+
+    return col.replace("_", " ").title()
+
+
+# pylint: disable=too-many-return-statements
+def get_information_text(tooltip_id: str):
+    match tooltip_id:
+        case "tooltip-accuracy_metric":
+            return """Average accuracy of predictions
+                within the selected timeframe and for the selected predictoors and feeds."""
+        case "tooltip-profit_metric":
+            return """Total profit generated from predictions
+                within the selected timeframe and for the selected predictoors and feeds."""
+        case "tooltip-costs_metric":
+            return """Transaction fee costs for predicting and claiming payouts
+                for each slot individually within the selected timeframe 
+                and for the selected predictoors and feeds."""
+        case "tooltip-stake_metric":
+            return """Average stake placed on each prediction
+                within the selected timeframe and for the selected predictoors and feeds."""
+        case "tooltip-switch-predictoors":
+            return """Toggle this switch to automatically select predictoors
+                that are pre-configured in the ppss.yaml settings."""
+        case "tooltip-switch-feeds":
+            return """Toggle this switch to view only the feeds associated with
+                the selected predictoors."""
+        case _:
+            return ""
+
+
+def get_tooltip_and_button(value_id: str):
+    return html.Span(
+        [
+            dbc.Button(
+                "?", id=f"tooltip-target-{value_id}", className="tooltip-question-mark"
+            ),
+            dbc.Tooltip(
+                get_information_text(f"tooltip-{value_id}"),
+                target=f"tooltip-target-{value_id}",
+                placement="right",
+            ),
+        ]
+    )
+
+
+def get_feeds_switch():
+    return html.Div(
+        [
+            dbc.Switch(
+                id="toggle-switch-predictoor-feeds",
+                label="Predictoor feeds only",
+                value=True,
+            ),
+            get_tooltip_and_button("switch-feeds"),
+        ],
+        style={"display": "flex"},
+    )
+
+
+def get_predictoors_switch(selected_items):
+    return html.Div(
+        [
+            dbc.Switch(
+                id="show-favourite-addresses",
+                label="Select configured predictoors",
+                value=bool(selected_items),
+            ),
+            get_tooltip_and_button("switch-predictoors"),
+        ],
+        style={"display": "flex"},
+    )
+
+
+def get_feeds_data(app):
+    data = app.feeds_data
+
+    columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
+    hidden_columns = ["contract"]
+
+    return (columns, hidden_columns), data
+
+
+def get_predictoors_data(app):
+    columns = [
+        {"name": col_to_human(col), "id": col} for col in app.predictoors_data[0].keys()
+    ]
+    hidden_columns = ["user"]
+
+    if app.favourite_addresses:
+        data = [
+            p for p in app.predictoors_data if p["user"] in app.favourite_addresses
+        ] + [
+            p for p in app.predictoors_data if p["user"] not in app.favourite_addresses
+        ]
+    else:
+        data = app.predictoors_data
+
+    return (columns, hidden_columns), data
+
+
+def get_input_column(app):
+    feed_cols, feed_data = get_feeds_data(app)
+    predictoor_cols, predictoor_data = get_predictoors_data(app)
+
+    selected_predictoors = list(range(len(app.favourite_addresses)))
+
+    if app.favourite_addresses:
+        feed_ids = get_feed_ids_based_on_predictoors_from_db(
+            app.lake_dir,
+            app.favourite_addresses,
+        )
+
+        if feed_ids:
+            feed_data = [
+                feed for feed in app.feeds_data if feed["contract"] in feed_ids
+            ]
+
+        selected_feeds = list(range(len(feed_ids)))
+    else:
+        selected_feeds = []
+
     return html.Div(
         [
             html.Div(
@@ -10,11 +136,10 @@ def get_input_column():
                     table_id="predictoors_table",
                     table_name="Predictoors",
                     searchable_field="user",
-                    columns=[],
-                    data=None,
-                    default_sorting=[
-                        {"column_id": "total_profit", "direction": "desc"}
-                    ],
+                    columns=predictoor_cols,
+                    selected_items=selected_predictoors,
+                    data=predictoor_data,
+                    length=len(app.predictoors_data),
                 ),
                 id="predictoors_container",
             ),
@@ -23,13 +148,14 @@ def get_input_column():
                     table_id="feeds_table",
                     table_name="Feeds",
                     searchable_field="pair",
-                    columns=[],
-                    data=None,
-                    default_sorting=[],
+                    columns=feed_cols,
+                    data=feed_data,
+                    selected_items=selected_feeds,
+                    length=len(app.feeds_data),
                 ),
                 id="feeds_container",
                 style={
-                    "height": "50%",
+                    "marginTop": "20px",
                     "display": "flex",
                     "flexDirection": "column",
                     "justifyContent": "flex-end",
@@ -64,9 +190,10 @@ def get_graphs_column():
 def get_graphs_column_metrics_row():
     return html.Div(
         [
-            get_metric(label="Avg Accuracy", value="50%", value_id="accuracy_metric"),
-            get_metric(label="Total Profit", value="50%", value_id="profit_metric"),
-            get_metric(label="Avg Stake", value="50%", value_id="stake_metric"),
+            get_metric(label="Avg Accuracy", value="0%", value_id="accuracy_metric"),
+            get_metric(label="Pred Profit", value="0 OCEAN", value_id="profit_metric"),
+            get_metric(label="Tx Costs", value="0 OCEAN", value_id="costs_metric"),
+            get_metric(label="Avg Stake", value="0 OCEAN", value_id="stake_metric"),
             get_date_period_selection_component(),
         ],
         id="metrics_container",
@@ -102,7 +229,17 @@ def get_graphs_column_plots_row():
         [
             html.Div(id="accuracy_chart"),
             html.Div(id="profit_chart"),
-            html.Div(id="stake_chart"),
+            html.Div(
+                [
+                    html.Div(id="cost_chart", style={"width": "48%"}),
+                    html.Div(id="stake_chart", style={"width": "48%"}),
+                ],
+                style={
+                    "width": "100%",
+                    "display": "flex",
+                    "justifyContent": "space-between",
+                },
+            ),
         ],
         id="plots_container",
         style={
@@ -118,7 +255,15 @@ def get_metric(label, value, value_id):
     return html.Div(
         [
             html.Span(
-                label,
+                [
+                    label,
+                    get_tooltip_and_button(value_id),
+                ],
+                style={
+                    "display": "flex",
+                    "justifyContent": "center",
+                    "alignItems": "center",
+                },
             ),
             html.Span(value, id=value_id, style={"fontWeight": "bold"}),
         ],
@@ -126,7 +271,7 @@ def get_metric(label, value, value_id):
     )
 
 
-def get_layout():
+def get_layout(app):
     return html.Div(
         [
             dcc.Store(id="user-payout-stats"),
@@ -137,40 +282,60 @@ def get_layout():
             dcc.Loading(
                 id="loading",
                 type="default",
-                children=get_main_container(),
+                children=get_main_container(app),
                 custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
             ),
-            dcc.Input(id="is-loading", type="hidden", value=1),
         ],
         style={"height": "100%"},
     )
 
 
-def get_main_container():
+def get_main_container(app):
     return html.Div(
-        [get_input_column(), get_graphs_column()],
+        [get_input_column(app), get_graphs_column()],
         className="main-container",
     )
 
 
-def get_table(table_id, table_name, searchable_field, columns, data, default_sorting):
+def get_table(
+    table_id,
+    table_name,
+    searchable_field,
+    columns,
+    data,
+    selected_items=None,
+    length=0,
+):
     return html.Div(
         [
             html.Div(
                 [
-                    html.Span(table_name, style={"fontSize": "20px"}),
+                    html.Div(
+                        [
+                            html.Span(
+                                table_name, style={"fontSize": "20px", "height": "100%"}
+                            ),
+                            html.Span(
+                                id=f"table-rows-count-{table_id}",
+                                children=f"({length})",
+                                style={
+                                    "fontSize": "16px",
+                                    "color": "gray",
+                                    "hight": "100%",
+                                    "marginLeft": "4px",
+                                },
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "justifyContet": "center",
+                            "alignItems": "center",
+                        },
+                    ),
                     (
-                        dbc.Switch(
-                            id="toggle-switch-predictoor-feeds",
-                            label="Predictoor feeds only",
-                            value=True,
-                        )
+                        get_feeds_switch()
                         if table_name == "Feeds"
-                        else dbc.Switch(
-                            id="show-favourite-addresses",
-                            label="Select configured predictoors",
-                            value=True,
-                        )
+                        else get_predictoors_switch(selected_items=selected_items)
                     ),
                 ],
                 className="table-title",
@@ -206,11 +371,11 @@ def get_table(table_id, table_name, searchable_field, columns, data, default_sor
             ),
             dash_table.DataTable(
                 id=table_id,
-                columns=[{"name": col, "id": col, "sortable": True} for col in columns],
-                sort_by=default_sorting,
+                columns=columns[0],
+                hidden_columns=columns[1],
                 data=data,
                 row_selectable="multi",  # Can be 'multi' for multiple rows
-                selected_rows=[],
+                selected_rows=selected_items if selected_items else [],
                 sort_action="native",  # Enables data to be sorted
                 style_cell={"textAlign": "left"},
                 style_table={
