@@ -8,7 +8,7 @@ def layout():
             dcc.Store(id="user-payout-stats"),
             html.H1(
                 "Feeds page content",
-                id="page_title",
+                id="page_title_feeds",
             ),
             dcc.Loading(
                 id="loading",
