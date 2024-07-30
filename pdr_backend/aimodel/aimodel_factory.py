@@ -117,7 +117,7 @@ class AimodelFactory:
                 N = len(ycont)
                 I = np.random.choice(a=N, size=N, replace=True)
                 X_tr_I, ycont_I = X_tr[I, :], ycont[I]
-                sk_regr = _approach_to_skm(ss.approach)
+                sk_regr = _approach_to_skm(ss.approach, ss.seed)
                 _fit(sk_regr, X_tr_I, ycont_I, show_warnings)
                 sk_regrs.append(sk_regr)
 
@@ -158,7 +158,7 @@ class AimodelFactory:
             ytrue[0], ytrue[1] = True, False
             sk_classif = DummyClassifier(strategy="most_frequent")
         else:
-            sk_classif = _approach_to_skm(ss.approach)
+            sk_classif = _approach_to_skm(ss.approach, ss.seed)
         if sk_classif is None:
             raise ValueError(ss.approach)
 
@@ -251,12 +251,11 @@ def _fit(skm, X, y, show_warnings: bool):
 
 
 @enforce_types
-def _approach_to_skm(approach: str):
+def _approach_to_skm(approach: str, seed: Optional[int]):
     # pylint: disable=too-many-return-statements
     if approach in ["ClassifConstant", "RegrConstant"]:
         raise ValueError("should have handled constants before this")
 
-    seed = self.aimodel_ss.seed
     # regressor approaches
     if approach == "RegrLinearLS":
         return LinearRegression(random_state=seed)
