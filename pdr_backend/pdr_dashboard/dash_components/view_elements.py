@@ -1,15 +1,8 @@
 import dash_bootstrap_components as dbc
-from dash import dash_table, dcc, html
+from dash import dcc, html
 
 
 NAV_ITEMS = [{"text": "Home", "location": "/"}, {"text": "Feeds", "location": "/feeds"}]
-
-
-def col_to_human(col):
-    col = col.replace("avg_", "")
-    col = col.replace("total_", "")
-
-    return col.replace("_", " ").title()
 
 
 # pylint: disable=too-many-return-statements
@@ -23,7 +16,7 @@ def get_information_text(tooltip_id: str):
                 within the selected timeframe and for the selected predictoors and feeds."""
         case "tooltip-costs_metric":
             return """Transaction fee costs for predicting and claiming payouts
-                for each slot individually within the selected timeframe 
+                for each slot individually within the selected timeframe
                 and for the selected predictoors and feeds."""
         case "tooltip-stake_metric":
             return """Average stake placed on each prediction
@@ -36,76 +29,6 @@ def get_information_text(tooltip_id: str):
                 the selected predictoors."""
         case _:
             return ""
-
-
-def get_tooltip_and_button(value_id: str):
-    return html.Span(
-        [
-            dbc.Button(
-                "?", id=f"tooltip-target-{value_id}", className="tooltip-question-mark"
-            ),
-            dbc.Tooltip(
-                get_information_text(f"tooltip-{value_id}"),
-                target=f"tooltip-target-{value_id}",
-                placement="right",
-            ),
-        ]
-    )
-
-
-def get_feeds_switch():
-    return html.Div(
-        [
-            dbc.Switch(
-                id="toggle-switch-predictoor-feeds",
-                label="Predictoor feeds only",
-                value=True,
-            ),
-            get_tooltip_and_button("switch-feeds"),
-        ],
-        style={"display": "flex"},
-    )
-
-
-def get_predictoors_switch(selected_items):
-    return html.Div(
-        [
-            dbc.Switch(
-                id="show-favourite-addresses",
-                label="Select configured predictoors",
-                value=bool(selected_items),
-            ),
-            get_tooltip_and_button("switch-predictoors"),
-        ],
-        style={"display": "flex"},
-    )
-
-
-def get_feeds_data(app):
-    data = app.feeds_data
-
-    columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
-    hidden_columns = ["contract"]
-
-    return (columns, hidden_columns), data
-
-
-def get_predictoors_data(app):
-    columns = [
-        {"name": col_to_human(col), "id": col} for col in app.predictoors_data[0].keys()
-    ]
-    hidden_columns = ["user"]
-
-    if app.favourite_addresses:
-        data = [
-            p for p in app.predictoors_data if p["user"] in app.favourite_addresses
-        ] + [
-            p for p in app.predictoors_data if p["user"] not in app.favourite_addresses
-        ]
-    else:
-        data = app.predictoors_data
-
-    return (columns, hidden_columns), data
 
 
 def get_date_period_selection_component():
@@ -123,6 +46,21 @@ def get_date_period_selection_component():
                 labelStyle={"display": "inline-block", "margin-right": "10px"},
             ),
             html.Span("there is no data available", id="available_data_period_text"),
+        ]
+    )
+
+
+def get_tooltip_and_button(value_id: str):
+    return html.Span(
+        [
+            dbc.Button(
+                "?", id=f"tooltip-target-{value_id}", className="tooltip-question-mark"
+            ),
+            dbc.Tooltip(
+                get_information_text(f"tooltip-{value_id}"),
+                target=f"tooltip-target-{value_id}",
+                placement="right",
+            ),
         ]
     )
 
@@ -154,99 +92,6 @@ def get_layout():
             html.Div(id="navbar-container"),
             html.Div(id="page-content"),
         ]
-    )
-
-
-def get_table(
-    table_id,
-    table_name,
-    searchable_field,
-    columns,
-    data,
-    selected_items=None,
-    length=0,
-):
-    return html.Div(
-        [
-            html.Div(
-                [
-                    html.Div(
-                        [
-                            html.Span(
-                                table_name, style={"fontSize": "20px", "height": "100%"}
-                            ),
-                            html.Span(
-                                id=f"table-rows-count-{table_id}",
-                                children=f"({length})",
-                                style={
-                                    "fontSize": "16px",
-                                    "color": "gray",
-                                    "hight": "100%",
-                                    "marginLeft": "4px",
-                                },
-                            ),
-                        ],
-                        style={
-                            "display": "flex",
-                            "justifyContet": "center",
-                            "alignItems": "center",
-                        },
-                    ),
-                    (
-                        get_feeds_switch()
-                        if table_name == "Feeds"
-                        else get_predictoors_switch(selected_items=selected_items)
-                    ),
-                ],
-                className="table-title",
-            ),
-            html.Div(
-                [
-                    dcc.Input(
-                        id=f"search-input-{table_name}",
-                        type="text",
-                        placeholder=f"Search for {searchable_field}",
-                        debounce=True,  # Trigger the input event after user stops typing
-                        style={"fontSize": "15px", "min-width": "100px"},
-                    ),
-                    html.Div(
-                        [
-                            html.Button(
-                                "Select All",
-                                id=f"select-all-{table_id}",
-                                n_clicks=0,
-                                className="button-select-all",
-                            ),
-                            html.Button(
-                                "Clear",
-                                id=f"clear-all-{table_id}",
-                                n_clicks=0,
-                                className="button-clear-all",
-                            ),
-                        ],
-                        className="wrap-with-gap",
-                    ),
-                ],
-                className="wrap-with-gap",
-            ),
-            dash_table.DataTable(
-                id=table_id,
-                columns=columns[0],
-                hidden_columns=columns[1],
-                data=data,
-                row_selectable="multi",  # Can be 'multi' for multiple rows
-                selected_rows=selected_items if selected_items else [],
-                sort_action="native",  # Enables data to be sorted
-                style_cell={"textAlign": "left"},
-                style_table={
-                    "height": "30vh",
-                    "width": "100%",
-                    "overflow": "auto",
-                    "paddingTop": "5px",
-                },
-                fill_width=True,
-            ),
-        ],
     )
 
 

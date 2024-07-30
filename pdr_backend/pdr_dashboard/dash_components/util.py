@@ -243,20 +243,3 @@ def calculate_tx_gas_fee_cost_in_OCEAN(web3_pp, feed_contract_addr, prices):
     tx_fee_price_ocean_prediction = tx_fee_price_usdt_prediction / prices["OCEAN"]
 
     return tx_fee_price_ocean_prediction
-
-
-def get_feeds_for_favourite_predictoors(app, feed_data):
-    if app.favourite_addresses:
-        feed_ids = get_feed_ids_based_on_predictoors_from_db(
-            app.lake_dir,
-            app.favourite_addresses,
-        )
-
-        if feed_ids:
-            feed_data = [
-                feed for feed in app.feeds_data if feed["contract"] in feed_ids
-            ]
-
-        return list(range(len(feed_ids))), feed_data
-
-    return [], feed_data
