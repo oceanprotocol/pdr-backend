@@ -7,8 +7,11 @@ from selenium.webdriver.chrome.options import Options
 from pdr_backend.lake.payout import mock_payouts, mock_payouts_related_with_predictions
 from pdr_backend.lake.prediction import mock_daily_predictions, mock_first_predictions
 
-from pdr_backend.pdr_dashboard.dash_components.callbacks import (
-    get_callbacks,
+from pdr_backend.pdr_dashboard.callbacks.callbacks_common import (
+    get_callbacks_common,
+)
+from pdr_backend.pdr_dashboard.callbacks.callbacks_home import (
+    get_callbacks_home,
 )
 from pdr_backend.pdr_dashboard.test.resources import (
     _prepare_test_db,
@@ -116,7 +119,8 @@ def setup_app(
 
     app = _add_css(app)
     setup_app_main(app, ppss)
-    get_callbacks(app)
+    get_callbacks_home(app)
+    get_callbacks_common(app)
 
     return app
 
@@ -145,6 +149,7 @@ def setup_app_with_favourite_addresses(
 
     app = _add_css(app)
     setup_app_main(app, ppss)
-    get_callbacks(app)
+    get_callbacks_home(app)
+    get_callbacks_common(app)
 
     return app

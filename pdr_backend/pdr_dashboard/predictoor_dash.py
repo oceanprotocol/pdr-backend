@@ -7,8 +7,11 @@ from enforce_typing import enforce_types
 from pdr_backend.exchange.fetch_ohlcv import fetch_ohlcv
 from pdr_backend.util.time_types import UnixTimeMs
 
-from pdr_backend.pdr_dashboard.dash_components.callbacks import (
-    get_callbacks,
+from pdr_backend.pdr_dashboard.callbacks.callbacks_home import (
+    get_callbacks_home,
+)
+from pdr_backend.pdr_dashboard.callbacks.callbacks_common import (
+    get_callbacks_common,
 )
 from pdr_backend.pdr_dashboard.dash_components.util import (
     get_feeds_data_from_db,
@@ -38,7 +41,8 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
             Full error: {e}"""
         )
         return
-    get_callbacks(app)
+    get_callbacks_home(app)
+    get_callbacks_common(app)
     app.run(debug=debug_mode, port=port)
 
 
