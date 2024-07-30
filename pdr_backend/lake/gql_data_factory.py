@@ -21,6 +21,7 @@ from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.util.constants import WHITELIST_FEEDS_MAINNET
 
 logger = logging.getLogger("gql_data_factory")
 
@@ -55,12 +56,16 @@ class GQLDataFactory:
 
         # filter by feed contract address
         network = get_sapphire_postfix(ppss.web3_pp.network)
-        contract_list = get_all_contract_ids_by_owner(
-            owner_address=self.ppss.web3_pp.owner_addrs,
-            network=network,
-        )
 
-        contract_list = [f.lower() for f in contract_list]
+        contract_list = []
+        if network == "mainnet":
+            contract_list = WHITELIST_FEEDS_MAINNET
+        else:
+            contract_list = get_all_contract_ids_by_owner(
+                owner_address=self.ppss.web3_pp.owner_addrs,
+                network=network,
+            )
+            contract_list = [f.lower() for f in contract_list]
 
         # configure all DB tables <> QGL queries
         self.record_config = {
