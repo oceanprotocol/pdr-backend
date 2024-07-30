@@ -68,11 +68,11 @@ class Aimodel:
             yptrue = np.mean(Ycont > self._y_thr, axis=1)
         else:
             X = self._scaler.transform(X)
-            try:
+            if isinstance(self._sk_classif, LinearSVC):
                 T = self._sk_classif._predict_proba_lr(
                     X
                 )  # required for LinearSVC() that is called by ClassifLinearSVM approach
-            except AttributeError:
+            else:
                 T = self._sk_classif.predict_proba(X)  # [sample_i][class_i]
             N = T.shape[0]
             class_i = 1  # this is the class for "True"
