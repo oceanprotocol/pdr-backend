@@ -41,8 +41,7 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
             Full error: {e}"""
         )
         return
-    get_callbacks_home(app)
-    get_callbacks_common(app)
+
     app.run(debug=debug_mode, port=port)
 
 
@@ -71,4 +70,6 @@ def setup_app(app, ppss: PPSS):
         else:
             app.prices = None
 
+    get_callbacks_home(app)
+    get_callbacks_common(app)
     return app
