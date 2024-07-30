@@ -8,7 +8,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_date_period_selection_component,
 )
 from pdr_backend.pdr_dashboard.dash_components.util import (
-    get_feed_ids_based_on_predictoors_from_db,
+    get_feeds_for_favourite_predictoors,
 )
 
 
@@ -55,20 +55,7 @@ def get_input_column(app):
 
     selected_predictoors = list(range(len(app.favourite_addresses)))
 
-    if app.favourite_addresses:
-        feed_ids = get_feed_ids_based_on_predictoors_from_db(
-            app.lake_dir,
-            app.favourite_addresses,
-        )
-
-        if feed_ids:
-            feed_data = [
-                feed for feed in app.feeds_data if feed["contract"] in feed_ids
-            ]
-
-        selected_feeds = list(range(len(feed_ids)))
-    else:
-        selected_feeds = []
+    selected_feeds, feed_data = get_feeds_for_favourite_predictoors(app, feed_data)
 
     return html.Div(
         [
