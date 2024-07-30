@@ -256,36 +256,53 @@ def _approach_to_skm(approach: str):
     if approach in ["ClassifConstant", "RegrConstant"]:
         raise ValueError("should have handled constants before this")
 
+    seed = self.aimodel_ss.seed
     # regressor approaches
     if approach == "RegrLinearLS":
-        return LinearRegression()
+        return LinearRegression(random_state=seed)
     if approach == "RegrLinearLasso":
-        return Lasso()
+        return Lasso(random_state=seed)
     if approach == "RegrLinearRidge":
-        return Ridge()
+        return Ridge(random_state=seed)
     if approach == "RegrLinearElasticNet":
-        return ElasticNet()
+        return ElasticNet(random_state=seed)
     if approach == "RegrGaussianProcess":
-        return GaussianProcessRegressor()
+        return GaussianProcessRegressor(random_state=seed)
     if approach == "RegrXgboost":
-        return XGBRegressor()
+        return XGBRegressor(random_state=seed)
 
     # classifier approaches
     if approach == "ClassifLinearLasso":
-        return LogisticRegression(penalty="l1", solver="liblinear", max_iter=1000)
+        return LogisticRegression(
+            penalty="l1", solver="liblinear", max_iter=1000, random_state=seed
+        )
     if approach == "ClassifLinearLasso_Balanced":
         return LogisticRegression(
-            penalty="l1", solver="liblinear", max_iter=1000, class_weight="balanced"
+            penalty="l1",
+            solver="liblinear",
+            max_iter=1000,
+            class_weight="balanced",
+            random_state=seed,
         )
     if approach == "ClassifLinearRidge":
-        return LogisticRegression(penalty="l2", solver="lbfgs", max_iter=1000)
+        return LogisticRegression(
+            penalty="l2", solver="lbfgs", max_iter=1000, random_state=seed
+        )
     if approach == "ClassifLinearRidge_Balanced":
         return LogisticRegression(
-            penalty="l2", solver="lbfgs", max_iter=1000, class_weight="balanced"
+            penalty="l2",
+            solver="lbfgs",
+            max_iter=1000,
+            class_weight="balanced",
+            random_state=seed,
         )
     if approach == "ClassifLinearElasticNet":
         return LogisticRegression(
-            penalty="elasticnet", l1_ratio=0.5, solver="saga", max_iter=1000
+            penalty="elasticnet",
+            l1_ratio=0.5,
+            solver="saga",
+            max_iter=1000,
+            random_state=seed,
         )
     if approach == "ClassifLinearElasticNet_Balanced":
         return LogisticRegression(
@@ -294,13 +311,14 @@ def _approach_to_skm(approach: str):
             solver="saga",
             max_iter=1000,
             class_weight="balanced",
+            random_state=seed,
         )
     if approach == "ClassifLinearSVM":
-        return SVC(kernel="linear", probability=True, C=0.025)
+        return SVC(kernel="linear", probability=True, C=0.025, random_state=seed)
     if approach == "ClassifGaussianProcess":
-        return GaussianProcessClassifier()
+        return GaussianProcessClassifier(random_state=seed)
     if approach == "ClassifXgboost":
-        return XGBClassifier()
+        return XGBClassifier(random_state=seed)
 
     # unidentified
     return None
