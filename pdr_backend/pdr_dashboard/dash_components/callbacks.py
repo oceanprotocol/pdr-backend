@@ -17,13 +17,31 @@ from pdr_backend.pdr_dashboard.dash_components.util import (
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_graph,
+    get_navbar,
+    NAV_ITEMS,
 )
+
+from pdr_backend.pdr_dashboard.pages import home, feeds
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
 # pylint: disable=too-many-statements
 def get_callbacks(app):
+    @app.callback(
+        Output("page-content", "children"),
+        Output("navbar-container", "children"),
+        [Input("url", "pathname")],
+    )
+    def display_page(pathname):
+        for item in NAV_ITEMS:
+            item["active"] = item["location"].lower() == pathname
+        if pathname == "/":
+            return home.layout(app), get_navbar(NAV_ITEMS)
+        if pathname == "/feeds":
+            return feeds.layout(), get_navbar(NAV_ITEMS)
+        return "404 - Page not found", get_navbar(NAV_ITEMS)
+
     @app.callback(
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),

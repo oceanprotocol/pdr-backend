@@ -5,6 +5,9 @@ from pdr_backend.pdr_dashboard.dash_components.util import (
 )
 
 
+NAV_ITEMS = [{"text": "Home", "location": "/"}, {"text": "Feeds", "location": "/feeds"}]
+
+
 def col_to_human(col):
     col = col.replace("avg_", "")
     col = col.replace("total_", "")
@@ -271,22 +274,13 @@ def get_metric(label, value, value_id):
     )
 
 
-def get_layout(app):
+def get_layout():
     return html.Div(
         [
-            dcc.Store(id="user-payout-stats"),
-            html.H1(
-                "Predictoor dashboard",
-                id="page_title",
-            ),
-            dcc.Loading(
-                id="loading",
-                type="default",
-                children=get_main_container(app),
-                custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
-            ),
-        ],
-        style={"height": "100%"},
+            dcc.Location(id="url", refresh=False),
+            html.Div(id="navbar-container"),
+            html.Div(id="page-content"),
+        ]
     )
 
 
@@ -392,3 +386,31 @@ def get_table(
 
 def get_graph(figure):
     return dcc.Graph(figure=figure, style={"width": "100%", "height": "25vh"})
+
+
+def get_navbar(nav_items):
+    return dbc.NavbarSimple(
+        children=[
+            get_nav_item(item["text"], item["location"], item.get("active", False))
+            for item in nav_items
+        ],
+        brand_href="/",
+        color="transparent",
+        style={
+            "display": "flex",
+            "justifyContent": "center",
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+        },
+    )
+
+
+def get_nav_item(text: str, location: str, active: bool):
+    return dbc.NavItem(
+        dbc.NavLink(
+            text,
+            href=location,
+            active=active,
+            style={"fontSize": "26px", "margin": "0 10px"},
+        )
+    )

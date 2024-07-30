@@ -38,7 +38,6 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
             Full error: {e}"""
         )
         return
-
     get_callbacks(app)
     app.run(debug=debug_mode, port=port)
 
@@ -52,7 +51,7 @@ def setup_app(app, ppss: PPSS):
         get_user_payouts_stats_from_db(ppss.lake_ss.lake_dir)
     )
     app.favourite_addresses = ppss.predictoor_ss.my_addresses
-    app.layout = get_layout(app)
+    app.layout = get_layout()
 
     # fetch token prices
     current_date_ms = UnixTimeMs(int(datetime.now().timestamp()) * 1000 - 300000)
