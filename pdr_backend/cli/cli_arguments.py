@@ -52,7 +52,6 @@ Power tools:
   pdr lake raw|etl drop PPSS_FILE NETWORK ST
   pdr lake describe --HTML PPSS_FILE NETWORK
   pdr lake validate PPSS_FILE NETWORK
-  pdr predictoor_dashboard PPSS_FILE NETWORK
 
 Utilities:
   pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS
