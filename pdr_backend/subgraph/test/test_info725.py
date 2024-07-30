@@ -6,6 +6,7 @@ from enforce_typing import enforce_types
 from web3 import Web3
 
 from pdr_backend.subgraph.info725 import (
+    get_pair_timeframe_source_from_contract,
     info725_to_info,
     info_to_info725,
     key_to_key725,
@@ -87,3 +88,52 @@ def test_info_to_info725__missingkey():
         {"key": key_to_key725("source"), "value": None},
     ]
     assert info_to_info725(info) == info725
+
+
+@enforce_types
+def test_get_pair_timeframe_source_from_contract_nft_data():
+    contract_data = {
+        "token": {
+            "nft": {
+                "nftData": [
+                    {
+                        "key": key_to_key725("pair"),
+                        "value": value_to_value725("ETH/USDT"),
+                    },
+                    {
+                        "key": key_to_key725("timeframe"),
+                        "value": value_to_value725("5m"),
+                    },
+                    {
+                        "key": key_to_key725("source"),
+                        "value": value_to_value725("binance"),
+                    },
+                ]
+            }
+        }
+    }
+
+    pair, timeframe, source = get_pair_timeframe_source_from_contract(contract_data)
+    assert pair == "ETH/USDT"
+    assert timeframe == "5m"
+    assert source == "binance"
+
+
+@enforce_types
+def test_get_pair_timeframe_source_from_contract_nft_data__missingkey():
+    contract = {
+        "id": "0x3fb744c3702ff2237fc65f261046ead36656f3bc",
+        "secondsPerEpoch": "300",
+        "token": {
+            "id": "0x3fb744c3702ff2237fc65f261046ead36656f3bc",
+            "name": "BTC/USDT",
+            "symbol": "BTC/USDT",
+            "nft": None,
+        },
+    }
+
+    pair, timeframe, source = get_pair_timeframe_source_from_contract(contract)
+
+    assert pair == "BTC/USDT"
+    assert timeframe == "5m"
+    assert source == "binance"

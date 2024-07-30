@@ -99,7 +99,7 @@ def test_fetch_filtered_subscriptions(mock_query_subgraph):
     assert len(subscriptions) == 1
     assert isinstance(subscriptions[0], Subscription)
     assert subscriptions[0].user == "0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d"
-    assert subscriptions[0].pair == "ADA-USDT"
+    assert subscriptions[0].pair == "ADA/USDT"
     assert mock_query_subgraph.call_count == 1
 
 
