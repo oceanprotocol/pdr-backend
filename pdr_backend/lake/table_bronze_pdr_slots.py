@@ -40,4 +40,4 @@ class BronzeSlot(LakeMapper):
 
     @staticmethod
     def get_fetch_function() -> Callable:
-        raise NotImplementedError("BronzeSlot.get_fetch_function() not implemented yet")
+        raise NotImplementedError("BronzeSlot does not have a fetch function")
