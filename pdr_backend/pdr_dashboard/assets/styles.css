@@ -46,6 +46,7 @@ body{
 button{
     background-color: #007BFF !important;
     color: white;
+    border: 0;
 }
 
 /* Style the label as buttons */
@@ -118,4 +119,16 @@ button{
 
 .ms-auto{
     margin: 0 auto !important;
+}
+
+.dropdown-toggle{
+    background-color: transparent !important;
+    color: #aaa;
+    border-color: #aaa;
+    border-radius: 4px;
+    padding: 5px 10px;
+}
+
+.dropdown-toggle:hover{
+    color: black;
 }
