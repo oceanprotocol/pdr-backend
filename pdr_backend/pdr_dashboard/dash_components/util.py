@@ -214,12 +214,23 @@ def get_feeds_stats_from_db(lake_dir: str):
         scalar=True,
     )
 
+    accuracy = _query_db(
+        lake_dir,
+        f"""
+            SELECT
+                SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+            FROM
+                {Payout.get_lake_table_name()}
+        """,
+        scalar=True,
+    )
+
     return {
         "Volume": "TODO",
         "Feeds": feeds,
         "Sales": "TODO",
         "Revenue": "TODO",
-        "Accuracy": "TODO",
+        "Accuracy": str(round(accuracy, 2) if accuracy else 0.0) + "%",
     }
 
 
