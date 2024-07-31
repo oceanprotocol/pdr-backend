@@ -66,6 +66,7 @@ def get_payout_query(
                 timestamp
                 payout
                 predictedValue
+                trueValue
                 prediction {
                     stake
                     user {
@@ -135,7 +136,6 @@ def fetch_payouts(
     )
 
     try:
-        logger.info("Querying subgraph... %s", query)
         result = query_subgraph(
             get_subgraph_url(network),
             query,
@@ -163,6 +163,7 @@ def fetch_payouts(
                     "name"
                 ],
                 "predvalue": bool(payout["predictedValue"]),
+                "truevalue": bool(payout["trueValue"]),
                 "slot": UnixTimeS(int(payout["id"].split("-")[1])),
                 "revenue": float(payout["prediction"]["slot"]["revenue"]),
                 "roundSumStakesUp": float(

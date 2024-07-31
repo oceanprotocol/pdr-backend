@@ -7,7 +7,7 @@ from enforce_typing import enforce_types
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.table import NamedTable, TempTable
+from pdr_backend.lake.table import Table, TempTable
 from pdr_backend.lake.table_bronze_pdr_predictions import (
     BronzePrediction,
     get_bronze_pdr_predictions_data_with_SQL,
@@ -36,10 +36,10 @@ def test_table_bronze_pdr_predictions(
     )
 
     gql_tables = {
-        "pdr_predictions": NamedTable.from_dataclass(Prediction),
-        "pdr_truevals": NamedTable.from_dataclass(Trueval),
-        "pdr_payouts": NamedTable.from_dataclass(Payout),
-        "bronze_pdr_predictions": NamedTable.from_dataclass(BronzePrediction),
+        "pdr_predictions": Table.from_dataclass(Prediction),
+        "pdr_truevals": Table.from_dataclass(Trueval),
+        "pdr_payouts": Table.from_dataclass(Payout),
+        "bronze_pdr_predictions": Table.from_dataclass(BronzePrediction),
     }
 
     # Work 1: Append all data onto bronze_table
@@ -51,12 +51,12 @@ def test_table_bronze_pdr_predictions(
 
     db = DuckDBDataStore(ppss.lake_ss.lake_dir)
     # truevals should have 6
-    table_name = NamedTable("pdr_truevals").fullname
+    table_name = Table("pdr_truevals").table_name
     result_truevals = db.query_data("SELECT * FROM {}".format(table_name))
     assert len(result_truevals) == 6
 
     # payouts should have 6
-    table_name = NamedTable("pdr_payouts").fullname
+    table_name = Table("pdr_payouts").table_name
     result_payouts = db.query_data("SELECT * FROM {}".format(table_name))
     assert len(result_payouts) == 5
 
@@ -69,7 +69,7 @@ def test_table_bronze_pdr_predictions(
 
     temp_bronze_pdr_predictions_table_name = TempTable.from_dataclass(
         BronzePrediction
-    ).fullname
+    ).table_name
     result = db.query_data(
         f"""
             SELECT * FROM {temp_bronze_pdr_predictions_table_name}

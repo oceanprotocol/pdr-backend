@@ -23,6 +23,7 @@ class Payout(LakeMapper):  # pylint: disable=too-many-instance-attributes
         timestamp: UnixTimeS,
         payout: float,
         predvalue: bool,
+        truevalue: bool,
         revenue: float,
         roundSumStakesUp: float,
         roundSumStakes: float,
@@ -35,6 +36,7 @@ class Payout(LakeMapper):  # pylint: disable=too-many-instance-attributes
         self.slot = slot
         self.payout = payout
         self.predvalue = predvalue
+        self.truevalue = truevalue
         self.revenue = revenue
         self.roundSumStakesUp = roundSumStakesUp
         self.roundSumStakes = roundSumStakes
@@ -53,6 +55,7 @@ class Payout(LakeMapper):  # pylint: disable=too-many-instance-attributes
                 "timestamp": Int64,
                 "payout": Float64,
                 "predvalue": Boolean,
+                "truevalue": Boolean,
                 "revenue": Float64,
                 "roundSumStakesUp": Float64,
                 "roundSumStakes": Float64,
@@ -84,6 +87,7 @@ def mock_payout(payout_tuple: tuple) -> Payout:
         slot,
         payout,
         predvalue,
+        truevalue,
         revenue,
         roundSumStakesUp,
         roundSumStakes,
@@ -98,6 +102,7 @@ def mock_payout(payout_tuple: tuple) -> Payout:
         slot=UnixTimeS(slot),
         payout=payout,
         predvalue=predvalue,
+        truevalue=truevalue,
         revenue=revenue,
         roundSumStakesUp=roundSumStakesUp,
         roundSumStakes=roundSumStakes,
@@ -128,6 +133,7 @@ _PAYOUT_TUPS = [
         1704152700,  # slot
         0.0,  # payout
         True,  # predictedValue
+        True,  # truevalue
         0.919372744934776618,  # revenue
         7.635901006590730052,  # roundSumStakesUp
         17.728238320965607921,  # roundSumStakes
@@ -141,6 +147,7 @@ _PAYOUT_TUPS = [
         "ADA/USDT",
         1704152700,
         3.786517720904995824,
+        False,
         False,
         0.919372744934776618,
         7.635901006590730052,
@@ -156,6 +163,7 @@ _PAYOUT_TUPS = [
         1704153000,
         3.687473663992716148,
         False,
+        False,
         0.919372744934776618,
         11.201148268567394458,
         25.423083432944667468,
@@ -169,6 +177,7 @@ _PAYOUT_TUPS = [
         "ADA/USDT",
         1704153000,
         6.334665366356455078,
+        False,
         False,
         0.919372744934776618,
         11.201148268567394458,
@@ -184,6 +193,7 @@ _PAYOUT_TUPS = [
         1704153000,
         1.463270654801637113,
         False,
+        False,
         0.919372744934776618,
         11.201148268567394458,
         25.423083432944667468,
@@ -197,6 +207,7 @@ _PAYOUT_TUPS = [
         "ADA/USDT",
         1704153000,
         0.0,
+        True,
         True,
         0.919372744934776618,
         11.201148268567394458,
@@ -216,6 +227,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         1704152700,  # slot
         1.4,  # payout
         True,  # predictedValue
+        True,  # predictedValue
         0.919372744934776618,  # revenue
         7.635901006590730052,  # roundSumStakesUp
         17.728238320965607921,  # roundSumStakes
@@ -229,6 +241,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         "ADA/USDT",
         1704152700,
         3.786517720904995824,
+        False,
         False,
         0.919372744934776618,
         7.635901006590730052,
@@ -244,6 +257,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         1704153000,
         3.687473663992716148,
         False,
+        False,
         0.919372744934776618,
         11.201148268567394458,
         25.423083432944667468,
@@ -257,6 +271,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         "ADA/USDT",
         1704153000,
         6.334665366356455078,
+        False,
         False,
         0.919372744934776618,
         11.201148268567394458,
@@ -272,6 +287,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         1704153000,
         1.463270654801637113,
         False,
+        False,
         0.919372744934776618,
         11.201148268567394458,
         25.423083432944667468,
@@ -285,6 +301,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         "ADA/USDT",
         1704153000,
         0.0,
+        True,
         True,
         0.919372744934776618,
         11.201148268567394458,

@@ -128,7 +128,7 @@ class CSVDataStore:
 
     @staticmethod
     def from_table(table, ppss):
-        return CSVDataStore(ppss.lake_ss.lake_dir, table.table_name)
+        return CSVDataStore(ppss.lake_ss.lake_dir, table._base_table_name)
 
     @enforce_types
     def _create_file_name(self, start_time: int, end_time: Optional[int]) -> str:
@@ -254,6 +254,7 @@ class CSVDataStore:
 
         remaining_data = data.slice(0, remaining_rows)
         last_file_path = self._get_last_file_path()
+
         last_file_data = pl.read_csv(last_file_path, schema=schema)
         last_file_data = last_file_data.vstack(remaining_data).rechunk()
 
