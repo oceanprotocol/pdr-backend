@@ -254,7 +254,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         """
         result = self.duckdb_conn.execute(query).fetchone()
 
-        return result[0] if result else None
+        return result
 
     @enforce_types
     def move_table_data(self, temp_table, permanent_table):
