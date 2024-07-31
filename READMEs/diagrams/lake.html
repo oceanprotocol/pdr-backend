@@ -34,6 +34,7 @@
 			erDiagram
 				SUBGRAPH_predictPredictions ||--o{ PDR_PREDICTIONS : yields
 				SUBGRAPH_predictPayouts ||--o{ PDR_PAYOUTS : yields
+				SUBGRAPH_predictTrueVals ||--o{ PDR_TRUEVALS : yields
                 PDR_PREDICTIONS ||--o{ BRONZE_PDR_PREDICTIONS : yields
                 PDR_PAYOUTS ||--o{ BRONZE_PDR_PREDICTIONS : yields
 				PDR_PREDICTIONS {
@@ -54,6 +55,16 @@
                     boolean predvalue
                     float stake
                     float payout
+                    int timestamp
+				}
+				PDR_TRUEVALS {
+					string ID
+                    string token
+					int slot
+                    boolean truevalue
+                    float revenue
+                    float roundSumStakesUp
+					float roundSumStakes
                     int timestamp
 				}
 				BRONZE_PDR_PREDICTIONS {
