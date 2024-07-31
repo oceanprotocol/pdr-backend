@@ -76,11 +76,18 @@ def fetch_filtered_subscriptions(
                         id
                         name
                         lastPriceValue
+                        nft{{
+                            nftData {{
+                            key
+                            value
+                            }}
+                        }}
                     }}
+                    secondsPerEpoch
                 }}
             }}
         }}"""
-
+    
     result = query_subgraph(
         get_subgraph_url(network),
         query,

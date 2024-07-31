@@ -30,8 +30,8 @@ def is_etl_table(table_name: str) -> bool:
     table_name = table_name.removeprefix("_")
     table_name = table_name.removeprefix("temp_")
 
-    for _, member in TableType.__members__.items():
-        table_name = table_name.removeprefix(str(member.value).lower() + "_")
+    for value in TableType.__members__.values():
+        table_name = table_name.removeprefix(str(value).lower() + "_")
 
     return (
         table_name.startswith("bronze_")

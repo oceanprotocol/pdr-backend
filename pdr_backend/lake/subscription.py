@@ -56,9 +56,12 @@ class Subscription(LakeMapper):
 
     @staticmethod
     def get_fetch_function() -> Callable:
-        raise NotImplementedError(
-            "Subscription.get_fetch_function() not implemented yet"
+        # pylint: disable=import-outside-toplevel
+        from pdr_backend.subgraph.subgraph_subscriptions import (
+            fetch_filtered_subscriptions,
         )
+
+        return fetch_filtered_subscriptions
 
 
 # =========================================================================
