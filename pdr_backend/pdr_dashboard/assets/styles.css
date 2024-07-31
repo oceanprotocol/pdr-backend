@@ -43,6 +43,14 @@ body{
     display: none;
 }
 
+#feeds_table {
+    width: 100%;
+}
+
+#feeds_table table {
+    table-layout: fixed
+}
+
 button{
     background-color: #007BFF !important;
     color: white;

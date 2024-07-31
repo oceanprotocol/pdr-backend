@@ -73,6 +73,23 @@ def get_user_payouts_stats_from_db(lake_dir: str):
         """,
     )
 
+@enforce_types
+def get_feed_payouts_stats_from_db(lake_dir: str):
+    return _query_db(
+        lake_dir,
+        f"""
+            SELECT
+                SPLIT_PART(ID, '-', 1) AS contract,
+                SUM(stake) AS volume,
+                SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+                AVG(stake) AS avg_stake
+            FROM
+                {Payout.get_lake_table_name()}
+            GROUP BY
+                contract
+        """,
+    )
+
 
 def get_feed_ids_based_on_predictoors_from_db(
     lake_dir: str, predictoor_addrs: List[str]

@@ -18,5 +18,5 @@ def get_callbacks_common(app):
         if pathname == "/":
             return home.layout(app), get_navbar(NAV_ITEMS)
         if pathname == "/feeds":
-            return feeds.layout(), get_navbar(NAV_ITEMS)
+            return feeds.layout(app), get_navbar(NAV_ITEMS)
         return "404 - Page not found", get_navbar(NAV_ITEMS)

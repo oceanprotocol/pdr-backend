@@ -1,5 +1,6 @@
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
+from typing import List, Dict, Any, Union, Tuple
 
 
 NAV_ITEMS = [{"text": "Home", "location": "/"}, {"text": "Feeds", "location": "/feeds"}]
@@ -89,6 +90,47 @@ def get_feeds_data(app):
 
     return (columns, hidden_columns), data
 
+def get_feeds_stat_with_contract(
+        contract: str,
+        feed_stats: List[Dict[str, Any]]
+) -> Union[Tuple[float, float, float], None]:
+    for feed in feed_stats:
+        if feed["contract"] == contract:
+            return (
+                round(feed["avg_accuracy"],2),
+                round(feed["volume"], 2),
+                round(feed["avg_stake"], 2)
+            )
+        
+    return None
+
+def get_feeds_data_for_feeds_table(app, feed_stats: List[Dict[str, Any]]):
+    temp_data = app.feeds_data
+
+    new_feed_data = []
+    ## split the pair column into two columns
+    for feed in temp_data:
+        split_pair = feed["pair"].split("/")
+        feed_item = {}
+        feed_item["addr"] = feed["contract"][:5] + "..." + feed["contract"][-5:]
+        feed_item["base_token"] = split_pair[0]
+        feed_item["quote_token"] = split_pair[1]
+        feed_item["exchange"] = feed["source"].capitalize()
+        feed_item["time"] = feed["timeframe"]
+
+        result = get_feeds_stat_with_contract(feed["contract"], feed_stats)
+        if result:
+            feed_item["avg_accuracy"] = result[0]
+            feed_item["avg_stake"] = result[2]
+            feed_item["volume"] = result[1]
+
+        new_feed_data.append(feed_item)
+
+    columns = [
+        {"name": col_to_human(col), "id":col} for col in new_feed_data[0].keys()
+    ]
+
+    return columns, new_feed_data
 
 def get_predictoors_data(app):
     columns = [
@@ -279,4 +321,21 @@ def get_nav_item(text: str, location: str, active: bool):
             active=active,
             style={"fontSize": "26px", "margin": "0 10px"},
         )
+    )
+
+def get_feeds_table_area(
+    columns,
+    feeds_data,
+):
+    return html.Div(
+        [
+            dash_table.DataTable(
+                id='feeds_table',
+                columns=columns,
+                data=feeds_data,
+                style_table={'overflowX': 'auto'},
+                sort_action="native",    # Enables sorting feature
+            )
+        ],
+        style={"width": "100%"}
     )
