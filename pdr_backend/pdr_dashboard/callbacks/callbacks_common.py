@@ -3,7 +3,8 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_navbar,
     NAV_ITEMS,
 )
-from pdr_backend.pdr_dashboard.pages import home, feeds
+from pdr_backend.pdr_dashboard.pages.home import HomePage
+from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
 
 
 def get_callbacks_common(app):
@@ -15,8 +16,13 @@ def get_callbacks_common(app):
     def display_page(pathname):
         for item in NAV_ITEMS:
             item["active"] = item["location"].lower() == pathname
-        if pathname == "/":
-            return home.layout(app), get_navbar(NAV_ITEMS)
-        if pathname == "/feeds":
-            return feeds.layout(app), get_navbar(NAV_ITEMS)
-        return "404 - Page not found", get_navbar(NAV_ITEMS)
+
+        return get_page(pathname), get_navbar(NAV_ITEMS)
+
+    def get_page(pathname):
+        if pathname not in ["/", "/feeds"]:
+            return "404 - Page not found"
+
+        page = HomePage(app) if pathname == "/" else FeedsPage(app)
+
+        return page.layout()
