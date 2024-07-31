@@ -49,9 +49,10 @@ Power tools:
   pdr deployer (for >1 predictoor bots)
   pdr ohlcv PPSS_FILE NETWORK
   pdr lake raw|etl update PPSS_FILE NETWORK
-  pdr lake raw|etl drop PPSS_FILE NETWORK ST
+  pdr lake raw|etl drop PPSS_FILE NETWORK ST_TS
   pdr lake describe --HTML PPSS_FILE NETWORK
   pdr lake validate PPSS_FILE NETWORK
+  pdr lake query PPSS_FILE NETWORK SQL_QUERY
 
 Utilities:
   pdr get_predictoors_info ST END PQDIR PPSS_FILE NETWORK --PDRS

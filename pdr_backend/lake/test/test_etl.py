@@ -2,532 +2,468 @@
 # Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
-from unittest.mock import Mock, patch
-
-import polars as pl
 import pytest
 from enforce_typing import enforce_types
 
-from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.lake.etl import (
-    _ETL_REGISTERED_LAKE_TABLES,
-    _ETL_REGISTERED_TABLE_NAMES,
-    ETL,
-)
-from pdr_backend.lake.gql_data_factory import _GQLDF_REGISTERED_LAKE_TABLES
-from pdr_backend.lake.table import ETLTable, NamedTable, TempTable
+import polars as pl
+
+from pdr_backend.lake.table import Table, NewEventsTable
+from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
-from pdr_backend.lake.table_bronze_pdr_slots import BronzeSlot
-from pdr_backend.lake.test.resources import _gql_data_factory
-from pdr_backend.util.time_types import UnixTimeMs
 
 
 @enforce_types
-@pytest.mark.parametrize(
-    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
-)
-def test_etl_tables(
-    _gql_datafactory_etl_predictions_df,
-    _gql_datafactory_etl_payouts_df,
-    _gql_datafactory_etl_truevals_df,
-    setup_data,
-):
-    _, db, gql_tables = setup_data
+@pytest.mark.parametrize("_sample_etl", [("2024-05-05", "2024-05-06")], indirect=True)
+def test_etl_tables(_sample_etl):
+    _, db, _ = _sample_etl
 
     # Assert all dfs are not the same size as mock data
     pdr_predictions_df = db.query_data("SELECT * FROM pdr_predictions")
     pdr_payouts_df = db.query_data("SELECT * FROM pdr_payouts")
-    pdr_truevals_df = db.query_data("SELECT * FROM pdr_truevals")
-    pdr_slots_df = db.query_data("SELECT * FROM pdr_slots")
-    assert len(pdr_predictions_df) != len(_gql_datafactory_etl_predictions_df)
-    assert len(pdr_payouts_df) != len(_gql_datafactory_etl_payouts_df)
-    assert len(pdr_truevals_df) != len(_gql_datafactory_etl_truevals_df)
 
     # Assert len of all dfs
-    assert len(gql_tables) == len(_GQLDF_REGISTERED_LAKE_TABLES) + len(
-        _ETL_REGISTERED_LAKE_TABLES
+    assert len(pdr_predictions_df) == 2057
+    assert len(pdr_payouts_df) == 1870
+
+
+# pylint: disable=too-many-statements
+@enforce_types
+@pytest.mark.parametrize("_sample_etl", [("2024-05-05", "2024-05-06")], indirect=True)
+def test_etl_do_bronze_step(_sample_etl):
+    etl, db, _ = _sample_etl
+
+    # assert the number of predictions we expect to see in prod table
+    # assert all predictions have null payouts
+    table_name = Table.from_dataclass(Prediction).table_name
+    pdr_predictions = db.query_data("SELECT * FROM {}".format(table_name))
+    assert len(pdr_predictions) == 2057
+    assert pdr_predictions["payout"].is_null().sum() == 2057
+
+    # assert we have valid payouts to join with predictions
+    table_name = Table.from_dataclass(Payout).table_name
+    pdr_payouts = db.query_data("SELECT * FROM {}".format(table_name))
+    assert len(pdr_payouts) == 1870
+    assert pdr_payouts["payout"].is_null().sum() == 0
+
+    # Work 1: Do bronze
+    etl.do_bronze_step()
+
+    # assert bronze_pdr_predictios and related tables are created correctly
+    new_events_bronze_pdr_predictions_table = NewEventsTable.from_dataclass(
+        BronzePrediction
     )
-    assert len(pdr_slots_df) == 6
-    assert len(pdr_predictions_df) == 5
-    assert len(pdr_payouts_df) == 4
-    assert len(pdr_truevals_df) == 5
+    records = db.query_data(
+        "SELECT * FROM {}".format(new_events_bronze_pdr_predictions_table.table_name)
+    )
+
+    null_payouts = records["payout"].is_null().sum()
+    valid_payouts = records["payout"].is_not_null().sum()
+
+    # assert temp_bronze_pdr_predictions table that will be moved to production
+    assert null_payouts == 379
+    assert valid_payouts == 1678
+    assert null_payouts + valid_payouts == 2057
+
+    # move tables to production
+    etl._do_bronze_swap_to_prod_atomic()
+
+    # assert bronze_pdr_predictions_df is created correctly
+    table_name = Table.from_dataclass(BronzePrediction).table_name
+    bronze_pdr_predictions_records = db.query_data(
+        "SELECT * FROM {}".format(table_name)
+    )
+    assert bronze_pdr_predictions_records is not None
+
+    # verify final production table
+    prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
+    prod_valid_payouts = bronze_pdr_predictions_records["payout"].is_not_null().sum()
+
+    assert prod_null_payouts == 379
+    assert prod_valid_payouts == 1678
+    assert prod_null_payouts + prod_valid_payouts == 2057
 
 
 # pylint: disable=too-many-statements
 @enforce_types
 @pytest.mark.parametrize(
-    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+    "_sample_etl", [("2024-05-05_00:00", "2024-05-05_00:40")], indirect=True
 )
-def test_etl_do_bronze_step(
-    _gql_datafactory_etl_payouts_df,
-    _gql_datafactory_etl_predictions_df,
-    _gql_datafactory_etl_truevals_df,
-    setup_data,
-):
-    etl, db, _ = setup_data
+def test_etl_do_incremental_bronze_step(_sample_raw_data, _sample_etl):
+    etl, db, gql_tables = _sample_etl
 
-    # Work 1: Do bronze
-    etl.do_bronze_step()
-    etl._move_from_temp_tables_to_live()
+    # We are gonna operate the ETL manually in 3 steps
+    etl._clamp_checkpoints_to_ppss = True
 
-    # assert bronze_pdr_predictions_df is created
-    table_name = NamedTable.from_dataclass(BronzePrediction).fullname
-    bronze_pdr_predictions_records = db.query_data(
-        "SELECT * FROM {}".format(table_name)
-    )
-    assert len(bronze_pdr_predictions_records) == 5
-    assert len(_gql_datafactory_etl_predictions_df) == 6
+    def _step1():
+        # Step 1: 00:00 - 00:40
+        # payouts -> 361
+        # predictions -> 544
 
-    print(f"bronze_pdr_predictions_records {bronze_pdr_predictions_records}")
+        # get all predictions we expect to end up in bronze table
+        prediction_table = Table.from_dataclass(Prediction).table_name
+        query = f"""
+        SELECT 
+            * 
+        FROM {prediction_table}
+        where
+            {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
+        """
+        expected_rows = db.query_data(query)
+        assert len(expected_rows) == 485
 
-    # Assert that "contract" data was created, and matches the same data from pdr_predictions
-    bronze_pdr_predictions_df = bronze_pdr_predictions_records
-    assert (
-        bronze_pdr_predictions_df["contract"][0]
-        == _gql_datafactory_etl_predictions_df["contract"][1]
-    )
-    assert (
-        bronze_pdr_predictions_df["contract"][1]
-        == _gql_datafactory_etl_predictions_df["contract"][2]
-    )
-    assert (
-        bronze_pdr_predictions_df["contract"][2]
-        == _gql_datafactory_etl_predictions_df["contract"][3]
-    )
-
-    # Assert timestamp == predictions timestamp
-    assert (
-        bronze_pdr_predictions_df["timestamp"][1]
-        == _gql_datafactory_etl_predictions_df["timestamp"][2]
-    )
-    assert (
-        bronze_pdr_predictions_df["timestamp"][2]
-        == _gql_datafactory_etl_predictions_df["timestamp"][3]
-    )
-
-    # Assert last_event_timestamp == payout.timestamp
-    assert (
-        bronze_pdr_predictions_df["last_event_timestamp"][1]
-        == _gql_datafactory_etl_payouts_df["timestamp"][2]
-    )
-    assert (
-        bronze_pdr_predictions_df["last_event_timestamp"][2]
-        == _gql_datafactory_etl_payouts_df["timestamp"][3]
-    )
-
-    # Assert predictions.truevalue == gql truevals_df
-    assert bronze_pdr_predictions_df["truevalue"][2] is True
-    assert bronze_pdr_predictions_df["truevalue"][3] is False
-
-    assert (
-        bronze_pdr_predictions_df["truevalue"][1]
-        == _gql_datafactory_etl_truevals_df["truevalue"][2]
-    )
-    assert (
-        bronze_pdr_predictions_df["truevalue"][2]
-        == _gql_datafactory_etl_truevals_df["truevalue"][3]
-    )
-
-    # Assert payout ts > prediction ts
-    assert (
-        bronze_pdr_predictions_df["last_event_timestamp"][0]
-        > bronze_pdr_predictions_df["timestamp"][0]
-    )
-    assert (
-        bronze_pdr_predictions_df["last_event_timestamp"][1]
-        > bronze_pdr_predictions_df["timestamp"][1]
-    )
-
-    # Assert payout came from payouts
-    assert round(bronze_pdr_predictions_df["payout"][1], 3) == round(
-        _gql_datafactory_etl_payouts_df["payout"][2], 3
-    )
-    assert round(bronze_pdr_predictions_df["payout"][2], 3) == round(
-        _gql_datafactory_etl_payouts_df["payout"][3], 3
-    )
-
-    # Assert stake in the bronze_table came from payouts
-    assert round(bronze_pdr_predictions_df["stake"][1], 3) == round(
-        _gql_datafactory_etl_payouts_df["stake"][2], 3
-    )
-    assert round(bronze_pdr_predictions_df["stake"][2], 3) == round(
-        _gql_datafactory_etl_payouts_df["stake"][3], 3
-    )
-
-    # Assert bronze slots table is building correctly
-    table_name = NamedTable.from_dataclass(BronzeSlot).fullname
-    bronze_pdr_slots_records = db.query_data("SELECT * FROM {}".format(table_name))
-
-    assert bronze_pdr_slots_records is None
-
-
-@pytest.mark.parametrize(
-    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
-)
-def test_etl_views(setup_data):
-    etl, db, _ = setup_data
-
-    # Work 1: First Run
-    with patch("pdr_backend.lake.etl.ETL._move_from_temp_tables_to_live") as mock:
+        # execute the ETL
         etl.do_bronze_step()
-        etl._move_from_temp_tables_to_live()
-        assert mock.called
+        etl._do_bronze_swap_to_prod_atomic()
 
-    # live table shouldn't exist
-    # temp table should be created
-    # etl view shouldn't exist
-    assert not BronzePrediction.get_lake_table_name() in db.get_table_names()
-    records = db.query_data(
-        "SELECT * FROM {}".format(TempTable.from_dataclass(BronzePrediction).fullname)
+        # get all bronze_pdr_predictions for this period
+        bronze_prediction_table = Table.from_dataclass(BronzePrediction).table_name
+        query = f"""
+        SELECT 
+            * 
+        FROM {bronze_prediction_table}
+        where
+            {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {bronze_prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
+        """
+        bronze_pdr_predictions_records = db.query_data(query)
+
+        # get count of null and valid prediction.payouts
+        prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
+        prod_valid_payouts = (
+            bronze_pdr_predictions_records["payout"].is_not_null().sum()
+        )
+
+        prod_null_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_null().sum()
+        )
+        prod_valid_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_not_null().sum()
+        )
+
+        # assert those numbers so we can track progress
+        assert prod_null_payouts == 178
+        assert prod_valid_payouts == 307
+
+        assert prod_null_truevalues == 178
+        assert prod_valid_truevalues == 307
+
+        # validate that rows are equal to what we expected
+        assert prod_null_payouts + prod_valid_payouts == len(expected_rows)
+
+    def _step2():
+        # Step 2: 00:40 - 01:20
+        # payouts -> 1163
+        # predictions -> 1283
+
+        # override ppss timestamps
+        etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_00:40:01"
+        etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_01:20:00"
+
+        # sim gql_data_factory saving data to storage so it can be processed
+        _sample_predictions = (
+            _sample_raw_data["pdr_predictions"]
+            .filter(pl.col("timestamp") >= etl.ppss.lake_ss.st_timestamp)
+            .filter(pl.col("timestamp") <= etl.ppss.lake_ss.fin_timestamp)
+        )
+
+        _sample_payouts = (
+            _sample_raw_data["pdr_payouts"]
+            .filter(pl.col("timestamp") >= etl.ppss.lake_ss.st_timestamp)
+            .filter(pl.col("timestamp") <= etl.ppss.lake_ss.fin_timestamp)
+        )
+
+        def _transform_columns(df, dtype_mapping):
+            for column, dtype in dtype_mapping.items():
+                df = df.with_columns(df[column].cast(dtype).alias(column))
+            return df
+
+        _sample_predictions = _transform_columns(
+            _sample_predictions, Prediction.get_lake_schema()
+        )
+        _sample_payouts = _transform_columns(_sample_payouts, Payout.get_lake_schema())
+
+        gql_tables["pdr_predictions"].append_to_storage(_sample_predictions, etl.ppss)
+        gql_tables["pdr_payouts"].append_to_storage(_sample_payouts, etl.ppss)
+
+        # get all predictions we expect to end up in bronze table
+        prediction_table = Table.from_dataclass(Prediction).table_name
+        query = f"""
+        SELECT 
+            * 
+        FROM {prediction_table}
+        where
+            {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
+        """
+        expected_rows = db.query_data(query)
+        assert len(expected_rows) == 797
+
+        # execute the ETL
+        etl.do_bronze_step()
+        etl._do_bronze_swap_to_prod_atomic()
+
+        # get all bronze_pdr_predictions for this period
+        bronze_prediction_table = Table.from_dataclass(BronzePrediction).table_name
+        query = f"""
+        SELECT 
+            * 
+        FROM {bronze_prediction_table}
+        where
+            {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {bronze_prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
+        """
+        bronze_pdr_predictions_records = db.query_data(query)
+
+        # get count of null and valid prediction.payouts
+        prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
+        prod_valid_payouts = (
+            bronze_pdr_predictions_records["payout"].is_not_null().sum()
+        )
+
+        prod_null_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_null().sum()
+        )
+        prod_valid_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_not_null().sum()
+        )
+
+        # assert those numbers so we can track progress
+        assert prod_null_payouts == 290
+        assert prod_valid_payouts == 507
+
+        assert prod_null_truevalues == prod_null_payouts
+        assert prod_valid_truevalues == prod_valid_payouts
+
+        # validate that rows are equal to what we expected
+        assert prod_null_payouts + prod_valid_payouts == len(expected_rows)
+
+    def _step3():
+        # Step 3: 01:20 - 02:00
+        # override ppss timestamps
+        etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_01:20:01"
+        etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_02:00:00"
+
+        # sim gql_data_factory saving data to storage so it can be processed
+        _sample_predictions = (
+            _sample_raw_data["pdr_predictions"]
+            .filter(pl.col("timestamp") >= etl.ppss.lake_ss.st_timestamp)
+            .filter(pl.col("timestamp") <= etl.ppss.lake_ss.fin_timestamp)
+        )
+
+        _sample_payouts = (
+            _sample_raw_data["pdr_payouts"]
+            .filter(pl.col("timestamp") >= etl.ppss.lake_ss.st_timestamp)
+            .filter(pl.col("timestamp") <= etl.ppss.lake_ss.fin_timestamp)
+        )
+
+        def _transform_columns(df, dtype_mapping):
+            for column, dtype in dtype_mapping.items():
+                df = df.with_columns(df[column].cast(dtype).alias(column))
+            return df
+
+        _sample_predictions = _transform_columns(
+            _sample_predictions, Prediction.get_lake_schema()
+        )
+        _sample_payouts = _transform_columns(_sample_payouts, Payout.get_lake_schema())
+
+        gql_tables["pdr_predictions"].append_to_storage(_sample_predictions, etl.ppss)
+        gql_tables["pdr_payouts"].append_to_storage(_sample_payouts, etl.ppss)
+
+        # get all predictions we expect to end up in bronze table
+        prediction_table = Table.from_dataclass(Prediction).table_name
+        query = f"""
+        SELECT 
+            * 
+        FROM {prediction_table}
+        where
+            {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
+        """
+        expected_rows = db.query_data(query)
+        assert len(expected_rows) == 775
+
+        # execute the ETL
+        etl.do_bronze_step()
+        etl._do_bronze_swap_to_prod_atomic()
+
+        # get all bronze_pdr_predictions for this period
+        bronze_prediction_table = Table.from_dataclass(BronzePrediction).table_name
+        query = f"""
+        SELECT 
+            * 
+        FROM {bronze_prediction_table}
+        where
+            {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {bronze_prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
+        """
+        bronze_pdr_predictions_records = db.query_data(query)
+
+        # get count of null and valid prediction.payouts
+        prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
+        prod_valid_payouts = (
+            bronze_pdr_predictions_records["payout"].is_not_null().sum()
+        )
+
+        prod_null_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_null().sum()
+        )
+        prod_valid_truevalues = (
+            bronze_pdr_predictions_records["truevalue"].is_not_null().sum()
+        )
+
+        # assert those numbers so we can track progress
+        assert prod_null_payouts == 247
+        assert prod_valid_payouts == 528
+
+        assert prod_null_truevalues == prod_null_payouts
+        assert prod_valid_truevalues == prod_valid_payouts
+
+        # validate that rows are equal to what we expected
+        assert prod_null_payouts + prod_valid_payouts == len(expected_rows)
+
+    _step1()
+    _step2()
+    _step3()
+
+    # assert bronze_pdr_predictions_df is created correctly
+    bronze_table_name = Table.from_dataclass(BronzePrediction).table_name
+    query = f"""SELECT * FROM {bronze_table_name}"""
+    bronze_pdr_predictions_records = db.query_data(query)
+    # bronze_pdr_predictions_records.write_csv('final_bronze_pdr_predictions_records.csv')
+
+    # verify final production table
+    prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
+    prod_valid_payouts = bronze_pdr_predictions_records["payout"].is_not_null().sum()
+
+    prod_null_truevalues = bronze_pdr_predictions_records["truevalue"].is_null().sum()
+    prod_valid_truevalues = (
+        bronze_pdr_predictions_records["truevalue"].is_not_null().sum()
     )
-    assert len(records) == 5
-    assert ETLTable.from_dataclass(BronzePrediction).fullname in db.get_view_names()
 
-    # move from temp to live
-    etl._move_from_temp_tables_to_live()
+    # assert final ETL values
+    assert prod_null_payouts == 379
+    assert prod_valid_payouts == 1678
+    assert prod_null_truevalues == prod_null_payouts
+    assert prod_valid_truevalues == prod_valid_payouts
+
+    assert bronze_pdr_predictions_records.shape[0] == 2057
+    assert (
+        prod_null_payouts + prod_valid_payouts
+        == bronze_pdr_predictions_records.shape[0]
+    )
 
 
+# pylint: disable=too-many-statements
 @enforce_types
 @pytest.mark.parametrize(
-    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
+    "_sample_etl", [("2024-05-05_00:00", "2024-05-05_00:40")], indirect=True
 )
-def test_drop_temp_sql_tables(setup_data):
-    etl, db, _ = setup_data
+def test_etl_do_incremental_broken_date_bronze_step(_sample_etl):
+    etl, db, _ = _sample_etl
 
-    # SELECT ALL TABLES FROM DB
-    table_names = db.get_table_names()
+    # We are gonna operate the ETL manually in 3 steps
+    etl._clamp_checkpoints_to_ppss = True
+    prediction_table = Table.from_dataclass(Prediction).table_name
+    bronze_prediction_table = Table.from_dataclass(BronzePrediction).table_name
 
-    # DROP ALL TABLES
-    for table in table_names:
-        db.duckdb_conn.execute(f"DROP TABLE {table}")
+    def _step1():
+        # Step 1: 00:00 - 00:40
+        # payouts -> 361
+        # predictions -> 544
 
-    dummy_schema = {"test_column": str}
+        # get all predictions we expect to end up in bronze table
+        query = f"""
+        SELECT 
+            * 
+        FROM {prediction_table}
+        where
+            {prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
+        """
+        expected_rows = db.query_data(query)
+        assert len(expected_rows) == 485
 
-    # Insert temp ETL tables w/ dummy data into DuckDB
-    for table_name in _ETL_REGISTERED_TABLE_NAMES:
-        db.insert_from_df(
-            pl.DataFrame([], schema=dummy_schema), TempTable(table_name).fullname
+        # execute the ETL
+        etl.do_bronze_step()
+        etl._do_bronze_swap_to_prod_atomic()
+
+        # get all bronze_pdr_predictions for this period
+        bronze_prediction_table = Table.from_dataclass(BronzePrediction).table_name
+        query = f"""
+        SELECT 
+            * 
+        FROM {bronze_prediction_table}
+        where
+            {bronze_prediction_table}.timestamp >= {etl.ppss.lake_ss.st_timestamp}
+            and {bronze_prediction_table}.timestamp <= {etl.ppss.lake_ss.fin_timestamp}
+        """
+        bronze_pdr_predictions_records = db.query_data(query)
+
+        # get count of null and valid prediction.payouts
+        prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
+        prod_valid_payouts = (
+            bronze_pdr_predictions_records["payout"].is_not_null().sum()
         )
 
-    # assert all ETL temp tables were created
-    etl_table_names = db.get_table_names()
-    assert len(etl_table_names) == len(_ETL_REGISTERED_TABLE_NAMES)
+        # assert those numbers so we can track progress
+        assert prod_null_payouts == 178
+        assert prod_valid_payouts == 307
 
-    # now, drop all ETL temp tables and verify we're back to 0
-    etl._drop_temp_sql_tables()
+        # validate that rows are equal to what we expected
+        assert prod_null_payouts + prod_valid_payouts == len(expected_rows)
 
-    table_names = db.get_table_names()
+    def _step2_introduce_error_in_date():
+        # Step 2: 00:00 - 00:35
+        # new_payouts -> 0
+        # new_predictions -> 0
+        # new bronze_pdr_predictions -> 0
 
-    assert len(table_names) == 0
+        # disable clamp so checkpoint algo runs
+        etl._clamp_checkpoints_to_ppss = False
 
+        # override ppss timestamps to a date we aleady processed
+        # this introduces room for errors and duplicates
+        etl.ppss.lake_ss.d["st_timestr"] = "2024-05-05_00:00"
+        etl.ppss.lake_ss.d["fin_timestr"] = "2024-05-05_00:35"
 
-@enforce_types
-@pytest.mark.parametrize(
-    "setup_data", [("2023-11-02_0:00", "2023-11-07_0:00")], indirect=True
-)
-def test_move_from_temp_tables_to_live(setup_data):
-    etl, db, gql_tables = setup_data
+        # execute the ETL
+        etl.do_bronze_step()
 
-    # Insert temp ETL tables w/ dummy data into DuckDB
-    temp_bronze_table_names = []
-    dummy_schema = {"test_column": str}
-    for table_name in _ETL_REGISTERED_TABLE_NAMES:
-        db.insert_from_df(
-            pl.DataFrame([], schema=dummy_schema), TempTable(table_name).fullname
-        )
-        temp_bronze_table_names.append(TempTable(table_name).fullname)
+        # do the final swap
+        etl._do_bronze_swap_to_prod_atomic()
 
-    # check if tables are created
-    table_names = db.get_table_names()
+        # get all bronze_pdr_predictions for this period
+        bronze_prediction_table = Table.from_dataclass(BronzePrediction).table_name
 
-    # Assert all temp bronze table names exist in table_names
-    assert all(
-        table in table_names for table in temp_bronze_table_names
-    ), "Not all temporary bronze tables were created successfully"
-
-    etl._move_from_temp_tables_to_live()
-
-    # check all temp tables are dropped, and raw + etl exist
-    table_names = db.get_table_names()
-    assert all(
-        table in table_names for table in _ETL_REGISTERED_TABLE_NAMES
-    ), "Not all temporary bronze tables were moved to live tables successfully"
-    assert len(table_names) == len(gql_tables) + len(_ETL_REGISTERED_TABLE_NAMES)
-
-    # Verify no build tables exist
-    table_names = db.get_table_names()
-    for table_name in table_names:
-        assert "_temp_" not in table_name
-
-
-@enforce_types
-def test_get_max_timestamp_values_from(tmpdir):
-    db = DuckDBDataStore(str(tmpdir))
-
-    db.duckdb_conn.execute(
+        # validate we have 0 duplicates
+        query_duplicate_summary = f"""
+            SELECT
+                '{bronze_prediction_table}' as table_name,
+                COUNT(*) as incident_count
+            FROM (
+                SELECT
+                    ID as ID,
+                    timestamp,
+                FROM {bronze_prediction_table}
+                GROUP BY ID, timestamp
+                HAVING COUNT(*) > 1
+            ) as inner_query
+            GROUP BY table_name
         """
-        CREATE TABLE test_table_1 (timestamp INT64);
-        CREATE TABLE test_table_2 (timestamp INT64);
-        CREATE TABLE test_table_3 (timestamp INT64);
-        """
+        duplicate_records = db.query_data(query_duplicate_summary)
+        assert len(duplicate_records) == 0
+
+    _step1()
+    _step2_introduce_error_in_date()
+
+    # get count of final prod table
+    bronze_pdr_predictions_records = db.query_data(
+        f"SELECT * FROM {bronze_prediction_table}"
     )
+    prod_null_payouts = bronze_pdr_predictions_records["payout"].is_null().sum()
+    prod_valid_payouts = bronze_pdr_predictions_records["payout"].is_not_null().sum()
 
-    ts1 = UnixTimeMs.from_timestr("2023-11-02_0:00")
-    ts2 = UnixTimeMs.from_timestr("2023-11-03_0:00")
-    ts3 = UnixTimeMs.from_timestr("2023-11-04_0:00")
-    ts4 = UnixTimeMs.from_timestr("2023-11-09_0:00")
-    db.duckdb_conn.execute(
-        """
-        INSERT INTO test_table_1 VALUES (INT64 '{0}');
-        INSERT INTO test_table_2 VALUES (INT64 '{1}');
-        INSERT INTO test_table_2 VALUES (INT64 '{2}');
-        INSERT INTO test_table_3 VALUES (INT64 '{3}');
-        """.format(
-            ts1, ts2, ts3, ts4
-        )
-    )
-
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
-
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    etl = ETL(ppss, gql_data_factory)
-
-    max_timestamp_values = etl._get_max_timestamp_values_from(
-        [
-            NamedTable("test_table_1"),
-            NamedTable("test_table_2"),
-            NamedTable("test_table_3"),
-        ]
-    )
-    assert (
-        UnixTimeMs(max_timestamp_values["test_table_1"])
-        .to_dt()
-        .strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert (
-        UnixTimeMs(max_timestamp_values["test_table_2"])
-        .to_dt()
-        .strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-04 00:00:00"
-    )
-    assert (
-        UnixTimeMs(max_timestamp_values["test_table_3"])
-        .to_dt()
-        .strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-09 00:00:00"
-    )
-
-
-@enforce_types
-def _fill_dummy_tables(tmpdir):
-    db = DuckDBDataStore(str(tmpdir))
-
-    # mock bronze + raw tables
-    db.duckdb_conn.execute(
-        """
-        CREATE TABLE raw_table_1 (timestamp INT64);
-        CREATE TABLE raw_table_2 (timestamp INT64);
-        CREATE TABLE raw_table_3 (timestamp INT64);
-        """
-    )
-
-    db.duckdb_conn.execute(
-        """
-        CREATE TABLE bronze_table_1 (timestamp INT64);
-        CREATE TABLE bronze_table_2 (timestamp INT64);
-        CREATE TABLE bronze_table_3 (timestamp INT64);
-        """
-    )
-
-    # all bronze tables should have the same max timestamp
-    # etl should start from the bronze table max_timestamp => 2023-11-02
-    ts1 = UnixTimeMs.from_timestr("2023-11-01_0:00")
-    ts2 = UnixTimeMs.from_timestr("2023-11-02_0:00")
-    db.duckdb_conn.execute(
-        """
-        INSERT INTO bronze_table_1 VALUES (INT64 '{1}');
-        INSERT INTO bronze_table_2 VALUES (INT64 '{0}');
-        INSERT INTO bronze_table_2 VALUES (INT64 '{1}');
-        INSERT INTO bronze_table_3 VALUES (INT64 '{1}');
-        """.format(
-            ts1, ts2
-        )
-    )
-
-    # raw tables can have different max timestamps
-    # etl should process all raw_tables up to min_timestamp => 2023-11-21
-    ts1 = UnixTimeMs.from_timestr("2023-11-21_0:00")
-    ts2 = UnixTimeMs.from_timestr("2023-11-22_0:00")
-    ts3 = UnixTimeMs.from_timestr("2023-11-23_0:00")
-    ts4 = UnixTimeMs.from_timestr("2023-11-25_0:00")
-    db.duckdb_conn.execute(
-        """
-        INSERT INTO raw_table_1 VALUES (INT64 '{0}');
-        INSERT INTO raw_table_2 VALUES (INT64 '{1}');
-        INSERT INTO raw_table_2 VALUES (INT64 '{2}');
-        INSERT INTO raw_table_3 VALUES (INT64 '{3}');
-        """.format(
-            ts1, ts2, ts3, ts4
-        )
-    )
-
-
-@enforce_types
-def test_calc_bronze_start_end_ts(tmpdir):
-    """
-    @description
-        Verify that the start and end timestamps for the bronze tables are calculated correctly
-        1. ETL step resumes from max(timestamp) across all bronze tables
-        - this gets the "checkpoint" from where the ETL pipeline last ended/should resume
-        - this gives us our "from" timestamp
-        2. raw_tables can have different max timestamps
-        - db raw tables should have just been updated by GQLDF
-        - this gives us our "to" timestamp
-    """
-    _fill_dummy_tables(tmpdir)
-
-    # we can set whatever we want here, the ETL pipeline should update as best as possible
-    st_timestr = "2023-11-01_0:00"
-    fin_timestr = "2023-11-30_0:00"
-
-    # Setup GQL Data Factory and mock tables for ETL
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    gql_data_factory = Mock(spec=gql_data_factory)
-    mock_gql_tables = [
-        "raw_table_1",
-        "raw_table_2",
-        "raw_table_3",
-    ]
-
-    etl = ETL(ppss, gql_data_factory)
-    mock_tables = [
-        "bronze_table_1",
-        "bronze_table_2",
-        "bronze_table_3",
-    ]
-
-    with patch("pdr_backend.lake.etl._ETL_REGISTERED_TABLE_NAMES", mock_tables):
-        with patch(
-            "pdr_backend.lake.etl._GQLDF_REGISTERED_TABLE_NAMES", mock_gql_tables
-        ):
-            # Calculate from + to timestamps
-            from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
-
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert (
-        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-25 00:00:00"
-    )
-
-
-@enforce_types
-def test_calc_bronze_start_end_ts_with_nonexist_tables(tmpdir):
-    _fill_dummy_tables(tmpdir)
-
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "2023-11-07_0:00"
-
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    etl = ETL(ppss, gql_data_factory)
-    etl.bronze_table_names = [
-        "bronze_table_1",
-        "bronze_table_2",
-        "bronze_table_3",
-        "bronze_table_4",
-        "bronze_table_5",
-    ]
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
-
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert (
-        UnixTimeMs(to_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-07 00:00:00"
-    )
-
-
-@enforce_types
-def test_calc_bronze_start_end_ts_with_now_value(tmpdir):
-    _fill_dummy_tables(tmpdir)
-
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "now"
-
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    etl = ETL(ppss, gql_data_factory)
-    etl.bronze_table_names = [
-        "bronze_table_1",
-        "bronze_table_2",
-        "bronze_table_3",
-    ]
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
-
-    ts_now = UnixTimeMs.now()
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert abs(ts_now - to_timestamp) < 100
-
-
-@enforce_types
-def test_calc_bronze_start_end_ts_with_now_value_and_nonexist_tables(tmpdir):
-    _fill_dummy_tables(tmpdir)
-
-    st_timestr = "2023-11-02_0:00"
-    fin_timestr = "now"
-
-    ppss, gql_data_factory = _gql_data_factory(
-        tmpdir,
-        "binanceus ETH/USDT h 5m",
-        st_timestr,
-        fin_timestr,
-    )
-
-    etl = ETL(ppss, gql_data_factory)
-    etl.bronze_table_names = [
-        "bronze_table_1",
-        "bronze_table_2",
-        "bronze_table_3",
-        "bronze_table_4",
-        "bronze_table_5",
-    ]
-    from_timestamp, to_timestamp = etl._calc_bronze_start_end_ts()
-
-    ts_now = UnixTimeMs.now()
-    assert (
-        UnixTimeMs(from_timestamp).to_dt().strftime("%Y-%m-%d %H:%M:%S")
-        == "2023-11-02 00:00:00"
-    )
-    assert abs(ts_now - to_timestamp) < 100
+    assert prod_null_payouts == 178
+    assert prod_valid_payouts == 307

@@ -4,6 +4,7 @@
 #
 import os
 from typing import List
+from unittest.mock import patch
 
 import polars as pl
 import pytest
@@ -23,7 +24,7 @@ from pdr_backend.lake.prediction import (
 )
 from pdr_backend.lake.slot import Slot, mock_slot, mock_slots
 from pdr_backend.lake.subscription import mock_subscriptions
-from pdr_backend.lake.table import NamedTable
+from pdr_backend.lake.table import Table
 from pdr_backend.lake.test.resources import (
     _gql_data_factory,
     get_filtered_timestamps_df,
@@ -98,7 +99,7 @@ _ETL_PAYOUT_TUPS = [
         1698865200,  # slot # Nov 01 2023 19:00:00 GMT
         0.0,  # payout
         True,  # predictedValue
-        # False,  # trueValue
+        False,  # trueValue
         0.928046,  # revenue
         15.629683,  # roundSumStakesUp
         34.314841,  # roundSumStakes
@@ -112,7 +113,7 @@ _ETL_PAYOUT_TUPS = [
         1698951600,  # slot # Nov 02 2023 19:00:00 GMT
         10.928642693189679,  # payout
         False,  # predictedValue
-        # False,  # trueValue
+        False,  # trueValue
         0.92804,  # revenue
         45.62968,  # roundSumStakesUp
         72.31484,  # roundSumStakes
@@ -126,7 +127,7 @@ _ETL_PAYOUT_TUPS = [
         1699038000,  # slot # Nov 03 2023 19:00:00 GMT
         7.041434095860760067,  # payout
         False,  # predictedValue
-        # False,  # trueValue
+        False,  # trueValue
         0.93671,  # revenue
         47.61968,  # roundSumStakesUp
         72.31484,  # roundSumStakes
@@ -140,7 +141,7 @@ _ETL_PAYOUT_TUPS = [
         1699124400,  # slot # Nov 04 2023 19:00:00 GMT
         7.160056238874628619,  # payout
         True,  # predictedValue
-        # True,  # trueValue
+        True,  # trueValue
         0.92804,  # revenue
         38.09065,  # roundSumStakesUp
         93.31532,  # roundSumStakes
@@ -154,7 +155,7 @@ _ETL_PAYOUT_TUPS = [
         1699300800,  # slot # Nov 06 2023 19:00:00 GMT
         0.0,  # payout
         True,  # predictedValue
-        # False,  # trueValue
+        False,  # trueValue
         0.92804,  # revenue
         47.71968,  # roundSumStakesUp
         74.30484,  # roundSumStakes
@@ -571,6 +572,36 @@ def clean_up_test_folder():
     return _clean_up
 
 
+@enforce_types
+def get_table_dfs(
+    st_timestr: str,
+    fin_timestr: str,
+    _gql_datafactory_etl_payouts_df,
+    _gql_datafactory_etl_predictions_df,
+    _gql_datafactory_etl_truevals_df,
+    _gql_datafactory_etl_slots_df,
+):
+    predictions = get_filtered_timestamps_df(
+        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
+    )
+    truevals = get_filtered_timestamps_df(
+        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
+    )
+    payouts = get_filtered_timestamps_df(
+        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
+    )
+    slots = get_filtered_timestamps_df(
+        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    )
+
+    return {
+        "pdr_predictions": predictions,
+        "pdr_truevals": truevals,
+        "pdr_payouts": payouts,
+        "pdr_slots": slots,
+    }
+
+
 @pytest.fixture
 def setup_data(
     _gql_datafactory_etl_payouts_df,
@@ -584,17 +615,13 @@ def setup_data(
     st_timestr = request.param[0]
     fin_timestr = request.param[1]
 
-    preds = get_filtered_timestamps_df(
-        _gql_datafactory_etl_predictions_df, st_timestr, fin_timestr
-    )
-    truevals = get_filtered_timestamps_df(
-        _gql_datafactory_etl_truevals_df, st_timestr, fin_timestr
-    )
-    payouts = get_filtered_timestamps_df(
-        _gql_datafactory_etl_payouts_df, st_timestr, fin_timestr
-    )
-    slots = get_filtered_timestamps_df(
-        _gql_datafactory_etl_slots_df, st_timestr, fin_timestr
+    table_dfs = get_table_dfs(
+        st_timestr,
+        fin_timestr,
+        _gql_datafactory_etl_payouts_df,
+        _gql_datafactory_etl_predictions_df,
+        _gql_datafactory_etl_truevals_df,
+        _gql_datafactory_etl_slots_df,
     )
 
     ppss, gql_data_factory = _gql_data_factory(
@@ -605,16 +632,16 @@ def setup_data(
     )
 
     gql_tables = {
-        "pdr_predictions": NamedTable.from_dataclass(Prediction),
-        "pdr_truevals": NamedTable.from_dataclass(Trueval),
-        "pdr_payouts": NamedTable.from_dataclass(Payout),
-        "pdr_slots": NamedTable.from_dataclass(Slot),
+        "pdr_predictions": Table.from_dataclass(Prediction),
+        "pdr_truevals": Table.from_dataclass(Trueval),
+        "pdr_payouts": Table.from_dataclass(Payout),
+        "pdr_slots": Table.from_dataclass(Slot),
     }
 
-    gql_tables["pdr_predictions"].append_to_storage(preds, ppss)
-    gql_tables["pdr_truevals"].append_to_storage(truevals, ppss)
-    gql_tables["pdr_payouts"].append_to_storage(payouts, ppss)
-    gql_tables["pdr_slots"].append_to_storage(slots, ppss)
+    gql_tables["pdr_predictions"].append_to_storage(table_dfs["pdr_predictions"], ppss)
+    gql_tables["pdr_truevals"].append_to_storage(table_dfs["pdr_truevals"], ppss)
+    gql_tables["pdr_payouts"].append_to_storage(table_dfs["pdr_payouts"], ppss)
+    gql_tables["pdr_slots"].append_to_storage(table_dfs["pdr_payouts"], ppss)
 
     assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
     assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
@@ -628,5 +655,81 @@ def setup_data(
 
     _records = db.query_data("SELECT * FROM pdr_predictions")
     assert len(_records) == 5
+
+    yield etl, db, gql_tables
+
+
+@pytest.fixture()
+def _sample_raw_data(request):
+    """
+    Load sample raw data for testing the ETL pipeline
+    """
+
+    test_dir = os.path.dirname(str(request.node.fspath))
+    predictions_df = pl.read_csv(os.path.join(test_dir, "pdr_predictions.csv"))
+    payouts_df = pl.read_csv(os.path.join(test_dir, "pdr_payouts.csv"))
+
+    predictions_schema_order = list(Prediction.get_lake_schema().keys())
+    payouts_schema_order = list(Payout.get_lake_schema().keys())
+
+    predictions_df = predictions_df[predictions_schema_order]
+    payouts_df = payouts_df[payouts_schema_order]
+
+    return {"pdr_predictions": predictions_df, "pdr_payouts": payouts_df}
+
+
+@pytest.fixture
+def _sample_etl(
+    _sample_raw_data,
+    _get_test_DuckDB,
+    tmpdir,
+    request,
+):
+    # sample raw data
+    st_timestr = request.param[0]
+    fin_timestr = request.param[1]
+
+    ppss = None
+    gql_data_factory = None
+
+    with patch(
+        "pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner",
+        return_value=[],
+    ):
+        ppss, gql_data_factory = _gql_data_factory(
+            tmpdir,
+            "binanceus ETH/USDT h 5m",
+            st_timestr,
+            fin_timestr,
+        )
+
+    gql_tables = {
+        "pdr_predictions": Table.from_dataclass(Prediction),
+        "pdr_payouts": Table.from_dataclass(Payout),
+    }
+
+    # only add to storage the data that falls within the time range
+    # everything else should be sim-fetched via gql_data_factory or another patch
+    _sample_predictions = (
+        _sample_raw_data["pdr_predictions"]
+        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
+        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
+    )
+
+    _sample_payouts = (
+        _sample_raw_data["pdr_payouts"]
+        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
+        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
+    )
+
+    gql_tables["pdr_predictions"].append_to_storage(_sample_predictions, ppss)
+    gql_tables["pdr_payouts"].append_to_storage(_sample_payouts, ppss)
+
+    assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
+    assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
+
+    # provide the setup data to the test
+    etl = ETL(ppss, gql_data_factory)
+    db = _get_test_DuckDB(tmpdir)
 
     yield etl, db, gql_tables
