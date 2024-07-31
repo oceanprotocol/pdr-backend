@@ -87,7 +87,7 @@ def fetch_filtered_subscriptions(
                 }}
             }}
         }}"""
-    
+
     result = query_subgraph(
         get_subgraph_url(network),
         query,
