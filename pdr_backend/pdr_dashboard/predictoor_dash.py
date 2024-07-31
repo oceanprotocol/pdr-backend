@@ -1,11 +1,8 @@
 import webbrowser
 
-from datetime import datetime
 import dash_bootstrap_components as dbc
 from dash import Dash
 from enforce_typing import enforce_types
-from pdr_backend.exchange.fetch_ohlcv import fetch_ohlcv
-from pdr_backend.util.time_types import UnixTimeMs
 
 from pdr_backend.pdr_dashboard.callbacks.callbacks_home import (
     get_callbacks_home,
@@ -17,6 +14,7 @@ from pdr_backend.pdr_dashboard.dash_components.util import (
     get_feeds_data_from_db,
     get_predictoors_data_from_payouts,
     get_user_payouts_stats_from_db,
+    fetch_token_prices,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_layout,
@@ -57,18 +55,7 @@ def setup_app(app, ppss: PPSS):
     app.layout = get_layout()
 
     # fetch token prices
-    current_date_ms = UnixTimeMs(int(datetime.now().timestamp()) * 1000 - 300000)
-    rose_usdt = fetch_ohlcv("binance", "ROSE/USDT", "5m", current_date_ms, 1)
-    fet_usdt = fetch_ohlcv("binance", "FET/USDT", "5m", current_date_ms, 1)
-    if rose_usdt and fet_usdt:
-        app.prices = {"ROSE": rose_usdt[0][1], "OCEAN": fet_usdt[0][1] * 0.433226}
-    else:
-        rose_usdt = fetch_ohlcv("binanceus", "ROSE/USDT", "5m", current_date_ms, 1)
-        fet_usdt = fetch_ohlcv("binanceus", "FET/USDT", "5m", current_date_ms, 1)
-        if rose_usdt and fet_usdt:
-            app.prices = {"ROSE": rose_usdt[0][1], "OCEAN": fet_usdt[0][1] * 0.433226}
-        else:
-            app.prices = None
+    app.prices = fetch_token_prices()
 
     get_callbacks_home(app)
     get_callbacks_common(app)
