@@ -17,7 +17,7 @@ logger = logging.getLogger("predictoor_dashboard_utils")
 
 
 @enforce_types
-def _query_db(lake_dir: str, query: str) -> Union[List[dict], Exception]:
+def _query_db(lake_dir: str, query: str, scalar=False) -> Union[List[dict], Exception]:
     """
     Query the database with the given query.
     Args:
@@ -27,6 +27,12 @@ def _query_db(lake_dir: str, query: str) -> Union[List[dict], Exception]:
         dict: Query result.
     """
     try:
+        if scalar:
+            db = DuckDBDataStore(lake_dir, read_only=True)
+            result = db.query_scalar(query)
+            db.duckdb_conn.close()
+            return result
+
         db = DuckDBDataStore(lake_dir, read_only=True)
         df = db.query_data(query)
         db.duckdb_conn.close()
@@ -195,6 +201,26 @@ def get_predictoors_data_from_payouts(
         data.update(new_data)
 
     return user_payout_stats
+
+
+@enforce_types
+def get_feeds_stats_from_db(lake_dir: str):
+    feeds = _query_db(
+        lake_dir,
+        f"""
+            SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
+            FROM {Prediction.get_lake_table_name()}
+        """,
+        scalar=True,
+    )
+
+    return {
+        "Volume": "TODO",
+        "Feeds": feeds,
+        "Sales": "TODO",
+        "Revenue": "TODO",
+        "Accuracy": "TODO",
+    }
 
 
 def get_start_date_from_period(period: int):

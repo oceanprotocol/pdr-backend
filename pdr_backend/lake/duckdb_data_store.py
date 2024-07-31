@@ -242,6 +242,20 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
                 return None
             raise e
 
+    def query_scalar(self, query: str) -> Any:
+        """
+        Execute a SQL query on DuckDB and return the result as a scalar.
+        @arguments:
+            query - The SQL query to execute.
+        @returns:
+            Any - The result of the query.
+        @example:
+            query_scalar("SELECT COUNT(*) FROM table_name")
+        """
+        result = self.duckdb_conn.execute(query).fetchone()
+
+        return result[0] if result else None
+
     @enforce_types
     def move_table_data(self, temp_table, permanent_table):
         """
