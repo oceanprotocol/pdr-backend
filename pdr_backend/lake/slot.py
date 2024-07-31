@@ -29,7 +29,6 @@ class Slot(LakeMapper):
         self.truevalue = truevalue
         self.roundSumStakesUp = roundSumStakesUp
         self.roundSumStakes = roundSumStakes
-        self.slot = slot
 
         self.check_against_schema()
 
