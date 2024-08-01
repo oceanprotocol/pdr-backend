@@ -105,7 +105,7 @@ class FeedsPage:
                 feed_subcription_stats, "contract", feed["contract"]
             )
 
-            feed_item["price"] = (
+            feed_item["price_(OCEAN)"] = (
                 subscription_result["price"] if subscription_result else ""
             )
             feed_item["sales"] = (
