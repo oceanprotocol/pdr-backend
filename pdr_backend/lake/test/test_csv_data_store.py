@@ -116,13 +116,6 @@ def test_write_1000_rows(_get_test_CSVDataStore, tmpdir):
     )
     csv_ds.write(data)
 
-    # folder_path = csv_data_store._get_folder_path("test")
-
-    # get folder including files
-    # folder = os.listdir(folder_path)
-    # print folder files
-    # print("folder---", folder)
-
     file_name = csv_ds._create_file_path(0, 999)
     data = pl.read_csv(file_name)
 

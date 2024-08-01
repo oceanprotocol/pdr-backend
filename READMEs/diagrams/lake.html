@@ -1,0 +1,114 @@
+<html>
+	<head>
+		<title>ETL Architecture</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				text-align: center;
+				background-color: #f0f0f0;
+				margin: 40px;
+			}
+	
+			.banner {
+				font-size: 24px;
+				margin-bottom: 20px;
+			}
+	
+			.pink {
+				color: rgb(255, 64, 146);
+			}
+		</style>
+		<script src="https://cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js"></script>
+		<script>
+			mermaid.initialize({
+				startOnLoad: true,
+				theme: 'forest',
+			});
+		</script>
+	</head>
+	<body>
+		<div class="banner">
+			Predict<span class="pink">oo</span>r Tables & Lake
+		</div>
+		<div class="mermaid">
+			erDiagram
+				SUBGRAPH_predictPredictions ||--o{ PDR_PREDICTIONS : yields
+				SUBGRAPH_predictPayouts ||--o{ PDR_PAYOUTS : yields
+				SUBGRAPH_predictTrueVals ||--o{ PDR_TRUEVALS : yields
+				SUBGRAPH_predictSlots ||--o{ PDR_SLOTS : yields
+				SUBGRAPH_predictSubscriptions ||--o{ PDR_SUBSCRIPTIONS : yields
+                PDR_PREDICTIONS ||--o{ BRONZE_PDR_PREDICTIONS : yields
+                PDR_PAYOUTS ||--o{ BRONZE_PDR_PREDICTIONS : yields
+				PDR_PREDICTIONS {
+					string ID
+                    string contract
+					string pair
+                    string timeframe
+                    boolean predvalue
+					float stake
+					boolean truevalue
+					int timestamp
+					string source
+					float payout
+					int slot
+					string user
+				}
+				PDR_PAYOUTS {
+					string ID
+                    string user
+                    int timestamp
+					string token
+                    int slot
+					float payout
+					boolean predvalue
+					boolean truevalue
+                    float stake                    
+				}
+				PDR_TRUEVALS {
+					string ID
+                    boolean truevalue
+                    int timestamp
+					string token
+					int slot
+                    float revenue
+                    float roundSumStakesUp
+					float roundSumStakes
+				}
+				PDR_SLOTS {
+					string ID
+					int timestamp
+                    int slot
+                    boolean truevalue
+                    float roundSumStakesUp
+					float roundSumStakes
+				}
+				PDR_SUBSCRIPTIONS {
+					string ID
+                    string pair
+					string timeframe
+					string source
+					string tx_id
+					float last_price_value
+					int timestamp
+					string user
+				}
+				BRONZE_PDR_PREDICTIONS {
+                    string ID
+                    string slot_id
+                    string contract
+                    int slot
+                    string user
+                    string pair
+                    string timeframe
+                    string source
+                    boolean predvalue
+					boolean truevalue
+                    float stake
+					float revenue
+                    float payout
+                    int timestamp
+                    int last_event_timestamp
+				}
+		</div>
+	</body>
+</html>
