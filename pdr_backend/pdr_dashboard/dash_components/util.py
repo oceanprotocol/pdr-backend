@@ -10,6 +10,7 @@ from pdr_backend.exchange.fetch_ohlcv import fetch_ohlcv
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.subscription import Subscription
 from pdr_backend.util.currency_types import Eth, Wei
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -216,22 +217,29 @@ def get_feeds_stats_from_db(lake_dir: str):
 
     feeds = feeds[0] if feeds else 0
 
-    accuracy, revenue = _query_db(
+    accuracy, revenue, volume = _query_db(
         lake_dir,
         f"""
             SELECT
                 SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
-                SUM(revenue) AS total_revenue
+                SUM(revenue) AS total_revenue,
+                SUM(stake) AS total_stake
             FROM
                 {Payout.get_lake_table_name()}
         """,
         scalar=True,
     )
 
+    sales = _query_db(
+        lake_dir,
+        f"SELECT COUNT(*) from {Subscription.get_lake_table_name()}",
+        scalar=True,
+    )
+
     return {
-        "Volume": "TODO",
-        "Feeds": feeds,
-        "Sales": "TODO",
+        "Volume": str(round(volume, 2) if volume else 0.0) + " OCEAN",
+        "Feeds": feeds if feeds else 0,
+        "Sales": sales if sales else 0,
         "Revenue": str(round(revenue, 2) if revenue else 0.0) + " OCEAN",
         "Accuracy": str(round(accuracy, 2) if accuracy else 0.0) + "%",
     }

@@ -27,6 +27,17 @@ def get_information_text(tooltip_id: str):
         case "tooltip-switch-feeds":
             return """Toggle this switch to view only the feeds associated with
                 the selected predictoors."""
+        case "tooltip-feeds_page_Volume_metric":
+            return "Total stake placed on predictions"
+        case "tooltip-feeds_page_Feeds_metric":
+            return "Total number of feeds"
+        case "tooltip-feeds_page_Sales_metric":
+            return "Number of subscriptions to feeds"
+        case "tooltip-feeds_page_Revenue_metric":
+            return "Total revenue generated from predictions"
+        case "tooltip-feeds_page_Accuracy_metric":
+            return "Average accuracy of predictions"
+
         case _:
             return ""
 

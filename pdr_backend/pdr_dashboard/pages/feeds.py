@@ -14,10 +14,6 @@ class FeedsPage:
         return html.Div(
             [
                 dcc.Store(id="user-payout-stats"),
-                html.H1(
-                    "Feeds page content",
-                    id="page_title_feeds",
-                ),
                 dcc.Loading(
                     id="loading",
                     type="default",
@@ -33,24 +29,17 @@ class FeedsPage:
         stats = get_feeds_stats_from_db(self.lake_dir)
 
         return html.Div(
-            [
-                html.Div(
-                    [
-                        html.H3("Metrics"),
-                        html.Div(
-                            [
-                                get_metric(
-                                    label=key,
-                                    value=value,
-                                    value_id=f"feeds_page_{key}_metric",
-                                )
-                                for key, value in stats.items()
-                            ],
-                            style={"display": "flex"},
-                        ),
-                    ],
-                    style={"width": "100%"},
-                ),
+            children=[
+                get_metric(
+                    label=key,
+                    value=value,
+                    value_id=f"feeds_page_{key}_metric",
+                )
+                for key, value in stats.items()
             ],
-            style={"display": "flex"},
+            style={
+                "height": "12%",
+                "display": "flex",
+                "justifyContent": "space-between",
+            },
         )
