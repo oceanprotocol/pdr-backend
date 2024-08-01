@@ -74,6 +74,7 @@ class FeedsPage:
             id=filter_obj.name,
             options=filter_obj.options,
             multi=True,
+            value=[],
             placeholder=filter_obj.placeholder,
             style={"width": "130px", "borderColor": "#aaa"},
         )
@@ -102,16 +103,18 @@ class FeedsPage:
     def get_input_filter(self, label: str):
         return dbc.DropdownMenu(
             [
-                self.get_input_with_label("Min"),
-                self.get_input_with_label("Max"),
+                self.get_input_with_label("Min", label),
+                self.get_input_with_label("Max", label),
                 html.Button(
                     "Apply Filter",
                     style={
                         "width": "100%",
                         "padding": "5px",
                     },
+                    id=f"{label.lower()}_button",
                 ),
             ],
+            id=f"{label.lower()}_dropdown",
             label=label,
             style={
                 "backgroundColor": "white",
@@ -125,9 +128,9 @@ class FeedsPage:
             },
         )
 
-    def get_input_with_label(self, label: str):
+    def get_input_with_label(self, label: str, name: str):
         return html.Div(
-            [html.Label(label), dcc.Input(id=label.lower())],
+            [html.Label(label), dcc.Input(id=f"{name.lower()}_{label.lower()}")],
             style={
                 "display": "flex",
                 "flexDirection": "column",
@@ -143,6 +146,7 @@ class FeedsPage:
                 self.get_filters(),
                 html.Button(
                     "Clear All",
+                    id="clear_filters_button",
                     style={
                         "width": "100px",
                         "hight": "100%",

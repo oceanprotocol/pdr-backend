@@ -4,6 +4,9 @@ import dash_bootstrap_components as dbc
 from dash import Dash
 from enforce_typing import enforce_types
 
+from pdr_backend.pdr_dashboard.callbacks.callbacks_feeds import (
+    get_callbacks_feeds,
+)
 from pdr_backend.pdr_dashboard.callbacks.callbacks_home import (
     get_callbacks_home,
 )
@@ -58,5 +61,6 @@ def setup_app(app, ppss: PPSS):
     app.prices = fetch_token_prices()
 
     get_callbacks_home(app)
+    get_callbacks_feeds(app)
     get_callbacks_common(app)
     return app
