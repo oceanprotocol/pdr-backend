@@ -1,5 +1,6 @@
-from dash import html, dcc, dash_table
 from typing import List, Dict, Any, Union, Tuple
+
+from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 from pdr_backend.pdr_dashboard.dash_components.util import (
     get_feed_payouts_stats_from_db,
