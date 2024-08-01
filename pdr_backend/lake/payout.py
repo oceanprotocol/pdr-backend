@@ -23,9 +23,7 @@ class Payout(LakeMapper):  # pylint: disable=too-many-instance-attributes
         timestamp: UnixTimeS,
         payout: float,
         predvalue: bool,
-        revenue: float,
-        roundSumStakesUp: float,
-        roundSumStakes: float,
+        truevalue: bool,
         stake: float,
     ) -> None:
         self.ID = ID
@@ -35,9 +33,7 @@ class Payout(LakeMapper):  # pylint: disable=too-many-instance-attributes
         self.slot = slot
         self.payout = payout
         self.predvalue = predvalue
-        self.revenue = revenue
-        self.roundSumStakesUp = roundSumStakesUp
-        self.roundSumStakes = roundSumStakes
+        self.truevalue = truevalue
         self.stake = stake
 
         self.check_against_schema()
@@ -53,9 +49,7 @@ class Payout(LakeMapper):  # pylint: disable=too-many-instance-attributes
                 "timestamp": Int64,
                 "payout": Float64,
                 "predvalue": Boolean,
-                "revenue": Float64,
-                "roundSumStakesUp": Float64,
-                "roundSumStakes": Float64,
+                "truevalue": Boolean,
                 "stake": Float64,
             }
         )
@@ -84,9 +78,7 @@ def mock_payout(payout_tuple: tuple) -> Payout:
         slot,
         payout,
         predvalue,
-        revenue,
-        roundSumStakesUp,
-        roundSumStakes,
+        truevalue,
         stake,
     ) = payout_tuple
 
@@ -98,9 +90,7 @@ def mock_payout(payout_tuple: tuple) -> Payout:
         slot=UnixTimeS(slot),
         payout=payout,
         predvalue=predvalue,
-        revenue=revenue,
-        roundSumStakesUp=roundSumStakesUp,
-        roundSumStakes=roundSumStakes,
+        truevalue=truevalue,
         stake=stake,
     )
 
@@ -128,9 +118,7 @@ _PAYOUT_TUPS = [
         1704152700,  # slot
         0.0,  # payout
         True,  # predictedValue
-        0.919372744934776618,  # revenue
-        7.635901006590730052,  # roundSumStakesUp
-        17.728238320965607921,  # roundSumStakes
+        True,  # truevalue
         0.41,  # stake
     ),
     (
@@ -142,9 +130,7 @@ _PAYOUT_TUPS = [
         1704152700,
         3.786517720904995824,
         False,
-        0.919372744934776618,
-        7.635901006590730052,
-        17.728238320965607921,
+        False,
         2.049314196396558,
     ),
     (
@@ -156,9 +142,7 @@ _PAYOUT_TUPS = [
         1704153000,
         3.687473663992716148,
         False,
-        0.919372744934776618,
-        11.201148268567394458,
-        25.423083432944667468,
+        False,
         1.9908170679122585,
     ),
     (
@@ -170,9 +154,7 @@ _PAYOUT_TUPS = [
         1704153000,
         6.334665366356455078,
         False,
-        0.919372744934776618,
-        11.201148268567394458,
-        25.423083432944667468,
+        False,
         3.4200000000000004,
     ),
     (
@@ -184,9 +166,7 @@ _PAYOUT_TUPS = [
         1704153000,
         1.463270654801637113,
         False,
-        0.919372744934776618,
-        11.201148268567394458,
-        25.423083432944667468,
+        False,
         0.79,
     ),
     (
@@ -198,9 +178,7 @@ _PAYOUT_TUPS = [
         1704153000,
         0.0,
         True,
-        0.919372744934776618,
-        11.201148268567394458,
-        25.423083432944667468,
+        True,
         0.41,
     ),
 ]
@@ -216,9 +194,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         1704152700,  # slot
         1.4,  # payout
         True,  # predictedValue
-        0.919372744934776618,  # revenue
-        7.635901006590730052,  # roundSumStakesUp
-        17.728238320965607921,  # roundSumStakes
+        True,  # predictedValue
         0.41,  # stake
     ),
     (
@@ -230,9 +206,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         1704152700,
         3.786517720904995824,
         False,
-        0.919372744934776618,
-        7.635901006590730052,
-        17.728238320965607921,
+        False,
         2.049314196396558,
     ),
     (
@@ -244,9 +218,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         1704153000,
         3.687473663992716148,
         False,
-        0.919372744934776618,
-        11.201148268567394458,
-        25.423083432944667468,
+        False,
         1.9908170679122585,
     ),
     (
@@ -258,9 +230,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         1704153000,
         6.334665366356455078,
         False,
-        0.919372744934776618,
-        11.201148268567394458,
-        25.423083432944667468,
+        False,
         3.4200000000000004,
     ),
     (
@@ -272,9 +242,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         1704153000,
         1.463270654801637113,
         False,
-        0.919372744934776618,
-        11.201148268567394458,
-        25.423083432944667468,
+        False,
         0.79,
     ),
     (
@@ -286,9 +254,7 @@ _PAYOUT_TUPS_RELATED_WITH_PREDICTIONS = [
         1704153000,
         0.0,
         True,
-        0.919372744934776618,
-        11.201148268567394458,
-        25.423083432944667468,
+        True,
         0.41,
     ),
 ]
