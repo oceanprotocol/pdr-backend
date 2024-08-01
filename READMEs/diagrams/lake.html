@@ -35,37 +35,62 @@
 				SUBGRAPH_predictPredictions ||--o{ PDR_PREDICTIONS : yields
 				SUBGRAPH_predictPayouts ||--o{ PDR_PAYOUTS : yields
 				SUBGRAPH_predictTrueVals ||--o{ PDR_TRUEVALS : yields
+				SUBGRAPH_predictSlots ||--o{ PDR_SLOTS : yields
+				SUBGRAPH_predictSubscriptions ||--o{ PDR_SUBSCRIPTIONS : yields
                 PDR_PREDICTIONS ||--o{ BRONZE_PDR_PREDICTIONS : yields
                 PDR_PAYOUTS ||--o{ BRONZE_PDR_PREDICTIONS : yields
 				PDR_PREDICTIONS {
 					string ID
                     string contract
+					string pair
+                    string timeframe
+                    boolean predvalue
+					float stake
+					boolean truevalue
+					int timestamp
+					string source
+					float payout
 					int slot
 					string user
-                    string pair
-                    string timeframe
-                    string source
-					int timestamp
 				}
 				PDR_PAYOUTS {
 					string ID
-                    string contract
-                    int slot
-					string user
-                    boolean predvalue
-                    float stake
-                    float payout
+                    string user
                     int timestamp
+					string token
+                    int slot
+					float payout
+					boolean predvalue
+					boolean truevalue
+                    float stake                    
 				}
 				PDR_TRUEVALS {
 					string ID
-                    string token
-					int slot
                     boolean truevalue
+                    int timestamp
+					string token
+					int slot
                     float revenue
                     float roundSumStakesUp
 					float roundSumStakes
-                    int timestamp
+				}
+				PDR_SLOTS {
+					string ID
+					int timestamp
+                    int slot
+                    boolean truevalue
+                    float roundSumStakesUp
+					float roundSumStakes
+				}
+				PDR_SUBSCRIPTIONS {
+					string ID
+                    string pair
+					string timeframe
+					string source
+					string tx_id
+					float last_price_value
+					int timestamp
+					string user
 				}
 				BRONZE_PDR_PREDICTIONS {
                     string ID
@@ -77,7 +102,9 @@
                     string timeframe
                     string source
                     boolean predvalue
+					boolean truevalue
                     float stake
+					float revenue
                     float payout
                     int timestamp
                     int last_event_timestamp

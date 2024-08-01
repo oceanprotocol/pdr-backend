@@ -17,6 +17,8 @@ from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.table import Table, NewEventsTable
 from pdr_backend.lake.table_pdr_predictions import _transform_timestamp_to_ms
 from pdr_backend.lake.trueval import Trueval
+from pdr_backend.lake.subscription import Subscription
+from pdr_backend.lake.slot import Slot
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_predictions import get_all_contract_ids_by_owner
 from pdr_backend.util.networkutil import get_sapphire_postfix
@@ -27,11 +29,7 @@ logger = logging.getLogger("gql_data_factory")
 
 
 # Registered GQL fetches & tables
-_GQLDF_REGISTERED_LAKE_TABLES = [
-    Prediction,
-    Trueval,
-    Payout,
-]
+_GQLDF_REGISTERED_LAKE_TABLES = [Prediction, Trueval, Payout, Subscription, Slot]
 
 _GQLDF_REGISTERED_TABLE_NAMES = [
     t.get_lake_table_name() for t in _GQLDF_REGISTERED_LAKE_TABLES  # type: ignore[attr-defined]
