@@ -4,7 +4,9 @@ from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 from pdr_backend.pdr_dashboard.dash_components.util import (
     get_feed_payouts_stats_from_db,
+    get_feed_subscription_stats_from_db,
     col_to_human,
+    find_with_key_value,
 )
 
 
@@ -30,8 +32,13 @@ class FeedsPage:
 
     def get_main_container(self):
         feed_stats = get_feed_payouts_stats_from_db(self.app.lake_dir)
+        feed_subscriptions = get_feed_subscription_stats_from_db(
+            self.app.lake_dir, self.app.network_name
+        )
 
-        feed_cols, feed_data = self.get_feeds_data_for_feeds_table(feed_stats)
+        feed_cols, feed_data = self.get_feeds_data_for_feeds_table(
+            feed_stats, feed_subscriptions
+        )
 
         return html.Div(
             [self.get_feeds_table_area(feed_cols, feed_data)],
@@ -58,18 +65,21 @@ class FeedsPage:
     def get_feeds_stat_with_contract(
         self, contract: str, feed_stats: List[Dict[str, Any]]
     ) -> Union[Tuple[float, float, float], None]:
-        for feed in feed_stats:
-            if feed["contract"] == contract:
-                return (
-                    round(feed["avg_accuracy"], 2),
-                    round(feed["volume"], 2),
-                    round(feed["avg_stake"], 2),
-                )
+        result = find_with_key_value(feed_stats, "contract", contract)
+
+        if result:
+            return (
+                round(result["avg_accuracy"], 2),
+                round(result["volume"], 2),
+                round(result["avg_stake"], 2),
+            )
 
         return None
 
     def get_feeds_data_for_feeds_table(
-        self, feed_stats: List[Dict[str, Any]]
+        self,
+        feed_stats: List[Dict[str, Any]],
+        feed_subcription_stats: List[Dict[str, Any]],
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]]]:
 
         temp_data = self.app.feeds_data
@@ -86,10 +96,28 @@ class FeedsPage:
             feed_item["time"] = feed["timeframe"]
 
             result = self.get_feeds_stat_with_contract(feed["contract"], feed_stats)
-            if result:
-                feed_item["avg_accuracy"] = str(result[0]) + "%"
-                feed_item["avg_stake_(OCEAN)"] = result[2]
-                feed_item["volume_(OCEAN)"] = result[1]
+
+            feed_item["avg_accuracy"] = str(result[0]) + "%" if result else ""
+            feed_item["avg_stake_(OCEAN)"] = result[2] if result else ""
+            feed_item["volume_(OCEAN)"] = result[1] if result else ""
+
+            subscription_result = find_with_key_value(
+                feed_subcription_stats, "contract", feed["contract"]
+            )
+
+            feed_item["price"] = (
+                subscription_result["price"] if subscription_result else ""
+            )
+            feed_item["sales"] = (
+                (
+                    f"{subscription_result['sales']} ({subscription_result['df_buy_count']}-DF)"
+                )
+                if subscription_result
+                else ""
+            )
+            feed_item["sales_revenue_(OCEAN)"] = (
+                subscription_result["sales_revenue"] if subscription_result else ""
+            )
 
             new_feed_data.append(feed_item)
 
