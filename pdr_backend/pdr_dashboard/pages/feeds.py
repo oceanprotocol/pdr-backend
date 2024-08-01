@@ -48,7 +48,6 @@ class FeedsPage:
                     id="feeds_table",
                     columns=columns,
                     data=feeds_data,
-                    style_table={"overflowX": "auto"},
                     sort_action="native",  # Enables sorting feature
                 )
             ],
@@ -87,9 +86,9 @@ class FeedsPage:
 
             result = self.get_feeds_stat_with_contract(feed["contract"], feed_stats)
             if result:
-                feed_item["avg_accuracy"] = result[0]
-                feed_item["avg_stake"] = result[2]
-                feed_item["volume"] = result[1]
+                feed_item["avg_accuracy"] = str(result[0]) + "%"
+                feed_item["avg_stake_(OCEAN)"] = result[2]
+                feed_item["volume_(OCEAN)"] = result[1]
 
             new_feed_data.append(feed_item)
 
