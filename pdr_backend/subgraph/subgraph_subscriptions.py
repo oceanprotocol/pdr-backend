@@ -106,10 +106,8 @@ def fetch_filtered_subscriptions(
         pair, timeframe, source = get_pair_timeframe_source_from_contract(contract)
         timestamp = UnixTimeS(int(subscription_sg_dict["timestamp"]))
         tx_id = subscription_sg_dict["txId"]
-        last_price_value = (
-            float(subscription_sg_dict["predictContract"]["token"]["lastPriceValue"])
-            * 1.201
-        )
+        # hardcoding price to 3 as a temporary solution because FRE data is missing in subgraph and the price doesn't change for now
+        last_price_value = 3.0
 
         user = subscription_sg_dict["user"]["id"]
 
