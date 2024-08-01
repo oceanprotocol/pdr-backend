@@ -258,7 +258,7 @@ def _approach_to_skm(approach: str, seed: Optional[int]):
 
     # regressor approaches
     if approach == "RegrLinearLS":
-        return LinearRegression(random_state=seed)
+        return LinearRegression()
     if approach == "RegrLinearLasso":
         return Lasso(random_state=seed)
     if approach == "RegrLinearRidge":
