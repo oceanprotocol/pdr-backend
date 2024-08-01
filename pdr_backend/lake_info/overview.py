@@ -9,6 +9,8 @@ import polars as pl
 from enforce_typing import enforce_types
 from polars.dataframe.frame import DataFrame
 
+from pdr_backend.lake.table import Table
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 
 pl.Config.set_tbl_hide_dataframe_shape(True)
@@ -55,6 +57,7 @@ class ValidationOverview:
             "validate_no_views_in_lake": self.validate_expected_view_names,
             "validate_no_gaps_in_bronze_predictions": self.validate_lake_bronze_predictions_gaps,
             "validate_no_duplicate_rows_in_lake": self.validate_lake_tables_no_duplicates,
+            "validate_no_unmatched_payouts": self.validate_no_unmatched_payouts,
         }
 
         self.validation_results: Dict[str, List[str]] = {}
@@ -256,8 +259,8 @@ class ValidationOverview:
                 query_duplicate_rows = """
                     SELECT
                         'target_table' as table_name,
-                        target_table.ID,
-                        target_table.timestamp
+                        known_duplicates.ID,
+                        known_duplicates.timestamp
                     FROM (
                         SELECT
                             ID as ID,
@@ -266,8 +269,7 @@ class ValidationOverview:
                         GROUP BY ID, timestamp
                         HAVING COUNT(*) > 1
                     ) as known_duplicates
-                    LEFT JOIN target_table
-                    ON known_duplicates.ID = target_table.ID
+                    GROUP BY table_name, ID, timestamp
                 """
 
                 query = query_duplicate_rows.replace("target_table", table_name)
@@ -287,4 +289,53 @@ class ValidationOverview:
         # to write out and debug:
         duplicate_rows.write_csv("validate_duplicate_rows.csv")
 
+        return violations
+
+    @enforce_types
+    def validate_no_unmatched_payouts(self) -> List[str]:
+        """
+        @description
+            validates that all payouts have been able to match with a prediction
+        """
+        violations: list[str] = []
+
+        # get all payouts
+        # we want to select all payouts
+        # we want to then join with predictions, and then filter for unmatched payouts
+        # as long as their timestamp is within first/last prediction['timestamp] rows
+        query_unmatched_payouts = f"""
+            WITH payouts AS (
+                SELECT
+                    ID,
+                    timestamp
+                FROM {Table.from_dataclass(Payout).table_name}
+            ), bronze_predictions AS (
+                SELECT
+                    ID,
+                    timestamp,
+                    max(timestamp) as max_timestamp,
+                    min(timestamp) as min_timestamp
+                FROM {Table.from_dataclass(BronzePrediction).table_name}
+                GROUP BY ID, timestamp
+            ),
+            unmatched_payouts AS (
+                SELECT
+                    payouts.ID,
+                    payouts.timestamp
+                FROM payouts
+                LEFT JOIN bronze_predictions
+                ON payouts.ID = bronze_predictions.ID
+                WHERE bronze_predictions.ID IS NULL
+                AND payouts.timestamp BETWEEN bronze_predictions.min_timestamp AND bronze_predictions.max_timestamp
+            )
+            select * from unmatched_payouts;
+        """
+
+        rows_df: pl.DataFrame = self.db.query_data(query_unmatched_payouts)
+
+        if rows_df is None or rows_df.shape[0] == 0:
+            logger.info("No unmatched payouts found in the lake.")
+            return violations
+
+        violations.append(f"Unmatched Payouts:\n{rows_df}")
         return violations

@@ -10,7 +10,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.analytics.get_predictions_info import get_traction_info_main
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.table import NamedTable
+from pdr_backend.lake.table import Table
 from pdr_backend.ppss.ppss import mock_ppss
 
 
@@ -40,7 +40,7 @@ def test_get_traction_info_main_mainnet(
     )
 
     predictions_df = _gql_datafactory_daily_predictions_df
-    predictions_table = NamedTable.from_dataclass(Prediction)
+    predictions_table = Table.from_dataclass(Prediction)
     predictions_table.append_to_storage(predictions_df, ppss)
 
     get_traction_info_main(ppss, st_timestr, fin_timestr)
@@ -80,7 +80,7 @@ def test_get_traction_info_empty_data(
         fin_timestr=fin_timestr,
     )
 
-    pdr_prediction_table = NamedTable.from_dataclass(Prediction)
+    pdr_prediction_table = Table.from_dataclass(Prediction)
     pdr_prediction_table.append_to_storage(
         pl.DataFrame([], schema=Prediction.get_lake_schema()), ppss
     )
