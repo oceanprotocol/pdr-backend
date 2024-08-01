@@ -9,6 +9,11 @@ options_ex = [
 ]
 
 
+def add_to_filter(filter_options, value):
+    if value not in filter_options:
+        filter_options.append(value)
+
+
 class Filter:
     def __init__(self, name, placeholder, options):
         self.name = name
@@ -17,16 +22,34 @@ class Filter:
 
 
 filters = [
-    {"name": "base_token", "placeholder": "Base Token", "options": options_ex},
-    {"name": "quote_token", "placeholder": "Quote Token", "options": options_ex},
-    {"name": "venue", "placeholder": "Venue", "options": options_ex},
-    {"name": "time", "placeholder": "Time", "options": options_ex},
+    {"name": "base_token", "placeholder": "Base Token", "options": []},
+    {"name": "quote_token", "placeholder": "Quote Token", "options": []},
+    {"name": "venue", "placeholder": "Venue", "options": []},
+    {"name": "time", "placeholder": "Time", "options": []},
 ]
 
 filters_objects = [Filter(**item) for item in filters]
 
 
 class FeedsPage:
+    def __init__(self, app):
+        self.app = app
+
+        for feed in app.feeds_data:
+            pair_base, pair_quote = feed["pair"].split("/")
+
+            # Update base currency filter
+            add_to_filter(filters[0]["options"], pair_base)
+
+            # Update quote currency filter
+            add_to_filter(filters[1]["options"], pair_quote)
+
+            # Update source filter
+            add_to_filter(filters[2]["options"], feed["source"])
+
+            # Update timeframe filter
+            add_to_filter(filters[3]["options"], feed["timeframe"])
+
     def layout(self):
         return html.Div(
             [

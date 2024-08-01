@@ -23,6 +23,6 @@ def get_callbacks_common(app):
         if pathname not in ["/", "/feeds"]:
             return "404 - Page not found"
 
-        page = HomePage(app) if pathname == "/" else FeedsPage()
+        page = HomePage(app) if pathname == "/" else FeedsPage(app)
 
         return page.layout()
