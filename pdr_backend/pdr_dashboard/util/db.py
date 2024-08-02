@@ -85,7 +85,7 @@ class DBGetter:
         )
 
     @enforce_types
-    def feed_subscription_stats_from_db(self, network_name: str):
+    def feed_subscription_stats(self, network_name: str):
         opf_addresses = get_opf_addresses(network_name)
 
         query = f"""
