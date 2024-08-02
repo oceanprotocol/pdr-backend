@@ -1,4 +1,14 @@
-from dash import Input, Output, State
+import dash
+from dash import Input, Output, State, callback_context
+
+
+def filter_table_by_range(min_val, max_val, label_text):
+    ctx = callback_context
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    if (not min_val and not max_val) or button_id == "clear_filters_button":
+        return label_text
+
+    return f"{label_text} {min_val}-{max_val}"
 
 
 def get_callbacks_feeds(app):
@@ -16,37 +26,27 @@ def get_callbacks_feeds(app):
         """
 
         print(base_token, quote_token, venue, time)
-        return ""
+        return dash.no_update
 
     @app.callback(
         Output("sales_dropdown", "label"),
         State("sales_min", "value"),
         State("sales_max", "value"),
         Input("sales_button", "n_clicks"),
+        Input("clear_filters_button", "n_clicks"),
     )
-    def filter_table_by_sales_range(min_val, max_val, btn_clicks):
-        if not min_val and not max_val:
-            return "Sales"
-        """
-        Filter table based on selected data ranges.
-        """
-
-        return f"Sales {min_val}-{max_val}"
+    def filter_table_by_sales_range(min_val, max_val, _btn_1, _bnt_2):
+        return filter_table_by_range(min_val, max_val, "Sales")
 
     @app.callback(
         Output("revenue_dropdown", "label"),
         State("revenue_min", "value"),
         State("revenue_max", "value"),
         Input("revenue_button", "n_clicks"),
+        Input("clear_filters_button", "n_clicks"),
     )
-    def filter_table_by_revenue_range(min_val, max_val, btn_clicks):
-        if not min_val and not max_val:
-            return "Revenue"
-        """
-        Filter table based on selected data ranges.
-        """
-
-        return f"Revenue {min_val}-{max_val}"
+    def filter_table_by_revenue_range(min_val, max_val, _btn_1, _bnt_2):
+        return filter_table_by_range(min_val, max_val, "Revenue")
 
     @app.callback(
         Output("accuracy_dropdown", "label"),
@@ -55,14 +55,8 @@ def get_callbacks_feeds(app):
         Input("clear_filters_button", "n_clicks"),
         Input("accuracy_button", "n_clicks"),
     )
-    def filter_table_by_accuracy_range(min_val, max_val, btn_clicks, btn_clicks2):
-        if not min_val and not max_val:
-            return "Accuracy"
-        """
-        Filter table based on selected data ranges.
-        """
-
-        return f"Accuracy {min_val}-{max_val}"
+    def filter_table_by_accuracy_range(min_val, max_val, _btn_1, _bnt_2):
+        return filter_table_by_range(min_val, max_val, "Accuracy")
 
     @app.callback(
         Output("volume_dropdown", "label"),
@@ -71,16 +65,14 @@ def get_callbacks_feeds(app):
         Input("clear_filters_button", "n_clicks"),
         Input("volume_button", "n_clicks"),
     )
-    def filter_table_by_volume_range(min_val, max_val, btn_clicks, btn_clicks2):
-        if not min_val and not max_val:
-            return "Volume"
-        """
-        Filter table based on selected data ranges.
-        """
-
-        return f"Volume {min_val}-{max_val}"
+    def filter_table_by_volume_range(min_val, max_val, _btn_1, _bnt_2):
+        return filter_table_by_range(min_val, max_val, "Volume")
 
     @app.callback(
+        Output("base_token", "value"),
+        Output("quote_token", "value"),
+        Output("venue", "value"),
+        Output("time", "value"),
         Output("sales_min", "value"),
         Output("sales_max", "value"),
         Output("revenue_min", "value"),
@@ -92,9 +84,13 @@ def get_callbacks_feeds(app):
         Input("clear_filters_button", "n_clicks"),
     )
     def clear_all_filters(btn_clicks):
-
-        print(btn_clicks)
+        if not btn_clicks:
+            return dash.no_update
         return (
+            [],
+            [],
+            [],
+            [],
             None,
             None,
             None,

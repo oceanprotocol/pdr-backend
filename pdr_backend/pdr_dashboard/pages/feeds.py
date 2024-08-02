@@ -76,7 +76,7 @@ class FeedsPage:
             multi=True,
             value=[],
             placeholder=filter_obj.placeholder,
-            style={"width": "130px", "borderColor": "#aaa"},
+            style={"width": "140px", "borderColor": "#aaa"},
         )
 
     def get_filters(self):
@@ -92,9 +92,8 @@ class FeedsPage:
                 self.get_input_filter("Volume"),
             ],
             style={
-                "width": "100%",
                 "display": "flex",
-                "justofyContnet": "center",
+                "justifyContnet": "center",
                 "alignItems": "flex_start",
                 "gap": "8px",
             },
@@ -120,7 +119,7 @@ class FeedsPage:
                 "backgroundColor": "white",
             },
             toggle_style={
-                "width": "120px",
+                "width": "130px",
                 "backgroundColor": "white",
                 "display": "flex",
                 "justifyContent": "space-between",
@@ -157,6 +156,6 @@ class FeedsPage:
             style={
                 "display": "flex",
                 "justifyContent": "space-between",
-                "alignItems": "center",
+                "alignItems": "flex-start",
             },
         )
