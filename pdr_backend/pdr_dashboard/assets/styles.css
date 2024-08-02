@@ -43,37 +43,37 @@ body{
     display: none;
 }
 
-#feeds_table {
+#feeds_page_table {
     width: 100%;
     overflow-x: auto;
     max-height: 50vh;
 }
 
-#feeds_table table {
+#feeds_page_table table {
     table-layout: auto;
 }
 
-#feeds_table table td::before {
+#feeds_page_table table td::before {
     content: '';
     display: block; 
     width: 100px;
 }
 
-#feeds_table table td {
+#feeds_page_table table td {
     padding: 10px 15px;
     text-align: center;
 }
 
-#feeds_table table th {
+#feeds_page_table table th {
     padding: 5px;
 }
 
-#feeds_table table th .column-actions {
+#feeds_page_table table th .column-actions {
     display: flex;
     align-items: center;
 }
 
-#feeds_table table th .column-header-name {
+#feeds_page_table table th .column-header-name {
     width: 100px;
     display: flex;
     align-items: center;

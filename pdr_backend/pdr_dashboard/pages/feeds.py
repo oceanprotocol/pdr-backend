@@ -124,7 +124,7 @@ class FeedsPage:
                 "backgroundColor": "white",
             },
             toggle_style={
-                "width": "130px",
+                "min-width": "130px",
                 "backgroundColor": "white",
                 "display": "flex",
                 "justifyContent": "space-between",
@@ -175,6 +175,8 @@ class FeedsPage:
             feed_stats, feed_subscriptions
         )
 
+        self.app.feeds_table_data = feed_data
+
         return html.Div(
             [
                 self.get_filters_section(),
@@ -197,7 +199,7 @@ class FeedsPage:
         return html.Div(
             [
                 dash_table.DataTable(
-                    id="feeds_table",
+                    id="feeds_page_table",
                     columns=columns,
                     data=feeds_data,
                     sort_action="native",  # Enables sorting feature
