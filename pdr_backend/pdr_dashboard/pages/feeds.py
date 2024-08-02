@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Union, Tuple
+from typing import List, Dict, Any, Tuple
 
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
@@ -64,17 +64,39 @@ class FeedsPage:
 
     def get_feeds_stat_with_contract(
         self, contract: str, feed_stats: List[Dict[str, Any]]
-    ) -> Union[Tuple[float, float, float], None]:
+    ) -> Dict[str, str]:
         result = find_with_key_value(feed_stats, "contract", contract)
 
         if result:
-            return (
-                round(result["avg_accuracy"], 2),
-                round(result["volume"], 2),
-                round(result["avg_stake"], 2),
-            )
+            return {
+                "avg_accuracy": str(round(result["avg_accuracy"], 2)) + "%",
+                "avg_stake_(OCEAN)": str(round(result["avg_stake"], 2)),
+                "volume_(OCEAN)": str(round(result["volume"], 2)),
+            }
 
-        return None
+        return {
+            "avg_accuracy": "",
+            "avg_stake_(OCEAN)": "",
+            "volume_(OCEAN)": "",
+        }
+
+    def get_feeds_subscription_stat_with_contract(
+        self, contract: str, feed_subcription_stats: List[Dict[str, Any]]
+    ) -> Dict[str, str]:
+        result = find_with_key_value(feed_subcription_stats, "contract", contract)
+
+        if result:
+            return {
+                "price_(OCEAN)": str(result["price"]),
+                "sales": f"{result['sales']} ({result['df_buy_count']}-DF)",
+                "sales_revenue_(OCEAN)": str(result["sales_revenue"]),
+            }
+
+        return {
+            "price_(OCEAN)": "",
+            "sales": "",
+            "sales_revenue_(OCEAN)": "",
+        }
 
     def get_feeds_data_for_feeds_table(
         self,
@@ -97,27 +119,13 @@ class FeedsPage:
 
             result = self.get_feeds_stat_with_contract(feed["contract"], feed_stats)
 
-            feed_item["avg_accuracy"] = str(result[0]) + "%" if result else ""
-            feed_item["avg_stake_(OCEAN)"] = result[2] if result else ""
-            feed_item["volume_(OCEAN)"] = result[1] if result else ""
+            feed_item.update(result)
 
-            subscription_result = find_with_key_value(
-                feed_subcription_stats, "contract", feed["contract"]
+            subscription_result = self.get_feeds_subscription_stat_with_contract(
+                feed["contract"], feed_subcription_stats
             )
 
-            feed_item["price_(OCEAN)"] = (
-                subscription_result["price"] if subscription_result else ""
-            )
-            feed_item["sales"] = (
-                (
-                    f"{subscription_result['sales']} ({subscription_result['df_buy_count']}-DF)"
-                )
-                if subscription_result
-                else ""
-            )
-            feed_item["sales_revenue_(OCEAN)"] = (
-                subscription_result["sales_revenue"] if subscription_result else ""
-            )
+            feed_item.update(subscription_result)
 
             new_feed_data.append(feed_item)
 
