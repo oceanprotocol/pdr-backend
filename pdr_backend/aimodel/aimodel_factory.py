@@ -24,7 +24,7 @@ from sklearn.linear_model import (
     Ridge,
 )
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from xgboost import XGBClassifier, XGBRegressor
 
 from pdr_backend.aimodel.aimodel import Aimodel
@@ -296,7 +296,7 @@ def _approach_to_skm(approach: str):
             class_weight="balanced",
         )
     if approach == "ClassifLinearSVM":
-        return SVC(kernel="linear", probability=True, C=0.025)
+        return LinearSVC(C=0.025)
     if approach == "ClassifGaussianProcess":
         return GaussianProcessClassifier()
     if approach == "ClassifXgboost":
