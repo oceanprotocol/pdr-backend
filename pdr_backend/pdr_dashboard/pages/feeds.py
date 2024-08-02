@@ -38,9 +38,11 @@ class FeedsPage:
                 for key, value in stats.items()
             ],
             style={
-                "height": "12%",
                 "display": "flex",
                 "justifyContent": "space-between",
+                "border": "1px solid grey",
+                "borderRadius": "10px",
+                "padding": "10px 40px",
             },
             id="feeds_page_metrics_row",
         )
