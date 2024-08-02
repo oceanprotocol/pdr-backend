@@ -3,6 +3,7 @@ from dash import dash_table, dcc, html
 
 from pdr_backend.pdr_dashboard.dash_components.util import (
     get_feed_ids_based_on_predictoors_from_db,
+    col_to_human,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_date_period_selection_component,
@@ -303,10 +304,3 @@ class HomePage:
                 ),
             ],
         )
-
-
-def col_to_human(col):
-    col = col.replace("avg_", "")
-    col = col.replace("total_", "")
-
-    return col.replace("_", " ").title()
