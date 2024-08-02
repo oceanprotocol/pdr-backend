@@ -58,6 +58,9 @@ def get_truevals_query(
                             name
                         }
                     }
+                    revenue
+                    roundSumStakesUp
+                    roundSumStakes
                 }
             }
         }
@@ -94,7 +97,6 @@ def fetch_truevals(
     )
 
     try:
-        logger.info("Querying subgraph... %s", query)
         result = query_subgraph(
             get_subgraph_url(network),
             query,
@@ -120,6 +122,9 @@ def fetch_truevals(
         ID = record["id"]
         token = record["slot"]["predictContract"]["token"]["name"]
         slot = UnixTimeS(int(record["id"].split("-")[1]))
+        revenue = float(record["slot"].get("revenue", 0))
+        roundSumStakesUp = float(record["slot"].get("roundSumStakesUp", 0))
+        roundSumStakes = float(record["slot"].get("roundSumStakes", 0))
 
         trueval = Trueval(
             ID=ID,
@@ -127,6 +132,9 @@ def fetch_truevals(
             timestamp=timestamp,
             truevalue=truevalue,
             slot=slot,
+            revenue=revenue,
+            roundSumStakesUp=roundSumStakesUp,
+            roundSumStakes=roundSumStakes,
         )
 
         truevals.append(trueval)

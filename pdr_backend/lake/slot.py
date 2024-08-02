@@ -29,7 +29,6 @@ class Slot(LakeMapper):
         self.truevalue = truevalue
         self.roundSumStakesUp = roundSumStakesUp
         self.roundSumStakes = roundSumStakes
-        self.slot = slot
 
         self.check_against_schema()
 
@@ -52,7 +51,12 @@ class Slot(LakeMapper):
 
     @staticmethod
     def get_fetch_function() -> Callable:
-        raise NotImplementedError("Slot.get_fetch_function() not implemented yet")
+        # pylint: disable=import-outside-toplevel
+        from pdr_backend.subgraph.subgraph_slot import (
+            fetch_slots,
+        )
+
+        return fetch_slots
 
 
 # =========================================================================

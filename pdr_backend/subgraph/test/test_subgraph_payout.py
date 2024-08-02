@@ -23,6 +23,7 @@ MOCK_PAYOUT_QUERY_RESPONSE = {
                 "timestamp": 1698527000,
                 "payout": "0",
                 "predictedValue": True,
+                "trueValue": True,
                 "prediction": {
                     "stake": "1.2",
                     "user": {"id": "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"},
@@ -86,6 +87,7 @@ def test_fetch_payouts(mock_query_subgraph):
     assert payouts[0].slot == 1696880700
     assert payouts[0].payout == float(0)
     assert payouts[0].predvalue is True
+    assert payouts[0].truevalue is True
     assert payouts[0].user == "0xd2a24cb4ff2584bad80ff5f109034a891c3d88dd"
     assert payouts[0].stake == float(1.2)
     assert mock_query_subgraph.call_count == 1
