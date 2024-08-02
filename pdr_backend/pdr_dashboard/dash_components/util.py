@@ -13,6 +13,7 @@ from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.subscription import Subscription
 from pdr_backend.util.currency_types import Eth, Wei
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 
 logger = logging.getLogger("predictoor_dashboard_utils")
 
@@ -81,6 +82,67 @@ def get_user_payouts_stats_from_db(lake_dir: str):
             GROUP BY
                 "user"
         """,
+    )
+
+
+@enforce_types
+def get_feed_payouts_stats_from_db(lake_dir: str):
+    return _query_db(
+        lake_dir,
+        f"""
+            SELECT
+                SPLIT_PART(ID, '-', 1) AS contract,
+                SUM(stake) AS volume,
+                SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+                AVG(stake) AS avg_stake
+            FROM
+                {Payout.get_lake_table_name()}
+            GROUP BY
+                contract
+        """,
+    )
+
+
+@enforce_types
+def get_feed_subscription_stats_from_db(lake_dir: str, network_name: str):
+    opf_addresses = get_opf_addresses(network_name)
+
+    query = f"""
+        WITH user_buy_counts AS (
+            SELECT
+                SPLIT_PART(ID, '-', 1) AS contract,
+                COUNT(*) AS df_buy_count
+            FROM
+                {Subscription.get_lake_table_name()}
+            WHERE
+                "user" = '{opf_addresses["dfbuyer"].lower()}'
+            GROUP BY
+                SPLIT_PART(ID, '-', 1)
+        )
+        SELECT
+            main_contract AS contract,
+            SUM(last_price_value) AS sales_revenue,
+            AVG(last_price_value) AS price,
+            COUNT(*) AS sales,
+            COALESCE(ubc.df_buy_count, 0) AS df_buy_count
+        FROM
+            (
+                SELECT
+                    SPLIT_PART(ID, '-', 1) AS main_contract,
+                    last_price_value
+                FROM
+                    {Subscription.get_lake_table_name()}
+            ) AS main
+        LEFT JOIN
+            user_buy_counts ubc
+        ON
+            main.main_contract = ubc.contract
+        GROUP BY
+            main_contract, ubc.df_buy_count"""
+
+    return _query_db(
+        lake_dir,
+        query,
     )
 
 
@@ -314,5 +376,24 @@ def fetch_token_prices() -> Optional[Dict[str, float]]:
 
     if rose_usdt and fet_usdt:
         return {"ROSE": rose_usdt[0][1], "OCEAN": fet_usdt[0][1] * 0.433226}
+
+    return None
+
+
+@enforce_types
+def col_to_human(col: str) -> str:
+    col = col.replace("avg_", "")
+    col = col.replace("total_", "")
+
+    return col.replace("_", " ").title()
+
+
+@enforce_types
+def find_with_key_value(
+    objects: List[Dict[str, Any]], key: str, value: str
+) -> Union[Dict[str, Any], None]:
+    for obj in objects:
+        if obj[key] == value:
+            return obj
 
     return None
