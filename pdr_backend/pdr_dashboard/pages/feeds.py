@@ -2,9 +2,11 @@ from typing import List, Dict, Any, Tuple
 
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
-from pdr_backend.pdr_dashboard.dash_components.util import (
+from pdr_backend.pdr_dashboard.util.db import (
     get_feed_payouts_stats_from_db,
     get_feed_subscription_stats_from_db,
+)
+from pdr_backend.pdr_dashboard.util.data import (
     col_to_human,
     find_with_key_value,
 )

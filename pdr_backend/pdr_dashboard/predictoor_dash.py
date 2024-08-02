@@ -10,10 +10,14 @@ from pdr_backend.pdr_dashboard.callbacks.callbacks_home import (
 from pdr_backend.pdr_dashboard.callbacks.callbacks_common import (
     get_callbacks_common,
 )
-from pdr_backend.pdr_dashboard.dash_components.util import (
+from pdr_backend.pdr_dashboard.util.db import (
     get_feeds_data_from_db,
-    get_predictoors_data_from_payouts,
     get_user_payouts_stats_from_db,
+)
+from pdr_backend.pdr_dashboard.util.data import (
+    get_predictoors_data_from_payouts
+)
+from pdr_backend.pdr_dashboard.util.prices import (
     fetch_token_prices,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (

@@ -1,8 +1,10 @@
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 
-from pdr_backend.pdr_dashboard.dash_components.util import (
+from pdr_backend.pdr_dashboard.util.db import (
     get_feed_ids_based_on_predictoors_from_db,
+)
+from pdr_backend.pdr_dashboard.util.data import (
     col_to_human,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (

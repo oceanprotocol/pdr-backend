@@ -6,15 +6,17 @@ from pdr_backend.pdr_dashboard.dash_components.plots import (
     get_figures_and_metrics,
 )
 
-from pdr_backend.pdr_dashboard.dash_components.util import (
+from pdr_backend.pdr_dashboard.util.data import (
     filter_objects_by_field,
     get_date_period_text,
-    get_feed_ids_based_on_predictoors_from_db,
-    get_payouts_from_db,
     get_start_date_from_period,
     select_or_clear_all_by_table,
-    calculate_tx_gas_fee_cost_in_OCEAN,
 )
+from pdr_backend.pdr_dashboard.util.db import (
+    get_feed_ids_based_on_predictoors_from_db,
+    get_payouts_from_db
+)
+from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_graph,
 )
