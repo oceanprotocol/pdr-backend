@@ -42,4 +42,5 @@ class FeedsPage:
                 "display": "flex",
                 "justifyContent": "space-between",
             },
+            id="feeds_page_metrics_row",
         )

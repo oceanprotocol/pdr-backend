@@ -28,16 +28,17 @@ def _query_db(lake_dir: str, query: str, scalar=False) -> Union[List[dict], Exce
         dict: Query result.
     """
     try:
-        if scalar:
-            db = DuckDBDataStore(lake_dir, read_only=True)
-            result = db.query_scalar(query)
-            db.duckdb_conn.close()
-            return result
-
         db = DuckDBDataStore(lake_dir, read_only=True)
-        df = db.query_data(query)
+
+        if scalar:
+            result = db.query_scalar(query)
+        else:
+            df = db.query_data(query)
+            result = df.to_dicts() if len(df) else []
+
         db.duckdb_conn.close()
-        return df.to_dicts() if len(df) else []
+
+        return result
     except Exception as e:
         logger.error("Error querying the database: %s", e)
         return []
@@ -222,7 +223,7 @@ def get_feeds_stats_from_db(lake_dir: str):
         f"""
             SELECT
                 SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
-                SUM(revenue) AS total_revenue,
+                SUM(payout) as total_revenue,
                 SUM(stake) AS total_stake
             FROM
                 {Payout.get_lake_table_name()}

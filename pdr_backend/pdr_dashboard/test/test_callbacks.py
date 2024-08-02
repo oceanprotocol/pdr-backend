@@ -173,7 +173,7 @@ def test_navigation(setup_app, dash_duo):
 
     # Navigate to Feeds
     dash_duo.wait_for_element("#navbar-container a[href='/feeds']").click()
-    dash_duo.wait_for_element_by_id("page_title_feeds", timeout=10)
+    dash_duo.wait_for_element_by_id("feeds_page_metrics_row", timeout=10)
 
     # Navigate to Home
     dash_duo.wait_for_element("#navbar-container a[href='/']").click()
