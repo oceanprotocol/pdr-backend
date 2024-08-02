@@ -1,13 +1,7 @@
 from unittest.mock import patch
 
 from enforce_typing import enforce_types
-from pdr_backend.pdr_dashboard.util.db import (
-    _query_db,
-    get_feeds_data_from_db,
-    get_predictoors_data_from_db,
-    get_payouts_from_db,
-    get_user_payouts_stats_from_db,
-)
+from pdr_backend.pdr_dashboard.util.db import DBGetter
 from pdr_backend.pdr_dashboard.test.resources import (
     _prepare_test_db,
     _clear_test_db,
@@ -23,13 +17,14 @@ def test_query_db(
 ):
     lake_dir = "lake_dir"
     query = "query"
-    _query_db(lake_dir, query)
+    db_getter = DBGetter(lake_dir)
+    db_getter._query_db(query)
     mock_duckdb_data_store.assert_called_once_with(lake_dir, read_only=True)
     mock_duckdb_data_store.return_value.query_data.assert_called_once_with(query)
 
 
 @enforce_types
-def test_get_feeds_data_from_db(
+def test_get_feeds_data(
     tmpdir,
     _sample_first_predictions,
 ):
@@ -37,7 +32,8 @@ def test_get_feeds_data_from_db(
         tmpdir, _sample_first_predictions, Prediction.get_lake_table_name()
     )
 
-    result = get_feeds_data_from_db(ppss.lake_ss.lake_dir)
+    db_getter = DBGetter(ppss.lake_ss.lake_dir)
+    result = db_getter.feeds_data()
 
     assert isinstance(result, list)
     assert len(result) == len(sample_data_df)
@@ -46,7 +42,7 @@ def test_get_feeds_data_from_db(
 
 
 @enforce_types
-def test_get_predictoors_data_from_db(
+def test_get_predictoors_data(
     tmpdir,
     _sample_first_predictions,
 ):
@@ -54,7 +50,8 @@ def test_get_predictoors_data_from_db(
         tmpdir, _sample_first_predictions, Prediction.get_lake_table_name()
     )
 
-    result = get_predictoors_data_from_db(ppss.lake_ss.lake_dir)
+    db_getter = DBGetter(ppss.lake_ss.lake_dir)
+    result = db_getter.predictoors_data()
 
     grouped_sample = sample_data_df.unique("user")
 
@@ -65,7 +62,7 @@ def test_get_predictoors_data_from_db(
 
 
 @enforce_types
-def test_get_payouts_from_db(
+def test_get_payouts(
     tmpdir,
     _sample_payouts,
 ):
@@ -73,40 +70,38 @@ def test_get_payouts_from_db(
         tmpdir, _sample_payouts, table_name=Payout.get_lake_table_name()
     )
 
-    result = get_payouts_from_db([], [], 1704152700, ppss.lake_ss.lake_dir)
+    db_getter = DBGetter(ppss.lake_ss.lake_dir)
+    result = db_getter.payouts([], [], 1704152700)
     assert len(result) == 0
 
-    result = get_payouts_from_db(
+    result = db_getter.payouts(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"],
         1704152700,
-        ppss.lake_ss.lake_dir,
     )
     assert isinstance(result, list)
     assert len(result) == 2
 
     # start date after all payouts should return an empty list
-    result = get_payouts_from_db(
+    result = db_getter.payouts(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"],
         1704154000,
-        ppss.lake_ss.lake_dir,
     )
     assert len(result) == 0
 
     # start date 0 should not filter on start date
-    result = get_payouts_from_db(
+    result = db_getter.payouts(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"],
         0,
-        ppss.lake_ss.lake_dir,
     )
     assert len(result) == 2
 
     _clear_test_db(ppss.lake_ss.lake_dir)
 
 
-def test_get_user_payouts_stats_from_db(
+def test_get_user_payouts_stats(
     tmpdir,
     _sample_payouts,
 ):
@@ -114,7 +109,8 @@ def test_get_user_payouts_stats_from_db(
         tmpdir, _sample_payouts, table_name=Payout.get_lake_table_name()
     )
 
-    result = get_user_payouts_stats_from_db(ppss.lake_ss.lake_dir)
+    db_getter = DBGetter(ppss.lake_ss.lake_dir)
+    result = db_getter.payouts_stats()
 
     assert isinstance(result, list)
     assert len(result) == 5

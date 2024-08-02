@@ -12,10 +12,6 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_start_date_from_period,
     select_or_clear_all_by_table,
 )
-from pdr_backend.pdr_dashboard.util.db import (
-    get_feed_ids_based_on_predictoors_from_db,
-    get_payouts_from_db
-)
 from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_graph,
@@ -70,11 +66,10 @@ def get_callbacks_home(app):
                 if int(date_period) > 0
                 else 0
             )
-            payouts = get_payouts_from_db(
+            payouts = app.db_getter.payouts(
                 [row["contract"] for row in selected_feeds],
                 predictoors_addrs,
                 start_date,
-                app.lake_dir,
             )
 
         # get fee estimate
@@ -197,8 +192,7 @@ def get_callbacks_home(app):
 
         # filter feeds by payouts from selected predictoors
         if predictoor_feeds_only and (len(predictoors_addrs) > 0):
-            feed_ids = get_feed_ids_based_on_predictoors_from_db(
-                app.lake_dir,
+            feed_ids = app.db_getter.feed_ids_based_on_predictoors(
                 predictoors_addrs,
             )
             filtered_data = [

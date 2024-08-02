@@ -3,7 +3,7 @@ import dash
 
 from pdr_backend.pdr_dashboard.util.data import (
     get_predictoors_data_from_payouts,
-    select_or_clear_all_by_table
+    select_or_clear_all_by_table,
 )
 
 

@@ -2,10 +2,6 @@ from typing import List, Dict, Any, Tuple
 
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
-from pdr_backend.pdr_dashboard.util.db import (
-    get_feed_payouts_stats_from_db,
-    get_feed_subscription_stats_from_db,
-)
 from pdr_backend.pdr_dashboard.util.data import (
     col_to_human,
     find_with_key_value,
@@ -33,9 +29,9 @@ class FeedsPage:
         )
 
     def get_main_container(self):
-        feed_stats = get_feed_payouts_stats_from_db(self.app.lake_dir)
-        feed_subscriptions = get_feed_subscription_stats_from_db(
-            self.app.lake_dir, self.app.network_name
+        feed_stats = self.app.db_getter.feed_payouts_stats()
+        feed_subscriptions = self.app.db_getter.feed_subscription_stats(
+            self.app.network_name
         )
 
         feed_cols, feed_data = self.get_feeds_data_for_feeds_table(
