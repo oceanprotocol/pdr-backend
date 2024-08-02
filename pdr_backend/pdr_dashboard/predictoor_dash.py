@@ -54,7 +54,7 @@ def setup_app(app, ppss: PPSS):
         get_user_payouts_stats_from_db(ppss.lake_ss.lake_dir)
     )
 
-    valid_addresses = [p["user_address"] for p in app.predictoors_data]
+    valid_addresses = [p["user"].lower() for p in app.predictoors_data]
     app.favourite_addresses = [
         addr for addr in ppss.predictoor_ss.my_addresses if addr in valid_addresses
     ]
