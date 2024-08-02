@@ -157,7 +157,7 @@ def get_feed_ids_based_on_predictoors_from_db(
     """
 
     # Execute the query
-    return _query_db(lake_dir, query)[0]["feed_addrs"]
+    return _query_db(lake_dir, query)[0]["feed_addrs"] or []
 
 
 @enforce_types
