@@ -32,7 +32,7 @@ def get_information_text(tooltip_id: str):
         case "tooltip-feeds_page_Feeds_metric":
             return "Total number of feeds"
         case "tooltip-feeds_page_Sales_metric":
-            return "Number of subscriptions to feeds"
+            return "Number of subscriptions purchased across all feeds"
         case "tooltip-feeds_page_Revenue_metric":
             return "Total revenue generated from predictions"
         case "tooltip-feeds_page_Accuracy_metric":
