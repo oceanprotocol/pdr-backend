@@ -280,12 +280,11 @@ def get_feeds_stats_from_db(lake_dir: str):
 
     feeds = feeds[0] if feeds else 0
 
-    accuracy, revenue, volume = _query_db(
+    accuracy, volume = _query_db(
         lake_dir,
         f"""
             SELECT
                 SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
-                SUM(payout) as total_revenue,
                 SUM(stake) AS total_stake
             FROM
                 {Payout.get_lake_table_name()}
@@ -293,9 +292,9 @@ def get_feeds_stats_from_db(lake_dir: str):
         scalar=True,
     )
 
-    sales = _query_db(
+    sales, revenue = _query_db(
         lake_dir,
-        f"SELECT COUNT(*) from {Subscription.get_lake_table_name()}",
+        f"SELECT COUNT(ID), SUM(last_price_value) from {Subscription.get_lake_table_name()}",
         scalar=True,
     )
 
