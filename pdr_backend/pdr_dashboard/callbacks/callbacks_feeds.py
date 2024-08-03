@@ -20,7 +20,7 @@ def filter_condition(item, field, values):
 def range_condition(item, field, min_value, max_value):
     if min_value is not None and min_value is not "" and item[field] < min_value:
         return False
-    if max_value is not None and min_value is not "" and item[field] > max_value:
+    if max_value is not None and max_value is not "" and item[field] > max_value:
         return False
     return True
 
