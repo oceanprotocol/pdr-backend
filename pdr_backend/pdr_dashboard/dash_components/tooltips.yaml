@@ -1,0 +1,30 @@
+  tooltip-accuracy_metric: >
+    Average accuracy of predictions
+    within the selected timeframe and for the selected predictoors and feeds.
+
+  tooltip-profit_metric: >
+    Total profit generated from predictions
+    within the selected timeframe and for the selected predictoors and feeds.
+
+  tooltip-costs_metric: >
+    Transaction fee costs for predicting and claiming payouts
+    for each slot individually within the selected timeframe
+    and for the selected predictoors and feeds.
+
+  tooltip-stake_metric: >
+    Average stake placed on each prediction
+    within the selected timeframe and for the selected predictoors and feeds.
+
+  tooltip-switch-predictoors: >
+    Toggle this switch to automatically select predictoors
+    that are pre-configured in the ppss.yaml settings.
+
+  tooltip-switch-feeds: >
+    Toggle this switch to view only the feeds associated with
+    the selected predictoors.
+
+  tooltip-feeds_page_Volume_metric: "Total stake placed on predictions"
+  tooltip-feeds_page_Feeds_metric: "Total number of feeds"
+  tooltip-feeds_page_Sales_metric: "Number of subscriptions purchased across all feeds"
+  tooltip-feeds_page_Revenue_metric: "Total revenue generated from predictions"
+  tooltip-feeds_page_Accuracy_metric: "Average accuracy of predictions"

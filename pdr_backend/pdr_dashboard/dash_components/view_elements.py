@@ -1,45 +1,24 @@
-import dash_bootstrap_components as dbc
-from dash import dcc, html
+import os
+from pathlib import Path
 
+import dash_bootstrap_components as dbc
+import yaml
+from dash import dcc, html
 
 NAV_ITEMS = [{"text": "Home", "location": "/"}, {"text": "Feeds", "location": "/feeds"}]
 
 
 # pylint: disable=too-many-return-statements
 def get_information_text(tooltip_id: str):
-    match tooltip_id:
-        case "tooltip-accuracy_metric":
-            return """Average accuracy of predictions
-                within the selected timeframe and for the selected predictoors and feeds."""
-        case "tooltip-profit_metric":
-            return """Total profit generated from predictions
-                within the selected timeframe and for the selected predictoors and feeds."""
-        case "tooltip-costs_metric":
-            return """Transaction fee costs for predicting and claiming payouts
-                for each slot individually within the selected timeframe
-                and for the selected predictoors and feeds."""
-        case "tooltip-stake_metric":
-            return """Average stake placed on each prediction
-                within the selected timeframe and for the selected predictoors and feeds."""
-        case "tooltip-switch-predictoors":
-            return """Toggle this switch to automatically select predictoors
-                that are pre-configured in the ppss.yaml settings."""
-        case "tooltip-switch-feeds":
-            return """Toggle this switch to view only the feeds associated with
-                the selected predictoors."""
-        case "tooltip-feeds_page_Volume_metric":
-            return "Total stake placed on predictions"
-        case "tooltip-feeds_page_Feeds_metric":
-            return "Total number of feeds"
-        case "tooltip-feeds_page_Sales_metric":
-            return "Number of subscriptions purchased across all feeds"
-        case "tooltip-feeds_page_Revenue_metric":
-            return "Total revenue generated from predictions"
-        case "tooltip-feeds_page_Accuracy_metric":
-            return "Average accuracy of predictions"
+    fiile = os.path.join(Path(__file__).parent, "tooltips.yaml")
 
-        case _:
-            return ""
+    try:
+        with open(fiile, "r") as file:
+            tooltips = yaml.safe_load(file.read())
+    except FileNotFoundError:
+        return ""
+
+    return tooltips.get(tooltip_id, "")
 
 
 def get_date_period_selection_component():
