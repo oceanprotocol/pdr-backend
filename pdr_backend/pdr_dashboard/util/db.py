@@ -139,7 +139,7 @@ class DBGetter:
         """
 
         # Execute the query
-        return self._query_db(query)[0]["feed_addrs"]
+        return self._query_db(query)[0]["feed_addrs"] or []
 
     @enforce_types
     def payouts(

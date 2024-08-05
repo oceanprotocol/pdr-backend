@@ -61,10 +61,12 @@ class HomePage:
             self.app.favourite_addresses,
         )
 
-        if feed_ids:
-            feed_data = [
-                feed for feed in self.app.feeds_data if feed["contract"] in feed_ids
-            ]
+        if not feed_ids:
+            return [], feed_data
+
+        feed_data = [
+            feed for feed in self.app.feeds_data if feed["contract"] in feed_ids
+        ]
 
         return list(range(len(feed_ids))), feed_data
 
