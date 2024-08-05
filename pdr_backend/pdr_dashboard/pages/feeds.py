@@ -7,13 +7,6 @@ from pdr_backend.pdr_dashboard.util.data import (
     find_with_key_value,
 )
 
-options_ex = [
-    {"label": "Option 1", "value": "OPT1"},
-    {"label": "Option 2", "value": "OPT2"},
-    {"label": "Option 3", "value": "OPT3"},
-    {"label": "Option 4", "value": "OPT4"},
-]
-
 
 def add_to_filter(filter_options, value):
     if value not in filter_options:

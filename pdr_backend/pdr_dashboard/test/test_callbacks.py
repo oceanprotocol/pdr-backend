@@ -1,4 +1,5 @@
 import time
+from selenium.webdriver.common.keys import Keys
 
 from pdr_backend.pdr_dashboard.test.resources import (
     _input_action,
@@ -24,6 +25,7 @@ def test_feeds_search_input(setup_app, dash_duo):
     _input_action(dash_duo, "#search-input-Feeds", "#feeds_table", "ADA", 2)
 
 
+# pylint: disable=too-many-statements
 def test_predictoors_search_input(setup_app, dash_duo):
     """
     Test the search input in the "Predictoors" table.
@@ -178,3 +180,103 @@ def test_navigation(setup_app, dash_duo):
     # Navigate to Home
     dash_duo.wait_for_element("#navbar-container a[href='/']").click()
     dash_duo.wait_for_element_by_id("plots_container", timeout=10)
+
+
+def test_feeds_table_filters(setup_app, dash_duo):
+    """
+    Test the switch that toggles between showing only the feeds that are
+    associated with the selected predictoor and all feeds.
+    """
+
+    app = setup_app
+    start_server_and_wait(dash_duo, app)
+
+    # Navigate to feeds page
+    dash_duo.wait_for_element("#feeds")
+
+    navigation_link = dash_duo.find_element("#feeds")
+    navigation_link.click()
+
+    print(dash_duo.find_element("#feeds"))
+
+    # Check if the dropdown menu is present
+    dash_duo.wait_for_element("#base_token")
+
+    # Interact with the base token dropdown
+    dropdown_base = dash_duo.find_element("#base_token")
+    dropdown_base.click()
+
+    # Wait for the dropdown options to be visible
+    # dash_duo.wait_for_element('.VirtualizedSelectOption', timeout=10)
+
+    table_rows = dash_duo.find_elements("#feeds_page_table tbody tr")
+    assert len(table_rows) == 6
+
+    # Find the option with the label 'ETH' and click it
+    options = dash_duo.find_elements(".VirtualizedSelectOption")
+    for option in options:
+        if option.text == "ETH":
+            option.click()
+            break
+
+    table_rows = dash_duo.find_elements("#feeds_page_table tbody tr")
+    assert len(table_rows) == 3
+
+    # Interact with the base token dropdown
+    dropdown_time = dash_duo.find_element("#time")
+    dropdown_time.click()
+
+    # Find the option with the label '5m' and click it
+    options = dash_duo.find_elements(".VirtualizedSelectOption")
+    for option in options:
+        if option.text == "5m":
+            option.click()
+            break
+
+    table_rows = dash_duo.find_elements("#feeds_page_table tbody tr")
+    assert len(table_rows) == 2
+
+    # Click clear all button
+    clear_all_button = dash_duo.find_element("#clear_filters_button")
+    clear_all_button.click()
+    time.sleep(1)
+
+    table_rows = dash_duo.find_elements("#feeds_page_table tbody tr")
+    assert len(table_rows) == 6
+
+    dropdown_base.click()
+    # Find the option with the label 'BTC' and click it
+    options = dash_duo.find_elements(".VirtualizedSelectOption")
+    for option in options:
+        if option.text == "ADA":
+            option.click()
+            break
+
+    # Interact with the base token dropdown
+    dropdown_volume = dash_duo.find_element("#accuracy_dropdown")
+    dropdown_volume.click()
+
+    # Set min volume
+    min_accuracy_input = dash_duo.find_element("#accuracy_min")
+    min_accuracy_input.clear()
+    min_accuracy_input.send_keys("90" + Keys.ENTER)
+
+    # Submit min value
+    apply_filter_button = dash_duo.find_element("#accuracy_button")
+    apply_filter_button.click()
+    time.sleep(1)
+
+    table_rows = dash_duo.find_elements("#feeds_page_table tbody tr")
+    # time.sleep(50)
+    assert len(table_rows) == 1
+
+    time.sleep(1)
+    min_accuracy_input.click()
+    min_accuracy_input.clear()
+    min_accuracy_input.send_keys("80" + Keys.ENTER)
+    apply_filter_button.click()
+    time.sleep(1)
+
+    table_rows = dash_duo.find_elements("#feeds_page_table tbody tr")
+    # time.sleep(50)
+    # assert len(table_rows) == 2
