@@ -18,9 +18,9 @@ def filter_condition(item, field, values):
 
 
 def range_condition(item, field, min_value, max_value):
-    if min_value is not None and min_value is not "" and item[field] < min_value:
+    if min_value is not None and min_value != "" and item[field] < min_value:
         return False
-    if max_value is not None and max_value is not "" and item[field] > max_value:
+    if max_value is not None and max_value != "" and item[field] > max_value:
         return False
     return True
 
@@ -91,7 +91,9 @@ def get_callbacks_feeds(app):
         Input("sales_button", "n_clicks"),
         Input("clear_filters_button", "n_clicks"),
     )
-    def filter_table_by_sales_range(min_val, max_val, _btn_1, _bnt_2):
+    def filter_table_by_sales_range(
+        min_val, max_val, _n_clicks_sales_btn, _n_clicks_filters_bnt
+    ):
         return filter_table_by_range(min_val, max_val, "Sales")
 
     @app.callback(
@@ -101,27 +103,33 @@ def get_callbacks_feeds(app):
         Input("revenue_button", "n_clicks"),
         Input("clear_filters_button", "n_clicks"),
     )
-    def filter_table_by_revenue_range(min_val, max_val, _btn_1, _bnt_2):
+    def filter_table_by_revenue_range(
+        min_val, max_val, _n_clicks_revenue_btn, _n_clicks_filters_bnt
+    ):
         return filter_table_by_range(min_val, max_val, "Revenue")
 
     @app.callback(
         Output("accuracy_dropdown", "label"),
         State("accuracy_min", "value"),
         State("accuracy_max", "value"),
-        Input("clear_filters_button", "n_clicks"),
         Input("accuracy_button", "n_clicks"),
+        Input("clear_filters_button", "n_clicks"),
     )
-    def filter_table_by_accuracy_range(min_val, max_val, _btn_1, _bnt_2):
+    def filter_table_by_accuracy_range(
+        min_val, max_val, _n_clicks_accuracy_btn, _n_clicks_filters_bnt
+    ):
         return filter_table_by_range(min_val, max_val, "Accuracy")
 
     @app.callback(
         Output("volume_dropdown", "label"),
         State("volume_min", "value"),
         State("volume_max", "value"),
-        Input("clear_filters_button", "n_clicks"),
         Input("volume_button", "n_clicks"),
+        Input("clear_filters_button", "n_clicks"),
     )
-    def filter_table_by_volume_range(min_val, max_val, _btn_1, _bnt_2):
+    def filter_table_by_volume_range(
+        min_val, max_val, _n_clicks_volume_btn, _n_clicks_filters_bnt
+    ):
         return filter_table_by_range(min_val, max_val, "Volume")
 
     @app.callback(
