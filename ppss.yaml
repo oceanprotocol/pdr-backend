@@ -45,6 +45,7 @@ predictoor_ss:
     calibrate_regr: CurrentYval # CurrentYval | None
     train_every_n_epochs: 1
     calc_imps: True
+    # seed: 42
 
   my_addresses: []
 
