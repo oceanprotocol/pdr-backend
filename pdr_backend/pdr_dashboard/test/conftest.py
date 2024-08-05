@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.options import Options
 
 from pdr_backend.lake.payout import mock_payouts, mock_payouts_related_with_predictions
 from pdr_backend.lake.prediction import mock_daily_predictions, mock_first_predictions
-from pdr_backend.lake.subscription import mock_subscriptions
+from pdr_backend.lake.subscription import mock_subscriptions, Subscription
 
 from pdr_backend.pdr_dashboard.test.resources import (
     _prepare_test_db,
@@ -98,7 +98,10 @@ def _add_css(app):
 
 @pytest.fixture
 def setup_app(
-    tmpdir, _sample_daily_predictions, _sample_payouts_related_with_predictions
+    tmpdir,
+    _sample_daily_predictions,
+    _sample_payouts_related_with_predictions,
+    _sample_subscriptions,
 ):
     _clear_test_db(str(tmpdir))
 
@@ -110,8 +113,8 @@ def setup_app(
 
     _prepare_test_db(
         tmpdir,
-        _sample_payouts_related_with_predictions,
-        table_name=Payout.get_lake_table_name(),
+        _sample_subscriptions,
+        table_name=Subscription.get_lake_table_name(),
     )
 
     ppss, _ = _prepare_test_db(
@@ -131,7 +134,10 @@ def setup_app(
 
 @pytest.fixture
 def setup_app_with_favourite_addresses(
-    tmpdir, _sample_daily_predictions, _sample_payouts_related_with_predictions
+    tmpdir,
+    _sample_daily_predictions,
+    _sample_payouts_related_with_predictions,
+    _sample_subscriptions,
 ):
     _clear_test_db(str(tmpdir))
 
@@ -139,6 +145,12 @@ def setup_app_with_favourite_addresses(
         tmpdir,
         _sample_payouts_related_with_predictions,
         table_name=Payout.get_lake_table_name(),
+    )
+
+    _prepare_test_db(
+        tmpdir,
+        _sample_subscriptions,
+        table_name=Subscription.get_lake_table_name(),
     )
 
     ppss, _ = _prepare_test_db(
