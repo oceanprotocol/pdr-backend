@@ -18,7 +18,7 @@ install_requirements = [
     "dateparser==1.2.0",
     "duckdb==1.0.0",
     "enforce_typing",
-    "eth-account==0.11.0",
+    "eth-account==0.13.1",
     "eth-keys==0.5.1",
     "eth-typing==4.4.0",
     "flask==3.0.3",
