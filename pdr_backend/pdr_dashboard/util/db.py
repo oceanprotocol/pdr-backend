@@ -186,8 +186,6 @@ class DBGetter:
             scalar=True,
         )
 
-        feeds = feeds[0] if feeds else 0
-
         accuracy, volume = self._query_db(
             f"""
                 SELECT

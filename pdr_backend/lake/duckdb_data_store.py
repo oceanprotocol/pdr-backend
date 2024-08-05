@@ -297,6 +297,9 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         """
         result = self.duckdb_conn.execute(query).fetchone()
 
+        if len(result) == 1:
+            result = result[0]
+
         return result
 
     @enforce_types
@@ -316,7 +319,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         return f"""
         DELETE FROM {drop_table_name}
         WHERE ID IN (
-            SELECT DISTINCT ID 
+            SELECT DISTINCT ID
             FROM {ref_table_name}
         );
         """
