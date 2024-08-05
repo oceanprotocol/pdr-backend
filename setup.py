@@ -9,7 +9,7 @@ from setuptools import find_packages, setup
 # Installed by pip install pdr-backend
 # or pip install -e .
 install_requirements = [
-    "black==24.4.2",
+    "black==24.8.0",
     "bumpversion",
     "ccxt==4.3.68",
     "coverage",
