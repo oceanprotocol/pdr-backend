@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.options import Options
 
 from pdr_backend.lake.payout import mock_payouts, mock_payouts_related_with_predictions
 from pdr_backend.lake.prediction import mock_daily_predictions, mock_first_predictions
+from pdr_backend.lake.subscription import mock_subscriptions
 
 from pdr_backend.pdr_dashboard.test.resources import (
     _prepare_test_db,
@@ -31,6 +32,11 @@ def _sample_daily_predictions():
 @pytest.fixture()
 def _sample_payouts():
     return mock_payouts()
+
+
+@pytest.fixture()
+def _sample_subscriptions():
+    return mock_subscriptions()
 
 
 @pytest.fixture()
@@ -95,6 +101,12 @@ def setup_app(
     tmpdir, _sample_daily_predictions, _sample_payouts_related_with_predictions
 ):
     _clear_test_db(str(tmpdir))
+
+    _prepare_test_db(
+        tmpdir,
+        _sample_payouts_related_with_predictions,
+        table_name=Payout.get_lake_table_name(),
+    )
 
     _prepare_test_db(
         tmpdir,
