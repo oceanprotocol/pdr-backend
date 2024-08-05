@@ -1,8 +1,7 @@
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 
-from pdr_backend.pdr_dashboard.dash_components.util import (
-    get_feed_ids_based_on_predictoors_from_db,
+from pdr_backend.pdr_dashboard.util.data import (
     col_to_human,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
@@ -58,8 +57,7 @@ class HomePage:
         if not self.favourite_addresses:
             return [], feed_data
 
-        feed_ids = get_feed_ids_based_on_predictoors_from_db(
-            self.app.lake_dir,
+        feed_ids = self.app.db_getter.feed_ids_based_on_predictoors(
             self.app.favourite_addresses,
         )
 
