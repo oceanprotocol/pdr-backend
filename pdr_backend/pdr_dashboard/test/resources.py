@@ -53,6 +53,21 @@ def _input_action(dash_duo, input_id, table_id, input_value, expected_rows):
     assert len(dash_duo.find_elements(f"{table_id} tbody tr")) == expected_rows
 
 
+def _select_dropdown_option(dash_duo, dropdown_id, option_text):
+    dropdown = dash_duo.find_element(dropdown_id)
+    dropdown.click()
+    options = dash_duo.find_elements(".VirtualizedSelectOption")
+    for option in options:
+        if option.text == option_text:
+            option.click()
+            break
+
+
+def _assert_table_row_count(dash_duo, expected_count):
+    table_rows = dash_duo.find_elements("#feeds_page_table tbody tr")
+    assert len(table_rows) == expected_count
+
+
 def start_server_and_wait(dash_duo, app):
     """
     Start the server and wait for the elements to be rendered.
