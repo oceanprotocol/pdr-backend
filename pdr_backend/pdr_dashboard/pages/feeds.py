@@ -198,7 +198,7 @@ class FeedsPage:
                 "display": "flex",
                 "flexDirection": "column",
                 "justifyContent": "flex-start",
-                "gap": "40px",
+                "gap": "30px",
             },
             className="main-container",
         )

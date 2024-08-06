@@ -46,7 +46,7 @@ body{
 #feeds_page_table {
     width: 100%;
     overflow-x: auto;
-    max-height: 50vh;
+    max-height: 60vh;
 }
 
 #feeds_page_table table {
