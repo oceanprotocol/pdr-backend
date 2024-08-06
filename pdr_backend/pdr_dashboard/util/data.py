@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import Union, List, Dict, Any, Optional
 from enforce_typing import enforce_types
 import dash
+from numerize import numerize
 
 
 logger = logging.getLogger("predictoor_dashboard_utils")

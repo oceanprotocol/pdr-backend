@@ -8,6 +8,7 @@ from pdr_backend.pdr_dashboard.util.data import (
 )
 
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_metric
+from pdr_backend.pdr_dashboard.util.format import format_table
 
 
 class FeedsPage:
@@ -85,15 +86,15 @@ class FeedsPage:
 
         if result:
             return {
-                "avg_accuracy": str(round(result["avg_accuracy"], 2)) + "%",
-                "avg_stake_(OCEAN)": str(round(result["avg_stake"], 2)),
-                "volume_(OCEAN)": str(round(result["volume"], 2)),
+                "avg_accuracy": result["avg_accuracy"],
+                "avg_stake_(OCEAN)": result["avg_stake"],
+                "volume_(OCEAN)": result["volume"],
             }
 
         return {
-            "avg_accuracy": "",
-            "avg_stake_(OCEAN)": "",
-            "volume_(OCEAN)": "",
+            "avg_accuracy": 0,
+            "avg_stake_(OCEAN)": 0,
+            "volume_(OCEAN)": 0,
         }
 
     def get_feeds_subscription_stat_with_contract(
@@ -103,15 +104,15 @@ class FeedsPage:
 
         if result:
             return {
-                "price_(OCEAN)": str(result["price"]),
+                "price_(OCEAN)": result["price"],
                 "sales": f"{result['sales']} ({result['df_buy_count']}-DF)",
-                "sales_revenue_(OCEAN)": str(result["sales_revenue"]),
+                "sales_revenue_(OCEAN)": result["sales_revenue"],
             }
 
         return {
-            "price_(OCEAN)": "",
-            "sales": "",
-            "sales_revenue_(OCEAN)": "",
+            "price_(OCEAN)": 0,
+            "sales": 0,
+            "sales_revenue_(OCEAN)": 0,
         }
 
     def get_feeds_data_for_feeds_table(
@@ -149,4 +150,6 @@ class FeedsPage:
             {"name": col_to_human(col), "id": col} for col in new_feed_data[0].keys()
         ]
 
-        return columns, new_feed_data
+        formatted_data = format_table(new_feed_data, columns)
+
+        return columns, formatted_data
