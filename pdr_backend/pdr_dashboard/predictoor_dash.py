@@ -55,7 +55,12 @@ def setup_app(app, ppss: PPSS):
     app.predictoors_data = get_predictoors_data_from_payouts(
         app.db_getter.payouts_stats()
     )
-    app.favourite_addresses = ppss.predictoor_ss.my_addresses
+
+    valid_addresses = [p["user"].lower() for p in app.predictoors_data]
+    app.favourite_addresses = [
+        addr for addr in ppss.predictoor_ss.my_addresses if addr in valid_addresses
+    ]
+
     app.layout = get_layout()
 
     # fetch token prices

@@ -55,7 +55,7 @@ body{
 
 #feeds_page_table table td::before {
     content: '';
-    display: block; 
+    display: block;
     width: 100px;
 }
 
@@ -175,4 +175,13 @@ button{
 
 .dropdown-toggle:hover{
     color: black;
+}
+
+#feeds_page_metrics_row {
+    display: flex;
+    border: 1px solid grey;
+    border-radius: 10px;
+    justify-content: space-between;
+    padding: 10px 40px;
+    margin-bottom: 10px;
 }
