@@ -17,7 +17,7 @@ class DBGetter:
         self.lake_dir = lake_dir
 
     @enforce_types
-    def _query_db(self, query: str) -> Union[List[dict], Exception]:
+    def _query_db(self, query: str, scalar=False) -> Union[List[dict], Exception]:
         """
         Query the database with the given query.
         Args:
@@ -27,9 +27,15 @@ class DBGetter:
         """
         try:
             db = DuckDBDataStore(self.lake_dir, read_only=True)
-            df = db.query_data(query)
+
+            if scalar:
+                result = db.query_scalar(query)
+            else:
+                df = db.query_data(query)
+                result = df.to_dicts() if len(df) else []
+
             db.duckdb_conn.close()
-            return df.to_dicts() if len(df) else []
+            return result
         except Exception as e:
             logger.error("Error querying the database: %s", e)
             return []
@@ -139,7 +145,7 @@ class DBGetter:
         """
 
         # Execute the query
-        return self._query_db(query)[0]["feed_addrs"] or []
+        return self._query_db(query, scalar=True)
 
     @enforce_types
     def payouts(
@@ -169,3 +175,37 @@ class DBGetter:
         query += ";"
 
         return self._query_db(query)
+
+    @enforce_types
+    def feeds_stats(self):
+        feeds = self._query_db(
+            f"""
+                SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
+                FROM {Prediction.get_lake_table_name()}
+            """,
+            scalar=True,
+        )
+
+        accuracy, volume = self._query_db(
+            f"""
+                SELECT
+                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+                    SUM(stake) AS total_stake
+                FROM
+                    {Payout.get_lake_table_name()}
+            """,
+            scalar=True,
+        )
+
+        sales, revenue = self._query_db(
+            f"SELECT COUNT(ID), SUM(last_price_value) from {Subscription.get_lake_table_name()}",
+            scalar=True,
+        )
+
+        return {
+            "Feeds": feeds if feeds else 0,
+            "Accuracy": str(round(accuracy, 2) if accuracy else 0.0) + "%",
+            "Volume": str(round(volume, 2) if volume else 0.0) + " OCEAN",
+            "Sales": sales if sales else 0,
+            "Revenue": str(round(revenue, 2) if revenue else 0.0) + " OCEAN",
+        }

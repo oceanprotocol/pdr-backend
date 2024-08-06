@@ -7,6 +7,8 @@ from pdr_backend.pdr_dashboard.util.data import (
     find_with_key_value,
 )
 
+from pdr_backend.pdr_dashboard.dash_components.view_elements import get_metric
+
 
 class FeedsPage:
     def __init__(self, app):
@@ -20,12 +22,28 @@ class FeedsPage:
                     id="loading",
                     type="default",
                     children=[
+                        self.get_metrics_row(),
                         self.get_main_container(),
                     ],
                     custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
                 ),
             ],
             style={"height": "100%"},
+        )
+
+    def get_metrics_row(self):
+        stats = self.app.db_getter.feeds_stats()
+
+        return html.Div(
+            children=[
+                get_metric(
+                    label=key,
+                    value=value,
+                    value_id=f"feeds_page_{key}_metric",
+                )
+                for key, value in stats.items()
+            ],
+            id="feeds_page_metrics_row",
         )
 
     def get_main_container(self):
