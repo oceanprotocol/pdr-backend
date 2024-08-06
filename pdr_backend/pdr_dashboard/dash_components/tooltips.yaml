@@ -26,5 +26,5 @@
   tooltip-feeds_page_Volume_metric: "Total stake placed on predictions"
   tooltip-feeds_page_Feeds_metric: "Total number of feeds"
   tooltip-feeds_page_Sales_metric: "Number of subscriptions purchased across all feeds"
-  tooltip-feeds_page_Revenue_metric: "Total revenue generated from predictions"
+  tooltip-feeds_page_Revenue_metric: "Total revenue generated from feed sales"
   tooltip-feeds_page_Accuracy_metric: "Average accuracy of predictions"
