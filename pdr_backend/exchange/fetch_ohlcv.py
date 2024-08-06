@@ -21,7 +21,7 @@ def fetch_ohlcv(
     timeframe: str,
     since: UnixTimeMs,
     limit: int,
-    api: str="ccxt"
+    api: str = "ccxt",
 ) -> Union[List[tuple], None]:
     """
     @description
@@ -43,10 +43,10 @@ def fetch_ohlcv(
         where row 0 is oldest
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
-    if api == "ccxt":  
+    if api == "ccxt":
         return fetch_ohlcv_ccxt(exchange_str, pair_str, timeframe, since, limit)
 
     if api == "kaiko":
         return fetch_ohlcv_kaiko(exchange_str, pair_str, timeframe, since, limit)
-    
+
     raise ValueError(f"Unknown api={api}. Must be 'ccxt' or 'kaiko'")
