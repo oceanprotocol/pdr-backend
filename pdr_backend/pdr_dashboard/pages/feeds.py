@@ -92,9 +92,11 @@ class FeedsPage:
             ],
             style={
                 "display": "flex",
+                "flex-wrap": "wrap",
                 "justifyContnet": "center",
                 "alignItems": "flex_start",
                 "gap": "8px",
+                "width": "80%",
             },
         )
 
@@ -172,9 +174,7 @@ class FeedsPage:
                 for key, value in stats.items()
             ],
             id="feeds_page_metrics_row",
-            style={
-                "marginBottom": "60px"
-            }
+            style={"marginBottom": "60px"},
         )
 
     def get_main_container(self):

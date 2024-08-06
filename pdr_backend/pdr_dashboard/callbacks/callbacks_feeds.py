@@ -25,7 +25,7 @@ def range_condition(item, field, min_value, max_value):
 def check_condition(item, condition_type, field, *values):
     if condition_type == "filter":
         return filter_condition(item, field, values[0])
-    elif condition_type == "range":
+    if condition_type == "range":
         return range_condition(item, field, values[0], values[1])
     return True
 
