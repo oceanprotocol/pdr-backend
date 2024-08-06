@@ -80,7 +80,7 @@ def fetch_ohlcv_kaiko(
     if not api_key:
         raise ValueError("No KAIKO_KEY env var found")
     headers = {"X-Api-Key": api_key}
-    all_data = []
+    all_data: List[dict] = []
     continue_token = None
     page_size = 100000  # max page size
     start_time = since.to_dt().strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z"
