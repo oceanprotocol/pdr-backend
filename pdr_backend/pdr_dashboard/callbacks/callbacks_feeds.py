@@ -12,16 +12,21 @@ def filter_table_by_range(min_val, max_val, label_text):
 
 
 def filter_condition(item, field, values):
-    if not values:
-        return True
-    return item[field] in values
+    return not values or item[field] in values
 
 
 def range_condition(item, field, min_value, max_value):
-    if min_value is not None and min_value != "" and item[field] < min_value:
-        return False
-    if max_value is not None and max_value != "" and item[field] > max_value:
-        return False
+    return not (
+        (min_value is not None and min_value != "" and item[field] < min_value)
+        or (max_value is not None and max_value != "" and item[field] > max_value)
+    )
+
+
+def check_condition(item, condition_type, field, *values):
+    if condition_type == "filter":
+        return filter_condition(item, field, values[0])
+    elif condition_type == "range":
+        return range_condition(item, field, values[0], values[1])
     return True
 
 
@@ -31,7 +36,7 @@ def get_callbacks_feeds(app):
         [
             Input("base_token", "value"),
             Input("quote_token", "value"),
-            Input("venue", "value"),
+            Input("exchange", "value"),
             Input("time", "value"),
             Input("sales_button", "n_clicks"),
             Input("revenue_button", "n_clicks"),
@@ -50,7 +55,7 @@ def get_callbacks_feeds(app):
     def filter_table(
         base_token,
         quote_token,
-        venue,
+        exchange,
         time,
         _n_clicks_sales,
         _n_clicks_revenue,
@@ -69,17 +74,21 @@ def get_callbacks_feeds(app):
         Filter table based on selected dropdown values.
         """
 
+        conditions = [
+            ("filter", "base_token", base_token),
+            ("filter", "quote_token", quote_token),
+            ("filter", "exchange", exchange),
+            ("filter", "time", time),
+            ("range", "sales", sales_min, sales_max),
+            ("range", "sales_revenue_(OCEAN)", revenue_min, revenue_max),
+            ("range", "avg_accuracy", accuracy_min, accuracy_max),
+            ("range", "volume_(OCEAN)", volume_min, volume_max),
+        ]
+
         new_table_data = [
             item
             for item in app.feeds_table_data
-            if filter_condition(item, "base_token", base_token)
-            and filter_condition(item, "quote_token", quote_token)
-            and filter_condition(item, "venue", venue)
-            and filter_condition(item, "time", time)
-            and range_condition(item, "sales", sales_min, sales_max)
-            and range_condition(item, "sales_revenue_(OCEAN)", revenue_min, revenue_max)
-            and range_condition(item, "avg_accuracy", accuracy_min, accuracy_max)
-            and range_condition(item, "volume_(OCEAN)", volume_min, volume_max)
+            if all(check_condition(item, *condition) for condition in conditions)
         ]
 
         return new_table_data
@@ -135,7 +144,7 @@ def get_callbacks_feeds(app):
     @app.callback(
         Output("base_token", "value"),
         Output("quote_token", "value"),
-        Output("venue", "value"),
+        Output("exchange", "value"),
         Output("time", "value"),
         Output("sales_min", "value"),
         Output("sales_max", "value"),

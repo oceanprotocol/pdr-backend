@@ -23,7 +23,7 @@ class Filter:
 filters = [
     {"name": "base_token", "placeholder": "Base Token", "options": []},
     {"name": "quote_token", "placeholder": "Quote Token", "options": []},
-    {"name": "venue", "placeholder": "Venue", "options": []},
+    {"name": "exchange", "placeholder": "Exchange", "options": []},
     {"name": "time", "placeholder": "Time", "options": []},
 ]
 
@@ -44,7 +44,7 @@ class FeedsPage:
             add_to_filter(filters[1]["options"], pair_quote)
 
             # Update source filter
-            add_to_filter(filters[2]["options"], feed["source"])
+            add_to_filter(filters[2]["options"], feed["source"].capitalize())
 
             # Update timeframe filter
             add_to_filter(filters[3]["options"], feed["timeframe"])
