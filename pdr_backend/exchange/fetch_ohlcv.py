@@ -9,6 +9,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.exchange.fetch_ohlcv_ccxt import fetch_ohlcv_ccxt
+from pdr_backend.exchange.fetch_ohlcv_kaiko import fetch_ohlcv_kaiko
 
 logger = logging.getLogger("fetch_ohlcv")
 
@@ -20,6 +21,7 @@ def fetch_ohlcv(
     timeframe: str,
     since: UnixTimeMs,
     limit: int,
+    api: str="ccxt"
 ) -> Union[List[tuple], None]:
     """
     @description
@@ -41,6 +43,10 @@ def fetch_ohlcv(
         where row 0 is oldest
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
-    # currently only ccxt is here. In the future, this is where we'd
-    # have a switch to other exchanges too
-    return fetch_ohlcv_ccxt(exchange_str, pair_str, timeframe, since, limit)
+    if api == "ccxt":  
+        return fetch_ohlcv_ccxt(exchange_str, pair_str, timeframe, since, limit)
+
+    if api == "kaiko":
+        return fetch_ohlcv_kaiko(exchange_str, pair_str, timeframe, since, limit)
+    
+    raise ValueError(f"Unknown api={api}. Must be 'ccxt' or 'kaiko'")
