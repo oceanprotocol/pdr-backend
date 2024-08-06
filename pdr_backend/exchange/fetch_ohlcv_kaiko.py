@@ -11,13 +11,13 @@ from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("fetch_ohlcv_kaiko")
 
-
+@enforce_types
 def exchange_str_to_kaiko(exchange_str: str):
     if exchange_str == "binance":
         return "binc"
     return exchange_str
 
-
+@enforce_types
 def convert_to_tohlcv(data):
     # Create a list to hold the TOHLCV tuples
     raw_tohlcv_data = []
