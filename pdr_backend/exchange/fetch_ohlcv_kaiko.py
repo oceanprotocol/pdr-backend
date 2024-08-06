@@ -74,7 +74,7 @@ def fetch_ohlcv_kaiko(
         and TOHLCV = {unix time (in ms), Open, High, Low, Close, Volume}
     """
     exchange_str = exchange_str_to_kaiko(exchange_str)
-    pair_str = pair_str.replace("\\", "-").lower()
+    pair_str = pair_str.replace("\\", "-").replace("/", "-").lower()
     base = "https://us.market-api.kaiko.io/v2/data/trades.v1/exchanges/"
     path = f"{exchange_str}/spot/{pair_str}/aggregations/ohlcv?interval={timeframe}"
     url = f"{base}{path}"
@@ -98,6 +98,10 @@ def fetch_ohlcv_kaiko(
         response = requests.get(url, headers=headers, params=params)
         if response.status_code == 200:
             data = response.json()
+
+            if data["result"] == "error":
+                raise ValueError(f"Error: {data['message']}")
+
             all_data.extend(data["data"])
             continue_token = data.get("continuation_token", None)
             if not continue_token:
