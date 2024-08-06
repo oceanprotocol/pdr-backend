@@ -135,6 +135,7 @@ class OhlcvDataFactory:
                 timeframe=str(feed.timeframe),
                 since=st_ut,
                 limit=limit,
+                api=self.ss.api,
             )
             tohlcv_data = clean_raw_ohlcv(raw_tohlcv_data, feed, st_ut, fin_ut)
             # concat both TOHLCV data

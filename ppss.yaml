@@ -12,6 +12,7 @@ lake_ss:
   #    - kraken BTC/USDT 5m
   st_timestr: 30 days ago # starting date for data
   fin_timestr: now # ending date for data
+  api: ccxt
 
 predictoor_ss:
   predict_train_feedsets:
