@@ -90,14 +90,7 @@ class FeedsPage:
                 self.get_input_filter("Accuracy"),
                 self.get_input_filter("Volume"),
             ],
-            style={
-                "display": "flex",
-                "flex-wrap": "wrap",
-                "justifyContnet": "center",
-                "alignItems": "flex_start",
-                "gap": "8px",
-                "width": "80%",
-            },
+            id="filters-container",
         )
 
     def get_input_filter(self, label: str):
@@ -119,25 +112,13 @@ class FeedsPage:
             style={
                 "backgroundColor": "white",
             },
-            toggle_style={
-                "min-width": "130px",
-                "backgroundColor": "white",
-                "display": "flex",
-                "justifyContent": "space-between",
-                "alignItems": "center",
-            },
+            toggleClassName="dropdown-toggle-container",
         )
 
     def get_input_with_label(self, label: str, name: str):
         return html.Div(
             [html.Label(label), dcc.Input(id=f"{name.lower()}_{label.lower()}")],
-            style={
-                "display": "flex",
-                "flexDirection": "column",
-                "justifyContent": "center",
-                "alignItems": "flex-start",
-                "padding": "10px",
-            },
+            className="input-with-label",
         )
 
     def get_filters_section(self):
@@ -154,11 +135,7 @@ class FeedsPage:
                     },
                 ),
             ],
-            style={
-                "display": "flex",
-                "justifyContent": "space-between",
-                "alignItems": "flex-start",
-            },
+            id="filters-section",
         )
 
     def get_metrics_row(self):
@@ -194,12 +171,7 @@ class FeedsPage:
                 self.get_filters_section(),
                 self.get_feeds_table_area(feed_cols, feed_data),
             ],
-            style={
-                "display": "flex",
-                "flexDirection": "column",
-                "justifyContent": "flex-start",
-                "gap": "30px",
-            },
+            id="feeds-main-container",
             className="main-container",
         )
 

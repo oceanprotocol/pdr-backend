@@ -203,16 +203,16 @@ def test_feeds_table_filters(setup_app, dash_duo):
 
     # Interact with the base token dropdown
     _select_dropdown_option(dash_duo, "#base_token", "ETH")
-    _assert_table_row_count(dash_duo, 3)
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 3)
 
     # Interact with the time dropdown
     _select_dropdown_option(dash_duo, "#time", "5m")
-    _assert_table_row_count(dash_duo, 2)
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 2)
 
     # Click clear all button
     dash_duo.find_element("#clear_filters_button").click()
     time.sleep(1)  # Allow time for the table to refresh
-    _assert_table_row_count(dash_duo, 6)
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 6)
 
     # Interact with the base token dropdown
     _select_dropdown_option(dash_duo, "#base_token", "ADA")
@@ -226,7 +226,7 @@ def test_feeds_table_filters(setup_app, dash_duo):
     # Submit min value
     dash_duo.find_element("#accuracy_button").click()
     time.sleep(1)  # Allow time for the table to refresh
-    _assert_table_row_count(dash_duo, 1)
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 1)
 
     # Update min accuracy value
     min_accuracy_input.click()
@@ -234,7 +234,7 @@ def test_feeds_table_filters(setup_app, dash_duo):
     min_accuracy_input.send_keys("80" + Keys.ENTER)
     dash_duo.find_element("#accuracy_button").click()
     # time.sleep(50)  # Allow time for the table to refresh
-    _assert_table_row_count(dash_duo, 2)
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 2)
 
     # Interact with the volume dropdown and set max volume
     dash_duo.find_element("#volume_dropdown").click()
@@ -245,9 +245,9 @@ def test_feeds_table_filters(setup_app, dash_duo):
     # Submit max value
     dash_duo.find_element("#volume_button").click()
     time.sleep(1)  # Allow time for the table to refresh
-    _assert_table_row_count(dash_duo, 1)
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 1)
 
     # Click clear all button
     dash_duo.find_element("#clear_filters_button").click()
     time.sleep(1)  # Allow time for the table to refresh
-    _assert_table_row_count(dash_duo, 6)
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 6)

@@ -177,6 +177,12 @@ button{
     color: black;
 }
 
+#filters-section{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
 #feeds_page_metrics_row {
     display: flex;
     border: 1px solid grey;
@@ -184,4 +190,36 @@ button{
     justify-content: space-between;
     padding: 10px 40px;
     margin-bottom: 10px;
+}
+
+#filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 8px;
+    width: 80%;
+}
+
+.input-with-label {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 10px;
+}
+
+.dropdown-toggle-container {
+    min-width: 130px;
+    background-color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#feeds-main-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 30px;
 }

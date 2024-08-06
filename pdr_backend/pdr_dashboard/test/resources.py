@@ -63,8 +63,8 @@ def _select_dropdown_option(dash_duo, dropdown_id, option_text):
             break
 
 
-def _assert_table_row_count(dash_duo, expected_count):
-    table_rows = dash_duo.find_elements("#feeds_page_table tbody tr")
+def _assert_table_row_count(dash_duo, table_id, expected_count):
+    table_rows = dash_duo.find_elements(f"{table_id} tbody tr")
     assert len(table_rows) == expected_count
 
 
