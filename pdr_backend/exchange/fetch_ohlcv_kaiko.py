@@ -1,10 +1,11 @@
 import logging
 import os
 
+from typing import List, Union
 import requests
+
 from enforce_typing import enforce_types
 
-from typing import List, Union
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -72,7 +73,9 @@ def fetch_ohlcv_kaiko(
     """
     exchange_str = exchange_str_to_kaiko(exchange_str)
     pair_str = pair_str.replace("\\", "-").lower()
-    url = f"https://us.market-api.kaiko.io/v2/data/trades.v1/exchanges/{exchange_str}/spot/{pair_str}/aggregations/ohlcv?interval={timeframe}"
+    base = "https://us.market-api.kaiko.io/v2/data/trades.v1/exchanges/"
+    path = f"{exchange_str}/spot/{pair_str}/aggregations/ohlcv?interval={timeframe}"
+    url = f"{base}{path}"
     api_key = os.getenv("KAIKO_KEY")
     if not api_key:
         raise ValueError("No KAIKO_KEY env var found")
