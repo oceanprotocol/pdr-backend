@@ -15,7 +15,7 @@ class MockResponse:
         self.status_code = status_code
 
     def json(self):
-        return {"data": self.json_data}
+        return {"data": self.json_data, "result": "success"}
 
 
 mock_kaiko_data = [
