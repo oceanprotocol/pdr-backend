@@ -166,7 +166,7 @@ class SingleFeedMixin:
         return self.feed.timeframe.s if self.feed.timeframe else 0
 
     @property
-    def timeframe_m(self) -> int:
+    def timeframe_m(self) -> float:
         """Returns timeframe, in minutes"""
         return self.feed.timeframe.m if self.feed.timeframe else 0
 
