@@ -1,6 +1,7 @@
+from typing import Union
+
 from enforce_typing import enforce_types
 from numerize import numerize
-from typing import Union
 
 
 @enforce_types
@@ -15,7 +16,7 @@ def format_metric(metric: Union[int, float], value_id: str) -> str:
         case "costs_metric":
             return f"~{format_decimal_ocean_amount(float(metric))}"
         case _:
-            return metric
+            return str(metric)
 
 
 @enforce_types
@@ -52,7 +53,7 @@ def format_column(value: Union[int, float, str], column_id: str) -> str:
         case "avg_stake_(OCEAN)":
             return f"~{format_decimal_ocean_amount(float(value), w_suffix=False)}"
         case _:
-            return value
+            return str(value)
 
 
 @enforce_types

@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Union
 
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
@@ -81,7 +81,7 @@ class FeedsPage:
 
     def get_feeds_stat_with_contract(
         self, contract: str, feed_stats: List[Dict[str, Any]]
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Union[float, int]]:
         result = find_with_key_value(feed_stats, "contract", contract)
 
         if result:
@@ -99,7 +99,7 @@ class FeedsPage:
 
     def get_feeds_subscription_stat_with_contract(
         self, contract: str, feed_subcription_stats: List[Dict[str, Any]]
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Union[float, int, str]]:
         result = find_with_key_value(feed_subcription_stats, "contract", contract)
 
         if result:
