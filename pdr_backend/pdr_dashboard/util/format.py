@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Dict, List, Any
 
 from enforce_typing import enforce_types
 from numerize import numerize
@@ -12,11 +12,39 @@ FORMAT_CONFIG = {
     "stake_metric": "currency_with_decimal_and_suffix",
     "costs_metric": "approximate_currency_with_decimal",
     "addr": "eth_address",
+    "user": "eth_address",
     "avg_accuracy": "percentage",
+    "avg_stake": "currency_with_decimal",
     "sales_revenue_(OCEAN)": "currency_with_decimal",
+    "total_profit": "currency_without_decimal",
     "volume_(OCEAN)": "currency_without_decimal",
-    "avg_stake_(OCEAN)": "currency_with_decimal",
+    "avg_stake_per_epoch_(OCEAN)": "currency_with_decimal",
 }
+
+
+@enforce_types
+def pick_from_dict(data: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
+    """
+    Pick keys from dictionary.
+    Args:
+        data (Dict[str, Any]): Data.
+        keys (List[str]): Keys.
+    Returns:
+        Dict[str, Any]: Picked keys.
+    """
+    return {key: data[key] for key in keys}
+
+
+@enforce_types
+def format_dict(data: Dict[str, Union[int, float, str]]) -> dict[str, str]:
+    """
+    Format dictionary.
+    Args:
+        data (Dict[str, Union[int, float, str]]): Data.
+    Returns:
+        Dict[str, str]: Formatted dictionary.
+    """
+    return {key: format_value(data[key], key) for key in data.keys()}
 
 
 @enforce_types

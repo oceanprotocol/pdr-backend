@@ -87,13 +87,13 @@ class FeedsPage:
         if result:
             return {
                 "avg_accuracy": float(result["avg_accuracy"]),
-                "avg_stake_(OCEAN)": float(result["avg_stake"]),
+                "avg_stake_per_epoch_(OCEAN)": float(result["avg_stake"]),
                 "volume_(OCEAN)": float(result["volume"]),
             }
 
         return {
             "avg_accuracy": 0,
-            "avg_stake_(OCEAN)": 0,
+            "avg_stake_per_epoch_(OCEAN)": 0,
             "volume_(OCEAN)": 0,
         }
 

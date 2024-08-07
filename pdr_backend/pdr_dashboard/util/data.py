@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import Union, List, Dict, Any, Optional
 from enforce_typing import enforce_types
 import dash
+from pdr_backend.pdr_dashboard.util.format import pick_from_dict, format_dict
 
 logger = logging.getLogger("predictoor_dashboard_utils")
 
@@ -63,11 +64,17 @@ def get_predictoors_data_from_payouts(
     """
 
     for data in user_payout_stats:
+        formatted_data = format_dict(
+            pick_from_dict(
+                data=data, keys=["user", "total_profit", "avg_accuracy", "avg_stake"]
+            )
+        )
+
         new_data = {
-            "user_address": data["user"][:5] + "..." + data["user"][-5:],
-            "total_profit": round(data["total_profit"], 2),
-            "avg_accuracy": round(data["avg_accuracy"], 2),
-            "avg_stake": round(data["avg_stake"], 2),
+            "user_address": formatted_data["user"],
+            "total_profit": formatted_data["total_profit"],
+            "avg_accuracy": formatted_data["avg_accuracy"],
+            "avg_stake": formatted_data["avg_stake"],
             "user": data["user"],
         }
 
