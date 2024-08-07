@@ -3,20 +3,37 @@ from typing import Union
 from enforce_typing import enforce_types
 from numerize import numerize
 
+FORMAT_CONFIG = {
+    "feeds_page_Accuracy_metric": "percentage",
+    "accuracy_metric": "percentage",
+    "feeds_page_Volume_metric": "currency",
+    "feeds_page_Revenue_metric": "currency",
+    "profit_metric": "currency_with_decimal_and_suffix",
+    "stake_metric": "currency_with_decimal_and_suffix",
+    "costs_metric": "avg_currency_with_decimal",
+    "addr": "eth_address",
+    "avg_accuracy": "percentage",
+    "sales_revenue_(OCEAN)": "currency_with_decimal",
+    "volume_(OCEAN)": "currency_with_decimal",
+    "avg_stake_(OCEAN)": "avg_currency_with_decimal",
+}
+
 
 @enforce_types
-def format_metric(metric: Union[int, float], value_id: str) -> str:
-    match value_id:
-        case "feeds_page_Accuracy_metric" | "accuracy_metric":
-            return format_accuracy(float(metric))
-        case "feeds_page_Volume_metric" | "feeds_page_Revenue_metric":
-            return format_ocean_amount(int(metric))
-        case "profit_metric" | "stake_metric":
-            return format_decimal_ocean_amount(float(metric))
-        case "costs_metric":
-            return f"~{format_decimal_ocean_amount(float(metric))}"
-        case _:
-            return str(metric)
+def format_value(value: Union[int, float, str], value_id: str) -> str:
+    """
+    Format value.
+    Args:
+        value (Union[int, float]): Value.
+        value_id (str): Value id.
+    Returns:
+        str: Formatted value.
+    """
+
+    if value_id in FORMAT_CONFIG:
+        return globals()["format_" + FORMAT_CONFIG[value_id]](value)
+
+    return str(value)
 
 
 @enforce_types
@@ -34,7 +51,7 @@ def format_table(
 
     return [
         {
-            column["id"]: format_column(row[column["id"]], column["id"])
+            column["id"]: format_value(row[column["id"]], column["id"])
             for column in columns
         }
         for row in rows
@@ -42,48 +59,22 @@ def format_table(
 
 
 @enforce_types
-def format_column(value: Union[int, float, str], column_id: str) -> str:
-    match column_id:
-        case "addr":
-            return format_addr(value)
-        case "avg_accuracy":
-            return format_accuracy(float(value))
-        case "sales_revenue_(OCEAN)" | "volume_(OCEAN)":
-            return format_ocean_amount(int(value), w_suffix=False)
-        case "avg_stake_(OCEAN)":
-            return f"~{format_decimal_ocean_amount(float(value), w_suffix=False)}"
-        case _:
-            return str(value)
-
-
-@enforce_types
-def format_addr(addr: str) -> str:
+def format_eth_address(address: str) -> str:
     """
-    Format address.
+    Shorten ethereum address.
     Args:
-        addr (str): Address.
+        address (str): Address.
     Returns:
         str: Formatted address.
     """
 
-    return f"{addr[:5]}...{addr[-5:]}"
+    return f"{address[:5]}...{address[-5:]}"
 
 
 @enforce_types
-def format_ocean_amount(amount: int, w_suffix: bool = True) -> str:
-    """
-    Format Ocean date.
-    Args:
-        amount (int): Ocean amount.
-    Returns:
-        str: Formatted Ocean amount.
-    """
-
-    return f"{numerize.numerize(amount,2)}{" OCEAN" if w_suffix else ""}"
-
-
-@enforce_types
-def format_decimal_ocean_amount(amount: float, w_suffix: bool = True) -> str:
+def format_currency(
+    amount: Union[float, int], suffix: str = " OCEAN", show_decimal: bool = False
+) -> str:
     """
     Format Ocean date.
     Args:
@@ -92,11 +83,14 @@ def format_decimal_ocean_amount(amount: float, w_suffix: bool = True) -> str:
         str: Formatted Ocean amount.
     """
 
-    return f"{round(amount, 2)}{" OCEAN" if w_suffix else ""}"
+    formatted_amount = (
+        f"{round(amount, 2)}" if show_decimal else numerize.numerize(amount, 0)
+    )
+    return f"{formatted_amount}{suffix}"
 
 
 @enforce_types
-def format_accuracy(accuracy: float) -> str:
+def format_percentage(accuracy: Union[float, int]) -> str:
     """
     Format accuracy.
     Args:
@@ -105,4 +99,19 @@ def format_accuracy(accuracy: float) -> str:
         str: Formatted accuracy.
     """
 
-    return f"{round(accuracy, 2)}%"
+    return f"{round(float(accuracy), 2)}%"
+
+
+@enforce_types
+def format_currency_with_decimal(value: Union[float, int]) -> str:
+    return format_currency(value, suffix="", show_decimal=True)
+
+
+@enforce_types
+def format_currency_with_decimal_and_suffix(value: Union[float, int]) -> str:
+    return format_currency(value, suffix=" OCEAN", show_decimal=True)
+
+
+@enforce_types
+def format_avg_currency_with_decimal(value: Union[float, int]) -> str:
+    return f"~{format_currency(value, suffix="", show_decimal=True)}"

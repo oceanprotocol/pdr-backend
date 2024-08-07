@@ -13,7 +13,7 @@ from pdr_backend.pdr_dashboard.util.data import (
     select_or_clear_all_by_table,
 )
 from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
-from pdr_backend.pdr_dashboard.util.format import format_metric
+from pdr_backend.pdr_dashboard.util.format import format_value
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_graph,
 )
@@ -105,10 +105,10 @@ def get_callbacks_home(app):
             get_graph(figs_metrics.fig_profit),
             get_graph(figs_metrics.fig_costs),
             get_graph(figs_metrics.fig_stakes),
-            format_metric(figs_metrics.avg_accuracy, "accuracy_metric"),
-            format_metric(figs_metrics.total_profit, "profit_metric"),
-            format_metric(figs_metrics.total_cost, "costs_metric"),
-            format_metric(figs_metrics.avg_stake, "stake_metric"),
+            format_value(figs_metrics.avg_accuracy, "accuracy_metric"),
+            format_value(figs_metrics.total_profit, "profit_metric"),
+            format_value(figs_metrics.total_cost, "costs_metric"),
+            format_value(figs_metrics.avg_stake, "stake_metric"),
             date_period_text,
         )
 

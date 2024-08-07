@@ -86,9 +86,9 @@ class FeedsPage:
 
         if result:
             return {
-                "avg_accuracy": result["avg_accuracy"],
-                "avg_stake_(OCEAN)": result["avg_stake"],
-                "volume_(OCEAN)": result["volume"],
+                "avg_accuracy": float(result["avg_accuracy"]),
+                "avg_stake_(OCEAN)": float(result["avg_stake"]),
+                "volume_(OCEAN)": float(result["volume"]),
             }
 
         return {
@@ -128,7 +128,7 @@ class FeedsPage:
         for feed in temp_data:
             split_pair = feed["pair"].split("/")
             feed_item = {}
-            feed_item["addr"] = feed["contract"][:5] + "..." + feed["contract"][-5:]
+            feed_item["addr"] = feed["contract"]
             feed_item["base_token"] = split_pair[0]
             feed_item["quote_token"] = split_pair[1]
             feed_item["exchange"] = feed["source"].capitalize()

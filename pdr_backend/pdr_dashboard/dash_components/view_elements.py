@@ -4,7 +4,7 @@ from pathlib import Path
 import dash_bootstrap_components as dbc
 import yaml
 from dash import dcc, html
-from pdr_backend.pdr_dashboard.util.format import format_metric
+from pdr_backend.pdr_dashboard.util.format import format_value
 
 NAV_ITEMS = [{"text": "Home", "location": "/"}, {"text": "Feeds", "location": "/feeds"}]
 
@@ -71,7 +71,7 @@ def get_metric(label, value, value_id):
                 },
             ),
             html.Span(
-                format_metric(value, value_id),
+                format_value(value, value_id),
                 id=value_id,
                 style={"fontWeight": "bold"},
             ),
