@@ -216,10 +216,16 @@ class FeedsPage:
         result = find_with_key_value(feed_subcription_stats, "contract", contract)
 
         if result:
-            df_buy_count_str = f"({result['df_buy_count']}-DF)" if result['df_buy_count'] > 0 else ""
-            ws_buy_count_str = f"({result['ws_buy_count']}-WS)" if result['ws_buy_count'] > 0 else ""
+            df_buy_count_str = (
+                f"({result['df_buy_count']}-DF)" if result["df_buy_count"] > 0 else ""
+            )
+            ws_buy_count_str = (
+                f"({result['ws_buy_count']}-WS)" if result["ws_buy_count"] > 0 else ""
+            )
 
-            sales_str = f"{result['sales']} {df_buy_count_str} {ws_buy_count_str}".strip()
+            sales_str = (
+                f"{result['sales']} {df_buy_count_str} {ws_buy_count_str}".strip()
+            )
 
             return {
                 "price_(OCEAN)": str(result["price"]),
