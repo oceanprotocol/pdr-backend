@@ -29,10 +29,8 @@ def format_value(value: Union[int, float, str], value_id: str) -> str:
     Returns:
         str: Formatted value.
     """
-
     if value_id in FORMAT_CONFIG:
         return globals()["format_" + FORMAT_CONFIG[value_id]](value)
-
     return str(value)
 
 
@@ -43,12 +41,11 @@ def format_table(
     """
     Format table rows.
     Args:
-        rows (list[dict[str, Union[int, float]]): Table rows.
+        rows (list[dict[str, Union[int, float]]]): Table rows.
         columns (list[dict[str, str]]): Table columns.
     Returns:
         list[dict[str, str]]: Formatted table rows.
     """
-
     return [
         {
             column["id"]: format_value(row[column["id"]], column["id"])
@@ -67,7 +64,6 @@ def format_eth_address(address: str) -> str:
     Returns:
         str: Formatted address.
     """
-
     return f"{address[:5]}...{address[-5:]}"
 
 
@@ -76,16 +72,13 @@ def format_currency(
     amount: Union[float, int], suffix: str = " OCEAN", show_decimal: bool = False
 ) -> str:
     """
-    Format Ocean date.
+    Format Ocean amount.
     Args:
         amount (float): Ocean amount.
     Returns:
         str: Formatted Ocean amount.
     """
-
-    formatted_amount = (
-        f"{round(amount, 2)}" if show_decimal else numerize.numerize(amount, 0)
-    )
+    formatted_amount = f"{round(amount, 2)}" if show_decimal else numerize.numerize(amount)
     return f"{formatted_amount}{suffix}"
 
 
@@ -98,7 +91,6 @@ def format_percentage(accuracy: Union[float, int]) -> str:
     Returns:
         str: Formatted accuracy.
     """
-
     return f"{round(float(accuracy), 2)}%"
 
 
