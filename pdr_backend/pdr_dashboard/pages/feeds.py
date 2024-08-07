@@ -147,7 +147,8 @@ class FeedsPage:
             new_feed_data.append(feed_item)
 
         columns = [
-            {"name": col_to_human(col), "id": col} for col in new_feed_data[0].keys()
+            {"name": col_to_human(col=col, replace_rules=["total_"]), "id": col}
+            for col in new_feed_data[0].keys()
         ]
 
         formatted_data = format_table(new_feed_data, columns)

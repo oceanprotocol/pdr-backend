@@ -94,11 +94,12 @@ def get_date_period_text(payouts: List):
 
 
 @enforce_types
-def col_to_human(col: str) -> str:
-    col = col.replace("avg_", "")
-    col = col.replace("total_", "")
+def col_to_human(col: str, replace_rules: List[str] = ["avg_", "total_"]) -> str:
+    temp_col = col
+    for rule in replace_rules:
+        temp_col = temp_col.replace(rule, "")
 
-    return col.replace("_", " ").title()
+    return temp_col.replace("_", " ").title()
 
 
 @enforce_types
