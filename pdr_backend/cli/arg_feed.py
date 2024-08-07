@@ -25,6 +25,7 @@ class ArgFeed:
         pair: Union[ArgPair, str, None] = None,
         timeframe: Optional[Union[ArgTimeframe, str]] = None,
         contract: Optional[str] = None,
+        volume_threshold: Optional[float] = None,
     ):
         if signal is not None:
             self.signal = ArgSignal(signal) if isinstance(signal, str) else signal
@@ -36,7 +37,8 @@ class ArgFeed:
             ArgExchange(exchange) if isinstance(exchange, str) else exchange
         )
         self.pair = ArgPair(pair) if isinstance(pair, str) else pair
-        self.signal = ArgSignal(signal) if isinstance(signal, str) else signal
+        self.signal = ArgSignal(signal) if isinstance(signal, str) else signal  
+        self.volume_threshold = volume_threshold if volume_threshold else None
 
         if timeframe is None:
             self.timeframe = None

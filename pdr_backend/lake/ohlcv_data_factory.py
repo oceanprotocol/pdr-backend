@@ -13,6 +13,7 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.exchange.fetch_ohlcv import fetch_ohlcv
+from pdr_backend.lake.alt_bar import get_volume_bars
 from pdr_backend.lake.clean_raw_ohlcv import clean_raw_ohlcv
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
@@ -92,6 +93,74 @@ class OhlcvDataFactory:
         # postconditions
         assert isinstance(mergedohlcv_df, pl.DataFrame)
         return mergedohlcv_df
+        
+        
+    async def _update_volume_bars(self, fin_ut: UnixTimeMs):
+        logger.info("Update all volume bar files: begin")
+        tasks = []
+        for feed in self.ss.feeds:
+            tasks.append(self._update_volume_bars_at_feed(feed, fin_ut))
+
+        await asyncio.gather(*tasks)
+        
+    async def _update_volume_bars_at_feed(self, feed:ArgFeed, fin_ut: UnixTimeMs):
+        """
+        @arguments
+          feed -- ArgFeed
+          fin_ut -- a timestamp, in ms, in UTC
+        """
+        # read in ohlcv data from kaiko file name 
+        exch_str: str = str(feed.exchange)
+        pair_str: str = str(feed.pair)
+        assert feed.volume_threshold, f"volume_threshold can't be none"
+        threshold: float = float(feed.volume_threshold)
+        assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
+
+        update_s = f"Update volume bar file at exch={exch_str}, pair={pair_str}"
+        logger.info("%s: begin", update_s)
+
+        rawohlcv_filename = self._rawohlcv_filename(feed)
+        volumebar_filename = self._volbar_filename(feed)
+        logger.info("filename=%s", volumebar_filename)
+
+        assert feed.timeframe
+        st_ut = self._calc_start_ut_maybe_delete(feed.timeframe, rawohlcv_filename)
+        logger.info("Aim to fetch data from start time: %s", st_ut.pretty_timestr())
+        if st_ut > min(UnixTimeMs.now(), fin_ut):
+            logger.info("Given start time, no data to gather. Exit.")
+            return
+        
+        # empty ohlcv df
+        df = initialize_rawohlcv_df()
+        while True:
+            limit = 1000
+            logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
+            cols = TOHLCV_COLS
+            logger.info("Loading in kaiko ohlcv data (for calculating Volume bar) filename=%s", rawohlcv_filename)
+            rawohlcv_df = load_rawohlcv_file(rawohlcv_filename, cols, st_ut, fin_ut)
+            volume_bars, newest_ut_value = get_volume_bars(rawohlcv_df, threshold)
+            tohlcv_data = clean_raw_ohlcv(volume_bars, feed, st_ut, fin_ut)
+            # concat both TOHLCV data
+            next_df = pl.DataFrame(
+                tohlcv_data,
+                schema=TOHLCV_SCHEMA_PL,
+                orient="row",
+            )
+            df = concat_next_df(df, next_df)
+
+            if len(tohlcv_data) < limit:  # no more data, we're at newest time
+                break
+
+            # prep next iteration
+            logger.debug("newest_ut_value: %s", newest_ut_value)
+            st_ut = UnixTimeMs(newest_ut_value + feed.timeframe.ms)
+
+        # output to file
+        save_rawohlcv_file(volumebar_filename, df)
+
+        # done
+        logger.info("%s: done", update_s)
+        
 
     async def _update_rawohlcv_files(self, fin_ut: UnixTimeMs):
         logger.info("Update all rawohlcv files: begin")
@@ -250,5 +319,26 @@ class OhlcvDataFactory:
         assert "/" in str(pair_str) or "-" in pair_str, pair_str
         pair_str = str(pair_str).replace("/", "-")  # filesystem needs "-"
         basename = f"{feed.exchange}_{pair_str}_{feed.timeframe}.parquet"
+        filename = os.path.join(self.ss.lake_dir, basename)
+        return filename
+    
+    def _volbar_filename(self, feed: ArgFeed) -> str:
+        """
+        @description
+          Computes a filename for the volume bar data.
+
+        @arguments
+          feed -- ArgFeed
+
+        @return
+          volumebar_filename --
+
+        @notes
+          If pair_str has '/', it will become '-' in the filename.
+        """
+        pair_str = str(feed.pair)
+        assert "/" in str(pair_str) or "-" in pair_str, pair_str
+        pair_str = str(pair_str).replace("/", "-")  # filesystem needs "-"
+        basename = f"volume_bar_{feed.exchange}_{pair_str}_{feed.timeframe}.parquet"
         filename = os.path.join(self.ss.lake_dir, basename)
         return filename
