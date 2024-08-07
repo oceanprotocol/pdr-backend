@@ -78,7 +78,9 @@ def format_currency(
     Returns:
         str: Formatted Ocean amount.
     """
-    formatted_amount = f"{round(amount, 2)}" if show_decimal else numerize.numerize(amount)
+    formatted_amount = (
+        f"{round(amount, 2)}" if show_decimal else numerize.numerize(amount)
+    )
     return f"{formatted_amount}{suffix}"
 
 
@@ -106,4 +108,5 @@ def format_currency_with_decimal_and_suffix(value: Union[float, int]) -> str:
 
 @enforce_types
 def format_avg_currency_with_decimal(value: Union[float, int]) -> str:
-    return f"~{format_currency(value, suffix="", show_decimal=True)}"
+    formatted_value = format_currency(value, suffix="", show_decimal=True)
+    return f"~{formatted_value}"
