@@ -10,9 +10,46 @@ from pdr_backend.pdr_dashboard.util.data import (
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_metric
 
 
+def add_to_filter(filter_options, value):
+    if value not in filter_options:
+        filter_options.append(value)
+
+
+class Filter:
+    def __init__(self, name, placeholder, options):
+        self.name = name
+        self.placeholder = placeholder
+        self.options = options
+
+
+filters = [
+    {"name": "base_token", "placeholder": "Base Token", "options": []},
+    {"name": "quote_token", "placeholder": "Quote Token", "options": []},
+    {"name": "exchange", "placeholder": "Exchange", "options": []},
+    {"name": "time", "placeholder": "Time", "options": []},
+]
+
+filters_objects = [Filter(**item) for item in filters]
+
+
 class FeedsPage:
     def __init__(self, app):
         self.app = app
+
+        for feed in app.feeds_data:
+            pair_base, pair_quote = feed["pair"].split("/")
+
+            # Update base currency filter
+            add_to_filter(filters[0]["options"], pair_base)
+
+            # Update quote currency filter
+            add_to_filter(filters[1]["options"], pair_quote)
+
+            # Update source filter
+            add_to_filter(filters[2]["options"], feed["source"].capitalize())
+
+            # Update timeframe filter
+            add_to_filter(filters[3]["options"], feed["timeframe"])
 
     def layout(self):
         return html.Div(
@@ -32,6 +69,76 @@ class FeedsPage:
             style={"height": "100%"},
         )
 
+    def get_multiselect_dropdown(self, filter_obj: Filter):
+        return dcc.Dropdown(
+            id=filter_obj.name,
+            options=filter_obj.options,
+            multi=True,
+            value=[],
+            placeholder=filter_obj.placeholder,
+            style={"width": "140px", "borderColor": "#aaa"},
+        )
+
+    def get_filters(self):
+        return html.Div(
+            [
+                self.get_multiselect_dropdown(filter_obj)
+                for filter_obj in filters_objects
+            ]
+            + [
+                self.get_input_filter("Sales"),
+                self.get_input_filter("Revenue"),
+                self.get_input_filter("Accuracy"),
+                self.get_input_filter("Volume"),
+            ],
+            id="filters-container",
+        )
+
+    def get_input_filter(self, label: str):
+        return dbc.DropdownMenu(
+            [
+                self.get_input_with_label("Min", label),
+                self.get_input_with_label("Max", label),
+                html.Button(
+                    "Apply Filter",
+                    style={
+                        "width": "100%",
+                        "padding": "5px",
+                    },
+                    id=f"{label.lower()}_button",
+                ),
+            ],
+            id=f"{label.lower()}_dropdown",
+            label=label,
+            style={
+                "backgroundColor": "white",
+            },
+            toggleClassName="dropdown-toggle-container",
+        )
+
+    def get_input_with_label(self, label: str, name: str):
+        return html.Div(
+            [html.Label(label), dcc.Input(id=f"{name.lower()}_{label.lower()}")],
+            className="input-with-label",
+        )
+
+    def get_filters_section(self):
+        return html.Div(
+            [
+                self.get_filters(),
+                html.Button(
+                    "Clear All",
+                    id="clear_filters_button",
+                    style={
+                        "width": "100px",
+                        "hight": "100%",
+                        "padding": "5px",
+                    },
+                ),
+            ],
+            id="filters-section",
+        )
+
     def get_metrics_row(self):
         stats = self.app.db_getter.feeds_stats()
 
@@ -45,6 +152,7 @@ class FeedsPage:
                 for key, value in stats.items()
             ],
             id="feeds_page_metrics_row",
+            style={"marginBottom": "60px"},
         )
 
     def get_main_container(self):
@@ -57,8 +165,14 @@ class FeedsPage:
             feed_stats, feed_subscriptions
         )
 
+        self.app.feeds_table_data = feed_data
+
         return html.Div(
-            [self.get_feeds_table_area(feed_cols, feed_data)],
+            [
+                self.get_filters_section(),
+                self.get_feeds_table_area(feed_cols, feed_data),
+            ],
+            id="feeds-main-container",
             className="main-container",
         )
 
@@ -70,7 +184,7 @@ class FeedsPage:
         return html.Div(
             [
                 dash_table.DataTable(
-                    id="feeds_table",
+                    id="feeds_page_table",
                     columns=columns,
                     data=feeds_data,
                     sort_action="native",  # Enables sorting feature
