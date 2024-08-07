@@ -24,6 +24,7 @@ class FeedsPage:
                     children=[
                         self.get_metrics_row(),
                         self.get_main_container(),
+                        self.get_modal(),
                     ],
                     custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
                 ),
@@ -150,3 +151,12 @@ class FeedsPage:
         ]
 
         return columns, new_feed_data
+
+    def get_modal(self):
+        return dbc.Modal(
+            [
+                dbc.ModalHeader("Header"),
+                dbc.ModalBody("This is the content of the modal", id="modal_body"),
+            ],
+            id="modal",
+        )

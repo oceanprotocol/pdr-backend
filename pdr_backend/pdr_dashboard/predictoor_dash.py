@@ -10,6 +10,9 @@ from pdr_backend.pdr_dashboard.callbacks.callbacks_home import (
 from pdr_backend.pdr_dashboard.callbacks.callbacks_common import (
     get_callbacks_common,
 )
+from pdr_backend.pdr_dashboard.callbacks.callbacks_feeds import (
+    get_callbacks_feeds,
+)
 from pdr_backend.pdr_dashboard.util.db import DBGetter
 from pdr_backend.pdr_dashboard.util.data import get_predictoors_data_from_payouts
 from pdr_backend.pdr_dashboard.util.prices import (
@@ -64,5 +67,6 @@ def setup_app(app, ppss: PPSS):
     app.prices = fetch_token_prices()
 
     get_callbacks_home(app)
+    get_callbacks_feeds(app)
     get_callbacks_common(app)
     return app
