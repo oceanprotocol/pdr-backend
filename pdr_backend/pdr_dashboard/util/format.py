@@ -10,12 +10,12 @@ FORMAT_CONFIG = {
     "feeds_page_Revenue_metric": "currency",
     "profit_metric": "currency_with_decimal_and_suffix",
     "stake_metric": "currency_with_decimal_and_suffix",
-    "costs_metric": "avg_currency_with_decimal",
+    "costs_metric": "approximate_currency_with_decimal",
     "addr": "eth_address",
     "avg_accuracy": "percentage",
     "sales_revenue_(OCEAN)": "currency_with_decimal",
     "volume_(OCEAN)": "currency_without_decimal",
-    "avg_stake_(OCEAN)": "avg_currency_with_decimal",
+    "avg_stake_(OCEAN)": "currency_with_decimal",
 }
 
 
@@ -64,6 +64,9 @@ def format_eth_address(address: str) -> str:
     Returns:
         str: Formatted address.
     """
+    if not address:
+        return "No address"
+
     return f"{address[:5]}...{address[-5:]}"
 
 
@@ -112,6 +115,6 @@ def format_currency_with_decimal_and_suffix(value: Union[float, int]) -> str:
 
 
 @enforce_types
-def format_avg_currency_with_decimal(value: Union[float, int]) -> str:
+def format_approximate_currency_with_decimal(value: Union[float, int]) -> str:
     formatted_value = format_currency(value, suffix="", show_decimal=True)
     return f"~{formatted_value}"

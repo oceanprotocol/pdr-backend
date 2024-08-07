@@ -4,7 +4,7 @@ from pdr_backend.pdr_dashboard.util.format import (
     format_percentage,
     format_currency_with_decimal,
     format_currency_with_decimal_and_suffix,
-    format_avg_currency_with_decimal,
+    format_approximate_currency_with_decimal,
     format_value,
 )
 
@@ -21,7 +21,7 @@ def test_format_eth_address():
 
 
 def test_format_eth_address_empty():
-    assert format_eth_address("") == "..."
+    assert format_eth_address("") == "No address"
 
 
 def test_format_currency():
@@ -56,9 +56,12 @@ def test_format_currency_with_decimal_and_suffix():
     assert format_currency_with_decimal_and_suffix(1234567890) == "1234567890 OCEAN"
 
 
-def test_format_avg_currency_with_decimal():
-    assert format_avg_currency_with_decimal(1234567890.1234567890) == "~1234567890.12"
-    assert format_avg_currency_with_decimal(1234567890) == "~1234567890"
+def test_format_approximate_currency_with_decimal():
+    assert (
+        format_approximate_currency_with_decimal(1234567890.1234567890)
+        == "~1234567890.12"
+    )
+    assert format_approximate_currency_with_decimal(1234567890) == "~1234567890"
 
 
 def test_format_value():
@@ -76,5 +79,5 @@ def test_format_value():
     assert format_value(12.0, "avg_accuracy") == "12.0%"
     assert format_value(9876.12, "sales_revenue_(OCEAN)") == "9876.12"
     assert format_value(9876543, "volume_(OCEAN)") == "9.88M"
-    assert format_value(12, "avg_stake_(OCEAN)") == "~12"
+    assert format_value(12.0, "avg_stake_(OCEAN)") == "12.0"
     assert format_value(12, "unknown") == "12"
