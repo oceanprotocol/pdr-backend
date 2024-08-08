@@ -14,6 +14,7 @@ from pdr_backend.cli.arg_feed import (
 )
 from pdr_backend.cli.arg_pair import ArgPair
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
+from pdr_backend.cli.arg_vb import ArgVB
 
 
 class ArgFeeds(List[ArgFeed]):
@@ -55,12 +56,14 @@ class ArgFeeds(List[ArgFeed]):
         source: Union[str, ArgExchange],
         pair: Union[str, ArgPair],
         timeframe: Union[str, ArgTimeframe],
+        volume_threshold: Union[str, ArgVB],
     ) -> bool:
         for feed in self:
             if (
                 feed.exchange == source
                 and feed.pair == pair
                 and (not feed.timeframe or feed.timeframe == timeframe)
+                and (not feed.volume_threshold or feed.volume_threshold == volume_threshold)
             ):
                 return True
 
@@ -90,6 +93,7 @@ class ArgFeeds(List[ArgFeed]):
                     contract=row["contract"],
                     exchange=row["source"],
                     timeframe=row["timeframe"],
+                    volume_threshold=row["volume_threshold"]
                 )
                 for row in table_data
             ]
