@@ -43,9 +43,54 @@ body{
     display: none;
 }
 
+#feeds_page_table {
+    width: 100%;
+    overflow-x: auto;
+    max-height: 60vh;
+}
+
+#feeds_page_table table {
+    table-layout: auto;
+}
+
+#feeds_page_table table td::before {
+    content: '';
+    display: block;
+    width: 100px;
+}
+
+#feeds_page_table table td {
+    padding: 10px 15px;
+    text-align: center;
+}
+
+#feeds_page_table table th {
+    padding: 5px;
+}
+
+#feeds_page_table table th .column-actions {
+    display: flex;
+    align-items: center;
+}
+
+#feeds_page_table table th .column-header-name {
+    width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    white-space: normal;
+    text-overflow: ellipsis;
+    line-height: 1.5em;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
 button{
     background-color: #007BFF !important;
     color: white;
+    border: 0;
 }
 
 /* Style the label as buttons */
@@ -114,4 +159,67 @@ button{
     background-color: #6c757d !important;
     border: 0px none;
     margin-left: 5px;
+}
+
+.ms-auto{
+    margin: 0 auto !important;
+}
+
+.dropdown-toggle{
+    background-color: transparent !important;
+    color: #aaa;
+    border-color: #aaa;
+    border-radius: 4px;
+    padding: 5px 10px;
+}
+
+.dropdown-toggle:hover{
+    color: black;
+}
+
+#filters-section{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+#feeds_page_metrics_row {
+    display: flex;
+    border: 1px solid grey;
+    border-radius: 10px;
+    justify-content: space-between;
+    padding: 10px 40px;
+    margin-bottom: 10px;
+}
+
+#filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 8px;
+    width: 80%;
+}
+
+.input-with-label {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 10px;
+}
+
+.dropdown-toggle-container {
+    min-width: 130px;
+    background-color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#feeds-main-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 30px;
 }

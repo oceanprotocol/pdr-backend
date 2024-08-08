@@ -285,6 +285,23 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
                 return None
             raise e
 
+    def query_scalar(self, query: str) -> Any:
+        """
+        Execute a SQL query on DuckDB and return the result as a scalar.
+        @arguments:
+            query - The SQL query to execute.
+        @returns:
+            Any - The result of the query.
+        @example:
+            query_scalar("SELECT COUNT(*) FROM table_name")
+        """
+        result = self.duckdb_conn.execute(query).fetchone()
+
+        if len(result) == 1:
+            result = result[0]
+
+        return result
+
     @enforce_types
     def get_query_drop_common_records_by_id(
         self, drop_table_name: str, ref_table_name: str
@@ -302,7 +319,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         return f"""
         DELETE FROM {drop_table_name}
         WHERE ID IN (
-            SELECT DISTINCT ID 
+            SELECT DISTINCT ID
             FROM {ref_table_name}
         );
         """

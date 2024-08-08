@@ -6,10 +6,8 @@ from selenium.webdriver.chrome.options import Options
 
 from pdr_backend.lake.payout import mock_payouts, mock_payouts_related_with_predictions
 from pdr_backend.lake.prediction import mock_daily_predictions, mock_first_predictions
+from pdr_backend.lake.subscription import mock_subscriptions, Subscription
 
-from pdr_backend.pdr_dashboard.dash_components.callbacks import (
-    get_callbacks,
-)
 from pdr_backend.pdr_dashboard.test.resources import (
     _prepare_test_db,
     _clear_test_db,
@@ -37,6 +35,11 @@ def _sample_payouts():
 
 
 @pytest.fixture()
+def _sample_subscriptions():
+    return mock_subscriptions()
+
+
+@pytest.fixture()
 def _sample_payouts_related_with_predictions():
     return mock_payouts_related_with_predictions()
 
@@ -57,6 +60,7 @@ def pytest_setup_options():
     options = Options()
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
+    options.add_argument("--disable-search-engine-choice-screen")
 
     return options
 
@@ -95,7 +99,10 @@ def _add_css(app):
 
 @pytest.fixture
 def setup_app(
-    tmpdir, _sample_daily_predictions, _sample_payouts_related_with_predictions
+    tmpdir,
+    _sample_daily_predictions,
+    _sample_payouts_related_with_predictions,
+    _sample_subscriptions,
 ):
     _clear_test_db(str(tmpdir))
 
@@ -103,6 +110,12 @@ def setup_app(
         tmpdir,
         _sample_payouts_related_with_predictions,
         table_name=Payout.get_lake_table_name(),
+    )
+
+    _prepare_test_db(
+        tmpdir,
+        _sample_subscriptions,
+        table_name=Subscription.get_lake_table_name(),
     )
 
     ppss, _ = _prepare_test_db(
@@ -116,14 +129,16 @@ def setup_app(
 
     app = _add_css(app)
     setup_app_main(app, ppss)
-    get_callbacks(app)
 
     return app
 
 
 @pytest.fixture
 def setup_app_with_favourite_addresses(
-    tmpdir, _sample_daily_predictions, _sample_payouts_related_with_predictions
+    tmpdir,
+    _sample_daily_predictions,
+    _sample_payouts_related_with_predictions,
+    _sample_subscriptions,
 ):
     _clear_test_db(str(tmpdir))
 
@@ -131,6 +146,12 @@ def setup_app_with_favourite_addresses(
         tmpdir,
         _sample_payouts_related_with_predictions,
         table_name=Payout.get_lake_table_name(),
+    )
+
+    _prepare_test_db(
+        tmpdir,
+        _sample_subscriptions,
+        table_name=Subscription.get_lake_table_name(),
     )
 
     ppss, _ = _prepare_test_db(
@@ -145,6 +166,5 @@ def setup_app_with_favourite_addresses(
 
     app = _add_css(app)
     setup_app_main(app, ppss)
-    get_callbacks(app)
 
     return app
