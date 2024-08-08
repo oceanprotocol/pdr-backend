@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
 
-from pdr_backend.cli.arg_feeds import ArgFeeds
+from pdr_backend.cli.arg_feeds import ArgFeeds, ArgFeed
 from pdr_backend.util.time_types import UnixTimeS
 
 
@@ -338,3 +338,87 @@ def get_figures_and_metrics(
     figs_metrics.make_figures()
 
     return figs_metrics
+
+
+@enforce_types
+def get_feed_figures(payouts: Optional[List], feed: ArgFeed, predictoors: List[str]):
+    """
+    Get figures for accuracy, profit, and costs.
+    Args:
+        payouts (list): List of payouts data.
+        feeds (list): List of feeds data.
+        predictors (list): List of predictors data.
+    Returns:
+        FiguresAndMetricsResult: Tuple of accuracy, profit, and
+        costs figures, avg accuracy, total profit, avg stake
+    """
+    figs_metrics = FiguresAndMetricsResult()
+
+    if not payouts:
+        return (
+            figs_metrics.fig_accuracy,
+            figs_metrics.fig_costs,
+            figs_metrics.fig_profit,
+            figs_metrics.fig_stakes,
+        )
+
+    all_stakes = []
+    correct_prediction_count = 0
+    prediction_count = 0
+
+    for predictoor in predictoors:
+        filtered_payouts = [
+            p for p in payouts if predictoor in p["ID"] and feed.contract in p["ID"]
+        ]
+
+        if not filtered_payouts:
+            continue
+
+        processed_data = process_payouts(
+            payouts=filtered_payouts,
+            tx_fee_cost=0,
+            calculate_confint=False,
+        )
+
+        all_stakes.extend(processed_data.stakes)
+        correct_prediction_count += processed_data.correct_predictions
+        prediction_count += processed_data.predictions
+        figs_metrics.total_profit += (
+            processed_data.profits[-1] if processed_data.profits else 0.0
+        )
+        figs_metrics.total_cost += (
+            processed_data.tx_costs[-1] if processed_data.tx_costs else 0.0
+        )
+
+        short_name = f"{predictoor[:5]} - {str(feed)}"
+
+        figs_metrics.accuracy_scatters.extend(
+            processed_data.as_accuracy_scatters_bounds(short_name, False)
+        )
+
+        figs_metrics.profit_scatters.extend(
+            processed_data.as_profit_scatters(short_name)
+        )
+
+        figs_metrics.stakes_scatters.extend(
+            processed_data.as_stakes_scatters(short_name)
+        )
+
+        figs_metrics.costs_scatters.extend(
+            processed_data.as_costs_scatters(
+                f"{feed.pair.base_str}-{feed.timeframe}-{predictoor[:4]}", short_name
+            )
+        )
+
+    figs_metrics.avg_stake = sum(all_stakes) / len(all_stakes) if all_stakes else 0.0
+    figs_metrics.avg_accuracy = (
+        (correct_prediction_count / prediction_count) * 100 if prediction_count else 0.0
+    )
+    figs_metrics.make_figures()
+
+    return (
+        figs_metrics.fig_accuracy,
+        figs_metrics.fig_costs,
+        figs_metrics.fig_profit,
+        figs_metrics.fig_stakes,
+    )

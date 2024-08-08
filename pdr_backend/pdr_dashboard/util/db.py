@@ -147,9 +147,11 @@ class DBGetter:
         # Execute the query
         return self._query_db(query, scalar=True)
 
-    @enforce_types
     def payouts(
-        self, feed_addrs: List[str], predictoor_addrs: List[str], start_date: int
+        self,
+        feed_addrs: List[str],
+        predictoor_addrs: Union[List[str], None],
+        start_date: int,
     ) -> List[dict]:
         """
         Get payouts data for the given feed and predictoor addresses.
@@ -165,13 +167,19 @@ class DBGetter:
 
         # Adding conditions for the first list
         query += " OR ".join([f"ID LIKE '%{item}%'" for item in feed_addrs])
-        query += ") AND ("
-
-        # Adding conditions for the second list
-        query += " OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])
         query += ")"
+
+        if predictoor_addrs:
+            # Adding conditions for the second list
+            query += "AND ( OR ".join(
+                [f"ID LIKE '%{item}%'" for item in predictoor_addrs]
+            )
+            query += ")"
+
+        # Add condition for start date
         if start_date != 0:
             query += f"AND (slot >= {start_date})"
+
         query += ";"
 
         return self._query_db(query)

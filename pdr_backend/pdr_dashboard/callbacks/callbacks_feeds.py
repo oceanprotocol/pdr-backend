@@ -1,5 +1,8 @@
 import dash
 import dash_bootstrap_components as dbc
+from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
+from pdr_backend.pdr_dashboard.dash_components.plots import get_feed_figures
+from pdr_backend.cli.arg_feeds import ArgFeeds, ArgFeed
 
 from dash import Input, Output, State, callback_context
 
@@ -180,22 +183,37 @@ def get_callbacks_feeds(app):
         Output("modal", "is_open"),
         Output("modal", "children"),
         [
-            Input("feeds_table", "active_cell"),
+            Input("feeds_page_table", "selected_rows"),
         ],
-        State("feeds_table", "data"),
+        State("feeds_page_table", "data"),
     )
-    def update_graphs(active_cell, feeds_table_data):
-        open_modal = True if active_cell else False
+    def update_graphs(selected_rows, feeds_table_data):
+        open_modal = True if selected_rows else False
 
         if not open_modal:
             return open_modal, []
 
-        selected_row = feeds_table_data[active_cell["row"]]
+        selected_row = feeds_table_data[selected_rows[0]]
+        print(selected_row)
+        predictoor_addrs = []
+        for p in app.predictoors_data:
+            predictoor_addrs.append(p["user"])
 
+        feed = ArgFeed(
+            selected_row["exchange"].lower(),
+            None,
+            f'{selected_row["base_token"]}-{selected_row["quote_token"]}',
+            selected_row["time"],
+            selected_row["full_addr"],
+        )
+
+        payouts = app.db_getter.payouts([feed.contract], None, 0)
+        a, b, c, d = get_feed_figures(payouts, feed, predictoor_addrs)
+
+        feeds_page = FeedsPage(app)
         children = [
-            # TODO: adjust content for header and body
-            dbc.ModalHeader("Header"),
-            dbc.ModalBody(str(selected_row)),
+            feeds_page.get_feed_graphs_modal_header(selected_row),
+            feeds_page.get_feed_graphs_modal_body([a, b, c, d]),
         ]
 
         return open_modal, children
