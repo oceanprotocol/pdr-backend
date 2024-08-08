@@ -233,9 +233,9 @@ class FeedsPage:
                 sales_str += f" ({counts_str})"
 
             return {
-                "price_(OCEAN)": str(result["price"]),
+                "price_(OCEAN)": result["price"],
                 "sales": sales_str,
-                "sales_revenue_(OCEAN)": str(result["sales_revenue"]),
+                "sales_revenue_(OCEAN)": result["sales_revenue"],
             }
 
         return {
