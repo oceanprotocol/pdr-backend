@@ -130,7 +130,7 @@ def test_timeframe_metrics(setup_app, dash_duo):
         "#predictoors_table tbody tr:nth-child(2) td:nth-child(4)"
     ).text
     metric_accuracy = dash_duo.find_element("#accuracy_metric").text
-    assert table_accuracy + ".0%" == metric_accuracy
+    assert table_accuracy == metric_accuracy
 
     table_stake = dash_duo.find_element(
         "#predictoors_table tbody tr:nth-child(2) td:nth-child(5)"

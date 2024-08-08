@@ -8,7 +8,7 @@ FORMAT_CONFIG = {
     "accuracy_metric": "percentage",
     "feeds_page_Volume_metric": "currency",
     "feeds_page_Revenue_metric": "currency",
-    "profit_metric": "currency_with_decimal_and_suffix",
+    "profit_metric": "currency_without_decimal_with_suffix",
     "stake_metric": "currency_with_decimal_and_suffix",
     "costs_metric": "approximate_currency_with_decimal",
     "addr": "eth_address",
@@ -130,6 +130,11 @@ def format_percentage(accuracy: Union[float, int]) -> str:
 @enforce_types
 def format_currency_without_decimal(amount: Union[float, int]) -> str:
     return format_currency(amount, suffix="", show_decimal=False)
+
+
+@enforce_types
+def format_currency_without_decimal_with_suffix(amount: Union[float, int]) -> str:
+    return format_currency(amount, suffix=" OCEAN", show_decimal=False)
 
 
 @enforce_types
