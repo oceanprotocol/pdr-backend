@@ -1,7 +1,10 @@
 import time
+from selenium.webdriver.common.keys import Keys
 
 from pdr_backend.pdr_dashboard.test.resources import (
     _input_action,
+    _select_dropdown_option,
+    _assert_table_row_count,
     start_server_and_wait,
 )
 
@@ -24,6 +27,7 @@ def test_feeds_search_input(setup_app, dash_duo):
     _input_action(dash_duo, "#search-input-Feeds", "#feeds_table", "ADA", 2)
 
 
+# pylint: disable=too-many-statements
 def test_predictoors_search_input(setup_app, dash_duo):
     """
     Test the search input in the "Predictoors" table.
@@ -174,8 +178,76 @@ def test_navigation(setup_app, dash_duo):
     # Navigate to Feeds
     dash_duo.wait_for_element("#navbar-container a[href='/feeds']").click()
     dash_duo.wait_for_element_by_id("feeds_page_metrics_row", timeout=10)
-    dash_duo.wait_for_element_by_id("feeds_table", timeout=10)
+    dash_duo.wait_for_element_by_id("feeds_page_table", timeout=10)
 
     # Navigate to Home
     dash_duo.wait_for_element("#navbar-container a[href='/']").click()
     dash_duo.wait_for_element_by_id("plots_container", timeout=10)
+
+
+def test_feeds_table_filters(setup_app, dash_duo):
+    """
+    Test the filters associated to the feeds table from
+    the Feeds page.
+    """
+
+    app = setup_app
+    start_server_and_wait(dash_duo, app)
+
+    # Navigate to feeds page
+    dash_duo.wait_for_element("#feeds")
+    dash_duo.find_element("#feeds").click()
+
+    # Check if the dropdown menu is present
+    dash_duo.wait_for_element("#base_token")
+
+    # Interact with the base token dropdown
+    _select_dropdown_option(dash_duo, "#base_token", "ETH")
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 3)
+
+    # Interact with the time dropdown
+    _select_dropdown_option(dash_duo, "#time", "5m")
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 2)
+
+    # Click clear all button
+    dash_duo.find_element("#clear_filters_button").click()
+    time.sleep(1)  # Allow time for the table to refresh
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 6)
+
+    # Interact with the base token dropdown
+    _select_dropdown_option(dash_duo, "#base_token", "ADA")
+
+    # Interact with the accuracy dropdown and set min accuracy
+    dash_duo.find_element("#accuracy_dropdown").click()
+    min_accuracy_input = dash_duo.find_element("#accuracy_min")
+    min_accuracy_input.clear()
+    min_accuracy_input.send_keys("90" + Keys.ENTER)
+
+    # Submit min value
+    dash_duo.find_element("#accuracy_button").click()
+    time.sleep(1)  # Allow time for the table to refresh
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 1)
+
+    # Update min accuracy value
+    min_accuracy_input.click()
+    min_accuracy_input.send_keys(Keys.BACKSPACE * 2)  # Clear previous input
+    min_accuracy_input.send_keys("80" + Keys.ENTER)
+    dash_duo.find_element("#accuracy_button").click()
+    # time.sleep(50)  # Allow time for the table to refresh
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 2)
+
+    # Interact with the volume dropdown and set max volume
+    dash_duo.find_element("#volume_dropdown").click()
+    min_accuracy_input = dash_duo.find_element("#volume_max")
+    min_accuracy_input.clear()
+    min_accuracy_input.send_keys("8" + Keys.ENTER)
+
+    # Submit max value
+    dash_duo.find_element("#volume_button").click()
+    time.sleep(1)  # Allow time for the table to refresh
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 1)
+
+    # Click clear all button
+    dash_duo.find_element("#clear_filters_button").click()
+    time.sleep(1)  # Allow time for the table to refresh
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 6)

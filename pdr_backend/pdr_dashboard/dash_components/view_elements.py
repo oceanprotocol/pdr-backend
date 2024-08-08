@@ -115,6 +115,7 @@ def get_nav_item(text: str, location: str, active: bool):
     return dbc.NavItem(
         dbc.NavLink(
             text,
+            id=text.lower(),
             href=location,
             active=active,
             style={"fontSize": "26px", "margin": "0 10px"},
