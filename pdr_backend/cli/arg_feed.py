@@ -38,7 +38,7 @@ class ArgFeed:
             ArgExchange(exchange) if isinstance(exchange, str) else exchange
         )
         self.pair = ArgPair(pair) if isinstance(pair, str) else pair
-        self.signal = ArgSignal(signal) if isinstance(signal, str) else signal  
+        self.signal = ArgSignal(signal) if isinstance(signal, str) else signal
         self.volume_threshold = volume_threshold if volume_threshold else None
 
         if timeframe is None:
@@ -59,7 +59,7 @@ class ArgFeed:
 
         if self.timeframe is not None:
             feed_str += f" {self.timeframe}"
-            
+
         if self.volume_threshold is not None:
             feed_str += f" {self.volume_threshold}"
 
@@ -165,7 +165,7 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
             volume_threshold_str = feeds_str_split[-1]
             if vb_float_ok(volume_threshold_str):
                 # last part is a valid volume threshold
-                vb_str_list= ArgVBs.from_str(volume_threshold_str)
+                vb_str_list = ArgVBs.from_str(volume_threshold_str)
             else:
                 vb_str_list = [None]
 

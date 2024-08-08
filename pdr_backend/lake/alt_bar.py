@@ -9,6 +9,7 @@ logging = logging.getLogger("volume_bar")
 
 # add config pair: volume_threshold in ppss
 
+
 def _extract_bars(data, metric, threshold=50000):
     """
     For loop which compiles the various bars: dollar, volume, or tick.
@@ -22,8 +23,13 @@ def _extract_bars(data, metric, threshold=50000):
     """
 
     list_bars = []
-    cum_ticks, cum_dollar_value, cum_volume, high_price, low_price = 0, 0, 0, -np.inf, np.inf
-
+    cum_ticks, cum_dollar_value, cum_volume, high_price, low_price = (
+        0,
+        0,
+        0,
+        -np.inf,
+        np.inf,
+    )
 
     # Iterate over rows
     for row in data.values:
@@ -48,19 +54,46 @@ def _extract_bars(data, metric, threshold=50000):
             low_price = low
 
         # Update cache
-        cache.append([timestamp, open_price, low_price, high_price, cum_volume, cum_dollar_value, cum_ticks])
+        cache.append(
+            [
+                timestamp,
+                open_price,
+                low_price,
+                high_price,
+                cum_volume,
+                cum_dollar_value,
+                cum_ticks,
+            ]
+        )
 
         # If threshold reached then take a sample
-        if eval(metric) >= threshold:   # pylint: disable=eval-used
+        if eval(metric) >= threshold:  # pylint: disable=eval-used
             # Create bars
             open_price = cache[0][1]
             low_price = min(low_price, low)
             close_price = price
 
             # Update bars & Reset counters
-            list_bars.append([timestamp, open_price, high_price, low_price, close_price,
-                              cum_volume, cum_dollar_value, cum_ticks])
-            cum_ticks, cum_dollar_value, cum_volume, cache, high_price, low_price = 0, 0, 0, [], -np.inf, np.inf
+            list_bars.append(
+                [
+                    timestamp,
+                    open_price,
+                    high_price,
+                    low_price,
+                    close_price,
+                    cum_volume,
+                    cum_dollar_value,
+                    cum_ticks,
+                ]
+            )
+            cum_ticks, cum_dollar_value, cum_volume, cache, high_price, low_price = (
+                0,
+                0,
+                0,
+                [],
+                -np.inf,
+                np.inf,
+            )
 
     return list_bars, cache
 
@@ -78,9 +111,12 @@ def get_dollar_bars(rawohlcv_df, threshold=70000000):
     :param batch_size: The number of rows per batch. Less RAM = smaller batch size.
     :return: Dataframe of dollar bars
     """
-    list_bars, cache = _extract_bars(rawohlcv_df, metric='cum_dollar_value', threshold=threshold)
+    list_bars, cache = _extract_bars(
+        rawohlcv_df, metric="cum_dollar_value", threshold=threshold
+    )
     newest_ut_value = cache[0]["timestamp"]
     return list_bars, newest_ut_value
+
 
 def get_volume_bars(rawohlcv_df, threshold):
     """
@@ -94,9 +130,12 @@ def get_volume_bars(rawohlcv_df, threshold):
     :param batch_size: The number of rows per batch. Less RAM = smaller batch size.
     :return: Dataframe of volume bars
     """
-    list_bars, cache = _extract_bars(rawohlcv_df, metric='cum_volume', threshold=threshold)
+    list_bars, cache = _extract_bars(
+        rawohlcv_df, metric="cum_volume", threshold=threshold
+    )
     newest_ut_value = cache[0]["timestamp"]
     return list_bars, newest_ut_value
+
 
 def get_tick_bars(rawohlcv_df, threshold):
     """
@@ -107,6 +146,8 @@ def get_tick_bars(rawohlcv_df, threshold):
     :param batch_size: The number of rows per batch. Less RAM = smaller batch size.
     :return: Dataframe of tick bars
     """
-    list_bars, cache = _extract_bars(rawohlcv_df, metric='cum_tick', threshold=threshold)
+    list_bars, cache = _extract_bars(
+        rawohlcv_df, metric="cum_tick", threshold=threshold
+    )
     newest_ut_value = cache[0]["timestamp"]
     return list_bars, newest_ut_value

@@ -93,8 +93,7 @@ class OhlcvDataFactory:
         # postconditions
         assert isinstance(mergedohlcv_df, pl.DataFrame)
         return mergedohlcv_df
-        
-        
+
     async def _update_volume_bars(self, fin_ut: UnixTimeMs):
         logger.info("Update all volume bar files: begin")
         tasks = []
@@ -102,14 +101,14 @@ class OhlcvDataFactory:
             tasks.append(self._update_volume_bars_at_feed(feed, fin_ut))
 
         await asyncio.gather(*tasks)
-        
-    async def _update_volume_bars_at_feed(self, feed:ArgFeed, fin_ut: UnixTimeMs):
+
+    async def _update_volume_bars_at_feed(self, feed: ArgFeed, fin_ut: UnixTimeMs):
         """
         @arguments
           feed -- ArgFeed
           fin_ut -- a timestamp, in ms, in UTC
         """
-        # read in ohlcv data from kaiko file name 
+        # read in ohlcv data from kaiko file name
         exch_str: str = str(feed.exchange)
         pair_str: str = str(feed.pair)
         assert feed.volume_threshold, f"volume_threshold can't be none"
@@ -129,14 +128,17 @@ class OhlcvDataFactory:
         if st_ut > min(UnixTimeMs.now(), fin_ut):
             logger.info("Given start time, no data to gather. Exit.")
             return
-        
+
         # empty ohlcv df
         df = initialize_rawohlcv_df()
         while True:
             limit = 1000
             logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
             cols = TOHLCV_COLS
-            logger.info("Loading in kaiko ohlcv data (for calculating Volume bar) filename=%s", rawohlcv_filename)
+            logger.info(
+                "Loading in kaiko ohlcv data (for calculating Volume bar) filename=%s",
+                rawohlcv_filename,
+            )
             rawohlcv_df = load_rawohlcv_file(rawohlcv_filename, cols, st_ut, fin_ut)
             volume_bars, newest_ut_value = get_volume_bars(rawohlcv_df, threshold)
             tohlcv_data = clean_raw_ohlcv(volume_bars, feed, st_ut, fin_ut)
@@ -160,7 +162,6 @@ class OhlcvDataFactory:
 
         # done
         logger.info("%s: done", update_s)
-        
 
     async def _update_rawohlcv_files(self, fin_ut: UnixTimeMs):
         logger.info("Update all rawohlcv files: begin")
@@ -321,7 +322,7 @@ class OhlcvDataFactory:
         basename = f"{feed.exchange}_{pair_str}_{feed.timeframe}.parquet"
         filename = os.path.join(self.ss.lake_dir, basename)
         return filename
-    
+
     def _volbar_filename(self, feed: ArgFeed) -> str:
         """
         @description

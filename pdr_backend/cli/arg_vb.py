@@ -2,6 +2,7 @@ from typing import List, Union
 
 from enforce_typing import enforce_types
 
+
 class ArgVB:
     @enforce_types
     def __init__(self, vb_str: str):
@@ -18,8 +19,8 @@ class ArgVB:
 
     def __str__(self):
         return self.vb_str
-    
-    
+
+
 class ArgVBs(List[ArgVB]):
     @enforce_types
     def __init__(self, volume_thresholds: Union[List[str], List[ArgVB]]):

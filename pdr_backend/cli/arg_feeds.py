@@ -63,7 +63,10 @@ class ArgFeeds(List[ArgFeed]):
                 feed.exchange == source
                 and feed.pair == pair
                 and (not feed.timeframe or feed.timeframe == timeframe)
-                and (not feed.volume_threshold or feed.volume_threshold == volume_threshold)
+                and (
+                    not feed.volume_threshold
+                    or feed.volume_threshold == volume_threshold
+                )
             ):
                 return True
 
@@ -93,7 +96,7 @@ class ArgFeeds(List[ArgFeed]):
                     contract=row["contract"],
                     exchange=row["source"],
                     timeframe=row["timeframe"],
-                    volume_threshold=row["volume_threshold"]
+                    volume_threshold=row["volume_threshold"],
                 )
                 for row in table_data
             ]
