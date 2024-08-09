@@ -15,7 +15,7 @@ from pdr_backend.cli.arg_timeframe import (
     ArgTimeframes,
     timeframes_str_ok,
 )
-from pdr_backend.cli.arg_vb import ArgVBs, vb_float_ok
+from pdr_backend.cli.arg_vb import ArgVBs, verify_vb_ok
 
 
 class ArgFeed:
@@ -120,6 +120,7 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
 
     @arguments
       feeds_str - "<exchange_str> <pairs_str> <chars subset of "ohclv"> <timeframe> "
+      volume_bar_feeds = "<exchange_str> <pairs_str> <volume_threshold> "
       do_verify - typically T. Only F to avoid recursion from verify functions
 
     @return
@@ -163,7 +164,7 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
             offset_end = None
             # check if last part is volume threshold
             volume_threshold_str = feeds_str_split[-1]
-            if vb_float_ok(volume_threshold_str):
+            if verify_vb_ok(volume_threshold_str, True):
                 # last part is a valid volume threshold
                 vb_str_list = ArgVBs.from_str(volume_threshold_str)
             else:

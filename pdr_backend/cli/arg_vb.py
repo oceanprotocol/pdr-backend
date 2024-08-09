@@ -1,3 +1,4 @@
+import re
 from typing import List, Union
 
 from enforce_typing import enforce_types
@@ -8,11 +9,14 @@ class ArgVB:
     def __init__(self, vb_str: str):
         """
         @arguments
-          vb_str -- e.g. "2100"
+          vb_str -- e.g. "vb-2100"
         """
-        vb_float_ok(vb_str)
+        if not verify_vb_ok(vb_str):
+            raise ValueError(vb_str)
+        
+        _, value_str = _unpack_vb_str(vb_str)
 
-        self.vb_str = vb_str
+        self.vb_str = value_str
 
     def __eq__(self, other):
         return str(self) == str(other)
@@ -38,7 +42,7 @@ class ArgVBs(List[ArgVB]):
     def from_str(volume_thresholds_str: str):
         """
         @description
-          Parses a comma-separated string of volume_thresholds, e.g. "105.3,200"
+          Parses a comma-separated string of volume_thresholds, e.g. "vb-105.3,vb-200"
         """
         if not isinstance(volume_thresholds_str, str):
             raise TypeError("volume_thresholds_str must be a string")
@@ -53,9 +57,24 @@ class ArgVBs(List[ArgVB]):
 
 
 @enforce_types
-def vb_float_ok(s: str) -> bool:
+def verify_vb_ok(s: str) -> bool:
+    if not re.match(r"vb-\d+(\.\d+)?$", s):
+        return False
+
+    _, value_str = _unpack_vb_str(s)
     try:
-        float(s)
+        float(value_str)
         return True
     except ValueError:
         return False
+    
+
+def _unpack_vb_str(vb_str: str) -> tuple:
+    """
+    Unpacks the vb_str into prefix and value_str.
+
+    Example: Given 'vb-2100.5'
+    Return ('vb', '2100.5')
+    """
+    prefix, value_str = vb_str.split('-', 1)
+    return (prefix, value_str)
