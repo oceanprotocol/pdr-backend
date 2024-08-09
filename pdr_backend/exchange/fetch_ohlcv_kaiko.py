@@ -18,6 +18,7 @@ def exchange_str_to_kaiko(exchange_str: str):
         return "binc"
     return exchange_str
 
+
 @enforce_types
 def convert_to_tohlcv(data):
     def extract_fields(entry):
@@ -27,9 +28,9 @@ def convert_to_tohlcv(data):
             float(entry["high"]),
             float(entry["low"]),
             float(entry["close"]),
-            float(entry["volume"])
+            float(entry["volume"]),
         )
-    
+
     raw_tohlcv_data = []
     last_valid_entry = None
 
@@ -37,16 +38,13 @@ def convert_to_tohlcv(data):
         if entry["close"] is None:
             if last_valid_entry is None:
                 # Find the next valid entry with a non-None 'close'
-                for future_entry in data[data.index(entry) + 1:]:
+                for future_entry in data[data.index(entry) + 1 :]:
                     if future_entry["close"] is not None:
                         last_valid_entry = extract_fields(future_entry)
                         break
-            
+
             if last_valid_entry:
-                raw_tohlcv_data.append((
-                    int(entry["timestamp"]),
-                    *last_valid_entry[1:]
-                ))
+                raw_tohlcv_data.append((int(entry["timestamp"]), *last_valid_entry[1:]))
         else:
             tohlcv_tuple = extract_fields(entry)
             last_valid_entry = tohlcv_tuple
