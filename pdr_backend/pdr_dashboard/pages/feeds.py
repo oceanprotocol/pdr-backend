@@ -1,13 +1,14 @@
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Union
 
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 from pdr_backend.pdr_dashboard.util.data import (
-    col_to_human,
+    get_feed_column_ids,
     find_with_key_value,
 )
 
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_metric
+from pdr_backend.pdr_dashboard.util.format import format_table
 
 
 def add_to_filter(filter_options, value):
@@ -160,11 +161,11 @@ class FeedsPage:
             self.app.network_name
         )
 
-        feed_cols, feed_data = self.get_feeds_data_for_feeds_table(
+        feed_cols, feed_data, raw_feed_data = self.get_feeds_data_for_feeds_table(
             feed_stats, feed_subscriptions
         )
 
-        self.app.feeds_table_data = feed_data
+        self.app.feeds_table_data = raw_feed_data
 
         return html.Div(
             [
@@ -185,6 +186,7 @@ class FeedsPage:
                 dash_table.DataTable(
                     id="feeds_page_table",
                     columns=columns,
+                    hidden_columns=["sales_raw"],
                     data=feeds_data,
                     sort_action="native",  # Enables sorting feature
                 )
@@ -194,25 +196,25 @@ class FeedsPage:
 
     def get_feeds_stat_with_contract(
         self, contract: str, feed_stats: List[Dict[str, Any]]
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Union[float, int]]:
         result = find_with_key_value(feed_stats, "contract", contract)
 
         if result:
             return {
-                "avg_accuracy": str(round(result["avg_accuracy"], 2)) + "%",
-                "avg_stake_(OCEAN)": str(round(result["avg_stake"], 2)),
-                "volume_(OCEAN)": str(round(result["volume"], 2)),
+                "avg_accuracy": float(result["avg_accuracy"]),
+                "avg_stake_per_epoch_(OCEAN)": float(result["avg_stake"]),
+                "volume_(OCEAN)": float(result["volume"]),
             }
 
         return {
-            "avg_accuracy": "",
-            "avg_stake_(OCEAN)": "",
-            "volume_(OCEAN)": "",
+            "avg_accuracy": 0,
+            "avg_stake_per_epoch_(OCEAN)": 0,
+            "volume_(OCEAN)": 0,
         }
 
     def get_feeds_subscription_stat_with_contract(
         self, contract: str, feed_subcription_stats: List[Dict[str, Any]]
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Union[float, int, str]]:
         result = find_with_key_value(feed_subcription_stats, "contract", contract)
 
         if result:
@@ -226,28 +228,32 @@ class FeedsPage:
             )
 
             if df_buy_count_str or ws_buy_count_str:
-                counts_str = ", ".join(
+                counts_str = "_".join(
                     filter(None, [df_buy_count_str, ws_buy_count_str])
                 )
-                sales_str += f" ({counts_str})"
+
+                if counts_str:
+                    sales_str += f"_{counts_str}"
 
             return {
-                "price_(OCEAN)": str(result["price"]),
+                "price_(OCEAN)": result["price"],
                 "sales": sales_str,
-                "sales_revenue_(OCEAN)": str(result["sales_revenue"]),
+                "sales_raw": result["sales"],
+                "sales_revenue_(OCEAN)": result["sales_revenue"],
             }
 
         return {
-            "price_(OCEAN)": "",
-            "sales": "",
-            "sales_revenue_(OCEAN)": "",
+            "price_(OCEAN)": 0,
+            "sales": 0,
+            "sales_raw": 0,
+            "sales_revenue_(OCEAN)": 0,
         }
 
     def get_feeds_data_for_feeds_table(
         self,
         feed_stats: List[Dict[str, Any]],
         feed_subcription_stats: List[Dict[str, Any]],
-    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]]]:
+    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
         temp_data = self.app.feeds_data
 
@@ -256,7 +262,7 @@ class FeedsPage:
         for feed in temp_data:
             split_pair = feed["pair"].split("/")
             feed_item = {}
-            feed_item["addr"] = feed["contract"][:5] + "..." + feed["contract"][-5:]
+            feed_item["addr"] = feed["contract"]
             feed_item["base_token"] = split_pair[0]
             feed_item["quote_token"] = split_pair[1]
             feed_item["exchange"] = feed["source"].capitalize()
@@ -274,8 +280,8 @@ class FeedsPage:
 
             new_feed_data.append(feed_item)
 
-        columns = [
-            {"name": col_to_human(col), "id": col} for col in new_feed_data[0].keys()
-        ]
+        columns = get_feed_column_ids(new_feed_data[0])
 
-        return columns, new_feed_data
+        formatted_data = format_table(new_feed_data, columns)
+
+        return columns, formatted_data, new_feed_data

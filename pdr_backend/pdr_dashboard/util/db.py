@@ -220,8 +220,8 @@ class DBGetter:
 
         return {
             "Feeds": feeds if feeds else 0,
-            "Accuracy": str(round(accuracy, 2) if accuracy else 0.0) + "%",
-            "Volume": str(round(volume, 2) if volume else 0.0) + " OCEAN",
+            "Accuracy": accuracy if accuracy else 0.0,
+            "Volume": volume if volume else 0,
             "Sales": sales if sales else 0,
-            "Revenue": str(round(revenue, 2) if revenue else 0.0) + " OCEAN",
+            "Revenue": revenue if revenue else 0,
         }
