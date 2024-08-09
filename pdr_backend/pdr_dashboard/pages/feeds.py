@@ -284,7 +284,9 @@ class FeedsPage:
     def get_feed_graphs_modal_header(self, selected_row):
         return html.Div(
             html.Span(
-                f'{selected_row["base_token"]}-{selected_row["quote_token"]} {selected_row["time"]} {selected_row["exchange"]}',
+                f"""{selected_row["base_token"]}-{selected_row["quote_token"]}
+                {selected_row["time"]} {selected_row["exchange"]}
+                """,
                 style={"fontWeight": "bold", "fontSize": "20px"},
             ),
             style={
@@ -292,8 +294,19 @@ class FeedsPage:
                 "justifyContent": "center",
                 "width": "100%",
                 "padding": "10px",
+                "marginBottom": "10px",
             },
         )
 
     def get_feed_graphs_modal_body(self, figures):
-        return html.Div([get_graph(fig) for fig in figures])
+        return html.Div(
+            [
+                html.Div(get_graph(fig), style={"width": "45%", "margin": "0 auto"})
+                for fig in figures
+            ],
+            style={
+                "display": "flex",
+                "flexWrap": "wrap",
+                "justifyContent": "space-between",
+            },
+        )

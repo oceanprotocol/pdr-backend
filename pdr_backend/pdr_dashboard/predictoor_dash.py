@@ -13,9 +13,6 @@ from pdr_backend.pdr_dashboard.callbacks.callbacks_home import (
 from pdr_backend.pdr_dashboard.callbacks.callbacks_common import (
     get_callbacks_common,
 )
-from pdr_backend.pdr_dashboard.callbacks.callbacks_feeds import (
-    get_callbacks_feeds,
-)
 from pdr_backend.pdr_dashboard.util.db import DBGetter
 from pdr_backend.pdr_dashboard.util.data import get_predictoors_data_from_payouts
 from pdr_backend.pdr_dashboard.util.prices import (

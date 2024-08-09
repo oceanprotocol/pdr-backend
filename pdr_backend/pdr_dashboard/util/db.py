@@ -129,6 +129,27 @@ class DBGetter:
 
         return self._query_db(query)
 
+    @enforce_types
+    def feed_daily_subscriptions_by_feed_id(self, feed_id: str):
+        query = f"""
+        WITH date_counts AS (
+            SELECT
+                CAST(TO_TIMESTAMP(timestamp / 1000) AS DATE) AS day,
+                COUNT(*) AS count,
+                SUM(last_price_value) AS revenue
+            FROM
+                {Subscription.get_lake_table_name()}
+            WHERE
+                ID LIKE '%{feed_id}%'
+            GROUP BY
+                CAST(TO_TIMESTAMP(timestamp / 1000) AS DATE)
+        )
+        SELECT * FROM date_counts
+        ORDER BY day;
+        """
+
+        return self._query_db(query)
+
     def feed_ids_based_on_predictoors(self, predictoor_addrs: List[str]):
         # Constructing the SQL query
         query = f"""
@@ -171,9 +192,8 @@ class DBGetter:
 
         if predictoor_addrs:
             # Adding conditions for the second list
-            query += "AND ( OR ".join(
-                [f"ID LIKE '%{item}%'" for item in predictoor_addrs]
-            )
+            query += " AND ("
+            query += " OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])
             query += ")"
 
         # Add condition for start date
