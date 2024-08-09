@@ -128,6 +128,8 @@ class OhlcvDataFactory:
         df = initialize_rawohlcv_df()
         while True:
             limit = 1000
+            if self.ss.api == "kaiko":
+                limit = 100000
             logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
             raw_tohlcv_data = fetch_ohlcv(
                 exchange_str=exch_str,
