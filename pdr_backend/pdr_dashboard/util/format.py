@@ -15,10 +15,10 @@ FORMAT_CONFIG = {
     "user": "eth_address",
     "avg_accuracy": "percentage",
     "avg_stake": "currency_conditional",
-    "sales_revenue_(OCEAN)": "currency_with_decimal",
+    "sales_revenue_(OCEAN)": "currency_conditional",
     "total_profit": "currency_without_decimal",
     "volume_(OCEAN)": "currency_without_decimal",
-    "avg_stake_per_epoch_(OCEAN)": "currency_with_decimal",
+    "avg_stake_per_epoch_(OCEAN)": "currency_conditional",
 }
 
 
@@ -129,7 +129,7 @@ def format_percentage(accuracy: Union[float, int]) -> str:
 
 @enforce_types
 def format_currency_conditional(amount: Union[float, int]) -> str:
-    return format_currency(amount, suffix="", show_decimal=amount < 10)
+    return format_currency(amount, suffix="", show_decimal=amount < 1000)
 
 
 @enforce_types
