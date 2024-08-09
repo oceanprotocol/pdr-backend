@@ -251,7 +251,7 @@ class FeedsPage:
         self,
         feed_stats: List[Dict[str, Any]],
         feed_subcription_stats: List[Dict[str, Any]],
-    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]]]:
+    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
         temp_data = self.app.feeds_data
 
