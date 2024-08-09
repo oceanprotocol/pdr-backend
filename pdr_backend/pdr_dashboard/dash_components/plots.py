@@ -379,7 +379,7 @@ def get_feed_figures(payouts: Optional[List], subscriptions: List):
         datetime_obj = datetime.datetime.combine(subscription["day"], datetime.time())
         # Convert to Unix timestamp
         unix_timestamp = int(datetime_obj.timestamp())
-        subscription_dates.append(unix_timestamp)
+        subscription_dates.append(unix_timestamp * 1000)
 
     # sort payouts by slots
     payouts.sort(key=itemgetter("slot"))
