@@ -13,7 +13,7 @@ class ArgVB:
         """
         if not verify_vb_ok(vb_str):
             raise ValueError(vb_str)
-        
+
         _, value_str = _unpack_vb_str(vb_str)
 
         self.vb_str = value_str
@@ -67,7 +67,7 @@ def verify_vb_ok(s: str) -> bool:
         return True
     except ValueError:
         return False
-    
+
 
 def _unpack_vb_str(vb_str: str) -> tuple:
     """
@@ -76,5 +76,5 @@ def _unpack_vb_str(vb_str: str) -> tuple:
     Example: Given 'vb-2100.5'
     Return ('vb', '2100.5')
     """
-    prefix, value_str = vb_str.split('-', 1)
+    prefix, value_str = vb_str.split("-", 1)
     return (prefix, value_str)
