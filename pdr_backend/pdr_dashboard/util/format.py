@@ -99,13 +99,13 @@ def format_sales_info_data(data: str) -> str:
 
     result_data = []
 
-    for i in range(len(splitted_data)):
-        if splitted_data[i].isnumeric():
+    for _, item in enumerate(splitted_data):
+        if item.isnumeric():
             result_data.append(
-                format_currency(int(splitted_data[i]), suffix="", show_decimal=False)
+                format_currency(int(item), suffix="", show_decimal=False)
             )
         else:
-            splitted_item = splitted_data[i].split("-")
+            splitted_item = item.split("-")
             formatted_nr = format_currency(
                 int(splitted_item[0]), suffix="", show_decimal=False
             )
