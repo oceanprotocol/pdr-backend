@@ -69,7 +69,7 @@ def test_format_value():
     assert format_value(1.12, "accuracy_metric") == "1.12%"
     assert format_value(12, "feeds_page_Volume_metric") == "12 OCEAN"
     assert format_value(12, "feeds_page_Revenue_metric") == "12 OCEAN"
-    assert format_value(9876.12, "profit_metric") == "9876.12 OCEAN"
+    assert format_value(9876.12, "profit_metric") == "9.88K OCEAN"
     assert format_value(9876.12, "stake_metric") == "9876.12 OCEAN"
     assert format_value(9876, "costs_metric") == "~9876"
     assert (
@@ -77,7 +77,7 @@ def test_format_value():
         == "0x123...67890"
     )
     assert format_value(12.0, "avg_accuracy") == "12.0%"
-    assert format_value(9876.12, "sales_revenue_(OCEAN)") == "9876.12"
+    assert format_value(9876.12, "sales_revenue_(OCEAN)") == "9.88K"
     assert format_value(9876543, "volume_(OCEAN)") == "9.88M"
     assert format_value(12.0, "avg_stake_per_epoch_(OCEAN)") == "12.0"
     assert format_value(12, "unknown") == "12"

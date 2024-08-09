@@ -9,6 +9,7 @@ FORMAT_CONFIG = {
     "accuracy_metric": "percentage",
     "feeds_page_Volume_metric": "currency",
     "feeds_page_Revenue_metric": "currency",
+    "feeds_page_Sales_metric": "currency_without_decimal",
     "profit_metric": "currency_without_decimal_with_suffix",
     "stake_metric": "currency_with_decimal_and_suffix",
     "costs_metric": "approximate_currency_with_decimal",
@@ -17,6 +18,7 @@ FORMAT_CONFIG = {
     "avg_accuracy": "percentage",
     "avg_stake": "currency_conditional",
     "sales_revenue_(OCEAN)": "currency_conditional",
+    "sales": "sales_info_data",
     "total_profit": "currency_without_decimal",
     "volume_(OCEAN)": "currency_without_decimal",
     "avg_stake_per_epoch_(OCEAN)": "currency_conditional",
@@ -82,6 +84,40 @@ def format_table(
         }
         for row in rows
     ]
+
+
+@enforce_types
+def format_sales_info_data(data: str) -> str:
+    """
+    Format sales multiple data.
+    Args:
+        data str: Sales data. eg: 2160_2140-DF_20-WS
+    Returns:
+        str: Formatted sales data. eg: 2.16K (2.14K DF, 20 WS)
+    """
+    splitted_data = data.split("_")
+
+    result_data = []
+
+    for i in range(len(splitted_data)):
+        if splitted_data[i].isnumeric():
+            result_data.append(
+                format_currency(int(splitted_data[i]), suffix="", show_decimal=False)
+            )
+        else:
+            splitted_item = splitted_data[i].split("-")
+            formatted_nr = format_currency(
+                int(splitted_item[0]), suffix="", show_decimal=False
+            )
+
+            result_data.append(f"{formatted_nr} {splitted_item[1]}")
+
+    info_part = (", ").join(result_data[1:])
+
+    if info_part:
+        info_part = f" ({info_part})"
+
+    return result_data[0] + info_part
 
 
 @enforce_types

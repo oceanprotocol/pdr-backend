@@ -228,10 +228,12 @@ class FeedsPage:
             )
 
             if df_buy_count_str or ws_buy_count_str:
-                counts_str = ", ".join(
+                counts_str = "_".join(
                     filter(None, [df_buy_count_str, ws_buy_count_str])
                 )
-                sales_str += f" ({counts_str})"
+
+                if counts_str:
+                    sales_str += f"_{counts_str}"
 
             return {
                 "price_(OCEAN)": result["price"],
