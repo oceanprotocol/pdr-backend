@@ -100,7 +100,11 @@ def get_callbacks_feeds(app):
             if all(check_condition(item, *condition) for condition in conditions)
         ]
 
-        return format_table(new_table_data, get_feed_column_ids(new_table_data[0]))
+        columns = []
+        if new_table_data:
+            columns = get_feed_column_ids(new_table_data[0])
+
+        return format_table(new_table_data, columns)
 
     @app.callback(
         Output("sales_dropdown", "label"),

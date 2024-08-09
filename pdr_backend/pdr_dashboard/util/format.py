@@ -87,7 +87,7 @@ def format_table(
 
 
 @enforce_types
-def format_sales_info_data(data: str) -> str:
+def format_sales_info_data(data: Union[str, int]) -> str:
     """
     Format sales multiple data.
     Args:
@@ -95,7 +95,7 @@ def format_sales_info_data(data: str) -> str:
     Returns:
         str: Formatted sales data. eg: 2.16K (2.14K DF, 20 WS)
     """
-    splitted_data = data.split("_")
+    splitted_data = str(data).split("_")
 
     result_data = []
 
