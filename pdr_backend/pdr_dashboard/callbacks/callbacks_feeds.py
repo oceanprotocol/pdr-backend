@@ -1,5 +1,8 @@
 import dash
 from dash import Input, Output, State, callback_context
+from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
+from pdr_backend.pdr_dashboard.dash_components.plots import get_feed_figures
+from pdr_backend.cli.arg_feeds import ArgFeed
 
 
 def filter_table_by_range(min_val, max_val, label_text):
@@ -173,3 +176,39 @@ def get_callbacks_feeds(app):
             None,
             None,
         )
+
+    @app.callback(
+        Output("modal", "is_open"),
+        Output("modal", "children"),
+        [
+            Input("feeds_page_table", "selected_rows"),
+        ],
+        State("feeds_page_table", "data"),
+    )
+    def update_graphs(selected_rows, feeds_table_data):
+        open_modal = bool(selected_rows)
+
+        if not open_modal:
+            return open_modal, []
+
+        selected_row = feeds_table_data[selected_rows[0]]
+
+        feed = ArgFeed(
+            selected_row["exchange"].lower(),
+            None,
+            f'{selected_row["base_token"]}-{selected_row["quote_token"]}',
+            selected_row["time"],
+            selected_row["full_addr"],
+        )
+
+        payouts = app.db_getter.payouts([feed.contract], None, 0)
+        subscriptions = app.db_getter.feed_daily_subscriptions_by_feed_id(feed.contract)
+        a, b, c, d, e, f = get_feed_figures(payouts, subscriptions)
+
+        feeds_page = FeedsPage(app)
+        children = [
+            feeds_page.get_feed_graphs_modal_header(selected_row),
+            feeds_page.get_feed_graphs_modal_body([a, b, c, d, e, f]),
+        ]
+
+        return open_modal, children

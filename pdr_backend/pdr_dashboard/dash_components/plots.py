@@ -1,5 +1,7 @@
-from itertools import product
+from itertools import product, groupby
 from typing import List, Optional, Union, NamedTuple
+from operator import itemgetter
+import datetime
 
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
@@ -212,6 +214,7 @@ def create_figure(
     show_legend: bool = True,
     yaxis_range: Union[List, None] = None,
     use_default_tick_format: bool = False,
+    ticker_format: Union[str, None] = None,
 ):
     """
     Create a figure with the given data traces.
@@ -249,7 +252,7 @@ def create_figure(
             {
                 "type": "date",
                 "nticks": 5,
-                "tickformat": "%m-%d %H:%M",
+                "tickformat": ticker_format if ticker_format else "%m-%d %H:%M",
             }
             if not use_default_tick_format
             else {"nticks": 4}
@@ -338,3 +341,140 @@ def get_figures_and_metrics(
     figs_metrics.make_figures()
 
     return figs_metrics
+
+
+@enforce_types
+def get_feed_figures(payouts: Optional[List], subscriptions: List):
+    """
+    Return figures for a selected feed from the feeds table
+    """
+    figs_metrics = FiguresAndMetricsResult()
+
+    if not payouts:
+        return (
+            figs_metrics.fig_accuracy,
+            figs_metrics.fig_costs,
+            figs_metrics.fig_profit,
+            figs_metrics.fig_stakes,
+            figs_metrics.fig_profit,
+            figs_metrics.fig_stakes,
+        )
+
+    slots = []
+    stakes = []
+    accuracyes = []
+    profits = []
+    predictions_list = []
+    subscription_purchases = []
+    subscription_revenues = []
+    subscription_dates = []
+
+    # process subscriptions
+    for subscription in subscriptions:
+        subscription_purchases.append(subscription["count"])
+        subscription_revenues.append(subscription["revenue"])
+
+        # Get subscription dates as days
+        # Convert to datetime.datetime by combining with midnight time
+        datetime_obj = datetime.datetime.combine(subscription["day"], datetime.time())
+        # Convert to Unix timestamp
+        unix_timestamp = int(datetime_obj.timestamp())
+        subscription_dates.append(unix_timestamp * 1000)
+
+    # sort payouts by slots
+    payouts.sort(key=itemgetter("slot"))
+
+    # goup by slots
+    new_payouts = {
+        key: list(group) for key, group in groupby(payouts, key=itemgetter("slot"))
+    }
+    correct_predictions = 0
+    predictions = 0
+
+    # process payouts by slots
+    for slot in new_payouts.keys():
+        stake = 0
+        volume = 0
+        profit = 0.0
+        per_slot_predictions = 0
+        for p in new_payouts[slot]:
+            predictions += 1
+            stake += p["stake"]
+            volume += p["stake"]
+            profit_change = float(max(p["payout"], 0) - p["stake"])
+            profit += profit_change
+            correct_predictions += p["payout"] > 0
+            per_slot_predictions += 1
+        stakes.append(stake)
+        profits.append(profit)
+        accuracyes.append((correct_predictions / predictions) * 100)
+        slots.append(UnixTimeS(int(slot)).to_milliseconds())
+        predictions_list.append(per_slot_predictions)
+
+    sales_scatter = go.Bar(x=subscription_dates, y=subscription_purchases)
+
+    revenues_scatter = go.Bar(x=subscription_dates, y=subscription_revenues)
+
+    stake_scatter = go.Scatter(
+        x=slots,
+        y=stakes,
+        mode="lines",
+        showlegend=False,
+    )
+
+    accuracyes_scatter = go.Scatter(
+        x=slots,
+        y=accuracyes,
+        mode="lines",
+        showlegend=False,
+    )
+
+    predictions_scatter = go.Scatter(
+        x=slots,
+        y=predictions_list,
+        mode="lines",
+        showlegend=False,
+    )
+
+    predictioors_profit_scatter = go.Scatter(
+        x=slots,
+        y=profits,
+        mode="lines",
+        showlegend=False,
+    )
+
+    sales_fig = create_figure(
+        [sales_scatter], "Sales", "Daily Sales(OCEAN)", False, None, False, "%m-%d"
+    )
+    revenues_fig = create_figure(
+        [revenues_scatter],
+        "Revenues",
+        "Daily Revenues(OCEAN)",
+        False,
+        None,
+        False,
+        "%m-%d",
+    )
+    accuracyes_fig = create_figure(
+        [accuracyes_scatter],
+        "Accuracys",
+        "Avg Accuracy(OCEAN)",
+        False,
+        yaxis_range=[40, 70],
+    )
+    stakes_fig = create_figure([stake_scatter], "Stakes", "Stake(OCEAN)", False)
+    predictions_fig = create_figure(
+        [predictions_scatter], "Predictions", "Predictions", False
+    )
+    prefit_fig = create_figure(
+        [predictioors_profit_scatter], "Profits", "Pdr profit(OCEAN)", False
+    )
+
+    return (
+        sales_fig,
+        revenues_fig,
+        accuracyes_fig,
+        stakes_fig,
+        predictions_fig,
+        prefit_fig,
+    )
