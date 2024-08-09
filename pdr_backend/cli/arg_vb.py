@@ -5,7 +5,6 @@ from enforce_typing import enforce_types
 
 
 class ArgVB:
-    @enforce_types
     def __init__(self, vb_str: str):
         """
         @arguments
@@ -57,7 +56,7 @@ class ArgVBs(List[ArgVB]):
 
 
 @enforce_types
-def verify_vb_ok(s: str) -> bool:
+def verify_vb_ok(s: str, graceful: bool = False) -> bool:
     if not re.match(r"vb-\d+(\.\d+)?$", s):
         return False
 

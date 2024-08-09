@@ -56,7 +56,7 @@ class ArgFeeds(List[ArgFeed]):
         source: Union[str, ArgExchange],
         pair: Union[str, ArgPair],
         timeframe: Union[str, ArgTimeframe],
-        volume_threshold: Union[str, ArgVB],
+        volume_threshold: Union[str, ArgVB] = None,
     ) -> bool:
         for feed in self:
             if (

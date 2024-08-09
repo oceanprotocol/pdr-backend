@@ -15,7 +15,7 @@ from pdr_backend.cli.arg_timeframe import (
     ArgTimeframes,
     timeframes_str_ok,
 )
-from pdr_backend.cli.arg_vb import ArgVBs, verify_vb_ok
+from pdr_backend.cli.arg_vb import ArgVB, ArgVBs, verify_vb_ok
 
 
 class ArgFeed:
@@ -26,7 +26,7 @@ class ArgFeed:
         pair: Union[ArgPair, str, None] = None,
         timeframe: Optional[Union[ArgTimeframe, str]] = None,
         contract: Optional[str] = None,
-        volume_threshold: Optional[str] = None,
+        volume_threshold: Optional[Union[ArgVB, str]] = None,
     ):
         if signal is not None:
             self.signal = ArgSignal(signal) if isinstance(signal, str) else signal
@@ -39,7 +39,6 @@ class ArgFeed:
         )
         self.pair = ArgPair(pair) if isinstance(pair, str) else pair
         self.signal = ArgSignal(signal) if isinstance(signal, str) else signal
-        self.volume_threshold = volume_threshold if volume_threshold else None
 
         if timeframe is None:
             self.timeframe = None
@@ -47,6 +46,13 @@ class ArgFeed:
             self.timeframe = ArgTimeframe(timeframe)
         else:
             self.timeframe = timeframe
+
+        if volume_threshold is None:
+            self.volume_threshold = None
+        elif isinstance(volume_threshold, str):
+            self.volume_threshold = ArgVB(volume_threshold)
+        else:
+            self.volume_threshold = volume_threshold
 
         self.contract = contract
 
@@ -137,7 +143,8 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
 
     if timeframes_str_ok(timeframe_str):
         timeframe_str_list = ArgTimeframes.from_str(timeframe_str)
-
+        # last part is a valid timeframe, and we don't have volume threshold
+        vb_str_list = [None]
         # last part is a valid timeframe, and we might have a signal before it
         signal_char_str = feeds_str_split[-2]
 
@@ -158,6 +165,8 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
             # last part is a valid signal
             signal_str_list = ArgSignals.from_str(signal_char_str)
             offset_end = -1
+            # since last part is a signal, we don't have volume threshold
+            vb_str_list = [None]
         else:
             # last part is not a valid timeframe, nor a signal
             signal_str_list = [None]

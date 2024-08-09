@@ -303,9 +303,21 @@ def test_ArgFeeds_contains_combination_1():
         [ArgFeed("binance", "close", "BTC/USDT"), ArgFeed("kraken", "close", "BTC/DAI")]
     )
 
-    assert feeds.contains_combination("binance", "BTC/USDT", "1h")
-    assert feeds.contains_combination("kraken", "BTC/DAI", "5m")
-    assert not feeds.contains_combination("kraken", "BTC/USDT", "1h")
+    assert feeds.contains_combination(
+        "binance",
+        "BTC/USDT",
+        "1h",
+    )
+    assert feeds.contains_combination(
+        "kraken",
+        "BTC/DAI",
+        "5m",
+    )
+    assert not feeds.contains_combination(
+        "kraken",
+        "BTC/USDT",
+        "1h",
+    )
 
     # binance feed has a timeframe so contains just those timeframes
     feeds = ArgFeeds(
@@ -315,10 +327,26 @@ def test_ArgFeeds_contains_combination_1():
         ]
     )
 
-    assert not feeds.contains_combination("binance", "BTC/USDT", "1h")
-    assert feeds.contains_combination("binance", "BTC/USDT", "5m")
-    assert feeds.contains_combination("kraken", "BTC/DAI", "5m")
-    assert feeds.contains_combination("kraken", "BTC/DAI", "1h")
+    assert not feeds.contains_combination(
+        "binance",
+        "BTC/USDT",
+        "1h",
+    )
+    assert feeds.contains_combination(
+        "binance",
+        "BTC/USDT",
+        "5m",
+    )
+    assert feeds.contains_combination(
+        "kraken",
+        "BTC/DAI",
+        "5m",
+    )
+    assert feeds.contains_combination(
+        "kraken",
+        "BTC/DAI",
+        "1h",
+    )
 
 
 @enforce_types
