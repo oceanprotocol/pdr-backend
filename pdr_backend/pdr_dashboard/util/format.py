@@ -3,6 +3,7 @@ from typing import Union, Dict, List, Any
 from enforce_typing import enforce_types
 from numerize import numerize
 
+
 FORMAT_CONFIG = {
     "feeds_page_Accuracy_metric": "percentage",
     "accuracy_metric": "percentage",

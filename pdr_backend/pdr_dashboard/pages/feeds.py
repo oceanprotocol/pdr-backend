@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Tuple, Union
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 from pdr_backend.pdr_dashboard.util.data import (
-    col_to_human,
+    get_feed_column_ids,
     find_with_key_value,
 )
 
@@ -161,11 +161,11 @@ class FeedsPage:
             self.app.network_name
         )
 
-        feed_cols, feed_data = self.get_feeds_data_for_feeds_table(
+        feed_cols, feed_data, raw_feed_data = self.get_feeds_data_for_feeds_table(
             feed_stats, feed_subscriptions
         )
 
-        self.app.feeds_table_data = feed_data
+        self.app.feeds_table_data = raw_feed_data
 
         return html.Div(
             [
@@ -186,6 +186,7 @@ class FeedsPage:
                 dash_table.DataTable(
                     id="feeds_page_table",
                     columns=columns,
+                    hidden_columns=["sales_raw"],
                     data=feeds_data,
                     sort_action="native",  # Enables sorting feature
                 )
@@ -235,12 +236,14 @@ class FeedsPage:
             return {
                 "price_(OCEAN)": result["price"],
                 "sales": sales_str,
+                "sales_raw": result["sales"],
                 "sales_revenue_(OCEAN)": result["sales_revenue"],
             }
 
         return {
             "price_(OCEAN)": 0,
             "sales": 0,
+            "sales_raw": 0,
             "sales_revenue_(OCEAN)": 0,
         }
 
@@ -275,11 +278,8 @@ class FeedsPage:
 
             new_feed_data.append(feed_item)
 
-        columns = [
-            {"name": col_to_human(col=col, replace_rules=["total_"]), "id": col}
-            for col in new_feed_data[0].keys()
-        ]
+        columns = get_feed_column_ids(new_feed_data[0])
 
         formatted_data = format_table(new_feed_data, columns)
 
-        return columns, formatted_data
+        return columns, formatted_data, new_feed_data

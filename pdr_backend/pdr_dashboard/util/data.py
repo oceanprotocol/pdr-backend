@@ -10,6 +10,14 @@ logger = logging.getLogger("predictoor_dashboard_utils")
 
 
 @enforce_types
+def get_feed_column_ids(data: Dict[str, Any]):
+    return [
+        {"name": col_to_human(col=col, replace_rules=["total_"]), "id": col}
+        for col in data.keys()
+    ]
+
+
+@enforce_types
 def filter_objects_by_field(
     objects: List[Dict[str, Any]],
     field: str,
