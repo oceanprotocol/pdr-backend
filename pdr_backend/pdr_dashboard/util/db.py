@@ -142,7 +142,7 @@ class DBGetter:
             WHERE
                 ID LIKE '%{feed_id}%'
             GROUP BY
-                CAST(TO_TIMESTAMP(timestamp / 1000) AS DATE)
+                day
         )
         SELECT * FROM date_counts
         ORDER BY day;

@@ -1,7 +1,10 @@
 import dash
 from dash import Input, Output, State, callback_context
 from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
-from pdr_backend.pdr_dashboard.dash_components.plots import get_feed_figures
+from pdr_backend.pdr_dashboard.dash_components.plots import (
+    get_feed_figures,
+    FeedModalFigures,
+)
 from pdr_backend.cli.arg_feeds import ArgFeed
 
 
@@ -180,9 +183,7 @@ def get_callbacks_feeds(app):
     @app.callback(
         Output("modal", "is_open"),
         Output("modal", "children"),
-        [
-            Input("feeds_page_table", "selected_rows"),
-        ],
+        [Input("feeds_page_table", "selected_rows")],
         State("feeds_page_table", "data"),
     )
     def update_graphs(selected_rows, feeds_table_data):
@@ -201,28 +202,21 @@ def get_callbacks_feeds(app):
 
         payouts = app.db_getter.payouts([feed.contract], None, 0)
         subscriptions = app.db_getter.feed_daily_subscriptions_by_feed_id(feed.contract)
-        (
-            sales_fig,
-            revenues_fig,
-            accuracyes_fig,
-            stakes_fig,
-            predictions_fig,
-            prefit_fig,
-        ) = get_feed_figures(payouts, subscriptions)
+        feed_figures: FeedModalFigures = get_feed_figures(payouts, subscriptions)
 
         feeds_page = FeedsPage(app)
         children = [
             feeds_page.get_feed_graphs_modal_header(selected_row),
-            feeds_page.get_feed_graphs_modal_body(
-                [
-                    sales_fig,
-                    revenues_fig,
-                    accuracyes_fig,
-                    stakes_fig,
-                    predictions_fig,
-                    prefit_fig,
-                ]
-            ),
+            feeds_page.get_feed_graphs_modal_body(list(feed_figures.__dict__.values())),
         ]
 
         return True, children
+
+    # Callback to clear the selection when the modal is closed
+    @app.callback(
+        Output("feeds_page_table", "selected_rows"), [Input("modal", "is_open")]
+    )
+    def clear_selection(is_modal_open):
+        if not is_modal_open:
+            return []
+        return dash.no_update

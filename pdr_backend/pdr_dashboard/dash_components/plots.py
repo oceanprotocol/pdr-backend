@@ -11,6 +11,26 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.util.time_types import UnixTimeS
 
 
+class FeedModalFigures:
+    def __init__(self):
+        self.sales_fig: go.Figure = create_figure(
+            [], "Sales", "Daily Sales (OCEAN)", False, ticker_format="%m-%d"
+        )
+        self.revenues_fig: go.Figure = create_figure(
+            [], "Revenues", "Daily Revenues (OCEAN)", False, ticker_format="%m-%d"
+        )
+        self.accuracies_fig: go.Figure = create_figure(
+            [], "Accuracy", "Avg Accuracy (OCEAN)", False, yaxis_range=[40, 70]
+        )
+        self.stakes_fig: go.Figure = create_figure([], "Stakes", "Stake (OCEAN)", False)
+        self.predictions_fig: go.Figure = create_figure(
+            [], "Predictions", "Predictions", False
+        )
+        self.profits_fig: go.Figure = create_figure(
+            [], "Profits", "Pdr Profit (OCEAN)", False
+        )
+
+
 # pylint: disable=too-many-instance-attributes
 class FiguresAndMetricsResult:
     def __init__(self):
@@ -344,34 +364,16 @@ def get_figures_and_metrics(
 
 
 @enforce_types
-def get_feed_figures(payouts: Optional[List], subscriptions: List):
+def get_feed_figures(payouts: Optional[List], subscriptions: List) -> FeedModalFigures:
     """
     Return figures for a selected feed from the feeds table.
     """
 
     # Initialize empty figures with default settings
-    sales_fig = create_figure(
-        [], "Sales", "Daily Sales (OCEAN)", False, ticker_format="%m-%d"
-    )
-    revenues_fig = create_figure(
-        [], "Revenues", "Daily Revenues (OCEAN)", False, ticker_format="%m-%d"
-    )
-    accuracies_fig = create_figure(
-        [], "Accuracy", "Avg Accuracy (OCEAN)", False, yaxis_range=[40, 70]
-    )
-    stakes_fig = create_figure([], "Stakes", "Stake (OCEAN)", False)
-    predictions_fig = create_figure([], "Predictions", "Predictions", False)
-    profits_fig = create_figure([], "Profits", "Pdr Profit (OCEAN)", False)
+    figures = FeedModalFigures()
 
     if not payouts or not subscriptions:
-        return (
-            sales_fig,
-            revenues_fig,
-            accuracies_fig,
-            stakes_fig,
-            predictions_fig,
-            profits_fig,
-        )
+        return figures
 
     # Initialize lists for processing data
     slots, stakes, accuracies, profits, predictions_list = [], [], [], [], []
@@ -412,24 +414,21 @@ def get_feed_figures(payouts: Optional[List], subscriptions: List):
         predictions_list.append(slot_predictions)
 
     # Update figures with the processed data
-    sales_fig.add_traces(go.Bar(x=subscription_dates, y=subscription_purchases))
-    revenues_fig.add_traces(go.Bar(x=subscription_dates, y=subscription_revenues))
-    accuracies_fig.add_traces(
+    figures.sales_fig.add_traces(go.Bar(x=subscription_dates, y=subscription_purchases))
+    figures.revenues_fig.add_traces(
+        go.Bar(x=subscription_dates, y=subscription_revenues)
+    )
+    figures.accuracies_fig.add_traces(
         go.Scatter(x=slots, y=accuracies, mode="lines", showlegend=False)
     )
-    stakes_fig.add_traces(go.Scatter(x=slots, y=stakes, mode="lines", showlegend=False))
-    predictions_fig.add_traces(
+    figures.stakes_fig.add_traces(
+        go.Scatter(x=slots, y=stakes, mode="lines", showlegend=False)
+    )
+    figures.predictions_fig.add_traces(
         go.Scatter(x=slots, y=predictions_list, mode="lines", showlegend=False)
     )
-    profits_fig.add_traces(
+    figures.profits_fig.add_traces(
         go.Scatter(x=slots, y=profits, mode="lines", showlegend=False)
     )
 
-    return (
-        sales_fig,
-        revenues_fig,
-        accuracies_fig,
-        stakes_fig,
-        predictions_fig,
-        profits_fig,
-    )
+    return figures

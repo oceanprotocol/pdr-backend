@@ -289,13 +289,7 @@ class FeedsPage:
                 """,
                 style={"fontWeight": "bold", "fontSize": "20px"},
             ),
-            style={
-                "display": "flex",
-                "justifyContent": "center",
-                "width": "100%",
-                "padding": "10px",
-                "marginBottom": "10px",
-            },
+            id="feeds-modal-header",
         )
 
     def get_feed_graphs_modal_body(self, figures):
@@ -304,9 +298,5 @@ class FeedsPage:
                 html.Div(get_graph(fig), style={"width": "45%", "margin": "0 auto"})
                 for fig in figures
             ],
-            style={
-                "display": "flex",
-                "flexWrap": "wrap",
-                "justifyContent": "space-between",
-            },
+            id="feeds-modal-body",
         )

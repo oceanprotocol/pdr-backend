@@ -224,6 +224,20 @@ button{
     gap: 30px;
 }
 
+#feeds-modal-header{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+#feeds-modal-body{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
 .modal-dialog{
     display: flex;
     justify-content: center;
