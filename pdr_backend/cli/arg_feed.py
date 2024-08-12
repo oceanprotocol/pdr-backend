@@ -15,7 +15,7 @@ from pdr_backend.cli.arg_timeframe import (
     ArgTimeframes,
     timeframes_str_ok,
 )
-from pdr_backend.cli.arg_vb import ArgVB, ArgVBs, verify_vb_ok
+from pdr_backend.cli.arg_vb import ArgVB, ArgVBs, vb_str_ok
 
 
 class ArgFeed:
@@ -25,8 +25,8 @@ class ArgFeed:
         signal: Union[ArgSignal, str, None] = None,
         pair: Union[ArgPair, str, None] = None,
         timeframe: Optional[Union[ArgTimeframe, str]] = None,
-        contract: Optional[str] = None,
         volume_threshold: Optional[Union[ArgVB, str]] = None,
+        contract: Optional[str] = None,
     ):
         if signal is not None:
             self.signal = ArgSignal(signal) if isinstance(signal, str) else signal
@@ -156,28 +156,26 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
             # last part is a valid timeframe, but there is no signal before it
             signal_str_list = [None]
             offset_end = -1
+    elif vb_str_ok(timeframe_str):
+        volume_threshold_str = feeds_str_split[-1]
+        vb_str_list = ArgVBs.from_str(volume_threshold_str)
+        offset_end = -1
+        signal_str_list = [None]
+        timeframe_str_list = [None]
     else:
         # last part is not a valid timeframe, but it might be a signal
         timeframe_str_list = [None]
+        vb_str_list = [None]
         signal_char_str = feeds_str_split[-1]
 
         if verify_signalchar_str(signal_char_str, True):
             # last part is a valid signal
             signal_str_list = ArgSignals.from_str(signal_char_str)
             offset_end = -1
-            # since last part is a signal, we don't have volume threshold
-            vb_str_list = [None]
         else:
             # last part is not a valid timeframe, nor a signal
             signal_str_list = [None]
             offset_end = None
-            # check if last part is volume threshold
-            volume_threshold_str = feeds_str_split[-1]
-            if verify_vb_ok(volume_threshold_str, True):
-                # last part is a valid volume threshold
-                vb_str_list = ArgVBs.from_str(volume_threshold_str)
-            else:
-                vb_str_list = [None]
 
     pairs_list_str = " ".join(feeds_str_split[1:offset_end])
 

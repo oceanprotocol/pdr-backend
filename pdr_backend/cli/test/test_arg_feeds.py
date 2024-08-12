@@ -16,6 +16,10 @@ def test_ArgFeeds_from_str():
     assert ArgFeeds.from_str("binance ADA/USDT o") == target_feeds
     assert ArgFeeds.from_str("binance ADA-USDT o") == target_feeds
 
+    # 1 feed with volume threshold
+    target_feeds = [ArgFeed("binance", None, "ADA/USDT", None, "vb_201")]
+    assert ArgFeeds.from_str("binance ADA/USDT vb_201") == target_feeds
+
     # >1 signal, so >1 feed
     target_feeds = [
         ArgFeed("binance", "open", "ADA/USDT"),
