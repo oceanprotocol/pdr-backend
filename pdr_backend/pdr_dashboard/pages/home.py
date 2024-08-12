@@ -165,14 +165,10 @@ class HomePage:
     def get_graphs_column_metrics_row(self):
         return html.Div(
             [
-                get_metric(
-                    label="Avg Accuracy", value="0%", value_id="accuracy_metric"
-                ),
-                get_metric(
-                    label="Pred Profit", value="0 OCEAN", value_id="profit_metric"
-                ),
-                get_metric(label="Tx Costs", value="0 OCEAN", value_id="costs_metric"),
-                get_metric(label="Avg Stake", value="0 OCEAN", value_id="stake_metric"),
+                get_metric(label="Avg Accuracy", value=0.0, value_id="accuracy_metric"),
+                get_metric(label="Pred Profit", value=0, value_id="profit_metric"),
+                get_metric(label="Tx Costs", value=0.0, value_id="costs_metric"),
+                get_metric(label="Avg Stake", value=0, value_id="stake_metric"),
                 get_date_period_selection_component(),
             ],
             id="metrics_container",

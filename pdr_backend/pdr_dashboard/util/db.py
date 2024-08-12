@@ -95,7 +95,18 @@ class DBGetter:
         opf_addresses = get_opf_addresses(network_name)
 
         query = f"""
-            WITH user_buy_counts AS (
+            WITH ws_buy_counts AS (
+                SELECT
+                    SPLIT_PART(ID, '-', 1) AS contract,
+                    COUNT(*) AS ws_buy_count
+                FROM
+                    {Subscription.get_lake_table_name()}
+                WHERE
+                    "user" = '{opf_addresses["websocket"].lower()}'
+                GROUP BY
+                    SPLIT_PART(ID, '-', 1)
+            ),
+            user_buy_counts AS (
                 SELECT
                     SPLIT_PART(ID, '-', 1) AS contract,
                     COUNT(*) AS df_buy_count
@@ -111,7 +122,8 @@ class DBGetter:
                 SUM(last_price_value) AS sales_revenue,
                 AVG(last_price_value) AS price,
                 COUNT(*) AS sales,
-                COALESCE(ubc.df_buy_count, 0) AS df_buy_count
+                COALESCE(ubc.df_buy_count, 0) AS df_buy_count,
+                COALESCE(wbc.ws_buy_count, 0) AS ws_buy_count
             FROM
                 (
                     SELECT
@@ -124,8 +136,12 @@ class DBGetter:
                 user_buy_counts ubc
             ON
                 main.main_contract = ubc.contract
+            LEFT JOIN
+                ws_buy_counts wbc
+            ON
+                main.main_contract = wbc.contract
             GROUP BY
-                main_contract, ubc.df_buy_count"""
+                main_contract, ubc.df_buy_count, wbc.ws_buy_count"""
 
         return self._query_db(query)
 
@@ -232,8 +248,8 @@ class DBGetter:
 
         return {
             "Feeds": feeds if feeds else 0,
-            "Accuracy": str(round(accuracy, 2) if accuracy else 0.0) + "%",
-            "Volume": str(round(volume, 2) if volume else 0.0) + " OCEAN",
+            "Accuracy": accuracy if accuracy else 0.0,
+            "Volume": volume if volume else 0,
             "Sales": sales if sales else 0,
-            "Revenue": str(round(revenue, 2) if revenue else 0.0) + " OCEAN",
+            "Revenue": revenue if revenue else 0,
         }

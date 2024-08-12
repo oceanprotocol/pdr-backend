@@ -6,6 +6,8 @@ from pdr_backend.pdr_dashboard.dash_components.plots import (
     FeedModalFigures,
 )
 from pdr_backend.cli.arg_feeds import ArgFeed
+from pdr_backend.pdr_dashboard.util.format import format_table
+from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
 
 
 def filter_table_by_range(min_val, max_val, label_text):
@@ -22,9 +24,10 @@ def filter_condition(item, field, values):
 
 
 def range_condition(item, field, min_value, max_value):
+    item_value = float(item[field])
     return not (
-        (min_value is not None and min_value != "" and item[field] < min_value)
-        or (max_value is not None and max_value != "" and item[field] > max_value)
+        (min_value is not None and min_value != "" and item_value < min_value)
+        or (max_value is not None and max_value != "" and item_value > max_value)
     )
 
 
@@ -32,7 +35,12 @@ def check_condition(item, condition_type, field, *values):
     if condition_type == "filter":
         return filter_condition(item, field, values[0])
     if condition_type == "range":
-        return range_condition(item, field, values[0], values[1])
+        return range_condition(
+            item,
+            field,
+            float(values[0]) if values[0] is not None and values[0] != "" else None,
+            float(values[1]) if values[1] is not None and values[1] != "" else None,
+        )
     return True
 
 
@@ -57,6 +65,7 @@ def get_callbacks_feeds(app):
         State("accuracy_max", "value"),
         State("volume_min", "value"),
         State("volume_max", "value"),
+        prevent_initial_call=True,
     )
     def filter_table(
         base_token,
@@ -85,7 +94,7 @@ def get_callbacks_feeds(app):
             ("filter", "quote_token", quote_token),
             ("filter", "exchange", exchange),
             ("filter", "time", time),
-            ("range", "sales", sales_min, sales_max),
+            ("range", "sales_raw", sales_min, sales_max),
             ("range", "sales_revenue_(OCEAN)", revenue_min, revenue_max),
             ("range", "avg_accuracy", accuracy_min, accuracy_max),
             ("range", "volume_(OCEAN)", volume_min, volume_max),
@@ -97,7 +106,11 @@ def get_callbacks_feeds(app):
             if all(check_condition(item, *condition) for condition in conditions)
         ]
 
-        return new_table_data
+        columns = []
+        if new_table_data:
+            columns = get_feed_column_ids(new_table_data[0])
+
+        return format_table(new_table_data, columns)
 
     @app.callback(
         Output("sales_dropdown", "label"),

@@ -71,6 +71,6 @@ def test_get_predictoors_data_from_payouts():
     ][0]
 
     assert test_row["user_address"] == "0x02e...bde9e"
-    assert test_row["total_profit"] == 0.0
-    assert test_row["avg_accuracy"] == 100.0
-    assert test_row["avg_stake"] == 1.99
+    assert test_row["total_profit"] == "0"
+    assert test_row["avg_accuracy"] == "100.0%"
+    assert test_row["avg_stake"] == "1.99"
