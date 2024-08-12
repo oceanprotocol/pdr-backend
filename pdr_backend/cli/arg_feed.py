@@ -181,13 +181,29 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
 
     pairs = ArgPairs.from_str(pairs_list_str)
 
-    feeds = [
-        ArgFeed(exchange_str, signal_str, pair_str, timeframe_str, volume_threshold_str)
-        for signal_str in signal_str_list
-        for pair_str in pairs
-        for timeframe_str in timeframe_str_list
-        for volume_threshold_str in vb_str_list
-    ]
+    if isinstance(vb_str_list[0], ArgVB):
+        if len(pairs) != len(vb_str_list):
+            raise ValueError(
+                "The lists 'pairs' and 'volume_thresholds' do not have the same length."
+            )
+        feeds = [
+            ArgFeed(
+                exchange_str, signal_str, pair_str, timeframe_str, volume_threshold_str
+            )
+            for signal_str in signal_str_list
+            for pair_str, volume_threshold_str in zip(pairs, vb_str_list)
+            for timeframe_str in timeframe_str_list
+        ]
+    else:
+        feeds = [
+            ArgFeed(
+                exchange_str, signal_str, pair_str, timeframe_str, volume_threshold_str
+            )
+            for signal_str in signal_str_list
+            for pair_str in pairs
+            for timeframe_str in timeframe_str_list
+            for volume_threshold_str in vb_str_list
+        ]
 
     return feeds
 
