@@ -186,7 +186,6 @@ class FeedsPage:
     ):
         return html.Div(
             [
-                dcc.Store(id="selected-rows-store"),  # Add this store
                 dash_table.DataTable(
                     id="feeds_page_table",
                     columns=columns,
