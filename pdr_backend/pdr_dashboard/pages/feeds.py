@@ -186,6 +186,7 @@ class FeedsPage:
     ):
         return html.Div(
             [
+                dcc.Store(id="selected-rows-store"),  # Add this store
                 dash_table.DataTable(
                     id="feeds_page_table",
                     columns=columns,
@@ -193,7 +194,7 @@ class FeedsPage:
                     row_selectable="single",
                     data=feeds_data,
                     sort_action="native",  # Enables sorting feature
-                )
+                ),
             ],
             style={"width": "100%"},
         )

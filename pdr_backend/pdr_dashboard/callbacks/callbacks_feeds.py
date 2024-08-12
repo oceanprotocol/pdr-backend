@@ -182,13 +182,36 @@ def get_callbacks_feeds(app):
 
     @app.callback(
         Output("modal", "is_open"),
+        Output("feeds_page_table", "selected_rows"),
+        Input("feeds_page_table", "selected_rows"),
+        Input("modal", "is_open"),
+        State("modal", "is_open"),
+    )
+    def toggle_modal(selected_rows, is_open_input, is_open):
+        ctx = dash.callback_context
+        triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+        if triggered_id == "feeds_page_table" and selected_rows:
+            if not is_open_input:
+                return True, dash.no_update
+
+            return False, []
+
+        if not is_open:
+            # Close the modal when it is already open
+            return dash.no_update, []
+
+        return is_open, dash.no_update
+
+    @app.callback(
         Output("modal", "children"),
-        [Input("feeds_page_table", "selected_rows")],
+        Input("modal", "is_open"),
+        State("feeds_page_table", "selected_rows"),
         State("feeds_page_table", "data"),
     )
-    def update_graphs(selected_rows, feeds_table_data):
-        if not selected_rows:
-            return False, []
+    def update_graphs(is_open, selected_rows, feeds_table_data):
+        if not is_open or not selected_rows:
+            return []
 
         selected_row = feeds_table_data[selected_rows[0]]
 
@@ -210,13 +233,4 @@ def get_callbacks_feeds(app):
             feeds_page.get_feed_graphs_modal_body(list(feed_figures.__dict__.values())),
         ]
 
-        return True, children
-
-    # Callback to clear the selection when the modal is closed
-    @app.callback(
-        Output("feeds_page_table", "selected_rows"), [Input("modal", "is_open")]
-    )
-    def clear_selection(is_modal_open):
-        if not is_modal_open:
-            return []
-        return dash.no_update
+        return children
