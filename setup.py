@@ -26,6 +26,7 @@ install_requirements = [
     "kaleido==0.2.1",
     "mypy==1.11.0",
     "numpy==2.0.1",
+    "numerize==0.12.0",
     "pandas==2.2.2",
     "pathlib",
     "plotly==5.23.0",
