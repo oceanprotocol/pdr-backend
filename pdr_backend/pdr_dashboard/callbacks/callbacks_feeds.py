@@ -186,29 +186,43 @@ def get_callbacks_feeds(app):
         State("feeds_page_table", "data"),
     )
     def update_graphs(selected_rows, feeds_table_data):
-        open_modal = bool(selected_rows)
-
-        if not open_modal:
-            return open_modal, []
+        if not selected_rows:
+            return False, []
 
         selected_row = feeds_table_data[selected_rows[0]]
 
         feed = ArgFeed(
-            selected_row["exchange"].lower(),
-            None,
-            f'{selected_row["base_token"]}-{selected_row["quote_token"]}',
-            selected_row["time"],
-            selected_row["full_addr"],
+            exchange=selected_row["exchange"].lower(),
+            signal=None,
+            pair=f'{selected_row["base_token"]}-{selected_row["quote_token"]}',
+            timeframe=selected_row["time"],
+            contract=selected_row["full_addr"],
         )
 
         payouts = app.db_getter.payouts([feed.contract], None, 0)
         subscriptions = app.db_getter.feed_daily_subscriptions_by_feed_id(feed.contract)
-        a, b, c, d, e, f = get_feed_figures(payouts, subscriptions)
+        (
+            sales_fig,
+            revenues_fig,
+            accuracyes_fig,
+            stakes_fig,
+            predictions_fig,
+            prefit_fig,
+        ) = get_feed_figures(payouts, subscriptions)
 
         feeds_page = FeedsPage(app)
         children = [
             feeds_page.get_feed_graphs_modal_header(selected_row),
-            feeds_page.get_feed_graphs_modal_body([a, b, c, d, e, f]),
+            feeds_page.get_feed_graphs_modal_body(
+                [
+                    sales_fig,
+                    revenues_fig,
+                    accuracyes_fig,
+                    stakes_fig,
+                    predictions_fig,
+                    prefit_fig,
+                ]
+            ),
         ]
 
-        return open_modal, children
+        return True, children

@@ -346,135 +346,90 @@ def get_figures_and_metrics(
 @enforce_types
 def get_feed_figures(payouts: Optional[List], subscriptions: List):
     """
-    Return figures for a selected feed from the feeds table
+    Return figures for a selected feed from the feeds table.
     """
-    figs_metrics = FiguresAndMetricsResult()
 
-    if not payouts:
+    # Initialize empty figures with default settings
+    sales_fig = create_figure(
+        [], "Sales", "Daily Sales (OCEAN)", False, ticker_format="%m-%d"
+    )
+    revenues_fig = create_figure(
+        [], "Revenues", "Daily Revenues (OCEAN)", False, ticker_format="%m-%d"
+    )
+    accuracies_fig = create_figure(
+        [], "Accuracy", "Avg Accuracy (OCEAN)", False, yaxis_range=[40, 70]
+    )
+    stakes_fig = create_figure([], "Stakes", "Stake (OCEAN)", False)
+    predictions_fig = create_figure([], "Predictions", "Predictions", False)
+    profits_fig = create_figure([], "Profits", "Pdr Profit (OCEAN)", False)
+
+    if not payouts or not subscriptions:
         return (
-            figs_metrics.fig_accuracy,
-            figs_metrics.fig_costs,
-            figs_metrics.fig_profit,
-            figs_metrics.fig_stakes,
-            figs_metrics.fig_profit,
-            figs_metrics.fig_stakes,
+            sales_fig,
+            revenues_fig,
+            accuracies_fig,
+            stakes_fig,
+            predictions_fig,
+            profits_fig,
         )
 
-    slots = []
-    stakes = []
-    accuracyes = []
-    profits = []
-    predictions_list = []
-    subscription_purchases = []
-    subscription_revenues = []
-    subscription_dates = []
+    # Initialize lists for processing data
+    slots, stakes, accuracies, profits, predictions_list = [], [], [], [], []
+    subscription_purchases, subscription_revenues, subscription_dates = [], [], []
 
-    # process subscriptions
+    # Process subscription data
     for subscription in subscriptions:
         subscription_purchases.append(subscription["count"])
         subscription_revenues.append(subscription["revenue"])
+        unix_timestamp = int(
+            datetime.datetime.combine(subscription["day"], datetime.time()).timestamp()
+            * 1000
+        )
+        subscription_dates.append(unix_timestamp)
 
-        # Get subscription dates as days
-        # Convert to datetime.datetime by combining with midnight time
-        datetime_obj = datetime.datetime.combine(subscription["day"], datetime.time())
-        # Convert to Unix timestamp
-        unix_timestamp = int(datetime_obj.timestamp())
-        subscription_dates.append(unix_timestamp * 1000)
-
-    # sort payouts by slots
+    # Sort payouts by slots and group by slot
     payouts.sort(key=itemgetter("slot"))
-
-    # goup by slots
-    new_payouts = {
-        key: list(group) for key, group in groupby(payouts, key=itemgetter("slot"))
+    grouped_payouts = {
+        slot: list(group) for slot, group in groupby(payouts, key=itemgetter("slot"))
     }
+
     correct_predictions = 0
-    predictions = 0
+    total_predictions = 0
 
-    # process payouts by slots
-    for slot in new_payouts.keys():
-        stake = 0
-        volume = 0
-        profit = 0.0
-        per_slot_predictions = 0
-        for p in new_payouts[slot]:
-            predictions += 1
-            stake += p["stake"]
-            volume += p["stake"]
-            profit_change = float(max(p["payout"], 0) - p["stake"])
-            profit += profit_change
-            correct_predictions += p["payout"] > 0
-            per_slot_predictions += 1
-        stakes.append(stake)
-        profits.append(profit)
-        accuracyes.append((correct_predictions / predictions) * 100)
+    # Process each slot's payouts
+    for slot, payout_group in grouped_payouts.items():
+        slot_stake = sum(p["stake"] for p in payout_group)
+        slot_profit = sum(max(p["payout"], 0) - p["stake"] for p in payout_group)
+        slot_predictions = len(payout_group)
+
+        correct_predictions += sum(1 for p in payout_group if p["payout"] > 0)
+        total_predictions += slot_predictions
+
+        stakes.append(slot_stake)
+        profits.append(slot_profit)
+        accuracies.append((correct_predictions / total_predictions) * 100)
         slots.append(UnixTimeS(int(slot)).to_milliseconds())
-        predictions_list.append(per_slot_predictions)
+        predictions_list.append(slot_predictions)
 
-    sales_scatter = go.Bar(x=subscription_dates, y=subscription_purchases)
-
-    revenues_scatter = go.Bar(x=subscription_dates, y=subscription_revenues)
-
-    stake_scatter = go.Scatter(
-        x=slots,
-        y=stakes,
-        mode="lines",
-        showlegend=False,
+    # Update figures with the processed data
+    sales_fig.add_traces(go.Bar(x=subscription_dates, y=subscription_purchases))
+    revenues_fig.add_traces(go.Bar(x=subscription_dates, y=subscription_revenues))
+    accuracies_fig.add_traces(
+        go.Scatter(x=slots, y=accuracies, mode="lines", showlegend=False)
     )
-
-    accuracyes_scatter = go.Scatter(
-        x=slots,
-        y=accuracyes,
-        mode="lines",
-        showlegend=False,
+    stakes_fig.add_traces(go.Scatter(x=slots, y=stakes, mode="lines", showlegend=False))
+    predictions_fig.add_traces(
+        go.Scatter(x=slots, y=predictions_list, mode="lines", showlegend=False)
     )
-
-    predictions_scatter = go.Scatter(
-        x=slots,
-        y=predictions_list,
-        mode="lines",
-        showlegend=False,
-    )
-
-    predictioors_profit_scatter = go.Scatter(
-        x=slots,
-        y=profits,
-        mode="lines",
-        showlegend=False,
-    )
-
-    sales_fig = create_figure(
-        [sales_scatter], "Sales", "Daily Sales(OCEAN)", False, None, False, "%m-%d"
-    )
-    revenues_fig = create_figure(
-        [revenues_scatter],
-        "Revenues",
-        "Daily Revenues(OCEAN)",
-        False,
-        None,
-        False,
-        "%m-%d",
-    )
-    accuracyes_fig = create_figure(
-        [accuracyes_scatter],
-        "Accuracys",
-        "Avg Accuracy(OCEAN)",
-        False,
-        yaxis_range=[40, 70],
-    )
-    stakes_fig = create_figure([stake_scatter], "Stakes", "Stake(OCEAN)", False)
-    predictions_fig = create_figure(
-        [predictions_scatter], "Predictions", "Predictions", False
-    )
-    prefit_fig = create_figure(
-        [predictioors_profit_scatter], "Profits", "Pdr profit(OCEAN)", False
+    profits_fig.add_traces(
+        go.Scatter(x=slots, y=profits, mode="lines", showlegend=False)
     )
 
     return (
         sales_fig,
         revenues_fig,
-        accuracyes_fig,
+        accuracies_fig,
         stakes_fig,
         predictions_fig,
-        prefit_fig,
+        profits_fig,
     )
