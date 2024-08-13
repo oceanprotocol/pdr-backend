@@ -15,7 +15,7 @@ def test_ArgFeed_main_constructor():
         ("binance", "open", "BTC/USDT"),
         ("kraken", "close", "BTC/DAI"),
         ("kraken", "close", "BTC-DAI"),
-        ("binance", "open", "BTC/USDT", "5m", ,"vb-201")
+        ("binance", "open", "BTC/USDT", "5m", "vb_201")
     ]
     for feed_tup in tups:
         ArgFeed(*feed_tup)
