@@ -155,6 +155,6 @@ def get_tick_bars(rawohlcv_df, threshold):
     :return: Dataframe of tick bars
     """
     list_bars, newest_ut_value = _extract_bars(
-        rawohlcv_df, metric="cum_tick", threshold=threshold
+        rawohlcv_df, metric="cum_ticks", threshold=threshold
     )
     return list_bars, newest_ut_value

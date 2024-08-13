@@ -15,7 +15,7 @@ def test_ArgFeed_main_constructor():
         ("binance", "open", "BTC/USDT"),
         ("kraken", "close", "BTC/DAI"),
         ("kraken", "close", "BTC-DAI"),
-        ("binance", "open", "BTC/USDT", "5m", "vb_201")
+        ("binance", "open", "BTC/USDT", "5m", "vb_201"),
     ]
     for feed_tup in tups:
         ArgFeed(*feed_tup)
@@ -28,7 +28,7 @@ def test_ArgFeed_main_constructor():
         ("binance", "xyz", "BTC/USDT"),
         ("binance", "open", "BTC/XYZ"),
         ("binance", "open"),
-        ("binance", "open", "BTC/USDT", "5m", "201")
+        ("binance", "open", "BTC/USDT", "5m", "201"),
     ]
     for feed_tup in tups:
         with pytest.raises(ValueError):
@@ -42,6 +42,7 @@ def test_ArgFeed_main_constructor():
         with pytest.raises(TypeError):
             ArgFeed(*feed_tup)
 
+
 @enforce_types
 def test_ArgFeed_from_str():
     target_feed = ArgFeed("binance", "close", "BTC/USDT")
@@ -51,7 +52,7 @@ def test_ArgFeed_from_str():
     target_feed = ArgFeed("binance", "close", "BTC/USDT", "1h")
     assert ArgFeed.from_str("binance BTC/USDT c 1h") == target_feed
     assert ArgFeed.from_str("binance BTC-USDT c 1h") == target_feed
-    
+
     target_feed = ArgFeed("binance", None, "BTC/USDT", None, "vb_201")
     assert ArgFeed.from_str("binance BTC/USDT vb_201") == target_feed
 
