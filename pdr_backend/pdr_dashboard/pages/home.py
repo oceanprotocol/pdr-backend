@@ -22,7 +22,7 @@ class HomePage:
     def layout(self):
         return html.Div(
             self.get_main_container(),
-            style={"height": "100%"},
+            id="home-page-layout",
         )
 
     def get_main_container(self):

@@ -59,6 +59,18 @@ class ArgFeed:
 
         return feed_str
 
+    def output_for_legend(self):
+        feed_str = f"{self.pair}"
+
+        if self.signal is not None:
+            char = self.signal.to_char()
+            feed_str += f" {char}"
+
+        if self.timeframe is not None:
+            feed_str += f" {self.timeframe}"
+
+        return feed_str
+
     def __eq__(self, other) -> bool:
         assert isinstance(other, ArgFeed), (other, type(other))
         return (

@@ -65,7 +65,7 @@ class FeedsPage:
                 self.get_main_container(),
                 self.get_modal(),
             ],
-            style={"height": "100%"},
+            id="feeds-page-layout",
         )
 
     def get_multiselect_dropdown(self, filter_obj: Filter):
@@ -100,10 +100,7 @@ class FeedsPage:
                 self.get_input_with_label("Max", label),
                 html.Button(
                     "Apply Filter",
-                    style={
-                        "width": "100%",
-                        "padding": "5px",
-                    },
+                    className="btn-apply-filter",
                     id=f"{label.lower()}_button",
                 ),
             ],
@@ -151,7 +148,6 @@ class FeedsPage:
                 for key, value in stats.items()
             ],
             id="feeds_page_metrics_row",
-            style={"marginBottom": "60px"},
         )
 
     def get_main_container(self):
@@ -172,7 +168,6 @@ class FeedsPage:
                 self.get_feeds_table_area(feed_cols, feed_data),
             ],
             id="feeds-main-container",
-            className="main-container",
         )
 
     def get_feeds_table_area(

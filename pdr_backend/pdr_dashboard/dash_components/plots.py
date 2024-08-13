@@ -332,7 +332,7 @@ def get_figures_and_metrics(
             processed_data.tx_costs[-1] if processed_data.tx_costs else 0.0
         )
 
-        short_name = f"{predictor[:5]} - {str(feed)}"
+        short_name = f"{predictor[:5]} - {feed.output_for_legend()}"
 
         figs_metrics.accuracy_scatters.extend(
             processed_data.as_accuracy_scatters_bounds(
