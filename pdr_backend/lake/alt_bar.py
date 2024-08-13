@@ -10,7 +10,9 @@ logging = logging.getLogger("volume_bar")
 # add config pair: volume_threshold in ppss
 
 
-def _extract_bars(data: pd.DataFrame , metric: str, threshold: Union[float, int] =50000):
+def _extract_bars(
+    data: pd.DataFrame, metric: str, threshold: Union[float, int] = 50000
+):
     """
     For loop which compiles the various bars: dollar, volume, or tick.
 
@@ -55,13 +57,25 @@ def _extract_bars(data: pd.DataFrame , metric: str, threshold: Union[float, int]
             low_price = low
 
         # Update cache
-        cache.append([timestamp, open_price, low_price, high_price, close, cum_volume, cum_dollar_value, cum_ticks])
+        cache.append(
+            [
+                timestamp,
+                open_price,
+                low_price,
+                high_price,
+                close,
+                cum_volume,
+                cum_dollar_value,
+                cum_ticks,
+            ]
+        )
 
         # If threshold reached then take a sample
         if eval(metric) >= threshold:  # pylint: disable=eval-used
             # Create bars
             open_price = cache[0][1]
             low_price = min(low_price, low)
+            high_price = max(high_price, high)
             close_price = close
 
             # Update bars & Reset counters
@@ -85,9 +99,8 @@ def _extract_bars(data: pd.DataFrame , metric: str, threshold: Union[float, int]
                 -np.inf,
                 np.inf,
             )
-            cache = []
-    
-    if len(list_bars)>1:
+
+    if len(list_bars) > 1:
         start_tm = list_bars[-1][0]
     else:
         start_tm = cache[0][0]
