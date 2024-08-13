@@ -7,7 +7,10 @@ from pdr_backend.pdr_dashboard.util.data import (
     find_with_key_value,
 )
 
-from pdr_backend.pdr_dashboard.dash_components.view_elements import get_metric
+from pdr_backend.pdr_dashboard.dash_components.view_elements import (
+    get_metric,
+    get_graph,
+)
 from pdr_backend.pdr_dashboard.util.format import format_table
 
 
@@ -62,6 +65,7 @@ class FeedsPage:
                     children=[
                         self.get_metrics_row(),
                         self.get_main_container(),
+                        self.get_modal(),
                     ],
                     custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
                 ),
@@ -186,10 +190,11 @@ class FeedsPage:
                 dash_table.DataTable(
                     id="feeds_page_table",
                     columns=columns,
-                    hidden_columns=["sales_raw"],
+                    hidden_columns=["full_addr", "sales_raw"],
+                    row_selectable="single",
                     data=feeds_data,
                     sort_action="native",  # Enables sorting feature
-                )
+                ),
             ],
             style={"width": "100%"},
         )
@@ -267,6 +272,7 @@ class FeedsPage:
             feed_item["quote_token"] = split_pair[1]
             feed_item["exchange"] = feed["source"].capitalize()
             feed_item["time"] = feed["timeframe"]
+            feed_item["full_addr"] = feed["contract"]
 
             result = self.get_feeds_stat_with_contract(feed["contract"], feed_stats)
 
@@ -285,3 +291,32 @@ class FeedsPage:
         formatted_data = format_table(new_feed_data, columns)
 
         return columns, formatted_data, new_feed_data
+
+    def get_modal(self):
+        return dbc.Modal(
+            [
+                dbc.ModalHeader("Header"),
+                dbc.ModalBody("This is the content of the modal", id="modal_body"),
+            ],
+            id="modal",
+        )
+
+    def get_feed_graphs_modal_header(self, selected_row):
+        return html.Div(
+            html.Span(
+                f"""{selected_row["base_token"]}-{selected_row["quote_token"]}
+                {selected_row["time"]} {selected_row["exchange"]}
+                """,
+                style={"fontWeight": "bold", "fontSize": "20px"},
+            ),
+            id="feeds-modal-header",
+        )
+
+    def get_feed_graphs_modal_body(self, figures):
+        return html.Div(
+            [
+                html.Div(get_graph(fig), style={"width": "45%", "margin": "0 auto"})
+                for fig in figures
+            ],
+            id="feeds-modal-body",
+        )

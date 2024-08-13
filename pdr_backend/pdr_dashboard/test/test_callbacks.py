@@ -1,5 +1,6 @@
 import time
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
 
 from pdr_backend.pdr_dashboard.test.resources import (
     _input_action,
@@ -251,3 +252,63 @@ def test_feeds_table_filters(setup_app, dash_duo):
     dash_duo.find_element("#clear_filters_button").click()
     time.sleep(1)  # Allow time for the table to refresh
     _assert_table_row_count(dash_duo, "#feeds_page_table", 6)
+
+
+def test_feeds_table_modal(setup_app, dash_duo):
+    """
+    Test that selecting a row from the table of the feeds page,
+    opens a modal with the feed related plots
+    """
+
+    app = setup_app
+    start_server_and_wait(dash_duo, app)
+
+    # Navigate to feeds page
+    dash_duo.wait_for_element("#feeds")
+    dash_duo.find_element("#feeds").click()
+    time.sleep(1)
+
+    # Select a row
+    table = dash_duo.find_element("#feeds_page_table")
+    table.find_element(
+        By.XPATH, "//tr[2]//td[1]//input[@type='radio']"
+    ).click()  # Click on second row
+    time.sleep(1)
+    # addr = table.find_element(By.XPATH, "//tr[2]//td[2]//div").text
+    base_token = table.find_element(By.XPATH, "//tr[2]//td[3]//div").text
+    quote_token = table.find_element(By.XPATH, "//tr[2]//td[4]//div").text
+    timeframe = table.find_element(By.XPATH, "//tr[2]//td[6]//div").text
+    exchange = table.find_element(By.XPATH, "//tr[2]//td[5]//div").text
+
+    # Wait for modal to update
+    dash_duo.wait_for_element("#modal", timeout=4)
+
+    # Check if modal is visible and contains correct values
+    modal = dash_duo.find_element("#modal")
+    header_text = modal.find_element(
+        By.XPATH, "//div[@id='feeds-modal-header']//span"
+    ).text
+    assert header_text == f"{base_token}-{quote_token} {timeframe} {exchange}"
+
+    # Check that all the plots are visible inside the modal
+    number_of_plots = len(
+        modal.find_element(By.ID, "feeds-modal-body").find_elements(
+            By.CLASS_NAME, "dash-graph"
+        )
+    )
+    assert number_of_plots == 6
+
+    # Find modal backgound and click it to close the modal
+    dialog = dash_duo.find_element(".modal")
+    dialog.click()
+
+    # Check that no table row is selected after modal is closed
+    rows = table.find_elements(By.XPATH, ".//tr")
+    no_row_selected = True
+    for row in rows:
+        # Assume selected rows have a class 'selected' or similar
+        if "selected" in row.get_attribute("class"):
+            no_row_selected = False
+            break
+
+    assert no_row_selected, "A row is selected when none should be"

@@ -1,5 +1,11 @@
 import dash
 from dash import Input, Output, State, callback_context
+from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
+from pdr_backend.pdr_dashboard.dash_components.plots import (
+    get_feed_figures,
+    FeedModalFigures,
+)
+from pdr_backend.cli.arg_feeds import ArgFeed
 from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
 
@@ -186,3 +192,59 @@ def get_callbacks_feeds(app):
             None,
             None,
         )
+
+    @app.callback(
+        Output("modal", "is_open"),
+        Output("feeds_page_table", "selected_rows"),
+        Input("feeds_page_table", "selected_rows"),
+        State("modal", "is_open"),
+    )
+    def toggle_modal(selected_rows, is_open_input):
+        ctx = dash.callback_context
+        triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+        if triggered_id == "feeds_page_table":
+            if selected_rows:
+                if not is_open_input:
+                    return True, dash.no_update
+            else:
+                # Clear the selection if modal is not opened
+                return False, []
+
+        if triggered_id == "modal" and not is_open_input:
+            # Modal close button is clicked, clear the selection
+            return False, []
+
+        return dash.no_update, dash.no_update
+
+    @app.callback(
+        Output("modal", "children"),
+        Input("modal", "is_open"),
+        State("feeds_page_table", "selected_rows"),
+        State("feeds_page_table", "data"),
+    )
+    def update_graphs(is_open, selected_rows, feeds_table_data):
+        if not is_open or not selected_rows:
+            return []
+
+        selected_row = feeds_table_data[selected_rows[0]]
+
+        feed = ArgFeed(
+            exchange=selected_row["exchange"].lower(),
+            signal=None,
+            pair=f'{selected_row["base_token"]}-{selected_row["quote_token"]}',
+            timeframe=selected_row["time"],
+            contract=selected_row["full_addr"],
+        )
+
+        payouts = app.db_getter.payouts([feed.contract], None, 0)
+        subscriptions = app.db_getter.feed_daily_subscriptions_by_feed_id(feed.contract)
+        feed_figures: FeedModalFigures = get_feed_figures(payouts, subscriptions)
+
+        feeds_page = FeedsPage(app)
+        children = [
+            feeds_page.get_feed_graphs_modal_header(selected_row),
+            feeds_page.get_feed_graphs_modal_body(list(feed_figures.__dict__.values())),
+        ]
+
+        return children

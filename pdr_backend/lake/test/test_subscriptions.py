@@ -7,14 +7,16 @@ from pdr_backend.lake.subscription import Subscription, mock_subscriptions
 def test_subscriptions():
     subscriptions = mock_subscriptions()
 
-    assert len(subscriptions) == 8
+    assert len(subscriptions) == 9
     assert isinstance(subscriptions[0], Subscription)
     assert isinstance(subscriptions[1], Subscription)
     assert (
         subscriptions[0].ID
-        == "ETH/USDT-0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809592-98"
+        == """0x18f54cc21b7a2fdd011bea06bba7801b280e3151-
+        0xe4599d8d1a02330fbc3a2a8fb4950f6d5a44d2e85fe750438246f535b47eda35-98"""
     )
     assert (
         subscriptions[1].ID
-        == "BTC/USDT-0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809593-99"
+        == """0x18f54cc21b7a2fdd011bea06bba7801b280e3151-
+        0xe4599d8d1a02330fbc3a2a8fb4950f6d5a44d2e85fe750438246f535b47eda35-98"""
     )
