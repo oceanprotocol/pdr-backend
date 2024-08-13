@@ -224,8 +224,9 @@ def get_callbacks_feeds(app):
         State("feeds_page_table", "data"),
     )
     def update_graphs(is_open, selected_rows, feeds_table_data):
+        feeds_page = FeedsPage(app)
         if not is_open or not selected_rows:
-            return []
+            return feeds_page.get_default_modal_content()
 
         selected_row = feeds_table_data[selected_rows[0]]
 
@@ -241,7 +242,6 @@ def get_callbacks_feeds(app):
         subscriptions = app.db_getter.feed_daily_subscriptions_by_feed_id(feed.contract)
         feed_figures: FeedModalFigures = get_feed_figures(payouts, subscriptions)
 
-        feeds_page = FeedsPage(app)
         children = [
             feeds_page.get_feed_graphs_modal_header(selected_row),
             feeds_page.get_feed_graphs_modal_body(list(feed_figures.__dict__.values())),

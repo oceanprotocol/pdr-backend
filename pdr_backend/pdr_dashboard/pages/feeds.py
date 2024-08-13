@@ -6,7 +6,9 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_feed_column_ids,
     find_with_key_value,
 )
-
+from pdr_backend.pdr_dashboard.dash_components.plots import (
+    FeedModalFigures,
+)
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_graph,
@@ -59,16 +61,9 @@ class FeedsPage:
         return html.Div(
             [
                 dcc.Store(id="user-payout-stats"),
-                dcc.Loading(
-                    id="loading",
-                    type="default",
-                    children=[
-                        self.get_metrics_row(),
-                        self.get_main_container(),
-                        self.get_modal(),
-                    ],
-                    custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
-                ),
+                self.get_metrics_row(),
+                self.get_main_container(),
+                self.get_modal(),
             ],
             style={"height": "100%"},
         )
@@ -294,12 +289,16 @@ class FeedsPage:
 
     def get_modal(self):
         return dbc.Modal(
-            [
-                dbc.ModalHeader("Header"),
-                dbc.ModalBody("This is the content of the modal", id="modal_body"),
-            ],
+            self.get_default_modal_content(),
             id="modal",
         )
+
+    def get_default_modal_content(self):
+        figures = FeedModalFigures()
+        return [
+            dbc.ModalHeader("Loading feed data", id="feeds-modal-header"),
+            self.get_feed_graphs_modal_body(list(figures.__dict__.values())),
+        ]
 
     def get_feed_graphs_modal_header(self, selected_row):
         return html.Div(
