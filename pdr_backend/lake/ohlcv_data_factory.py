@@ -86,6 +86,14 @@ class OhlcvDataFactory:
         asyncio.run(self._update_rawohlcv_files(fin_ut))
         logger.info("Update all rawohlcv files: done")
         rawohlcv_dfs = self._load_rawohlcv_files(fin_ut)
+
+        for feed in self.ss.feeds:
+            if feed.volume_threshold is not None:
+                df = rawohlcv_dfs[str(feed.exchange)][str(feed.pair)]
+                logger.info("Get volume bars for %s", feed)
+                dfvb = get_volume_bars(df, feed.volume_threshold)
+                rawohlcv_dfs[str(feed.exchange)][str(feed.pair)] = dfvb
+
         mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
         logger.info("Get historical data, across many exchanges & pairs: done.")
@@ -93,77 +101,6 @@ class OhlcvDataFactory:
         # postconditions
         assert isinstance(mergedohlcv_df, pl.DataFrame)
         return mergedohlcv_df
-
-    async def _update_volume_bars(self, fin_ut: UnixTimeMs):
-        logger.info("Update all volume bar files: begin")
-        tasks = []
-        for feed in self.ss.feeds:
-            tasks.append(self._update_volume_bars_at_feed(feed, fin_ut))
-
-        await asyncio.gather(*tasks)
-
-    async def _update_volume_bars_at_feed(self, feed: ArgFeed, fin_ut: UnixTimeMs):
-        """
-        @arguments
-          feed -- ArgFeed
-          fin_ut -- a timestamp, in ms, in UTC
-        """
-        # read in ohlcv data from kaiko file name
-        exch_str: str = str(feed.exchange)
-        pair_str: str = str(feed.pair)
-        assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
-        assert feed.volume_threshold, f"volume_threshold can't be none"
-        vb_str: str = str(feed.volume_threshold)
-        _, value_str = vb_str.split("_", 1)
-        threshold: float = float(value_str)
-
-        update_s = f"Update volume bar file at exch={exch_str}, pair={pair_str}"
-        logger.info("%s: begin", update_s)
-
-        rawohlcv_filename = self._rawohlcv_filename(feed)
-        volumebar_filename = self._volbar_filename(feed)
-        logger.info("filename=%s", volumebar_filename)
-
-        feed.timeframe = '1s' # override timeframe to be 1s and use kaiko
-        st_ut = self._calc_start_ut_maybe_delete(feed.timeframe, rawohlcv_filename)
-        logger.info("Aim to fetch data from start time: %s", st_ut.pretty_timestr())
-        if st_ut > min(UnixTimeMs.now(), fin_ut):
-            logger.info("Given start time, no data to gather. Exit.")
-            return
-
-        # empty ohlcv df
-        df = initialize_rawohlcv_df()
-        while True:
-            limit = 1000
-            logger.info("Fetch up to %s pts from %s", limit, st_ut.pretty_timestr())
-            cols = TOHLCV_COLS
-            logger.info(
-                "Loading in kaiko ohlcv data (for calculating Volume bar) filename=%s",
-                rawohlcv_filename,
-            )
-            rawohlcv_df = load_rawohlcv_file(rawohlcv_filename, cols, st_ut, fin_ut)
-            volume_bars, newest_ut_value = get_volume_bars(rawohlcv_df, threshold)
-            tohlcv_data = clean_raw_ohlcv(volume_bars, feed, st_ut, fin_ut)
-            # concat both TOHLCV data
-            next_df = pl.DataFrame(
-                tohlcv_data,
-                schema=TOHLCV_SCHEMA_PL,
-                orient="row",
-            )
-            df = concat_next_df(df, next_df)
-
-            if len(tohlcv_data) < limit:  # no more data, we're at newest time
-                break
-
-            # prep next iteration
-            logger.debug("newest_ut_value: %s", newest_ut_value)
-            st_ut = UnixTimeMs(newest_ut_value + feed.timeframe.ms)
-
-        # output to file
-        save_rawohlcv_file(volumebar_filename, df)
-
-        # done
-        logger.info("%s: done", update_s)
 
     async def _update_rawohlcv_files(self, fin_ut: UnixTimeMs):
         logger.info("Update all rawohlcv files: begin")
