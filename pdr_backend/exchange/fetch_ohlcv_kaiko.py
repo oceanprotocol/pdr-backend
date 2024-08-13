@@ -21,24 +21,34 @@ def exchange_str_to_kaiko(exchange_str: str):
 
 @enforce_types
 def convert_to_tohlcv(data):
-    # Create a list to hold the TOHLCV tuples
+    def extract_fields(entry):
+        return (
+            int(entry["timestamp"]),
+            float(entry["open"]),
+            float(entry["high"]),
+            float(entry["low"]),
+            float(entry["close"]),
+            float(entry["volume"]),
+        )
+
     raw_tohlcv_data = []
+    last_valid_entry = None
 
-    # Iterate through each dictionary in the all_data list
     for entry in data:
-        # Extract and convert the relevant fields
         if entry["close"] is None:
-            continue
-        timestamp = int(entry["timestamp"])
-        open_ = float(entry["open"])
-        high = float(entry["high"])
-        low = float(entry["low"])
-        close = float(entry["close"])
-        volume = float(entry["volume"])
+            if last_valid_entry is None:
+                # Find the next valid entry with a non-None 'close'
+                for future_entry in data[data.index(entry) + 1 :]:
+                    if future_entry["close"] is not None:
+                        last_valid_entry = extract_fields(future_entry)
+                        break
 
-        # Create a tuple with the required format and append to the list
-        tohlcv_tuple = (timestamp, open_, high, low, close, volume)
-        raw_tohlcv_data.append(tohlcv_tuple)
+            if last_valid_entry:
+                raw_tohlcv_data.append((int(entry["timestamp"]), *last_valid_entry[1:]))
+        else:
+            tohlcv_tuple = extract_fields(entry)
+            last_valid_entry = tohlcv_tuple
+            raw_tohlcv_data.append(tohlcv_tuple)
 
     # Sort the list of tuples by timestamp (ascending order)
     raw_tohlcv_data.sort(key=lambda x: x[0])
@@ -83,31 +93,15 @@ def fetch_ohlcv_kaiko(
         raise ValueError("No KAIKO_KEY env var found")
     headers = {"X-Api-Key": api_key}
     all_data: List[dict] = []
-    continue_token = None
-    page_size = 100000  # max page size
+    page_size = limit  # max page size
     start_time = since.to_dt().strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z"
+    params = {"page_size": page_size, "start_time": start_time, "sort": "asc"}
 
-    while len(all_data) < limit:
-        params = {"page_size": page_size}
-        if len(all_data) == 0:
-            if start_time:
-                params["start_time"] = start_time
-        if continue_token:
-            params["continuation_token"] = continue_token
-
-        response = requests.get(url, headers=headers, params=params)
-        if response.status_code == 200:
-            data = response.json()
-
-            if data["result"] == "error":
-                raise ValueError(f"Error: {data['message']}")
-
-            all_data.extend(data["data"])
-            continue_token = data.get("continuation_token", None)
-            if not continue_token:
-                break  # No more pages to fetch
-        else:
-            print(f"Error: {response.status_code}, {response.text}")
-            break
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if data["result"] == "error":
+            raise ValueError(f"Error: {data['message']}")
+        all_data.extend(data["data"])
 
     return convert_to_tohlcv(all_data)
