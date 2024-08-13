@@ -111,9 +111,11 @@ class OhlcvDataFactory:
         # read in ohlcv data from kaiko file name
         exch_str: str = str(feed.exchange)
         pair_str: str = str(feed.pair)
-        assert feed.volume_threshold, f"volume_threshold can't be none"
-        threshold: float = float(feed.volume_threshold)
         assert "/" in str(pair_str), f"pair_str={pair_str} needs '/'"
+        assert feed.volume_threshold, f"volume_threshold can't be none"
+        vb_str: str = str(feed.volume_threshold)
+        _, value_str = vb_str.split("_", 1)
+        threshold: float = float(value_str)
 
         update_s = f"Update volume bar file at exch={exch_str}, pair={pair_str}"
         logger.info("%s: begin", update_s)
@@ -122,7 +124,7 @@ class OhlcvDataFactory:
         volumebar_filename = self._volbar_filename(feed)
         logger.info("filename=%s", volumebar_filename)
 
-        assert feed.timeframe
+        feed.timeframe = '1s' # override timeframe to be 1s and use kaiko
         st_ut = self._calc_start_ut_maybe_delete(feed.timeframe, rawohlcv_filename)
         logger.info("Aim to fetch data from start time: %s", st_ut.pretty_timestr())
         if st_ut > min(UnixTimeMs.now(), fin_ut):
@@ -342,6 +344,6 @@ class OhlcvDataFactory:
         pair_str = str(feed.pair)
         assert "/" in str(pair_str) or "-" in pair_str, pair_str
         pair_str = str(pair_str).replace("/", "-")  # filesystem needs "-"
-        basename = f"volume_bar_{feed.exchange}_{pair_str}_{feed.timeframe}.parquet"
+        basename = f"volume_bar_{feed.exchange}_{pair_str}.parquet"
         filename = os.path.join(self.ss.lake_dir, basename)
         return filename
