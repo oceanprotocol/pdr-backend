@@ -17,7 +17,8 @@ def get_callbacks_common(app):
         for item in NAV_ITEMS:
             item["active"] = item["location"].lower() == pathname
 
-        return get_page(pathname), get_navbar(NAV_ITEMS)
+        result = get_page(pathname), get_navbar(NAV_ITEMS)
+        return result
 
     def get_page(pathname):
         if pathname not in ["/", "/feeds"]:

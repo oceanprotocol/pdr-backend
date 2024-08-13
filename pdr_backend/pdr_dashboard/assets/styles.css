@@ -237,41 +237,6 @@ button {
     overflow: hidden;
 }
 
-#feeds-modal-header {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-}
-
-#feeds-modal-body {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-}
-
-.modal-dialog {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: calc(100% - 3.5rem);
-    max-width: 100% !important;
-}
-
-.modal {
-    max-width: 100% !important;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-}
-
-.modal-content {
-    width: 70%;
-    padding: 20px;
-    height: auto;
-}
-
 .btn-apply-filter {
     width: 100%;
     /* Fallback for browsers that don't support -webkit-fill-available or -moz-available */
@@ -287,6 +252,41 @@ button {
     margin-bottom: 5px;
 }
 
+#feeds-modal-header{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+#feeds-modal-body{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.modal-dialog{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100% - 3.5rem);
+    max-width: 100% !important;
+}
+
+.modal{
+    max-width: 100% !important;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+.modal-content{
+    width: 70%;
+    padding: 20px;
+    height: auto;
+}
+
 #clear_filters_button {
     width: "100px";
     padding: 5px;
@@ -299,10 +299,16 @@ button {
 }
 
 #feeds-page-layout,
-#feeds-page-layout>div,
-#feeds-page-layout>div>div,
 #home-page-layout {
     display: flex;
     width: 100%;
     flex-direction: column;
+}
+
+#feeds_page_metrics_row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    text-align: center;
+    margin-bottom: 60px;
 }

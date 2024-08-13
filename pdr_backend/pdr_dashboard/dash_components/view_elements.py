@@ -70,10 +70,15 @@ def get_metric(label, value, value_id):
                     "alignItems": "center",
                 },
             ),
-            html.Span(
-                format_value(value, value_id),
-                id=value_id,
-                style={"fontWeight": "bold"},
+            dcc.Loading(
+                id="loading",
+                type="default",
+                children=html.Span(
+                    format_value(value, value_id),
+                    id=value_id,
+                    style={"fontWeight": "bold"},
+                ),
+                custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
             ),
         ],
         style={"display": "flex", "flexDirection": "column", "font-size": "20px"},

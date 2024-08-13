@@ -8,6 +8,7 @@ from pdr_backend.pdr_dashboard.test.resources import (
 )
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.payout import Payout
+from pdr_backend.lake.subscription import Subscription
 
 
 @enforce_types
@@ -126,3 +127,35 @@ def test_get_user_payouts_stats(
     assert test_row["avg_stake"] == 1.9908170679122585
 
     _clear_test_db(ppss.lake_ss.lake_dir)
+
+
+def test_get_feed_daily_subscriptions_by_feed_id(tmpdir, _sample_subscriptions):
+    ppss, _ = _prepare_test_db(
+        tmpdir, _sample_subscriptions, table_name=Subscription.get_lake_table_name()
+    )
+
+    feed_id = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
+
+    db_getter = DBGetter(ppss.lake_ss.lake_dir)
+    result = db_getter.feed_daily_subscriptions_by_feed_id(feed_id)
+    all_subscriptions = db_getter._query_db(
+        f"SELECT * FROM {Subscription.get_lake_table_name()}"
+    )
+
+    # Verify the response type and length
+    assert isinstance(result, list)
+    assert len(result) == 1
+
+    # Filter subscriptions from the given contract
+    subscriptions_from_given_contract = [
+        item for item in all_subscriptions if feed_id in item["ID"]
+    ]
+
+    # Verify the fields in the result
+    assert result[0]["day"] is not None, "Day field should not be None"
+    assert result[0]["count"] == len(
+        subscriptions_from_given_contract
+    ), "Count should match the number of subscriptions from the given contract"
+    assert result[0]["revenue"] == sum(
+        obj["last_price_value"] for obj in subscriptions_from_given_contract
+    ), "Revenue should be the sum of last_price_value of the subscriptions"

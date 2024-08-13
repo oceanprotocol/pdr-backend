@@ -21,16 +21,8 @@ class HomePage:
 
     def layout(self):
         return html.Div(
-            [
-                dcc.Store(id="user-payout-stats"),
-                dcc.Loading(
-                    id="loading",
-                    type="default",
-                    children=self.get_main_container(),
-                    custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
-                ),
-            ],
-            style={"height": "100%"},
+            self.get_main_container(),
+            id="home-page-layout",
         )
 
     def get_main_container(self):
@@ -41,7 +33,15 @@ class HomePage:
 
     def get_graphs_column(self):
         return html.Div(
-            [self.get_graphs_column_metrics_row(), self.get_graphs_column_plots_row()],
+            [
+                self.get_graphs_column_metrics_row(),
+                dcc.Loading(
+                    id="loading",
+                    type="default",
+                    children=self.get_graphs_column_plots_row(),
+                    custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
+                ),
+            ],
             id="graphs_container",
             style={
                 "height": "100%",
