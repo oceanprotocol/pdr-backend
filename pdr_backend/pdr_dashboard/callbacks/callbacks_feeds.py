@@ -204,17 +204,19 @@ def get_callbacks_feeds(app):
         ctx = dash.callback_context
         triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-        if triggered_id == "feeds_page_table" and selected_rows:
-            if not is_open_input:
-                return True, dash.no_update
+        if triggered_id == "feeds_page_table":
+            if selected_rows:
+                if not is_open_input:
+                    return True, dash.no_update
+            else:
+                # Clear the selection if modal is not opened
+                return False, []
 
+        if triggered_id == "modal" and not is_open_input:
+            # Modal close button is clicked, clear the selection
             return False, []
 
-        if not is_open:
-            # Close the modal when it is already open
-            return dash.no_update, []
-
-        return is_open, dash.no_update
+        return dash.no_update, dash.no_update
 
     @app.callback(
         Output("modal", "children"),
