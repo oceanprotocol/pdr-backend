@@ -313,5 +313,21 @@ button {
     flex-direction: row;
     justify-content: space-around;
     text-align: center;
-    margin-bottom: 60px;
+    margin-bottom: 40px;
+}
+
+#feeds-page-search-bar-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-input{
+    border-radius: 4px;
+    border: 1px solid #aaa;
+    padding: 5px 10px;
+    width: 500px !important;
+    text-align: center;
 }

@@ -12,6 +12,7 @@ from pdr_backend.pdr_dashboard.dash_components.plots import (
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_graph,
+    get_search_bar,
 )
 from pdr_backend.pdr_dashboard.util.format import format_table
 
@@ -62,6 +63,7 @@ class FeedsPage:
             [
                 dcc.Store(id="user-payout-stats"),
                 self.get_metrics_row(),
+                self.get_search_bar_row(),
                 self.get_main_container(),
                 self.get_modal(),
             ],
@@ -148,6 +150,14 @@ class FeedsPage:
                 for key, value in stats.items()
             ],
             id="feeds_page_metrics_row",
+        )
+
+    def get_search_bar_row(self):
+        return html.Div(
+            children=get_search_bar(
+                "search-input-feeds-table", "Search for addrs, token ..."
+            ),
+            id="feeds-page-search-bar-row",
         )
 
     def get_main_container(self):
