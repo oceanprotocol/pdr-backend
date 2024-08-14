@@ -3,6 +3,7 @@ import re
 
 from enforce_typing import enforce_types
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.ppss.ppss import mock_ppss
@@ -120,3 +121,17 @@ def _set_input_value_and_submit(
     input_field.send_keys(value + Keys.ENTER)
     dash_duo.find_element(submit_button_id).click()
     time.sleep(1)
+
+
+def _set_searchbar_value(dash_duo, search_input_id, value, table_id, expected_rows):
+
+    searchbar = dash_duo.find_element(search_input_id)
+    searchbar.clear()
+    searchbar.send_keys(Keys.BACKSPACE * 10)
+
+    searchbar.send_keys(value)
+    time.sleep(1)
+
+    table = dash_duo.find_element(table_id)
+    rows = table.find_elements(By.XPATH, ".//tr")
+    assert len(rows) == expected_rows

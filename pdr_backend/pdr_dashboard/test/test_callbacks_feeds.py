@@ -9,6 +9,7 @@ from pdr_backend.pdr_dashboard.test.resources import (
     _set_dropdown_and_verify_row_count,
     _set_input_value_and_submit,
     _remove_tags,
+    _set_searchbar_value,
 )
 
 
@@ -156,4 +157,25 @@ def test_feeds_table_modal(setup_app_with_etl_sample_data, dash_duo):
     assert all(
         "selected" not in row.get_attribute("class")
         for row in table.find_elements(By.XPATH, ".//tr")
+    )
+
+
+def test_feeds_searchbar(setup_app_with_etl_sample_data, dash_duo):
+    app = setup_app_with_etl_sample_data
+    start_server_and_wait(dash_duo, app)
+
+    _navigate_to_feeds_page(dash_duo)
+    dash_duo.wait_for_element("#search-input-feeds-table")
+
+    _set_searchbar_value(
+        dash_duo, "#search-input-feeds-table", "ETH", "#feeds_page_table", 3
+    )
+    _set_searchbar_value(
+        dash_duo, "#search-input-feeds-table", "ADA", "#feeds_page_table", 3
+    )
+    _set_searchbar_value(
+        dash_duo, "#search-input-feeds-table", "6f3bc", "#feeds_page_table", 2
+    )
+    _set_searchbar_value(
+        dash_duo, "#search-input-feeds-table", "NO_ROWS", "#feeds_page_table", 1
     )
