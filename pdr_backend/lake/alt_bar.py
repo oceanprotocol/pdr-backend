@@ -9,7 +9,7 @@ logging = logging.getLogger("volume_bar")
 
 # add config pair: volume_threshold in ppss
 
-
+@enforce_types
 def _extract_bars(
     data: pd.DataFrame, metric: str, threshold: Union[float, int] = 50000
 ):
@@ -26,23 +26,19 @@ def _extract_bars(
 
     list_bars = []
     cache = []
-    cum_ticks, cum_dollar_value, cum_volume, high_price, low_price = (
-        0,
-        0,
-        0,
-        -np.inf,
-        np.inf,
-    )
+    start_tm = None
+    cum_ticks, cum_dollar_value, cum_volume, cache, high_price, low_price = 0, 0, 0, [], -np.inf, np.inf
+
 
     # Iterate over rows
     for row in data.values:
         # Set variables
         timestamp = row[0]
-        close = float(row[4])
         open_price = float(row[1])
         high = float(row[2])
         low = float(row[3])
-        volume = row[5]
+        close = float(row[4])
+        volume = float(row[5])
 
         # Calculations
         cum_ticks += 1
@@ -57,22 +53,14 @@ def _extract_bars(
             low_price = low
 
         # Update cache
-        cache.append(
-            [
-                timestamp,
-                open_price,
-                low_price,
-                high_price,
-                close,
-                cum_volume,
-                cum_dollar_value,
-                cum_ticks,
-            ]
-        )
+        cache.append([timestamp, open_price, high_price, low_price, close, cum_volume, cum_dollar_value, cum_ticks])
+
 
         # If threshold reached then take a sample
         if eval(metric) >= threshold:  # pylint: disable=eval-used
             # Create bars
+            start_tm = timestamp
+            tp = cache[0][0]
             open_price = cache[0][1]
             low_price = min(low_price, low)
             high_price = max(high_price, high)
@@ -81,7 +69,7 @@ def _extract_bars(
             # Update bars & Reset counters
             list_bars.append(
                 [
-                    timestamp,
+                    tp,
                     open_price,
                     high_price,
                     low_price,
@@ -91,24 +79,15 @@ def _extract_bars(
                     cum_ticks,
                 ]
             )
-            cum_ticks, cum_dollar_value, cum_volume, cache, high_price, low_price = (
-                0,
-                0,
-                0,
-                [],
-                -np.inf,
-                np.inf,
-            )
+            cum_ticks, cum_dollar_value, cum_volume, cache, high_price, low_price = 0, 0, 0, [], -np.inf, np.inf
 
-    if len(list_bars) > 1:
-        start_tm = list_bars[-1][0]
-    else:
+    
+    if not start_tm:
         start_tm = cache[0][0]
-
     return list_bars, start_tm
 
 
-def get_dollar_bars(rawohlcv_df, threshold=70000000):
+def get_dollar_bars(rawohlcv_df: pd.DataFrame, threshold: float):
     """
     Creates the dollar bars: timestamp, open, high, low, close, cum_vol, cum_dollar, and cum_ticks.
 
@@ -127,7 +106,7 @@ def get_dollar_bars(rawohlcv_df, threshold=70000000):
     return list_bars, newest_ut_value
 
 
-def get_volume_bars(rawohlcv_df, threshold):
+def get_volume_bars(rawohlcv_df: pd.DataFrame, threshold: float):
     """
     Creates the volume bars: date_time, open, high, low, close, cum_vol, cum_dollar, and cum_ticks.
 
@@ -145,7 +124,7 @@ def get_volume_bars(rawohlcv_df, threshold):
     return list_bars, newest_ut_value
 
 
-def get_tick_bars(rawohlcv_df, threshold):
+def get_tick_bars(rawohlcv_df: pd.DataFrame, threshold: int):
     """
     Creates the tick bars: date_time, open, high, low, close, cum_vol, cum_dollar, and cum_ticks.
 
