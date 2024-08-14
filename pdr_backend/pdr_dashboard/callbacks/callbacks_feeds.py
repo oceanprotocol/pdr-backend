@@ -190,25 +190,13 @@ def get_callbacks_feeds(app):
         Output("accuracy_max", "value"),
         Output("volume_min", "value"),
         Output("volume_max", "value"),
+        Output("search-input-feeds-table", "value"),
         Input("clear_filters_button", "n_clicks"),
     )
     def clear_all_filters(btn_clicks):
         if not btn_clicks:
             return dash.no_update
-        return (
-            [],
-            [],
-            [],
-            [],
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-        )
+        return ([], [], [], [], None, None, None, None, None, None, None, None, "")
 
     @app.callback(
         Output("modal", "is_open"),
