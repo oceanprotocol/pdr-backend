@@ -186,7 +186,7 @@ class FeedsPage:
                     sort_action="native",  # Enables sorting feature
                 ),
             ],
-            style={"width": "100%"},
+            style={"width": "100%", "overflow": "scroll"},
         )
 
     def get_feeds_stat_with_contract(

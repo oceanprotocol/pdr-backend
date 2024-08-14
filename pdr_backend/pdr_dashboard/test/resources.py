@@ -1,4 +1,5 @@
 import time
+import re
 
 from enforce_typing import enforce_types
 from selenium.webdriver.common.keys import Keys
@@ -29,6 +30,10 @@ def _prepare_test_db(tmpdir, sample_data, table_name, my_addresses=None):
     db.duckdb_conn.close()
 
     return ppss, sample_data_df
+
+
+def _get_test_DuckDB(directory):
+    return DuckDBDataStore(directory)
 
 
 @enforce_types
@@ -78,3 +83,40 @@ def start_server_and_wait(dash_duo, app):
     dash_duo.wait_for_element("#predictoors_table")
     dash_duo.wait_for_element("#feeds_table tbody tr")
     dash_duo.wait_for_element("#predictoors_table tbody tr")
+
+
+def _navigate_to_feeds_page(dash_duo):
+    dash_duo.wait_for_element("#feeds")
+    dash_duo.find_element("#feeds").click()
+    time.sleep(1)
+
+
+def _remove_tags(text):
+    clean = re.compile("<.*?>")
+    return re.sub(clean, "", text)
+
+
+def _clear_filters(dash_duo):
+    dash_duo.find_element("#clear_filters_button").click()
+    time.sleep(1)
+
+
+def _set_dropdown_and_verify_row_count(
+    dash_duo, dropdown_id, option_text, expected_row_count
+):
+    _select_dropdown_option(dash_duo, dropdown_id, option_text)
+    _assert_table_row_count(dash_duo, "#feeds_page_table", expected_row_count)
+
+
+def _set_input_value_and_submit(
+    dash_duo, dropdown_id, input_id, value, submit_button_id
+):
+    if dropdown_id:
+        dash_duo.find_element(dropdown_id).click()
+
+    input_field = dash_duo.find_element(input_id)
+    input_field.clear()
+    input_field.send_keys(Keys.BACKSPACE * 2)
+    input_field.send_keys(value + Keys.ENTER)
+    dash_duo.find_element(submit_button_id).click()
+    time.sleep(1)
