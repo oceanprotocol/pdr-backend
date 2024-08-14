@@ -126,3 +126,14 @@ def get_nav_item(text: str, location: str, active: bool):
             style={"fontSize": "26px", "margin": "0 10px"},
         )
     )
+
+
+def get_search_bar(component_id, placeholder):
+    return (
+        dcc.Input(
+            id=component_id,
+            className="search-input",
+            type="text",
+            placeholder=placeholder,
+        ),
+    )

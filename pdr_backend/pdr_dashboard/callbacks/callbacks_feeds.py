@@ -23,6 +23,16 @@ def filter_condition(item, field, values):
     return not values or item[field] in values
 
 
+def search_condition(item, search_value):
+    if not search_value:
+        return True
+    search_value = search_value.lower()
+    return any(
+        search_value in item.get(key, "").lower()
+        for key in ["addr", "base_token", "quote_token"]
+    )
+
+
 def range_condition(item, field, min_value, max_value):
     item_value = float(item[field])
     return not (
@@ -32,6 +42,8 @@ def range_condition(item, field, min_value, max_value):
 
 
 def check_condition(item, condition_type, field, *values):
+    if condition_type == "search":
+        return search_condition(item, values[0])
     if condition_type == "filter":
         return filter_condition(item, field, values[0])
     if condition_type == "range":
@@ -56,6 +68,7 @@ def get_callbacks_feeds(app):
             Input("revenue_button", "n_clicks"),
             Input("accuracy_button", "n_clicks"),
             Input("volume_button", "n_clicks"),
+            Input("search-input-feeds-table", "value"),
         ],
         State("sales_min", "value"),
         State("sales_max", "value"),
@@ -76,6 +89,7 @@ def get_callbacks_feeds(app):
         _n_clicks_revenue,
         _n_clicks_accuracy,
         _n_clicks_volume,
+        search_input_value,
         sales_min,
         sales_max,
         revenue_min,
@@ -103,7 +117,10 @@ def get_callbacks_feeds(app):
         new_table_data = [
             item
             for item in app.feeds_table_data
-            if all(check_condition(item, *condition) for condition in conditions)
+            if (
+                all(check_condition(item, *condition) for condition in conditions)
+                and search_condition(item, search_input_value)
+            )
         ]
 
         columns = []
@@ -173,25 +190,13 @@ def get_callbacks_feeds(app):
         Output("accuracy_max", "value"),
         Output("volume_min", "value"),
         Output("volume_max", "value"),
+        Output("search-input-feeds-table", "value"),
         Input("clear_filters_button", "n_clicks"),
     )
     def clear_all_filters(btn_clicks):
         if not btn_clicks:
             return dash.no_update
-        return (
-            [],
-            [],
-            [],
-            [],
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-        )
+        return ([], [], [], [], None, None, None, None, None, None, None, None, "")
 
     @app.callback(
         Output("modal", "is_open"),
