@@ -53,8 +53,8 @@ def test_ArgFeed_from_str():
     assert ArgFeed.from_str("binance BTC/USDT c 1h") == target_feed
     assert ArgFeed.from_str("binance BTC-USDT c 1h") == target_feed
 
-    target_feed = ArgFeed("binance", None, "BTC/USDT", "1s", "vb_201")
-    assert ArgFeed.from_str("binance BTC/USDT 1s vb_201") == target_feed
+    target_feed = ArgFeed("binance", "close", "BTC/USDT", "1s", "vb_201")
+    assert ArgFeed.from_str("binance BTC/USDT c 1s vb_201") == target_feed
 
 
 @enforce_types
