@@ -138,13 +138,21 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
 
     exchange_str = feeds_str_split[0]
 
-    timeframe_str = feeds_str_split[-1]
+    volume_threshold_str = feeds_str_split[-1]
     offset_end = None
-
-    if timeframes_str_ok(timeframe_str):
+    
+    if vb_str_ok(volume_threshold_str):
+        # last part is a valid volume_threshold
+        vb_str_list = ArgVBs.from_str(volume_threshold_str)
+        signal_str_list = [None]
+        # we have a timeframe in front of vb threshold
+        timeframe_str = feeds_str_split[-2]
         timeframe_str_list = ArgTimeframes.from_str(timeframe_str)
-        # last part is a valid timeframe, and we don't have volume threshold
+        offset_end = -2
+    elif timeframes_str_ok(feeds_str_split[-1]):
         vb_str_list = [None]
+        timeframe_str = feeds_str_split[-1]
+        timeframe_str_list = ArgTimeframes.from_str(timeframe_str)
         # last part is a valid timeframe, and we might have a signal before it
         signal_char_str = feeds_str_split[-2]
 
@@ -156,12 +164,6 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
             # last part is a valid timeframe, but there is no signal before it
             signal_str_list = [None]
             offset_end = -1
-    elif vb_str_ok(timeframe_str):
-        volume_threshold_str = feeds_str_split[-1]
-        vb_str_list = ArgVBs.from_str(volume_threshold_str)
-        offset_end = -1
-        signal_str_list = [None]
-        timeframe_str_list = [None]
     else:
         # last part is not a valid timeframe, but it might be a signal
         timeframe_str_list = [None]
