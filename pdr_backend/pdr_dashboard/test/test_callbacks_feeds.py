@@ -45,8 +45,8 @@ def _verify_table_data(table, filename):
         assert row in expected_data
 
 
-def test_feeds_table(setup_app_with_sample_etl, dash_duo):
-    app = setup_app_with_sample_etl
+def test_feeds_table(_sample_app, dash_duo):
+    app = _sample_app
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
@@ -83,8 +83,8 @@ def test_feeds_table(setup_app_with_sample_etl, dash_duo):
     _verify_table_data(table, "expected_feeds_table_data.json")
 
 
-def test_feeds_page_metrics_row(setup_app_with_sample_etl, dash_duo):
-    app = setup_app_with_sample_etl
+def test_feeds_page_metrics_row(_sample_app, dash_duo):
+    app = _sample_app
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
@@ -110,8 +110,8 @@ def test_feeds_page_metrics_row(setup_app_with_sample_etl, dash_duo):
         assert metric in metric_texts[i]
 
 
-def test_feeds_table_filters(setup_app_with_sample_etl, dash_duo):
-    app = setup_app_with_sample_etl
+def test_feeds_table_filters(_sample_app, dash_duo):
+    app = _sample_app
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
@@ -161,8 +161,8 @@ def test_feeds_table_filters(setup_app_with_sample_etl, dash_duo):
     _verify_table_data(table, "expected_feeds_table_data.json")
 
 
-def test_feeds_table_modal(setup_app_with_sample_etl, dash_duo):
-    app = setup_app_with_sample_etl
+def test_feeds_table_modal(_sample_app, dash_duo):
+    app = _sample_app
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
@@ -203,8 +203,8 @@ def test_feeds_table_modal(setup_app_with_sample_etl, dash_duo):
     )
 
 
-def test_feeds_searchbar(setup_app_with_sample_etl, dash_duo):
-    app = setup_app_with_sample_etl
+def test_feeds_searchbar(_sample_app, dash_duo):
+    app = _sample_app
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
