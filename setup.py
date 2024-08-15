@@ -9,9 +9,9 @@ from setuptools import find_packages, setup
 # Installed by pip install pdr-backend
 # or pip install -e .
 install_requirements = [
-    "black==24.4.2",
+    "black==24.8.0",
     "bumpversion",
-    "ccxt==4.3.68",
+    "ccxt==4.3.73",
     "coverage",
     "dash[testing]==2.17.1",
     "dash_bootstrap_components==1.6.0",
@@ -30,7 +30,7 @@ install_requirements = [
     "pandas==2.2.2",
     "pathlib",
     "plotly==5.23.0",
-    "polars==1.3.0",
+    "polars==1.4.1",
     "polars[timezone]",
     "pyarrow==17.0.0",
     "pylint==3.2.6",
@@ -44,7 +44,7 @@ install_requirements = [
     "statsmodels==0.14.2",
     "time_machine==2.14.2",
     "typeguard==4.3.0",
-    "xgboost==2.1.0",
+    "xgboost==2.1.1",
     "dash_bootstrap_components==1.6.0",
     "web3==6.20.1",
     "sapphire.py==0.2.3",

@@ -23,20 +23,26 @@ class ArgTimeframe:
     @property
     def ms(self) -> int:
         """Returns timeframe, in ms"""
-        return self.m * 60 * 1000
+        return int(self.m * 60 * 1000)
 
     @property
     def s(self) -> int:
         """Returns timeframe, in s"""
-        return self.m * 60
+        return int(self.m * 60)
 
     @property
-    def m(self) -> int:
+    def m(self) -> float:
         """Returns timeframe, in minutes"""
+        if self.timeframe_str == "1s":
+            return 1 / 60
+        if self.timeframe_str == "30s":
+            return 1 / 2
         if self.timeframe_str == "1m":
             return 1
         if self.timeframe_str == "5m":
             return 5
+        if self.timeframe_str == "15m":
+            return 15
         if self.timeframe_str == "1h":
             return 60
         raise ValueError(f"need to support timeframe={self.timeframe_str}")

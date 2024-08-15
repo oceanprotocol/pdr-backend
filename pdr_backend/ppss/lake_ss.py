@@ -57,6 +57,10 @@ class LakeSS(MultiFeedMixin):
     def fin_timestr(self) -> str:
         return self.d["fin_timestr"]  # eg "now","2023-09-23_17:55","2023-09-23"
 
+    @property
+    def api(self) -> str:
+        return self.d.get("api", "ccxt")
+
     # feeds defined in base
 
     # --------------------------------

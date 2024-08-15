@@ -97,6 +97,10 @@ class AimodelSS(StrMixin):
         return self.d["calibrate_probs"]
 
     @property
+    def seed(self) -> Optional[int]:
+        return self.d.get("seed", None)
+
+    @property
     def calc_imps(self) -> bool:
         """Calc feature importances"""
         return self.d.get("calc_imps", True)

@@ -117,7 +117,7 @@ class AimodelFactory:
                 N = len(ycont)
                 I = np.random.choice(a=N, size=N, replace=True)
                 X_tr_I, ycont_I = X_tr[I, :], ycont[I]
-                sk_regr = _approach_to_skm(ss.approach)
+                sk_regr = _approach_to_skm(ss.approach, ss.seed)
                 _fit(sk_regr, X_tr_I, ycont_I, show_warnings)
                 sk_regrs.append(sk_regr)
 
@@ -158,7 +158,7 @@ class AimodelFactory:
             ytrue[0], ytrue[1] = True, False
             sk_classif = DummyClassifier(strategy="most_frequent")
         else:
-            sk_classif = _approach_to_skm(ss.approach)
+            sk_classif = _approach_to_skm(ss.approach, ss.seed)
         if sk_classif is None:
             raise ValueError(ss.approach)
 
@@ -251,7 +251,7 @@ def _fit(skm, X, y, show_warnings: bool):
 
 
 @enforce_types
-def _approach_to_skm(approach: str):
+def _approach_to_skm(approach: str, seed: Optional[int]):
     # pylint: disable=too-many-return-statements
     if approach in ["ClassifConstant", "RegrConstant"]:
         raise ValueError("should have handled constants before this")
@@ -260,32 +260,48 @@ def _approach_to_skm(approach: str):
     if approach == "RegrLinearLS":
         return LinearRegression()
     if approach == "RegrLinearLasso":
-        return Lasso()
+        return Lasso(random_state=seed)
     if approach == "RegrLinearRidge":
-        return Ridge()
+        return Ridge(random_state=seed)
     if approach == "RegrLinearElasticNet":
-        return ElasticNet()
+        return ElasticNet(random_state=seed)
     if approach == "RegrGaussianProcess":
-        return GaussianProcessRegressor()
+        return GaussianProcessRegressor(random_state=seed)
     if approach == "RegrXgboost":
-        return XGBRegressor()
+        return XGBRegressor(random_state=seed)
 
     # classifier approaches
     if approach == "ClassifLinearLasso":
-        return LogisticRegression(penalty="l1", solver="liblinear", max_iter=1000)
+        return LogisticRegression(
+            penalty="l1", solver="liblinear", max_iter=1000, random_state=seed
+        )
     if approach == "ClassifLinearLasso_Balanced":
         return LogisticRegression(
-            penalty="l1", solver="liblinear", max_iter=1000, class_weight="balanced"
+            penalty="l1",
+            solver="liblinear",
+            max_iter=1000,
+            class_weight="balanced",
+            random_state=seed,
         )
     if approach == "ClassifLinearRidge":
-        return LogisticRegression(penalty="l2", solver="lbfgs", max_iter=1000)
+        return LogisticRegression(
+            penalty="l2", solver="lbfgs", max_iter=1000, random_state=seed
+        )
     if approach == "ClassifLinearRidge_Balanced":
         return LogisticRegression(
-            penalty="l2", solver="lbfgs", max_iter=1000, class_weight="balanced"
+            penalty="l2",
+            solver="lbfgs",
+            max_iter=1000,
+            class_weight="balanced",
+            random_state=seed,
         )
     if approach == "ClassifLinearElasticNet":
         return LogisticRegression(
-            penalty="elasticnet", l1_ratio=0.5, solver="saga", max_iter=1000
+            penalty="elasticnet",
+            l1_ratio=0.5,
+            solver="saga",
+            max_iter=1000,
+            random_state=seed,
         )
     if approach == "ClassifLinearElasticNet_Balanced":
         return LogisticRegression(
@@ -294,13 +310,14 @@ def _approach_to_skm(approach: str):
             solver="saga",
             max_iter=1000,
             class_weight="balanced",
+            random_state=seed,
         )
     if approach == "ClassifLinearSVM":
-        return LinearSVC(C=0.025)
+        return LinearSVC(C=0.025, random_state=seed)
     if approach == "ClassifGaussianProcess":
-        return GaussianProcessClassifier()
+        return GaussianProcessClassifier(random_state=seed)
     if approach == "ClassifXgboost":
-        return XGBClassifier()
+        return XGBClassifier(random_state=seed)
 
     # unidentified
     return None
