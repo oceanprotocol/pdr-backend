@@ -56,20 +56,16 @@ class ArgFeeds(List[ArgFeed]):
         source: Union[str, ArgExchange],
         pair: Union[str, ArgPair],
         timeframe: Union[str, ArgTimeframe],
-        volume_threshold: Union[str, ArgVB] = None,
+        volume_threshold: Optional[Union[str, ArgVB]] = None,
     ) -> bool:
         for feed in self:
             if (
                 feed.exchange == source
                 and feed.pair == pair
                 and (not feed.timeframe or feed.timeframe == timeframe)
-                and (
-                    not feed.volume_threshold
-                    or feed.volume_threshold == volume_threshold
-                )
             ):
                 return True
-
+        
         return False
 
     @enforce_types
