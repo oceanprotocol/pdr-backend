@@ -91,8 +91,22 @@ class OhlcvDataFactory:
             if feed.volume_threshold is not None:
                 df = rawohlcv_dfs[str(feed.exchange)][str(feed.pair)]
                 logger.info("Get volume bars for %s", feed)
-                dfvb = get_volume_bars(df, feed.volume_threshold)
-                rawohlcv_dfs[str(feed.exchange)][str(feed.pair)] = dfvb
+                bars, _ = get_volume_bars(
+                    df.to_pandas(), feed.volume_threshold.threshold()
+                )
+                columns = [
+                    "timestamp",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "Cumulative Dollar Value",
+                    "Cumulative Ticks",
+                ]
+                bars_df = pl.DataFrame(bars, schema=columns)
+                bars_df = bars_df.with_columns(pl.col("timestamp").cast(pl.Int64))
+                rawohlcv_dfs[str(feed.exchange)][str(feed.pair)] = bars_df
 
         mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
 
