@@ -87,10 +87,10 @@ class FeedsPage:
                 for filter_obj in filters_objects
             ]
             + [
-                self.get_input_filter("Sales"),
-                self.get_input_filter("Revenue"),
                 self.get_input_filter("Accuracy"),
                 self.get_input_filter("Volume"),
+                self.get_input_filter("Sales"),
+                self.get_input_filter("Revenue"),
             ],
             id="filters-container",
         )
