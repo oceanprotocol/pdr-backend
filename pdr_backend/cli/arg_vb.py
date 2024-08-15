@@ -26,7 +26,7 @@ class ArgVB:
 
     def __str__(self):
         return self.vb_str
-    
+
     def threshold(self) -> float:
         return float(self.vb_str.split("_")[1])
 

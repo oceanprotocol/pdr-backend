@@ -140,14 +140,14 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
 
     volume_threshold_str = feeds_str_split[-1]
     offset_end = None
-    
+
     if vb_str_ok(volume_threshold_str):
         # last part is a valid volume_threshold
         vb_str_list = ArgVBs.from_str(volume_threshold_str)
         feeds_str_split = feeds_str_split[:-1]
     else:
         vb_str_list = [None]
-        
+
     timeframe_str = feeds_str_split[-1]
     if timeframes_str_ok(timeframe_str):
         timeframe_str = feeds_str_split[-1]

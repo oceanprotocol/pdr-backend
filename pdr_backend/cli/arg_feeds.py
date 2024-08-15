@@ -65,7 +65,7 @@ class ArgFeeds(List[ArgFeed]):
                 and (not feed.timeframe or feed.timeframe == timeframe)
             ):
                 return True
-        
+
         return False
 
     @enforce_types
