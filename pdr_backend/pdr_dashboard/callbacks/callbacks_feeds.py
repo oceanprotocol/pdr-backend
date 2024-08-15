@@ -201,8 +201,7 @@ def get_callbacks_feeds(app):
     @app.callback(
         Output("modal", "is_open"),
         Output("feeds_page_table", "selected_rows"),
-        Input("feeds_page_table", "selected_rows"),
-        State("modal", "is_open"),
+        [Input("feeds_page_table", "selected_rows"), Input("modal", "is_open")],
     )
     def toggle_modal(selected_rows, is_open_input):
         ctx = dash.callback_context
