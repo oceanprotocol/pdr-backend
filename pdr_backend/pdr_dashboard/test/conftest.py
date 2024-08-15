@@ -177,7 +177,7 @@ def setup_app_with_favourite_addresses(
 
 
 @pytest.fixture
-def setup_app_with_etl_sample_data(tmpdir):
+def setup_app_with_sample_etl(tmpdir):
     _clear_test_db(str(tmpdir))
 
     base_test_dir = os.path.join(

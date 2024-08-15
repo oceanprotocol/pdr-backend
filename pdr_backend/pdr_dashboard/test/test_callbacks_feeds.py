@@ -1,3 +1,4 @@
+import json
 import time
 
 from selenium.webdriver.common.by import By
@@ -13,8 +14,39 @@ from pdr_backend.pdr_dashboard.test.resources import (
 )
 
 
-def test_feeds_table(setup_app_with_etl_sample_data, dash_duo):
-    app = setup_app_with_etl_sample_data
+def _get_table_data_as_json(table):
+    rows = table.find_elements(By.XPATH, ".//tr")
+    header = rows[0].find_elements(By.XPATH, ".//th")
+
+    headers = [_remove_tags(th.text) for th in header]
+
+    table_data = []
+
+    for row in rows[1:]:  # Skip header row
+        cells = row.find_elements(By.XPATH, ".//td")
+        row_data = {headers[i]: _remove_tags(cells[i].text) for i in range(len(cells))}
+        table_data.append(row_data)
+
+    return table_data
+
+
+def _save_table_data_as_json(table, filename):
+    table_data = _get_table_data_as_json(table)
+    with open("pdr_backend/pdr_dashboard/test/" + filename, "w") as f:
+        json.dump(table_data, f, indent=2)
+
+
+def _verify_table_data(table, filename):
+    table_data = _get_table_data_as_json(table)
+    with open("pdr_backend/pdr_dashboard/test/" + filename) as f:
+        expected_data = json.load(f)
+
+    for _, row in enumerate(table_data):
+        assert row in expected_data
+
+
+def test_feeds_table(setup_app_with_sample_etl, dash_duo):
+    app = setup_app_with_sample_etl
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
@@ -26,8 +58,8 @@ def test_feeds_table(setup_app_with_etl_sample_data, dash_duo):
     rows = table.find_elements(By.XPATH, ".//tr")
     assert len(rows) == 21
 
-    header = table.find_element(By.XPATH, ".//tr[1]")
-    columns = header.find_elements(By.XPATH, ".//th")
+    header = rows[0].find_elements(By.XPATH, ".//th")
+    columns = header
     assert len(columns) == 12
 
     # Validate headers
@@ -48,9 +80,11 @@ def test_feeds_table(setup_app_with_etl_sample_data, dash_duo):
     ]
     assert header_texts == expected_headers
 
+    _verify_table_data(table, "expected_feeds_table_data.json")
 
-def test_feeds_page_metrics_row(setup_app_with_etl_sample_data, dash_duo):
-    app = setup_app_with_etl_sample_data
+
+def test_feeds_page_metrics_row(setup_app_with_sample_etl, dash_duo):
+    app = setup_app_with_sample_etl
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
@@ -76,24 +110,29 @@ def test_feeds_page_metrics_row(setup_app_with_etl_sample_data, dash_duo):
         assert metric in metric_texts[i]
 
 
-def test_feeds_table_filters(setup_app_with_etl_sample_data, dash_duo):
-    app = setup_app_with_etl_sample_data
+def test_feeds_table_filters(setup_app_with_sample_etl, dash_duo):
+    app = setup_app_with_sample_etl
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
     dash_duo.wait_for_element("#base_token")
+    table = dash_duo.find_element("#feeds_page_table table")
 
     # Test filtering with base token
     _set_dropdown_and_verify_row_count(dash_duo, "#base_token", "ETH", 3)
+    _verify_table_data(table, "filtered_base_token_eth.json")
 
     # Test filtering with time
     _set_dropdown_and_verify_row_count(dash_duo, "#time", "5m", 2)
+    _verify_table_data(table, "filtered_base_token_eth_5m.json")
 
     _clear_filters(dash_duo)
     _assert_table_row_count(dash_duo, "#feeds_page_table", 21)
+    _verify_table_data(table, "expected_feeds_table_data.json")
 
     # Test filtering with ADA base token and accuracy range
     _set_dropdown_and_verify_row_count(dash_duo, "#base_token", "ADA", 3)
+    _verify_table_data(table, "filtered_base_token_ada.json")
 
     _clear_filters(dash_duo)
     # Test filtering with accuracy min value
@@ -101,25 +140,29 @@ def test_feeds_table_filters(setup_app_with_etl_sample_data, dash_duo):
         dash_duo, "#accuracy_dropdown", "#accuracy_min", "90", "#accuracy_button"
     )
     _assert_table_row_count(dash_duo, "#feeds_page_table", 1)
+    _verify_table_data(table, "filtered_accuracy_min_90.json")
 
     # Test filtering with accuracy min value
     _set_input_value_and_submit(
         dash_duo, None, "#accuracy_min", "55", "#accuracy_button"
     )
     _assert_table_row_count(dash_duo, "#feeds_page_table", 2)
+    _verify_table_data(table, "filtered_accuracy_min_55.json")
 
     # Test filtering with volume max value
     _set_input_value_and_submit(
         dash_duo, "#volume_dropdown", "#volume_max", "14000", "#volume_button"
     )
     _assert_table_row_count(dash_duo, "#feeds_page_table", 1)
+    _verify_table_data(table, "filtered_volume_max_1400.json")
 
     _clear_filters(dash_duo)
     _assert_table_row_count(dash_duo, "#feeds_page_table", 21)
+    _verify_table_data(table, "expected_feeds_table_data.json")
 
 
-def test_feeds_table_modal(setup_app_with_etl_sample_data, dash_duo):
-    app = setup_app_with_etl_sample_data
+def test_feeds_table_modal(setup_app_with_sample_etl, dash_duo):
+    app = setup_app_with_sample_etl
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
@@ -160,22 +203,29 @@ def test_feeds_table_modal(setup_app_with_etl_sample_data, dash_duo):
     )
 
 
-def test_feeds_searchbar(setup_app_with_etl_sample_data, dash_duo):
-    app = setup_app_with_etl_sample_data
+def test_feeds_searchbar(setup_app_with_sample_etl, dash_duo):
+    app = setup_app_with_sample_etl
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
     dash_duo.wait_for_element("#search-input-feeds-table")
-
+    table = dash_duo.find_element("#feeds_page_table")
     _set_searchbar_value(
         dash_duo, "#search-input-feeds-table", "ETH", "#feeds_page_table", 3
     )
+    _verify_table_data(table, "search_eth.json")
+
     _set_searchbar_value(
         dash_duo, "#search-input-feeds-table", "ADA", "#feeds_page_table", 3
     )
+    _verify_table_data(table, "search_ada.json")
+
     _set_searchbar_value(
         dash_duo, "#search-input-feeds-table", "6f3bc", "#feeds_page_table", 2
     )
+    _verify_table_data(table, "search_6f3bc.json")
+
     _set_searchbar_value(
         dash_duo, "#search-input-feeds-table", "NO_ROWS", "#feeds_page_table", 1
     )
+    _verify_table_data(table, "search_no_rows.json")
