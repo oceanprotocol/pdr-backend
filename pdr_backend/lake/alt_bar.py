@@ -7,10 +7,9 @@ import pandas as pd
 
 # add config pair: volume_threshold in ppss
 
+
 @enforce_types
-def _extract_bars(
-    data: pd.DataFrame, metric: str, threshold: float = 50000
-):
+def _extract_bars(data: pd.DataFrame, metric: str, threshold: float = 50000):
     """
     For loop which compiles the various bars: dollar, volume, or tick.
 
