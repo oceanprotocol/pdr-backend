@@ -30,12 +30,6 @@ def _preapre_table_data_to_be_saved_as_json(table):
     return table_data
 
 
-def _save_table_data_as_json(table, filename):
-    table_data = _preapre_table_data_to_be_saved_as_json(table)
-    with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename, "w") as f:
-        json.dump(table_data, f, indent=2)
-
-
 def _verify_table_data(table, filename):
     table_data = _preapre_table_data_to_be_saved_as_json(table)
     with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename) as f:
