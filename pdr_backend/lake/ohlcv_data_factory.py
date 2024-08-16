@@ -13,7 +13,7 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.exchange.fetch_ohlcv import fetch_ohlcv
-from pdr_backend.lake.alt_bar import get_volume_bars
+from pdr_backend.lake.alt_bar import get_dollar_bars, get_tick_bars, get_volume_bars
 from pdr_backend.lake.clean_raw_ohlcv import clean_raw_ohlcv
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
@@ -88,28 +88,32 @@ class OhlcvDataFactory:
         rawohlcv_dfs = self._load_rawohlcv_files(fin_ut)
 
         for feed in self.ss.feeds:
-            if feed.volume_threshold is not None:
-                df = rawohlcv_dfs[str(feed.exchange)][str(feed.pair)]
-                logger.info("Get volume bars for %s", feed)
-                bars, _ = get_volume_bars(
-                    df.to_pandas(), feed.volume_threshold.threshold()
-                )
-                columns = [
-                    "timestamp",
-                    "open",
-                    "high",
-                    "low",
-                    "close",
-                    "volume",
-                    "Cumulative Dollar Value",
-                    "Cumulative Ticks",
-                ]
-                bars_df = pl.DataFrame(bars, schema=columns)
-                bars_df = bars_df.with_columns(pl.col("timestamp").cast(pl.Int64))
-                rawohlcv_dfs[str(feed.exchange)][str(feed.pair)] = bars_df
+            columns = [
+                "timestamp",
+                "open",
+                "high",
+                "low",
+                "close",
+                "volume",
+                "Cumulative Dollar Value",
+                "Cumulative Ticks",
+            ]
+            df = rawohlcv_dfs[str(feed.exchange)][str(feed.pair)]
+            for threshold_type in ["volume", "tick", "dollar"]:
+                if getattr(feed, f"{threshold_type}_threshold") is not None:
+                    logger.info(f"Get {threshold_type} bars for %s", feed)
+                    bars = []
+                    df_pandas = df.to_pandas()
+                    if threshold_type == "volume":
+                        bars, _ = get_volume_bars(df_pandas, feed.volume_threshold.threshold())
+                    elif threshold_type == "tick":
+                        bars, _ = get_tick_bars(df_pandas, feed.tick_threshold.threshold())
+                    elif threshold_type == "dollar":
+                        bars, _ = get_dollar_bars(df_pandas, feed.dollar_threshold.threshold())
+                    bars_df = pl.DataFrame(bars, schema=columns).with_columns(pl.col("timestamp").cast(pl.Int64))
+                    rawohlcv_dfs[str(feed.exchange)][str(feed.pair)] = bars_df
 
         mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
-
         logger.info("Get historical data, across many exchanges & pairs: done.")
 
         # postconditions
