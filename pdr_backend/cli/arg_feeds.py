@@ -56,7 +56,6 @@ class ArgFeeds(List[ArgFeed]):
         source: Union[str, ArgExchange],
         pair: Union[str, ArgPair],
         timeframe: Union[str, ArgTimeframe],
-        volume_threshold: Optional[Union[str, ArgVB]] = None,
     ) -> bool:
         for feed in self:
             if (
@@ -93,6 +92,8 @@ class ArgFeeds(List[ArgFeed]):
                     exchange=row["source"],
                     timeframe=row["timeframe"],
                     volume_threshold=row["volume_threshold"],
+                    tick_threshold=row["tick_threshold"],
+                    dollar_threshold=row["dollar_threshold"],
                 )
                 for row in table_data
             ]
