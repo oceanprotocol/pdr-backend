@@ -57,14 +57,14 @@ class ArgFeed:
             self.volume_threshold = ArgVB(volume_threshold)
         else:
             self.volume_threshold = volume_threshold
-        
+
         if dollar_threshold is None:
             self.dollar_threshold = None
         elif isinstance(dollar_threshold, str):
             self.dollar_threshold = ArgDB(dollar_threshold)
         else:
             self.dollar_threshold = dollar_threshold
-        
+
         if tick_threshold is None:
             self.tick_threshold = None
         elif isinstance(tick_threshold, str):
@@ -76,7 +76,7 @@ class ArgFeed:
 
     def __str__(self):
         feed_str = f"{self.exchange} {self.pair}"
-        
+
         # feed_str = exchange + pair + signal + timeframe + volume + tick + dollar
         if self.signal is not None:
             char = self.signal.to_char()
@@ -87,10 +87,10 @@ class ArgFeed:
 
         if self.volume_threshold is not None:
             feed_str += f" {self.volume_threshold}"
-        
+
         if self.tick_threshold is not None:
             feed_str += f" {self.tick_threshold}"
-        
+
         if self.dollar_threshold is not None:
             feed_str += f" {self.dollar_threshold}"
 
@@ -175,7 +175,7 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
         vb_str_list = ArgVBs.from_str(threshold_str)
         feeds_str_split = feeds_str_split[:-1]
         db_str_list = [None]
-        tb_str_list = [None] 
+        tb_str_list = [None]
     elif tb_str_ok(threshold_str):
         tb_str_list = ArgTBs.from_str(threshold_str)
         feeds_str_split = feeds_str_split[:-1]
@@ -190,7 +190,7 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
         vb_str_list = [None]
         db_str_list = [None]
         tb_str_list = [None]
-        
+
     timeframe_str = feeds_str_split[-1]
     if timeframes_str_ok(timeframe_str):
         timeframe_str = feeds_str_split[-1]
@@ -245,7 +245,11 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
             )
         feeds = [
             ArgFeed(
-                exchange_str, signal_str, pair_str, timeframe_str, tick_threshold=tick_threshold_str
+                exchange_str,
+                signal_str,
+                pair_str,
+                timeframe_str,
+                tick_threshold=tick_threshold_str,
             )
             for signal_str in signal_str_list
             for pair_str, tick_threshold_str in zip(pairs, tb_str_list)
@@ -258,7 +262,11 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
             )
         feeds = [
             ArgFeed(
-                exchange_str, signal_str, pair_str, timeframe_str, dollar_threshold=dollar_threshold_str
+                exchange_str,
+                signal_str,
+                pair_str,
+                timeframe_str,
+                dollar_threshold=dollar_threshold_str,
             )
             for signal_str in signal_str_list
             for pair_str, dollar_threshold_str in zip(pairs, db_str_list)
