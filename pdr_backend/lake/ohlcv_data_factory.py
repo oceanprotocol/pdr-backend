@@ -110,6 +110,8 @@ class OhlcvDataFactory:
                         bars, _ = get_tick_bars(df_pandas, feed.tick_threshold.threshold())
                     elif threshold_type == "dollar":
                         bars, _ = get_dollar_bars(df_pandas, feed.dollar_threshold.threshold())
+                    else:
+                        raise ValueError(f"Unknown threshold type: {threshold_type}")
                     bars_df = pl.DataFrame(bars, schema=columns).with_columns(pl.col("timestamp").cast(pl.Int64))
                     rawohlcv_dfs[str(feed.exchange)][str(feed.pair)] = bars_df
 
