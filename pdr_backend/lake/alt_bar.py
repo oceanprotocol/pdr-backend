@@ -5,14 +5,11 @@ import numpy as np
 from enforce_typing import enforce_types
 import pandas as pd
 
-logging = logging.getLogger("volume_bar")
-
 # add config pair: volume_threshold in ppss
-
 
 @enforce_types
 def _extract_bars(
-    data: pd.DataFrame, metric: str, threshold: Union[float, int] = 50000
+    data: pd.DataFrame, metric: str, threshold: float = 50000
 ):
     """
     For loop which compiles the various bars: dollar, volume, or tick.
@@ -26,12 +23,12 @@ def _extract_bars(
     """
 
     list_bars = []
-    cache = []
+    cache: list = []
     start_tm = None
     cum_ticks, cum_dollar_value, cum_volume, cache, high_price, low_price = (
         0,
-        0,
-        0,
+        0.0,
+        0.0,
         [],
         -np.inf,
         np.inf,
@@ -98,8 +95,8 @@ def _extract_bars(
             )
             cum_ticks, cum_dollar_value, cum_volume, cache, high_price, low_price = (
                 0,
-                0,
-                0,
+                0.0,
+                0.0,
                 [],
                 -np.inf,
                 np.inf,

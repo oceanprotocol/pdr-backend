@@ -104,15 +104,15 @@ class OhlcvDataFactory:
                     logger.info(f"Get {threshold_type} bars for %s", feed)
                     bars = []
                     df_pandas = df.to_pandas()
-                    if threshold_type == "volume":
+                    if threshold_type == "volume" and feed.volume_threshold:
                         bars, _ = get_volume_bars(
                             df_pandas, feed.volume_threshold.threshold()
                         )
-                    elif threshold_type == "tick":
+                    elif threshold_type == "tick" and feed.tick_threshold:
                         bars, _ = get_tick_bars(
                             df_pandas, feed.tick_threshold.threshold()
                         )
-                    elif threshold_type == "dollar":
+                    elif threshold_type == "dollar" and feed.dollar_threshold:
                         bars, _ = get_dollar_bars(
                             df_pandas, feed.dollar_threshold.threshold()
                         )

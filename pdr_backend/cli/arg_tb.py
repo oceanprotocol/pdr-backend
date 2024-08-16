@@ -28,7 +28,7 @@ class ArgTB:
     def __str__(self):
         return self.tb_str
 
-    def threshold(self) -> float:
+    def threshold(self) -> int:
         return int(self.tb_str.split("_")[1])
 
 
