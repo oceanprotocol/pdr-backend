@@ -89,10 +89,22 @@ def start_server_and_wait(dash_duo, app):
 def _navigate_to_feeds_page(dash_duo):
     dash_duo.wait_for_element("#feeds")
     dash_duo.find_element("#feeds").click()
-    time.sleep(1)
 
 
 def _remove_tags(text):
+    """
+    Removes HTML or XML tags from the input string.
+
+    This function is useful for extracting plain text content from a string
+    that contains HTML or XML markup, such as when processing lists of subelements
+    within an HTML document.
+
+    Parameters:
+    text (str): The string from which HTML or XML tags should be removed.
+
+    Returns:
+    str: The input string with all HTML or XML tags removed.
+    """
     clean = re.compile("<.*?>")
     return re.sub(clean, "", text)
 

@@ -14,7 +14,7 @@ from pdr_backend.pdr_dashboard.test.resources import (
 )
 
 
-def _get_table_data_as_json(table):
+def _preapre_table_data_to_be_saved_as_json(table):
     rows = table.find_elements(By.XPATH, ".//tr")
     header = rows[0].find_elements(By.XPATH, ".//th")
 
@@ -31,13 +31,13 @@ def _get_table_data_as_json(table):
 
 
 def _save_table_data_as_json(table, filename):
-    table_data = _get_table_data_as_json(table)
+    table_data = _preapre_table_data_to_be_saved_as_json(table)
     with open("pdr_backend/pdr_dashboard/test/" + filename, "w") as f:
         json.dump(table_data, f, indent=2)
 
 
 def _verify_table_data(table, filename):
-    table_data = _get_table_data_as_json(table)
+    table_data = _preapre_table_data_to_be_saved_as_json(table)
     with open("pdr_backend/pdr_dashboard/test/" + filename) as f:
         expected_data = json.load(f)
 
@@ -115,7 +115,9 @@ def test_feeds_table_filters(_sample_app, dash_duo):
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
+    dash_duo.wait_for_element("#feeds_page_table")
     dash_duo.wait_for_element("#base_token")
+
     table = dash_duo.find_element("#feeds_page_table table")
 
     # Test filtering with base token
@@ -166,6 +168,7 @@ def test_feeds_table_modal(_sample_app, dash_duo):
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
+    dash_duo.wait_for_element("#feeds_page_table")
 
     # Select a row
     table = dash_duo.find_element("#feeds_page_table")
@@ -197,8 +200,8 @@ def test_feeds_table_modal(_sample_app, dash_duo):
     dash_duo.find_element(".modal").click()
 
     # Ensure no row is selected
-    assert all(
-        "selected" not in row.get_attribute("class")
+    assert not any(
+        "selected" in row.get_attribute("class")
         for row in table.find_elements(By.XPATH, ".//tr")
     )
 
