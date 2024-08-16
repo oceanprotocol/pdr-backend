@@ -16,14 +16,17 @@ def filter_table_by_range(min_val, max_val, label_text):
     if (not min_val and not max_val) or button_id == "clear_filters_button":
         return label_text
 
-    return f"{label_text} {min_val if min_val else ''}-{max_val if max_val else ''}"
+    min_val_str = min_val or ""
+    max_val_str = max_val or ""
+
+    return f"{label_text} {min_val_str}-{max_val_str}"
 
 
-def filter_condition(item, field, values):
+def table_column_filter_condition(item, field, values):
     return not values or item[field] in values
 
 
-def search_condition(item, search_value):
+def table_search_condition(item, search_value):
     if not search_value:
         return True
     search_value = search_value.lower()
@@ -33,21 +36,22 @@ def search_condition(item, search_value):
     )
 
 
-def range_condition(item, field, min_value, max_value):
+def table_column_range_condition(item, field, min_value, max_value):
     item_value = float(item[field])
-    return not (
-        (min_value is not None and min_value != "" and item_value < min_value)
-        or (max_value is not None and max_value != "" and item_value > max_value)
-    )
+
+    if min_value not in [None, ""] and item_value < min_value:
+        return False
+    if max_value not in [None, ""] and item_value > max_value:
+        return False
+
+    return True
 
 
 def check_condition(item, condition_type, field, *values):
-    if condition_type == "search":
-        return search_condition(item, values[0])
     if condition_type == "filter":
-        return filter_condition(item, field, values[0])
+        return table_column_filter_condition(item, field, values[0])
     if condition_type == "range":
-        return range_condition(
+        return table_column_range_condition(
             item,
             field,
             float(values[0]) if values[0] is not None and values[0] != "" else None,
@@ -119,7 +123,7 @@ def get_callbacks_feeds(app):
             for item in app.feeds_table_data
             if (
                 all(check_condition(item, *condition) for condition in conditions)
-                and search_condition(item, search_input_value)
+                and table_search_condition(item, search_input_value)
             )
         ]
 
@@ -208,12 +212,10 @@ def get_callbacks_feeds(app):
         triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
         if triggered_id == "feeds_page_table":
-            if selected_rows:
-                if not is_open_input:
-                    return True, dash.no_update
-            else:
-                # Clear the selection if modal is not opened
-                return False, []
+            if selected_rows and not is_open_input:
+                return True, dash.no_update
+            # Clear the selection if modal is not opened
+            return False, []
 
         if triggered_id == "modal" and not is_open_input:
             # Modal close button is clicked, clear the selection

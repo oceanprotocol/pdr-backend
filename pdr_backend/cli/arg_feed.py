@@ -59,7 +59,7 @@ class ArgFeed:
 
         return feed_str
 
-    def output_for_legend(self):
+    def str_without_exchange(self):
         feed_str = f"{self.pair}"
 
         if self.signal is not None:

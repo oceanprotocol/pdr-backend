@@ -92,8 +92,8 @@ def get_predictoors_data_from_payouts(
     return user_payout_stats
 
 
-def get_start_date_from_period(period: int):
-    return int((datetime.now() - timedelta(days=period)).timestamp())
+def get_start_date_from_period(number_days: int):
+    return int((datetime.now() - timedelta(days=number_days)).timestamp())
 
 
 def get_date_period_text(payouts: List):
