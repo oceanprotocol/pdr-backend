@@ -58,6 +58,7 @@ body {
     width: 100%;
     overflow-x: auto;
     height: 100%;
+    padding-bottom: 20px; /* Add some space at the bottom of the table for scroll */
 }
 
 #feeds_page_table table {

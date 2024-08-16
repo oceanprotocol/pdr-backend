@@ -4,7 +4,6 @@
 #
 import os
 from typing import List
-from unittest.mock import patch
 
 import polars as pl
 import pytest
@@ -23,11 +22,13 @@ from pdr_backend.lake.prediction import (
     mock_second_predictions,
 )
 from pdr_backend.lake.slot import Slot, mock_slot, mock_slots
-from pdr_backend.lake.subscription import mock_subscriptions, Subscription
+from pdr_backend.lake.subscription import mock_subscriptions
 from pdr_backend.lake.table import Table
 from pdr_backend.lake.test.resources import (
     _gql_data_factory,
     get_filtered_timestamps_df,
+    create_sample_etl,
+    create_sample_raw_data,
 )
 from pdr_backend.lake.trueval import Trueval, mock_trueval, mock_truevals
 from pdr_backend.util.time_types import UnixTimeMs
@@ -668,121 +669,22 @@ def _sample_raw_data(request):
     Load sample raw data for testing the ETL pipeline
     """
 
-    test_dir = os.path.dirname(str(request.node.fspath))
-    predictions_df = pl.read_csv(os.path.join(test_dir, "pdr_predictions.csv"))
-    payouts_df = pl.read_csv(os.path.join(test_dir, "pdr_payouts.csv"))
-    truevals_df = pl.read_csv(os.path.join(test_dir, "pdr_truevals.csv"))
-    subscriptions_df = pl.read_csv(os.path.join(test_dir, "pdr_subscriptions.csv"))
-    slots_df = pl.read_csv(os.path.join(test_dir, "pdr_slots.csv"))
-
-    predictions_schema_order = list(Prediction.get_lake_schema().keys())
-    payouts_schema_order = list(Payout.get_lake_schema().keys())
-    truevals_schema_order = list(Trueval.get_lake_schema().keys())
-    subscriptions_schema_order = list(Subscription.get_lake_schema().keys())
-    slots_schema_order = list(Slot.get_lake_schema().keys())
-
-    predictions_df = predictions_df[predictions_schema_order]
-    payouts_df = payouts_df[payouts_schema_order]
-    truevals_df = truevals_df[truevals_schema_order]
-    subscriptions_df = subscriptions_df[subscriptions_schema_order]
-    slots_df = slots_df[slots_schema_order]
-
-    return {
-        "pdr_predictions": predictions_df,
-        "pdr_payouts": payouts_df,
-        "pdr_truevals": truevals_df,
-        "pdr_subscriptions": subscriptions_df,
-        "pdr_slots": slots_df,
-    }
+    return create_sample_raw_data(str(request.node.fspath))
 
 
-@pytest.fixture
-def _sample_etl(
-    _sample_raw_data,
-    _get_test_DuckDB,
-    tmpdir,
-    request,
-):
-    # sample raw data
+@pytest.fixture()
+def _sample_etl(_sample_raw_data, _get_test_DuckDB, tmpdir, request):
     st_timestr = request.param[0]
     fin_timestr = request.param[1]
     enforce_null_values = request.param[2]
 
-    ppss = None
-    gql_data_factory = None
-
-    with patch(
-        "pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner",
-        return_value=[],
-    ):
-        ppss, gql_data_factory = _gql_data_factory(
-            tmpdir,
-            "binanceus ETH/USDT h 5m",
-            st_timestr,
-            fin_timestr,
-        )
-
-    gql_tables = {
-        "pdr_predictions": Table.from_dataclass(Prediction),
-        "pdr_payouts": Table.from_dataclass(Payout),
-        "pdr_truevals": Table.from_dataclass(Trueval),
-        "pdr_subscriptions": Table.from_dataclass(Subscription),
-        "pdr_slots": Table.from_dataclass(Slot),
-    }
-
-    # only add to storage the data that falls within the time range
-    # everything else should be sim-fetched via gql_data_factory or another patch
-    _sample_predictions = (
-        _sample_raw_data["pdr_predictions"]
-        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
+    etl, db, gql_tables = create_sample_etl(
+        _sample_raw_data,
+        _get_test_DuckDB,
+        tmpdir,
+        st_timestr,
+        fin_timestr,
+        enforce_null_values,
     )
-
-    # when simulating prediction wokload, we are going to null payouts
-    _sample_payouts = (
-        _sample_raw_data["pdr_payouts"]
-        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
-
-    _sample_truevals = (
-        _sample_raw_data["pdr_truevals"]
-        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
-
-    _sample_subscriptions = (
-        _sample_raw_data["pdr_subscriptions"]
-        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
-
-    _sample_slots = (
-        _sample_raw_data["pdr_slots"]
-        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
-
-    # don't cheat, verify we can recreate subgraph
-    if enforce_null_values is True:
-        _sample_predictions = _sample_predictions.with_columns(
-            pl.lit(None).alias("predvalue"),
-            pl.lit(None).alias("truevalue"),
-            pl.lit(None).alias("stake"),
-            pl.lit(None).alias("payout"),
-        )
-
-    gql_tables["pdr_predictions"].append_to_storage(_sample_predictions, ppss)
-    gql_tables["pdr_payouts"].append_to_storage(_sample_payouts, ppss)
-    gql_tables["pdr_truevals"].append_to_storage(_sample_truevals, ppss)
-    gql_tables["pdr_subscriptions"].append_to_storage(_sample_subscriptions, ppss)
-    gql_tables["pdr_slots"].append_to_storage(_sample_slots, ppss)
-
-    assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
-    assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
-
-    # provide the setup data to the test
-    etl = ETL(ppss, gql_data_factory)
-    db = _get_test_DuckDB(tmpdir)
 
     yield etl, db, gql_tables
