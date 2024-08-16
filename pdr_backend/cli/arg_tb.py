@@ -3,6 +3,7 @@ from typing import List, Union
 
 from enforce_typing import enforce_types
 
+
 # Tick Bar
 class ArgTB:
     def __init__(self, tb_str: str):

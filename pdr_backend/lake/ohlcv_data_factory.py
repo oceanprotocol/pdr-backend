@@ -105,14 +105,22 @@ class OhlcvDataFactory:
                     bars = []
                     df_pandas = df.to_pandas()
                     if threshold_type == "volume":
-                        bars, _ = get_volume_bars(df_pandas, feed.volume_threshold.threshold())
+                        bars, _ = get_volume_bars(
+                            df_pandas, feed.volume_threshold.threshold()
+                        )
                     elif threshold_type == "tick":
-                        bars, _ = get_tick_bars(df_pandas, feed.tick_threshold.threshold())
+                        bars, _ = get_tick_bars(
+                            df_pandas, feed.tick_threshold.threshold()
+                        )
                     elif threshold_type == "dollar":
-                        bars, _ = get_dollar_bars(df_pandas, feed.dollar_threshold.threshold())
+                        bars, _ = get_dollar_bars(
+                            df_pandas, feed.dollar_threshold.threshold()
+                        )
                     else:
                         raise ValueError(f"Unknown threshold type: {threshold_type}")
-                    bars_df = pl.DataFrame(bars, schema=columns).with_columns(pl.col("timestamp").cast(pl.Int64))
+                    bars_df = pl.DataFrame(bars, schema=columns).with_columns(
+                        pl.col("timestamp").cast(pl.Int64)
+                    )
                     rawohlcv_dfs[str(feed.exchange)][str(feed.pair)] = bars_df
 
         mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)

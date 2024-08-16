@@ -34,7 +34,18 @@ def test_verify_tbs_str():
     verify_tbs_str("tb_210")
     verify_tbs_str("tb_210,tb_214")
 
-    for bad_val in ["", " ", "foo", "tb-", "tb-ab", "tb210", "210", "tb-2", "tb_12,", "tb_12.5"]:
+    for bad_val in [
+        "",
+        " ",
+        "foo",
+        "tb-",
+        "tb-ab",
+        "tb210",
+        "210",
+        "tb-2",
+        "tb_12,",
+        "tb_12.5",
+    ]:
         with pytest.raises(ValueError):
             verify_tbs_str(bad_val)
 

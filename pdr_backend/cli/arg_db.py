@@ -3,6 +3,7 @@ from typing import List, Union
 
 from enforce_typing import enforce_types
 
+
 # dollar Bar
 class ArgDB:
     def __init__(self, db_str: str):
