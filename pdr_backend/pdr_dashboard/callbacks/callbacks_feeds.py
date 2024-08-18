@@ -1,25 +1,32 @@
+from typing import Optional
+
 import dash
 from dash import Input, Output, State, callback_context
-from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
-from pdr_backend.pdr_dashboard.dash_components.plots import (
-    get_feed_figures,
-    FeedModalFigures,
-)
+from enforce_typing import enforce_types
+
 from pdr_backend.cli.arg_feeds import ArgFeed
-from pdr_backend.pdr_dashboard.util.format import format_table
+from pdr_backend.pdr_dashboard.dash_components.plots import (
+    FeedModalFigures,
+    get_feed_figures,
+)
+from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
 from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
+from pdr_backend.pdr_dashboard.util.format import format_table
 
 
-def filter_table_by_range(min_val, max_val, label_text):
+@enforce_types
+def filter_table_by_range(
+    min_val: Optional[str], max_val: Optional[str], label_text: str
+):
+    min_val = min_val or ""
+    max_val = max_val or ""
+
     ctx = callback_context
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    if (not min_val and not max_val) or button_id == "clear_filters_button":
+    if button_id == "clear_filters_button" or (not min_val and not max_val):
         return label_text
 
-    min_val_str = min_val or ""
-    max_val_str = max_val or ""
-
-    return f"{label_text} {min_val_str}-{max_val_str}"
+    return f"{label_text} {min_val}-{max_val}"
 
 
 def table_column_filter_condition(item, field, values):
@@ -36,12 +43,18 @@ def table_search_condition(item, search_value):
     )
 
 
-def table_column_range_condition(item, field, min_value, max_value):
+@enforce_types
+def table_column_range_condition(
+    item, field, min_value: Optional[str], max_value: Optional[str]
+):
     item_value = float(item[field])
+    min_value = min_value or ""
+    max_value = max_value or ""
 
-    if min_value not in [None, ""] and item_value < min_value:
+    if min_value and item_value < float(min_value):
         return False
-    if max_value not in [None, ""] and item_value > max_value:
+
+    if max_value and item_value > float(max_value):
         return False
 
     return True
@@ -50,13 +63,18 @@ def table_column_range_condition(item, field, min_value, max_value):
 def check_condition(item, condition_type, field, *values):
     if condition_type == "filter":
         return table_column_filter_condition(item, field, values[0])
+
     if condition_type == "range":
         return table_column_range_condition(
             item,
             field,
-            float(values[0]) if values[0] is not None and values[0] != "" else None,
-            float(values[1]) if values[1] is not None and values[1] != "" else None,
+            values[0],
+            values[1],
         )
+
+    if condition_type == "search":
+        return table_search_condition(item, values[0])
+
     return True
 
 
@@ -116,15 +134,13 @@ def get_callbacks_feeds(app):
             ("range", "sales_revenue_(OCEAN)", revenue_min, revenue_max),
             ("range", "avg_accuracy", accuracy_min, accuracy_max),
             ("range", "volume_(OCEAN)", volume_min, volume_max),
+            ("search", None, search_input_value),
         ]
 
         new_table_data = [
             item
             for item in app.feeds_table_data
-            if (
-                all(check_condition(item, *condition) for condition in conditions)
-                and table_search_condition(item, search_input_value)
-            )
+            if all(check_condition(item, *condition) for condition in conditions)
         ]
 
         columns = []
@@ -211,17 +227,22 @@ def get_callbacks_feeds(app):
         ctx = dash.callback_context
         triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-        if triggered_id == "feeds_page_table":
-            if selected_rows and not is_open_input:
-                return True, dash.no_update
-            # Clear the selection if modal is not opened
-            return False, []
+        if triggered_id not in ["feeds_page_table", "modal"]:
+            return dash.no_update, dash.no_update
 
-        if triggered_id == "modal" and not is_open_input:
+        if triggered_id == "modal":
+            if is_open_input:
+                return dash.no_update, dash.no_update
+
             # Modal close button is clicked, clear the selection
             return False, []
 
-        return dash.no_update, dash.no_update
+        # triggered_id == "feeds_page_table"
+        if selected_rows and not is_open_input:
+            return True, dash.no_update
+
+        # Clear the selection if modal is not opened
+        return False, []
 
     @app.callback(
         Output("modal", "children"),
@@ -250,7 +271,7 @@ def get_callbacks_feeds(app):
 
         children = [
             feeds_page.get_feed_graphs_modal_header(selected_row),
-            feeds_page.get_feed_graphs_modal_body(list(feed_figures.__dict__.values())),
+            feeds_page.get_feed_graphs_modal_body(feed_figures.get_figures()),
         ]
 
         return children

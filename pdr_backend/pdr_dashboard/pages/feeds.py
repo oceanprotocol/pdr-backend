@@ -302,7 +302,7 @@ class FeedsPage:
         figures = FeedModalFigures()
         return [
             dbc.ModalHeader("Loading feed data", id="feeds-modal-header"),
-            self.get_feed_graphs_modal_body(list(figures.__dict__.values())),
+            self.get_feed_graphs_modal_body(figures.get_figures()),
         ]
 
     def get_feed_graphs_modal_header(self, selected_row):

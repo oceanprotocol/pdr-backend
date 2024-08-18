@@ -11,24 +11,91 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.util.time_types import UnixTimeS
 
 
+# pylint: disable=too-many-instance-attributes
 class FeedModalFigures:
     def __init__(self):
-        self.sales_fig: go.Figure = create_figure(
-            [], "Sales", "Daily Sales (OCEAN)", False, ticker_format="%m-%d"
+        fig_config = {
+            "sales_fig": {
+                "title": "Sales",
+                "yaxis_title": "Daily Sales (OCEAN)",
+                "show_legend": False,
+                "ticker_format": "%m-%d",
+            },
+            "revenues_fig": {
+                "title": "Revenues",
+                "yaxis_title": "Daily Revenues (OCEAN)",
+                "show_legend": False,
+                "ticker_format": "%m-%d",
+            },
+            "accuracies_fig": {
+                "title": "Accuracy",
+                "yaxis_title": "Avg Accuracy (OCEAN)",
+                "show_legend": False,
+                "yaxis_range": [40, 70],
+            },
+            "stakes_fig": {
+                "title": "Stakes",
+                "yaxis_title": "Stake (OCEAN)",
+                "show_legend": False,
+            },
+            "predictions_fig": {
+                "title": "Predictions",
+                "yaxis_title": "Predictions",
+                "show_legend": False,
+            },
+            "profits_fig": {
+                "title": "Profits",
+                "yaxis_title": "Pdr Profit (OCEAN)",
+                "show_legend": False,
+            },
+        }
+
+        for key, value in fig_config.items():
+            setattr(self, key, create_figure([], **value))
+
+        self.slots = []
+        self.stakes = []
+        self.accuracies = []
+        self.profits = []
+        self.predictions_list = []
+
+        self.subscription_purchases = []
+        self.subscription_revenues = []
+        self.subscription_dates = []
+
+    def update_figures(self):
+        self.sales_fig.add_traces(
+            go.Bar(x=self.subscription_dates, y=self.subscription_purchases)
         )
-        self.revenues_fig: go.Figure = create_figure(
-            [], "Revenues", "Daily Revenues (OCEAN)", False, ticker_format="%m-%d"
+
+        defaults = {
+            "mode": "lines",
+            "showlegend": False,
+        }
+
+        self.revenues_fig.add_traces(
+            go.Bar(x=self.subscription_dates, y=self.subscription_revenues)
         )
-        self.accuracies_fig: go.Figure = create_figure(
-            [], "Accuracy", "Avg Accuracy (OCEAN)", False, yaxis_range=[40, 70]
+        self.accuracies_fig.add_traces(
+            go.Scatter(x=self.slots, y=self.accuracies, **defaults)
         )
-        self.stakes_fig: go.Figure = create_figure([], "Stakes", "Stake (OCEAN)", False)
-        self.predictions_fig: go.Figure = create_figure(
-            [], "Predictions", "Predictions", False
+        self.stakes_fig.add_traces(go.Scatter(x=self.slots, y=self.stakes, **defaults))
+        self.predictions_fig.add_traces(
+            go.Scatter(x=self.slots, y=self.predictions_list, **defaults)
         )
-        self.profits_fig: go.Figure = create_figure(
-            [], "Profits", "Pdr Profit (OCEAN)", False
+        self.profits_fig.add_traces(
+            go.Scatter(x=self.slots, y=self.profits, **defaults)
         )
+
+    def get_figures(self):
+        return [
+            self.sales_fig,
+            self.revenues_fig,
+            self.accuracies_fig,
+            self.stakes_fig,
+            self.predictions_fig,
+            self.profits_fig,
+        ]
 
 
 # pylint: disable=too-many-instance-attributes
@@ -370,24 +437,20 @@ def get_feed_figures(payouts: Optional[List], subscriptions: List) -> FeedModalF
     """
 
     # Initialize empty figures with default settings
-    figures = FeedModalFigures()
+    result = FeedModalFigures()
 
     if not payouts or not subscriptions:
-        return figures
-
-    # Initialize lists for processing data
-    slots, stakes, accuracies, profits, predictions_list = [], [], [], [], []
-    subscription_purchases, subscription_revenues, subscription_dates = [], [], []
+        return result
 
     # Process subscription data
     for subscription in subscriptions:
-        subscription_purchases.append(subscription["count"])
-        subscription_revenues.append(subscription["revenue"])
+        result.subscription_purchases.append(subscription["count"])
+        result.subscription_revenues.append(subscription["revenue"])
         unix_timestamp = int(
             datetime.datetime.combine(subscription["day"], datetime.time()).timestamp()
             * 1000
         )
-        subscription_dates.append(unix_timestamp)
+        result.subscription_dates.append(unix_timestamp)
 
     # Sort payouts by slots and group by slot
     payouts.sort(key=itemgetter("slot"))
@@ -407,28 +470,13 @@ def get_feed_figures(payouts: Optional[List], subscriptions: List) -> FeedModalF
         correct_predictions += sum(1 for p in payout_group if p["payout"] > 0)
         total_predictions += slot_predictions
 
-        stakes.append(slot_stake)
-        profits.append(slot_profit)
-        accuracies.append((correct_predictions / total_predictions) * 100)
-        slots.append(UnixTimeS(int(slot)).to_milliseconds())
-        predictions_list.append(slot_predictions)
+        result.stakes.append(slot_stake)
+        result.profits.append(slot_profit)
+        result.accuracies.append((correct_predictions / total_predictions) * 100)
+        result.slots.append(UnixTimeS(int(slot)).to_milliseconds())
+        result.predictions_list.append(slot_predictions)
 
     # Update figures with the processed data
-    figures.sales_fig.add_traces(go.Bar(x=subscription_dates, y=subscription_purchases))
-    figures.revenues_fig.add_traces(
-        go.Bar(x=subscription_dates, y=subscription_revenues)
-    )
-    figures.accuracies_fig.add_traces(
-        go.Scatter(x=slots, y=accuracies, mode="lines", showlegend=False)
-    )
-    figures.stakes_fig.add_traces(
-        go.Scatter(x=slots, y=stakes, mode="lines", showlegend=False)
-    )
-    figures.predictions_fig.add_traces(
-        go.Scatter(x=slots, y=predictions_list, mode="lines", showlegend=False)
-    )
-    figures.profits_fig.add_traces(
-        go.Scatter(x=slots, y=profits, mode="lines", showlegend=False)
-    )
+    result.update_figures()
 
-    return figures
+    return result
