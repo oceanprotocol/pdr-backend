@@ -22,6 +22,9 @@ FORMAT_CONFIG = {
     "total_profit": "currency_without_decimal",
     "volume_(OCEAN)": "currency_without_decimal",
     "avg_stake_per_epoch_(OCEAN)": "currency_conditional",
+    "predictoors_page_accuracy_metric": "percentage",
+    "predictoors_page_stake_metric": "currency",
+    "predictoors_page_gross_income_metric": "currency",
 }
 
 
