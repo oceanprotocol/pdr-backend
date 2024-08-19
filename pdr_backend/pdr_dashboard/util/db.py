@@ -253,3 +253,13 @@ class DBGetter:
             "Sales": sales if sales else 0,
             "Revenue": revenue if revenue else 0,
         }
+
+    @enforce_types
+    def predictoors_stats(self):
+        # TODO
+        return {
+            "Predictoors": "TODO",
+            "Accuracy(avg)": "TODO",
+            "Stake(avg)": "TODO",
+            "Gross Income(avg)": "TODO",
+        }

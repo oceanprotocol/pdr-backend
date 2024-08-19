@@ -19,38 +19,23 @@ from pdr_backend.pdr_dashboard.pages.common import TabularPage, Filter, add_to_f
 
 
 filters = [
-    {"name": "base_token", "placeholder": "Base Token", "options": []},
-    {"name": "quote_token", "placeholder": "Quote Token", "options": []},
-    {"name": "exchange", "placeholder": "Exchange", "options": []},
-    {"name": "time", "placeholder": "Time", "options": []},
+    {"name": "apy", "placeholder": "APY", "options": []},
+    {"name": "accuracy", "placeholder": "Accuracy", "options": []},
+    {"name": "gross_income", "placeholder": "Gross Income", "options": []},
+    {"name": "costs", "placeholder": "Costs", "options": []},
 ]
 
 filters_objects = [Filter(**item) for item in filters]
 
 
-class FeedsPage(TabularPage):
+class PredictoorsPage(TabularPage):
     def __init__(self, app):
         self.app = app
-
-        for feed in app.feeds_data:
-            pair_base, pair_quote = feed["pair"].split("/")
-
-            # Update base currency filter
-            add_to_filter(filters[0]["options"], pair_base)
-
-            # Update quote currency filter
-            add_to_filter(filters[1]["options"], pair_quote)
-
-            # Update source filter
-            add_to_filter(filters[2]["options"], feed["source"].capitalize())
-
-            # Update timeframe filter
-            add_to_filter(filters[3]["options"], feed["timeframe"])
+        # TODO: add_to_filter
 
     def layout(self):
         return html.Div(
             [
-                dcc.Store(id="user-payout-stats"),
                 self.get_metrics_row(),
                 self.get_search_bar_row(),
                 self.get_main_container(),
@@ -66,10 +51,8 @@ class FeedsPage(TabularPage):
                 for filter_obj in filters_objects
             ]
             + [
-                self.get_input_filter("Accuracy"),
-                self.get_input_filter("Volume"),
-                self.get_input_filter("Sales"),
-                self.get_input_filter("Revenue"),
+                self.get_input_filter("Nr Feeds"),
+                self.get_input_filter("Stake"),
             ],
             className="filters-container",
         )
@@ -92,14 +75,14 @@ class FeedsPage(TabularPage):
         )
 
     def get_metrics_row(self):
-        stats = self.app.db_getter.feeds_stats()
+        stats = self.app.db_getter.predictoors_stats()
 
         return html.Div(
             children=[
                 get_metric(
                     label=key,
                     value=value,
-                    value_id=f"feeds_page_{key}_metric",
+                    value_id=f"predictoors_page_{key}_metric",
                 )
                 for key, value in stats.items()
             ],
@@ -109,12 +92,13 @@ class FeedsPage(TabularPage):
     def get_search_bar_row(self):
         return html.Div(
             children=get_search_bar(
-                "search-input-feeds-table", "Search for addrs, token ..."
+                "search-input-feeds-table", "Search for predictoors..."
             ),
             className="search-bar-row",
         )
 
     def get_main_container(self):
+        # TODO: replace with predictoors data
         feed_stats = self.app.db_getter.feed_payouts_stats()
         feed_subscriptions = self.app.db_getter.feed_subscription_stats(
             self.app.network_name
@@ -139,6 +123,7 @@ class FeedsPage(TabularPage):
         columns,
         feeds_data,
     ):
+        # TODO: replace with predictoors data, modify function name, parameters, id of table
         return html.Div(
             [
                 dash_table.DataTable(
@@ -156,6 +141,7 @@ class FeedsPage(TabularPage):
     def get_feeds_stat_with_contract(
         self, contract: str, feed_stats: List[Dict[str, Any]]
     ) -> Dict[str, Union[float, int]]:
+        # TODO: remove/adjust
         result = find_with_key_value(feed_stats, "contract", contract)
 
         if result:
@@ -174,6 +160,7 @@ class FeedsPage(TabularPage):
     def get_feeds_subscription_stat_with_contract(
         self, contract: str, feed_subcription_stats: List[Dict[str, Any]]
     ) -> Dict[str, Union[float, int, str]]:
+        # TODO: remove/adjust
         result = find_with_key_value(feed_subcription_stats, "contract", contract)
 
         if result:
@@ -213,6 +200,7 @@ class FeedsPage(TabularPage):
         feed_stats: List[Dict[str, Any]],
         feed_subcription_stats: List[Dict[str, Any]],
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
+        # TODO: remove/adjust
 
         temp_data = self.app.feeds_data
 
@@ -246,6 +234,7 @@ class FeedsPage(TabularPage):
 
         return columns, formatted_data, new_feed_data
 
+    # TODO: remove/adjust everything below
     def get_modal(self):
         return dbc.Modal(
             self.get_default_modal_content(),

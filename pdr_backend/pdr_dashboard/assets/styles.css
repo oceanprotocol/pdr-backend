@@ -196,7 +196,7 @@ button {
     align-items: flex-start;
 }
 
-#feeds_page_metrics_row {
+.metrics_row {
     display: flex;
     border: 1px solid grey;
     border-radius: 10px;
@@ -205,7 +205,7 @@ button {
     margin-bottom: 10px;
 }
 
-#filters-container {
+.filters-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
@@ -230,7 +230,7 @@ button {
     align-items: center;
 }
 
-#feeds-main-container {
+.tabular-main-container {
     height: calc(100% - 150px);
     display: flex;
     flex-direction: column;
@@ -300,15 +300,14 @@ button {
     justify-content: center;
 }
 
-#feeds-page-layout,
-#home-page-layout {
+.page-layout {
     height: 100%;
     display: flex;
     width: 100%;
     flex-direction: column;
 }
 
-#feeds_page_metrics_row {
+.metrics_row {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
@@ -316,7 +315,7 @@ button {
     margin-bottom: 40px;
 }
 
-#feeds-page-search-bar-row {
+.search-bar-row {
     display: flex;
     flex-direction: row;
     justify-content: center;

@@ -5,6 +5,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
 )
 from pdr_backend.pdr_dashboard.pages.home import HomePage
 from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
+from pdr_backend.pdr_dashboard.pages.predictoors import PredictoorsPage
 
 
 def get_callbacks_common(app):
@@ -21,9 +22,14 @@ def get_callbacks_common(app):
         return result
 
     def get_page(pathname):
-        if pathname not in ["/", "/feeds"]:
+        if pathname not in ["/", "/feeds", "/predictoors"]:
             return "404 - Page not found"
 
-        page = HomePage(app) if pathname == "/" else FeedsPage(app)
+        if pathname == "/":
+            page = HomePage(app)
+        elif pathname == "/feeds":
+            page = FeedsPage(app)
+        else:
+            page = PredictoorsPage(app)
 
         return page.layout()
