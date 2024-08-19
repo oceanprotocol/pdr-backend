@@ -82,11 +82,12 @@ class PredictoorsPage(TabularPage):
                 get_metric(
                     label=key,
                     value=value,
-                    value_id=f"predictoors_page_{key.lower().replace(' ', '_').replace('(avg)', '')}_metric",
+                    value_id=key_id_name(key),
                 )
                 for key, value in stats.items()
             ],
             className="metrics_row",
+            id="predictoors_page_metrics_row",
         )
 
     def get_search_bar_row(self):
@@ -267,3 +268,9 @@ class PredictoorsPage(TabularPage):
             ],
             id="feeds-modal-body",
         )
+
+
+def key_id_name(key: str) -> str:
+    sanitized_key = key.lower().replace(" ", "_").replace("(avg)", "")
+
+    return f"predictoors_page_{sanitized_key}_metric"
