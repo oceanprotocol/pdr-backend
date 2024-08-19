@@ -256,10 +256,29 @@ class DBGetter:
 
     @enforce_types
     def predictoors_stats(self):
-        # TODO
+        predictoors = self._query_db(
+            f"""
+                SELECT COUNT(DISTINCT(user))
+                FROM {Prediction.get_lake_table_name()}
+            """,
+            scalar=True,
+        )
+
+        tot_accuracy, tot_stake, tot_gross_income = self._query_db(
+            f"""
+                SELECT
+                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100 / COUNT(*) AS tot_accuracy,
+                    SUM(stake) as tot_stake,
+                    SUM(payout) AS tot_gross_income
+                FROM
+                    {Payout.get_lake_table_name()}
+            """,
+            scalar=True,
+        )
+
         return {
-            "Predictoors": "TODO",
-            "Accuracy(avg)": "TODO",
-            "Stake(avg)": "TODO",
-            "Gross Income(avg)": "TODO",
+            "Predictoors": predictoors,
+            "Accuracy(avg)": tot_accuracy / predictoors,
+            "Stake(avg)": tot_stake / predictoors,
+            "Gross Income(avg)": tot_gross_income / predictoors,
         }

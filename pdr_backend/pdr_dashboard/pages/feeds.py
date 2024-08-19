@@ -104,6 +104,7 @@ class FeedsPage(TabularPage):
                 for key, value in stats.items()
             ],
             className="metrics_row",
+            id="feeds_page_metrics_row",
         )
 
     def get_search_bar_row(self):
