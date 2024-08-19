@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from datetime import datetime, timedelta
 
 from enforce_typing import enforce_types
 
@@ -6,6 +7,7 @@ from pdr_backend.pdr_dashboard.dash_components.plots import (
     process_payouts,
     create_figure,
     get_figures_and_metrics,
+    get_feed_figures,
 )
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.cli.arg_feed import ArgFeed
@@ -205,3 +207,27 @@ def test_get_figures_and_metrics(
     assert isinstance(total_profit, float)
     assert isinstance(total_cost, float)
     assert isinstance(avg_stake, float)
+
+
+def test_get_feed_figures(
+    _sample_payouts,
+):
+    payouts = [p.__dict__ for p in _sample_payouts]
+    subscriptions = [
+        {"count": 10, "revenue": 500, "day": datetime.today()},
+        {"count": 5, "revenue": 250, "day": datetime.today() - timedelta(days=1)},
+    ]
+    # Execute the function
+    figures = get_feed_figures(payouts, subscriptions)
+
+    # Assertions to check if the figures have the expected data
+    assert len(figures.sales_fig.data) == 1, "Sales figure should have one trace."
+    assert len(figures.revenues_fig.data) == 1, "Revenues figure should have one trace."
+    assert (
+        len(figures.accuracies_fig.data) == 1
+    ), "Accuracies figure should have one trace."
+    assert len(figures.stakes_fig.data) == 1, "Stakes figure should have one trace."
+    assert (
+        len(figures.predictions_fig.data) == 1
+    ), "Predictions figure should have one trace."
+    assert len(figures.profits_fig.data) == 1, "Profits figure should have one trace."

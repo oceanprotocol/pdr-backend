@@ -1,19 +1,22 @@
 import webbrowser
 
-from datetime import datetime
 import dash_bootstrap_components as dbc
 from dash import Dash
 from enforce_typing import enforce_types
-from pdr_backend.exchange.fetch_ohlcv import fetch_ohlcv
-from pdr_backend.util.time_types import UnixTimeMs
 
-from pdr_backend.pdr_dashboard.dash_components.callbacks import (
-    get_callbacks,
+from pdr_backend.pdr_dashboard.callbacks.callbacks_feeds import (
+    get_callbacks_feeds,
 )
-from pdr_backend.pdr_dashboard.dash_components.util import (
-    get_feeds_data_from_db,
-    get_predictoors_data_from_payouts,
-    get_user_payouts_stats_from_db,
+from pdr_backend.pdr_dashboard.callbacks.callbacks_home import (
+    get_callbacks_home,
+)
+from pdr_backend.pdr_dashboard.callbacks.callbacks_common import (
+    get_callbacks_common,
+)
+from pdr_backend.pdr_dashboard.util.db import DBGetter
+from pdr_backend.pdr_dashboard.util.data import get_predictoors_data_from_payouts
+from pdr_backend.pdr_dashboard.util.prices import (
+    fetch_token_prices,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_layout,
@@ -39,33 +42,31 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
         )
         return
 
-    get_callbacks(app)
     app.run(debug=debug_mode, port=port)
 
 
 @enforce_types
 def setup_app(app, ppss: PPSS):
     app.web3_pp = ppss.web3_pp
-    app.lake_dir = ppss.lake_ss.lake_dir
-    app.feeds_data = get_feeds_data_from_db(ppss.lake_ss.lake_dir)
+    app.db_getter = DBGetter(ppss.lake_ss.lake_dir)
+    app.network_name = ppss.web3_pp.network
+
+    app.feeds_data = app.db_getter.feeds_data()
     app.predictoors_data = get_predictoors_data_from_payouts(
-        get_user_payouts_stats_from_db(ppss.lake_ss.lake_dir)
+        app.db_getter.payouts_stats()
     )
-    app.favourite_addresses = ppss.predictoor_ss.my_addresses
-    app.layout = get_layout(app)
+
+    valid_addresses = [p["user"].lower() for p in app.predictoors_data]
+    app.favourite_addresses = [
+        addr for addr in ppss.predictoor_ss.my_addresses if addr in valid_addresses
+    ]
+
+    app.layout = get_layout()
 
     # fetch token prices
-    current_date_ms = UnixTimeMs(int(datetime.now().timestamp()) * 1000 - 300000)
-    rose_usdt = fetch_ohlcv("binance", "ROSE/USDT", "5m", current_date_ms, 1)
-    fet_usdt = fetch_ohlcv("binance", "FET/USDT", "5m", current_date_ms, 1)
-    if rose_usdt and fet_usdt:
-        app.prices = {"ROSE": rose_usdt[0][1], "OCEAN": fet_usdt[0][1] * 0.433226}
-    else:
-        rose_usdt = fetch_ohlcv("binanceus", "ROSE/USDT", "5m", current_date_ms, 1)
-        fet_usdt = fetch_ohlcv("binanceus", "FET/USDT", "5m", current_date_ms, 1)
-        if rose_usdt and fet_usdt:
-            app.prices = {"ROSE": rose_usdt[0][1], "OCEAN": fet_usdt[0][1] * 0.433226}
-        else:
-            app.prices = None
+    app.prices = fetch_token_prices()
 
+    get_callbacks_home(app)
+    get_callbacks_feeds(app)
+    get_callbacks_common(app)
     return app

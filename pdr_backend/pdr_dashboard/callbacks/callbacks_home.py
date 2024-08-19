@@ -6,15 +6,14 @@ from pdr_backend.pdr_dashboard.dash_components.plots import (
     get_figures_and_metrics,
 )
 
-from pdr_backend.pdr_dashboard.dash_components.util import (
+from pdr_backend.pdr_dashboard.util.data import (
     filter_objects_by_field,
     get_date_period_text,
-    get_feed_ids_based_on_predictoors_from_db,
-    get_payouts_from_db,
     get_start_date_from_period,
     select_or_clear_all_by_table,
-    calculate_tx_gas_fee_cost_in_OCEAN,
 )
+from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
+from pdr_backend.pdr_dashboard.util.format import format_value
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_graph,
 )
@@ -23,7 +22,7 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
 # pylint: disable=too-many-statements
-def get_callbacks(app):
+def get_callbacks_home(app):
     @app.callback(
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),
@@ -68,11 +67,10 @@ def get_callbacks(app):
                 if int(date_period) > 0
                 else 0
             )
-            payouts = get_payouts_from_db(
+            payouts = app.db_getter.payouts(
                 [row["contract"] for row in selected_feeds],
                 predictoors_addrs,
                 start_date,
-                app.lake_dir,
             )
 
         # get fee estimate
@@ -107,10 +105,10 @@ def get_callbacks(app):
             get_graph(figs_metrics.fig_profit),
             get_graph(figs_metrics.fig_costs),
             get_graph(figs_metrics.fig_stakes),
-            f"{round(figs_metrics.avg_accuracy, 2)}%",
-            f"{round(figs_metrics.total_profit, 2)} OCEAN",
-            f"~{round(figs_metrics.total_cost, 2)} OCEAN",
-            f"{round(figs_metrics.avg_stake, 2)} OCEAN",
+            format_value(figs_metrics.avg_accuracy, "accuracy_metric"),
+            format_value(figs_metrics.total_profit, "profit_metric"),
+            format_value(figs_metrics.total_cost, "costs_metric"),
+            format_value(figs_metrics.avg_stake, "stake_metric"),
             date_period_text,
         )
 
@@ -195,8 +193,7 @@ def get_callbacks(app):
 
         # filter feeds by payouts from selected predictoors
         if predictoor_feeds_only and (len(predictoors_addrs) > 0):
-            feed_ids = get_feed_ids_based_on_predictoors_from_db(
-                app.lake_dir,
+            feed_ids = app.db_getter.feed_ids_based_on_predictoors(
                 predictoors_addrs,
             )
             filtered_data = [
