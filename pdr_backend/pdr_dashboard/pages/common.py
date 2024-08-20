@@ -1,5 +1,7 @@
-from dash import dcc, html
+from typing import Optional
+
 import dash_bootstrap_components as dbc
+from dash import dcc, html
 
 
 class Filter:
@@ -20,18 +22,18 @@ class TabularPage:
             style={"width": "140px", "borderColor": "#aaa"},
         )
 
-    def get_input_filter(self, label: str):
+    def get_input_filter(self, label: str, page: Optional[str] = None):
         return dbc.DropdownMenu(
             [
-                self.get_input_with_label("Min", label),
-                self.get_input_with_label("Max", label),
+                self.get_input_with_label("Min", label, page=page),
+                self.get_input_with_label("Max", label, page=page),
                 html.Button(
                     "Apply Filter",
                     className="btn-apply-filter",
-                    id=f"{label.lower()}_button",
+                    id=f"{button_label(label, page)}_button",
                 ),
             ],
-            id=f"{label.lower()}_dropdown",
+            id=f"{button_label(label, page)}_dropdown",
             label=label,
             style={
                 "backgroundColor": "white",
@@ -39,9 +41,12 @@ class TabularPage:
             toggleClassName="dropdown-toggle-container",
         )
 
-    def get_input_with_label(self, label: str, name: str):
+    def get_input_with_label(self, label: str, name: str, page: Optional[str] = None):
         return html.Div(
-            [html.Label(label), dcc.Input(id=f"{name.lower()}_{label.lower()}")],
+            [
+                html.Label(label),
+                dcc.Input(id=f"{button_label(name, page)}_{button_label(label, page)}"),
+            ],
             className="input-with-label",
         )
 
@@ -49,3 +54,12 @@ class TabularPage:
 def add_to_filter(filter_options, value):
     if value not in filter_options:
         filter_options.append(value)
+
+
+def button_label(label, page):
+    if label == "Accuracy" and page == "predictoors":
+        return "p_accuracy"
+
+    label = label.replace(" ", "_")
+
+    return label.lower()

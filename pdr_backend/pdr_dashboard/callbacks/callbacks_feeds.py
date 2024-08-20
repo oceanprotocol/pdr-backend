@@ -1,8 +1,5 @@
-from typing import Optional
-
 import dash
-from dash import Input, Output, State, callback_context
-from enforce_typing import enforce_types
+from dash import Input, Output, State
 
 from pdr_backend.cli.arg_feeds import ArgFeed
 from pdr_backend.pdr_dashboard.dash_components.plots import (
@@ -12,70 +9,10 @@ from pdr_backend.pdr_dashboard.dash_components.plots import (
 from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
 from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
 from pdr_backend.pdr_dashboard.util.format import format_table
-
-
-@enforce_types
-def filter_table_by_range(
-    min_val: Optional[str], max_val: Optional[str], label_text: str
-):
-    min_val = min_val or ""
-    max_val = max_val or ""
-
-    ctx = callback_context
-    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    if button_id == "clear_filters_button" or (not min_val and not max_val):
-        return label_text
-
-    return f"{label_text} {min_val}-{max_val}"
-
-
-def table_column_filter_condition(item, field, values):
-    return not values or item[field] in values
-
-
-def table_search_condition(item, search_value):
-    if not search_value:
-        return True
-    search_value = search_value.lower()
-    return any(
-        search_value in item.get(key, "").lower()
-        for key in ["addr", "base_token", "quote_token"]
-    )
-
-
-@enforce_types
-def table_column_range_condition(
-    item, field, min_value: Optional[str], max_value: Optional[str]
-):
-    item_value = float(item[field])
-    min_value = min_value or ""
-    max_value = max_value or ""
-
-    if min_value and item_value < float(min_value):
-        return False
-
-    if max_value and item_value > float(max_value):
-        return False
-
-    return True
-
-
-def check_condition(item, condition_type, field, *values):
-    if condition_type == "filter":
-        return table_column_filter_condition(item, field, values[0])
-
-    if condition_type == "range":
-        return table_column_range_condition(
-            item,
-            field,
-            values[0],
-            values[1],
-        )
-
-    if condition_type == "search":
-        return table_search_condition(item, values[0])
-
-    return True
+from pdr_backend.pdr_dashboard.util.filters import (
+    filter_table_by_range,
+    check_condition,
+)
 
 
 def get_callbacks_feeds(app):
@@ -154,7 +91,7 @@ def get_callbacks_feeds(app):
         State("sales_min", "value"),
         State("sales_max", "value"),
         Input("sales_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_sales_range(
         min_val, max_val, _n_clicks_sales_btn, _n_clicks_filters_bnt
@@ -166,7 +103,7 @@ def get_callbacks_feeds(app):
         State("revenue_min", "value"),
         State("revenue_max", "value"),
         Input("revenue_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_revenue_range(
         min_val, max_val, _n_clicks_revenue_btn, _n_clicks_filters_bnt
@@ -178,7 +115,7 @@ def get_callbacks_feeds(app):
         State("accuracy_min", "value"),
         State("accuracy_max", "value"),
         Input("accuracy_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_accuracy_range(
         min_val, max_val, _n_clicks_accuracy_btn, _n_clicks_filters_bnt
@@ -190,7 +127,7 @@ def get_callbacks_feeds(app):
         State("volume_min", "value"),
         State("volume_max", "value"),
         Input("volume_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_volume_range(
         min_val, max_val, _n_clicks_volume_btn, _n_clicks_filters_bnt
@@ -211,7 +148,7 @@ def get_callbacks_feeds(app):
         Output("volume_min", "value"),
         Output("volume_max", "value"),
         Output("search-input-feeds-table", "value"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def clear_all_filters(btn_clicks):
         if not btn_clicks:

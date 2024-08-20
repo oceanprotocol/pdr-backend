@@ -80,7 +80,8 @@ class FeedsPage(TabularPage):
                 self.get_filters(),
                 html.Button(
                     "Clear All",
-                    id="clear_filters_button",
+                    id="clear_feeds_filters_button",
+                    className="clear-filters-button",
                     style={
                         "width": "100px",
                         "hight": "100%",
@@ -88,7 +89,8 @@ class FeedsPage(TabularPage):
                     },
                 ),
             ],
-            id="filters-section",
+            className="filters-section",
+            id="feeds-filters-section",
         )
 
     def get_metrics_row(self):
