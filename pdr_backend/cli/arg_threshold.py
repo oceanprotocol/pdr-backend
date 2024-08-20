@@ -2,6 +2,7 @@ from typing import List, Union
 
 from enforce_typing import enforce_types
 
+
 class ArgThreshold:
     def __init__(self, threshold_str: str):
         """
@@ -9,9 +10,9 @@ class ArgThreshold:
           threshold_str -- e.g. "vb_2100" "db_2090.5" "tb_208"
         """
         prefix, value_str = _unpack_threshold_str(threshold_str)
-        
-        if prefix not in ['vb', 'db', 'tb']:
-            raise ValueError('threshold should start with vb, db or tb')
+
+        if prefix not in ["vb", "db", "tb"]:
+            raise ValueError("threshold should start with vb, db or tb")
 
         self.prefix = prefix  # 'db', 'vb', 'tb'
         self.value_str = value_str
@@ -21,7 +22,7 @@ class ArgThreshold:
         return str(self) == str(other)
 
     def __str__(self):
-        return self.prefix+'_'+self.value_str
+        return self.prefix + "_" + self.value_str
 
     def threshold(self) -> float:
         return self.value
@@ -87,6 +88,6 @@ def _unpack_threshold_str(th_str: str) -> tuple:
     """
     res = th_str.split("_")
     if len(res) != 2:
-        raise ValueError('wrong format for threshold')
+        raise ValueError("wrong format for threshold")
     prefix, value_str = res
     return (prefix, value_str)

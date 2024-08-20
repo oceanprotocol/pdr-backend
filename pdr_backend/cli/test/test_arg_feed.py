@@ -85,11 +85,5 @@ def test_ArgFeed_str():
     assert str(ArgFeed("binance", None, "BTC-USDT", "5m", "vb_201")) == target_feed_str
 
     target_feed_str = "binance BTC/USDT 5m db_201"
-    assert (
-        str(ArgFeed("binance", None, "BTC/USDT", "5m", "db_201"))
-        == target_feed_str
-    )
-    assert (
-        str(ArgFeed("binance", None, "BTC-USDT", "5m", "db_201"))
-        == target_feed_str
-    )
+    assert str(ArgFeed("binance", None, "BTC/USDT", "5m", "db_201")) == target_feed_str
+    assert str(ArgFeed("binance", None, "BTC-USDT", "5m", "db_201")) == target_feed_str

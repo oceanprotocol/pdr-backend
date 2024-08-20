@@ -27,7 +27,17 @@ def test_verify_threshold_str():
     verify_threshold_str("db_210.5")
     verify_threshold_str("vb_210")
 
-    for bad_val in ["", " ", "foo", "vb", "tbab", "tb-210.1", "210", "pb_2015", 'vb_ab']:
+    for bad_val in [
+        "",
+        " ",
+        "foo",
+        "vb",
+        "tbab",
+        "tb-210.1",
+        "210",
+        "pb_2015",
+        "vb_ab",
+    ]:
         with pytest.raises(ValueError):
             verify_threshold_str(bad_val)
 

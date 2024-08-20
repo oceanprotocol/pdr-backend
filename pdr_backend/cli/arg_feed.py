@@ -190,18 +190,14 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
                 "The lists 'pairs' and 'thresholds' do not have the same length."
             )
         feeds = [
-            ArgFeed(
-                exchange_str, signal_str, pair_str, timeframe_str, threshold_str
-            )
+            ArgFeed(exchange_str, signal_str, pair_str, timeframe_str, threshold_str)
             for signal_str in signal_str_list
             for pair_str, threshold_str in zip(pairs, threshold_str_list)
             for timeframe_str in timeframe_str_list
         ]
     else:
         feeds = [
-            ArgFeed(
-                exchange_str, signal_str, pair_str, timeframe_str
-            )
+            ArgFeed(exchange_str, signal_str, pair_str, timeframe_str)
             for signal_str in signal_str_list
             for pair_str in pairs
             for timeframe_str in timeframe_str_list
