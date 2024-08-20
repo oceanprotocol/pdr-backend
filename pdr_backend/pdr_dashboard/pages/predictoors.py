@@ -15,23 +15,12 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_search_bar,
 )
 from pdr_backend.pdr_dashboard.util.format import format_table
-from pdr_backend.pdr_dashboard.pages.common import TabularPage, Filter, add_to_filter
-
-
-filters = [
-    {"name": "apy", "placeholder": "APY", "options": []},
-    {"name": "accuracy", "placeholder": "Accuracy", "options": []},
-    {"name": "gross_income", "placeholder": "Gross Income", "options": []},
-    {"name": "costs", "placeholder": "Costs", "options": []},
-]
-
-filters_objects = [Filter(**item) for item in filters]
+from pdr_backend.pdr_dashboard.pages.common import TabularPage
 
 
 class PredictoorsPage(TabularPage):
     def __init__(self, app):
         self.app = app
-        # TODO: add_to_filter
 
     def layout(self):
         return html.Div(
@@ -47,12 +36,12 @@ class PredictoorsPage(TabularPage):
     def get_filters(self):
         return html.Div(
             [
-                self.get_multiselect_dropdown(filter_obj)
-                for filter_obj in filters_objects
-            ]
-            + [
+                self.get_input_filter("APY"),
+                self.get_input_filter("Accuracy"),
+                self.get_input_filter("Gross Income"),
                 self.get_input_filter("Nr Feeds"),
                 self.get_input_filter("Stake"),
+                self.get_input_filter("Costs"),
             ],
             className="filters-container",
         )
@@ -63,7 +52,8 @@ class PredictoorsPage(TabularPage):
                 self.get_filters(),
                 html.Button(
                     "Clear All",
-                    id="clear_filters_button",
+                    id="clear_predictoors_filters_button",
+                    className="clear-filters-button",
                     style={
                         "width": "100px",
                         "hight": "100%",
@@ -71,7 +61,8 @@ class PredictoorsPage(TabularPage):
                     },
                 ),
             ],
-            id="filters-section",
+            className="filters-section",
+            id="predictoors-filters-section",
         )
 
     def get_metrics_row(self):
@@ -93,7 +84,7 @@ class PredictoorsPage(TabularPage):
     def get_search_bar_row(self):
         return html.Div(
             children=get_search_bar(
-                "search-input-feeds-table", "Search for predictoors..."
+                "search-input-predictoors-table", "Search for predictoors..."
             ),
             className="search-bar-row",
         )

@@ -109,8 +109,8 @@ def _remove_tags(text):
     return re.sub(clean, "", text)
 
 
-def _clear_filters(dash_duo):
-    dash_duo.find_element("#clear_filters_button").click()
+def _clear_feeds_filters(dash_duo):
+    dash_duo.find_element("#clear_feeds_filters_button").click()
     time.sleep(1)
 
 

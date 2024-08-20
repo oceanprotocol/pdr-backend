@@ -23,7 +23,7 @@ def filter_table_by_range(
 
     ctx = callback_context
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    if button_id == "clear_filters_button" or (not min_val and not max_val):
+    if button_id == "clear_feeds_filters_button" or (not min_val and not max_val):
         return label_text
 
     return f"{label_text} {min_val}-{max_val}"
@@ -154,7 +154,7 @@ def get_callbacks_feeds(app):
         State("sales_min", "value"),
         State("sales_max", "value"),
         Input("sales_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_sales_range(
         min_val, max_val, _n_clicks_sales_btn, _n_clicks_filters_bnt
@@ -166,7 +166,7 @@ def get_callbacks_feeds(app):
         State("revenue_min", "value"),
         State("revenue_max", "value"),
         Input("revenue_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_revenue_range(
         min_val, max_val, _n_clicks_revenue_btn, _n_clicks_filters_bnt
@@ -178,7 +178,7 @@ def get_callbacks_feeds(app):
         State("accuracy_min", "value"),
         State("accuracy_max", "value"),
         Input("accuracy_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_accuracy_range(
         min_val, max_val, _n_clicks_accuracy_btn, _n_clicks_filters_bnt
@@ -190,7 +190,7 @@ def get_callbacks_feeds(app):
         State("volume_min", "value"),
         State("volume_max", "value"),
         Input("volume_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_volume_range(
         min_val, max_val, _n_clicks_volume_btn, _n_clicks_filters_bnt
@@ -211,7 +211,7 @@ def get_callbacks_feeds(app):
         Output("volume_min", "value"),
         Output("volume_max", "value"),
         Output("search-input-feeds-table", "value"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def clear_all_filters(btn_clicks):
         if not btn_clicks:
