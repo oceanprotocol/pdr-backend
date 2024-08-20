@@ -28,6 +28,9 @@ FORMAT_CONFIG = {
     "tx_costs_(OCEAN)": "currency_conditional",
     "apy": "percentage",
     "accuracy": "percentage",
+    "predictoors_page_accuracy_metric": "percentage",
+    "predictoors_page_stake_metric": "currency",
+    "predictoors_page_gross_income_metric": "currency",
 }
 
 
