@@ -37,7 +37,7 @@ class PredictoorsPage(TabularPage):
         return html.Div(
             [
                 self.get_input_filter("APY"),
-                self.get_input_filter("Accuracy"),
+                self.get_input_filter("Accuracy", "predictoors"),
                 self.get_input_filter("Gross Income"),
                 self.get_input_filter("Nr Feeds"),
                 self.get_input_filter("Stake"),
@@ -91,26 +91,19 @@ class PredictoorsPage(TabularPage):
 
     def get_main_container(self):
         # TODO: replace with predictoors data
-        feed_stats = self.app.db_getter.feed_payouts_stats()
-        feed_subscriptions = self.app.db_getter.feed_subscription_stats(
-            self.app.network_name
-        )
+        p_cols, p_data, raw_feed_data = self.get_predictoors_data_for_predictoors_table()
 
-        feed_cols, feed_data, raw_feed_data = self.get_feeds_data_for_feeds_table(
-            feed_stats, feed_subscriptions
-        )
-
-        self.app.feeds_table_data = raw_feed_data
+        self.app.predictoors_table_data = raw_feed_data
 
         return html.Div(
             [
                 self.get_filters_section(),
-                self.get_feeds_table_area(feed_cols, feed_data),
+                self.get_predictoors_table_area(p_cols, p_data),
             ],
             className="tabular-main-container",
         )
 
-    def get_feeds_table_area(
+    def get_predictoors_table_area(
         self,
         columns,
         feeds_data,
@@ -119,7 +112,7 @@ class PredictoorsPage(TabularPage):
         return html.Div(
             [
                 dash_table.DataTable(
-                    id="feeds_page_table",
+                    id="predictoors_page_table",
                     columns=columns,
                     hidden_columns=["full_addr", "sales_raw"],
                     row_selectable="single",
@@ -187,37 +180,28 @@ class PredictoorsPage(TabularPage):
             "sales_revenue_(OCEAN)": 0,
         }
 
-    def get_feeds_data_for_feeds_table(
+    def get_predictoors_data_for_predictoors_table(
         self,
-        feed_stats: List[Dict[str, Any]],
-        feed_subcription_stats: List[Dict[str, Any]],
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
         # TODO: remove/adjust
 
-        temp_data = self.app.feeds_data
-
+        temp_data = self.app.predictoors_data
         new_feed_data = []
-        ## split the pair column into two columns
-        for feed in temp_data:
-            split_pair = feed["pair"].split("/")
+
+        # TODO: temporary data until we have the queries
+        for i, feed in enumerate(temp_data):
+            if i > 3:
+                break
             feed_item = {}
-            feed_item["addr"] = feed["contract"]
-            feed_item["base_token"] = split_pair[0]
-            feed_item["quote_token"] = split_pair[1]
-            feed_item["exchange"] = feed["source"].capitalize()
-            feed_item["time"] = feed["timeframe"]
-            feed_item["full_addr"] = feed["contract"]
-
-            result = self.get_feeds_stat_with_contract(feed["contract"], feed_stats)
-
-            feed_item.update(result)
-
-            subscription_result = self.get_feeds_subscription_stat_with_contract(
-                feed["contract"], feed_subcription_stats
-            )
-
-            feed_item.update(subscription_result)
-
+            feed_item["addr"] = feed["user"]
+            feed_item["gross_income"] = 100 * i
+            feed_item["accuracy"] = 0.15 * i
+            feed_item["stake"] = 100 * i
+            feed_item["nr_feeds"] = i + 2
+            feed_item["costs"] = 100 * i
+            feed_item["income_from_stakes"] = 100 * i
+            feed_item["income_from_subscriptions"] = 100 * i
+            feed_item["apy"] = 0.25 * i
             new_feed_data.append(feed_item)
 
         columns = get_feed_column_ids(new_feed_data[0])
