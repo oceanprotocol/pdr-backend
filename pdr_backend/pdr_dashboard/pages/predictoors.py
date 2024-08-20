@@ -116,7 +116,7 @@ class PredictoorsPage(TabularPage):
                 dash_table.DataTable(
                     id="predictoors_page_table",
                     columns=columns,
-                    hidden_columns=["full_addr", "sales_raw"],
+                    hidden_columns=["full_addr"],
                     row_selectable="single",
                     data=predictoor_data,
                     sort_action="native",  # Enables sorting feature
@@ -142,8 +142,6 @@ class PredictoorsPage(TabularPage):
 
         ## split the pair column into two columns
         for data_item in temp_data:
-            print("data_item--->", data_item)
-
             temp_pred_item = {}
             temp_pred_item["addr"] = str(data_item["user"])
             temp_pred_item["gross_income_(OCEAN)"] = data_item["total_payout"]
