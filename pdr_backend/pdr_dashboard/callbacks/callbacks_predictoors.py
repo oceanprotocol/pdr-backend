@@ -60,25 +60,25 @@ def get_callbacks_predictoors(app):
         stake_min,
         stake_max,
         costs_min,
-        costs_max
+        costs_max,
     ):
         """
         Filter table based on selected dropdown values.
         """
 
         conditions = [
-            ("range", "apy", p_accuracy_min, p_accuracy_max),
+            ("range", "apy", apy_min, apy_max),
             ("range", "p_accuracy", p_accuracy_min, p_accuracy_max),
-            ("range", "gross_income", gross_income_min, gross_income_max),
-            ("range", "nr_feeds", nr_feeds_min, nr_feeds_max),
-            ("range", "stake", stake_min, stake_max),
-            ("range", "costs", costs_min, costs_max),
+            ("range", "gross_income_(OCEAN)", gross_income_min, gross_income_max),
+            ("range", "number_of_feeds", nr_feeds_min, nr_feeds_max),
+            ("range", "staked_(OCEAN)", stake_min, stake_max),
+            ("range", "tx_costs_(OCEAN)", costs_min, costs_max),
             ("search", None, search_input_value),
         ]
 
         new_table_data = [
             item
-            for item in app.predictoors_table_data
+            for item in app.predictoor_table_data
             if all(check_condition(item, *condition) for condition in conditions)
         ]
 

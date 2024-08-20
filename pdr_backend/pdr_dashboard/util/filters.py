@@ -12,6 +12,7 @@ def filter_table_by_range(
 
     ctx = callback_context
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
     if button_id in [
         "clear_feeds_filters_button",
         "clear_predictoors_filters_button",

@@ -1,10 +1,9 @@
-from typing import List, Dict, Any, Tuple, Union
+from typing import List, Dict, Any, Tuple
 
 from dash import html, dash_table
 import dash_bootstrap_components as dbc
 from pdr_backend.pdr_dashboard.util.data import (
     get_feed_column_ids,
-    find_with_key_value,
 )
 from pdr_backend.pdr_dashboard.dash_components.plots import (
     FeedModalFigures,
@@ -16,6 +15,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
 )
 from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.pages.common import TabularPage
+from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
 
 
 class PredictoorsPage(TabularPage):
@@ -90,27 +90,27 @@ class PredictoorsPage(TabularPage):
         )
 
     def get_main_container(self):
-        # TODO: replace with predictoors data
-        p_cols, p_data, raw_feed_data = (
-            self.get_predictoors_data_for_predictoors_table()
+        predictoor_stats = self.app.db_getter.predictoor_payouts_stats()
+
+        predictoor_cols, predictoor_data, raw_predictoor_data = (
+            self.get_data_for_predictoors_table(predictoor_stats)
         )
 
-        self.app.predictoors_table_data = raw_feed_data
+        self.app.predictoor_table_data = raw_predictoor_data
 
         return html.Div(
             [
                 self.get_filters_section(),
-                self.get_predictoors_table_area(p_cols, p_data),
+                self.get_predictoor_table_area(predictoor_cols, predictoor_data),
             ],
             className="tabular-main-container",
         )
 
-    def get_predictoors_table_area(
+    def get_predictoor_table_area(
         self,
         columns,
-        feeds_data,
+        predictoor_data,
     ):
-        # TODO: replace with predictoors data, modify function name, parameters, id of table
         return html.Div(
             [
                 dash_table.DataTable(
@@ -118,99 +118,51 @@ class PredictoorsPage(TabularPage):
                     columns=columns,
                     hidden_columns=["full_addr", "sales_raw"],
                     row_selectable="single",
-                    data=feeds_data,
+                    data=predictoor_data,
                     sort_action="native",  # Enables sorting feature
                 ),
             ],
             style={"width": "100%", "overflow": "scroll"},
         )
 
-    def get_feeds_stat_with_contract(
-        self, contract: str, feed_stats: List[Dict[str, Any]]
-    ) -> Dict[str, Union[float, int]]:
-        # TODO: remove/adjust
-        result = find_with_key_value(feed_stats, "contract", contract)
-
-        if result:
-            return {
-                "avg_accuracy": float(result["avg_accuracy"]),
-                "avg_stake_per_epoch_(OCEAN)": float(result["avg_stake"]),
-                "volume_(OCEAN)": float(result["volume"]),
-            }
-
-        return {
-            "avg_accuracy": 0,
-            "avg_stake_per_epoch_(OCEAN)": 0,
-            "volume_(OCEAN)": 0,
-        }
-
-    def get_feeds_subscription_stat_with_contract(
-        self, contract: str, feed_subcription_stats: List[Dict[str, Any]]
-    ) -> Dict[str, Union[float, int, str]]:
-        # TODO: remove/adjust
-        result = find_with_key_value(feed_subcription_stats, "contract", contract)
-
-        if result:
-            sales_str = f"{result['sales']}"
-
-            df_buy_count_str = (
-                f"{result['df_buy_count']}-DF" if result["df_buy_count"] > 0 else ""
-            )
-            ws_buy_count_str = (
-                f"{result['ws_buy_count']}-WS" if result["ws_buy_count"] > 0 else ""
-            )
-
-            if df_buy_count_str or ws_buy_count_str:
-                counts_str = "_".join(
-                    filter(None, [df_buy_count_str, ws_buy_count_str])
-                )
-
-                if counts_str:
-                    sales_str += f"_{counts_str}"
-
-            return {
-                "price_(OCEAN)": result["price"],
-                "sales": sales_str,
-                "sales_raw": result["sales"],
-                "sales_revenue_(OCEAN)": result["sales_revenue"],
-            }
-
-        return {
-            "price_(OCEAN)": 0,
-            "sales": 0,
-            "sales_raw": 0,
-            "sales_revenue_(OCEAN)": 0,
-        }
-
-    def get_predictoors_data_for_predictoors_table(
+    def get_data_for_predictoors_table(
         self,
+        predictoor_stats: List[Dict[str, Any]],
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
-        # TODO: remove/adjust
 
-        temp_data = self.app.predictoors_data
-        new_feed_data = []
+        temp_data = predictoor_stats
 
-        # TODO: temporary data until we have the queries
-        for i, feed in enumerate(temp_data):
-            if i > 3:
-                break
-            feed_item = {}
-            feed_item["addr"] = feed["user"]
-            feed_item["gross_income"] = 100 * i
-            feed_item["accuracy"] = 0.15 * i
-            feed_item["stake"] = 100 * i
-            feed_item["nr_feeds"] = i + 2
-            feed_item["costs"] = 100 * i
-            feed_item["income_from_stakes"] = 100 * i
-            feed_item["income_from_subscriptions"] = 100 * i
-            feed_item["apy"] = 0.25 * i
-            new_feed_data.append(feed_item)
+        new_predictoor_data = []
 
-        columns = get_feed_column_ids(new_feed_data[0])
+        appr_cost = calculate_tx_gas_fee_cost_in_OCEAN(
+            self.app.web3_pp,
+            "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+            self.app.prices,
+        )
 
-        formatted_data = format_table(new_feed_data, columns)
+        ## split the pair column into two columns
+        for data_item in temp_data:
+            print("data_item--->", data_item)
 
-        return columns, formatted_data, new_feed_data
+            temp_pred_item = {}
+            temp_pred_item["addr"] = str(data_item["user"])
+            temp_pred_item["gross_income_(OCEAN)"] = data_item["total_payout"]
+            temp_pred_item["accuracy"] = data_item["avg_accuracy"]
+            temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
+            temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
+            temp_pred_item["tx_costs_(OCEAN)"] = appr_cost * float(
+                data_item["stake_count"]
+            )
+            temp_pred_item["income_from_stakes_(OCEAN)"] = data_item["total_profit"]
+            temp_pred_item["apy"] = data_item["apy"]
+
+            new_predictoor_data.append(temp_pred_item)
+
+        columns = get_feed_column_ids(new_predictoor_data[0])
+
+        formatted_data = format_table(new_predictoor_data, columns)
+
+        return columns, formatted_data, new_predictoor_data
 
     # TODO: remove/adjust everything below
     def get_modal(self):
