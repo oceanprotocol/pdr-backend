@@ -100,7 +100,6 @@ class PredictoorsPage(TabularPage):
         )
 
     def get_main_container(self):
-        # TODO: replace with predictoors data
         predictoor_stats = self.app.db_getter.predictoor_payouts_stats()
 
         predictoor_cols, predictoor_data, raw_predictoor_data = self.get_data_for_predictoors_table(predictoor_stats)
@@ -120,7 +119,6 @@ class PredictoorsPage(TabularPage):
         columns,
         predictoor_data,
     ):
-        # TODO: replace with predictoors data, modify function name, parameters, id of table
         return html.Div(
             [
                 dash_table.DataTable(
@@ -139,7 +137,6 @@ class PredictoorsPage(TabularPage):
         self,
         predictoor_stats: List[Dict[str, Any]],
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
-        # TODO: remove/adjust
 
         temp_data = predictoor_stats
 
