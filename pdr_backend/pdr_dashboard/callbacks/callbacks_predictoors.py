@@ -48,6 +48,7 @@ def get_callbacks_predictoors(app):
         _n_clicks_nr_feeds,
         _n_clicks_stake,
         _n_clicks_costs,
+        search_input_value,
         apy_min,
         apy_max,
         p_accuracy_min,
@@ -59,8 +60,7 @@ def get_callbacks_predictoors(app):
         stake_min,
         stake_max,
         costs_min,
-        costs_max,
-        search_input_value,
+        costs_max
     ):
         """
         Filter table based on selected dropdown values.
@@ -141,7 +141,7 @@ def get_callbacks_predictoors(app):
         State("stake_min", "value"),
         State("stake_max", "value"),
         Input("stake_button", "n_clicks"),
-        Input("clear_predictoors_filters_button", "n_clicks")
+        Input("clear_predictoors_filters_button", "n_clicks"),
     )
     def filter_table_by_stake_range(
         min_val, max_val, _n_clicks_stake_btn, _n_clicks_filters_bnt
@@ -180,6 +180,20 @@ def get_callbacks_predictoors(app):
         if not btn_clicks:
             return dash.no_update
 
-        return (None, None, None, None, None, None, None, None, None, None, None, None, "")
+        return (
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "",
+        )
 
     # TODO: modals and graph

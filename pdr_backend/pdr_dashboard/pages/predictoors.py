@@ -91,7 +91,9 @@ class PredictoorsPage(TabularPage):
 
     def get_main_container(self):
         # TODO: replace with predictoors data
-        p_cols, p_data, raw_feed_data = self.get_predictoors_data_for_predictoors_table()
+        p_cols, p_data, raw_feed_data = (
+            self.get_predictoors_data_for_predictoors_table()
+        )
 
         self.app.predictoors_table_data = raw_feed_data
 

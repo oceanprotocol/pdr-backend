@@ -12,7 +12,10 @@ def filter_table_by_range(
 
     ctx = callback_context
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    if button_id in ["clear_feeds_filters_button", "clear_predictoors_filters_button"] or (not min_val and not max_val):
+    if button_id in [
+        "clear_feeds_filters_button",
+        "clear_predictoors_filters_button",
+    ] or (not min_val and not max_val):
         return label_text
 
     return f"{label_text} {min_val}-{max_val}"

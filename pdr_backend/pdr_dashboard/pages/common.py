@@ -42,7 +42,10 @@ class TabularPage:
 
     def get_input_with_label(self, label: str, name: str, page: Optional[str] = None):
         return html.Div(
-            [html.Label(label), dcc.Input(id=f"{button_label(name, page)}_{button_label(label, page)}")],
+            [
+                html.Label(label),
+                dcc.Input(id=f"{button_label(name, page)}_{button_label(label, page)}"),
+            ],
             className="input-with-label",
         )
 
