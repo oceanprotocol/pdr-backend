@@ -22,6 +22,12 @@ FORMAT_CONFIG = {
     "total_profit": "currency_without_decimal",
     "volume_(OCEAN)": "currency_without_decimal",
     "avg_stake_per_epoch_(OCEAN)": "currency_conditional",
+    "staked_(OCEAN)": "currency_conditional",
+    "gross_income_(OCEAN)": "currency_conditional",
+    "income_from_stakes_(OCEAN)": "currency_conditional",
+    "tx_costs_(OCEAN)": "currency_conditional",
+    "apy": "percentage",
+    "accuracy": "percentage",
 }
 
 
@@ -47,7 +53,7 @@ def format_dict(data: Dict[str, Union[int, float, str]]) -> dict[str, str]:
     Returns:
         Dict[str, str]: Formatted dictionary.
     """
-    return {key: format_value(data[key], key) for key in data.keys()}
+    return {key: format_value(data[key] if isinstance(data[key], str) else float(data[key]), key) for key in data.keys()}
 
 
 @enforce_types
@@ -166,7 +172,7 @@ def format_percentage(accuracy: Union[float, int]) -> str:
 
 @enforce_types
 def format_currency_conditional(amount: Union[float, int]) -> str:
-    return format_currency(amount, suffix="", show_decimal=amount < 1000)
+    return format_currency(amount, suffix="", show_decimal=amount < 1000 and amount > -1000)
 
 
 @enforce_types
