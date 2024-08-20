@@ -1,12 +1,6 @@
 import dash
 from dash import Input, Output, State
 
-from pdr_backend.cli.arg_feeds import ArgFeed
-from pdr_backend.pdr_dashboard.dash_components.plots import (
-    FeedModalFigures,
-    get_feed_figures,
-)
-from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
 from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
 from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.filters import (
