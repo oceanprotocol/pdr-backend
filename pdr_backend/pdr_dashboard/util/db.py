@@ -91,6 +91,59 @@ class DBGetter:
         )
 
     @enforce_types
+    def predictoor_payouts_stats(self):
+        return self._query_db(
+            f"""
+                WITH user_metrics AS (
+                    SELECT
+                        p."user",
+                        SUM(p.stake) AS total_stake,
+                        SUM(p.payout - p.stake) AS total_profit,
+                        SUM(p.payout) AS total_payout,
+                        COUNT(p.ID) AS stake_count,
+                        COUNT(DISTINCT SPLIT_PART(p.ID, '-', 1)) AS feed_count,
+                        SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) AS correct_predictions,
+                        COUNT(*) AS predictions,
+                        AVG(p.stake) AS avg_stake,
+                        -- Fetch timeframe from the Predictions table and calculate periods per year
+                        CASE
+                            WHEN pr.timeframe = '5m' THEN (525600 / 5)::float / COUNT(*)
+                            WHEN pr.timeframe = '1h' THEN 8760::float / COUNT(*)
+                        END AS periods_per_year,
+                        -- Calculate APY based on the total stake, profit, and the periods per year
+                        (POWER(1 + (SUM(p.payout - p.stake) / NULLIF(SUM(p.stake), 0)), 
+                            CASE
+                                WHEN pr.timeframe = '5m' THEN (525600 / 5)::float / COUNT(*)
+                                WHEN pr.timeframe = '1h' THEN 8760::float / COUNT(*)
+                            END
+                        ) - 1) * 100 AS apy
+                    FROM
+                        {Payout.get_lake_table_name()} p
+                    JOIN
+                        {Prediction.get_lake_table_name()} pr
+                    ON
+                        SPLIT_PART(p.ID, '-', 1) = pr.contract
+                    GROUP BY
+                        p."user", pr.timeframe
+                )
+                SELECT
+                    "user",
+                    SUM(stake_count) AS stake_count,
+                    SUM(total_stake) AS total_stake,
+                    SUM(total_profit) AS total_profit,
+                    SUM(feed_count) AS feed_count,
+                    SUM(total_payout) AS total_payout,
+                    SUM(correct_predictions) * 100.0 / SUM(predictions) AS avg_accuracy,
+                    -- Calculate overall APY by averaging the APYs from different timeframes
+                    SUM(apy) / COUNT(DISTINCT periods_per_year) AS apy
+                FROM
+                    user_metrics
+                GROUP BY
+                    "user";
+            """,
+        )
+
+    @enforce_types
     def feed_subscription_stats(self, network_name: str):
         opf_addresses = get_opf_addresses(network_name)
 
