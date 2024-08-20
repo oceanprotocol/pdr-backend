@@ -28,8 +28,8 @@ class ArgTB:
     def __str__(self):
         return self.tb_str
 
-    def threshold(self) -> int:
-        return int(self.tb_str.split("_")[1])
+    def threshold(self) -> float:
+        return float(self.tb_str.split("_")[1])
 
 
 class ArgTBs(List[ArgTB]):

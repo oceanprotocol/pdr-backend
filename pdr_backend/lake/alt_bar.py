@@ -143,7 +143,7 @@ def get_volume_bars(rawohlcv_df: pd.DataFrame, threshold: float):
     return list_bars, newest_ut_value
 
 
-def get_tick_bars(rawohlcv_df: pd.DataFrame, threshold: int):
+def get_tick_bars(rawohlcv_df: pd.DataFrame, threshold: float):
     """
     Creates the tick bars: date_time, open, high, low, close, cum_vol, cum_dollar, and cum_ticks.
 
@@ -153,6 +153,6 @@ def get_tick_bars(rawohlcv_df: pd.DataFrame, threshold: int):
     :return: Dataframe of tick bars
     """
     list_bars, newest_ut_value = _extract_bars(
-        rawohlcv_df, metric="cum_ticks", threshold=threshold
+        rawohlcv_df, metric="cum_ticks", threshold=float(int(threshold))
     )
     return list_bars, newest_ut_value
