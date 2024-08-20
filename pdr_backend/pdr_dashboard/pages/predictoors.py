@@ -1,10 +1,9 @@
-from typing import List, Dict, Any, Tuple, Union
+from typing import List, Dict, Any, Tuple
 
 from dash import html, dash_table
 import dash_bootstrap_components as dbc
 from pdr_backend.pdr_dashboard.util.data import (
     get_feed_column_ids,
-    find_with_key_value,
 )
 from pdr_backend.pdr_dashboard.dash_components.plots import (
     FeedModalFigures,
@@ -15,7 +14,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_search_bar,
 )
 from pdr_backend.pdr_dashboard.util.format import format_table
-from pdr_backend.pdr_dashboard.pages.common import TabularPage, Filter, add_to_filter
+from pdr_backend.pdr_dashboard.pages.common import TabularPage, Filter
 from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
 
 
@@ -102,7 +101,9 @@ class PredictoorsPage(TabularPage):
     def get_main_container(self):
         predictoor_stats = self.app.db_getter.predictoor_payouts_stats()
 
-        predictoor_cols, predictoor_data, raw_predictoor_data = self.get_data_for_predictoors_table(predictoor_stats)
+        predictoor_cols, predictoor_data, raw_predictoor_data = (
+            self.get_data_for_predictoors_table(predictoor_stats)
+        )
 
         self.app.predictoor_table_data = raw_predictoor_data
 
@@ -142,7 +143,11 @@ class PredictoorsPage(TabularPage):
 
         new_predictoor_data = []
 
-        appr_cost = calculate_tx_gas_fee_cost_in_OCEAN(self.app.web3_pp, "0x18f54cc21b7a2fdd011bea06bba7801b280e3151", self.app.prices)
+        appr_cost = calculate_tx_gas_fee_cost_in_OCEAN(
+            self.app.web3_pp,
+            "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+            self.app.prices,
+        )
 
         ## split the pair column into two columns
         for data_item in temp_data:
@@ -154,7 +159,9 @@ class PredictoorsPage(TabularPage):
             temp_pred_item["accuracy"] = data_item["avg_accuracy"]
             temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
             temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
-            temp_pred_item["tx_costs_(OCEAN)"] = appr_cost * float(data_item["stake_count"])
+            temp_pred_item["tx_costs_(OCEAN)"] = appr_cost * float(
+                data_item["stake_count"]
+            )
             temp_pred_item["income_from_stakes_(OCEAN)"] = data_item["total_profit"]
             temp_pred_item["apy"] = data_item["apy"]
 

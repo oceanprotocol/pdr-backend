@@ -89,7 +89,7 @@ class DBGetter:
                     contract
             """,
         )
-    
+
     @enforce_types
     def predictoor_payouts_stats(self):
         return self._query_db(
