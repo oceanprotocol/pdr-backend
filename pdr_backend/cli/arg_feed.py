@@ -15,9 +15,7 @@ from pdr_backend.cli.arg_timeframe import (
     ArgTimeframes,
     timeframes_str_ok,
 )
-from pdr_backend.cli.arg_vb import ArgVB, ArgVBs, vb_str_ok
-from pdr_backend.cli.arg_tb import ArgTB, ArgTBs, tb_str_ok
-from pdr_backend.cli.arg_db import ArgDB, ArgDBs, db_str_ok
+from pdr_backend.cli.arg_threshold import ArgThreshold, ArgThresholds, threshold_str_ok
 
 
 class ArgFeed:
@@ -27,9 +25,7 @@ class ArgFeed:
         signal: Union[ArgSignal, str, None] = None,
         pair: Union[ArgPair, str, None] = None,
         timeframe: Optional[Union[ArgTimeframe, str]] = None,
-        volume_threshold: Optional[Union[ArgVB, str]] = None,
-        tick_threshold: Optional[Union[ArgTB, str]] = None,
-        dollar_threshold: Optional[Union[ArgDB, str]] = None,
+        threshold: Optional[Union[ArgThreshold, str]] = None,
         contract: Optional[str] = None,
     ):
         if signal is not None:
@@ -51,26 +47,12 @@ class ArgFeed:
         else:
             self.timeframe = timeframe
 
-        if volume_threshold is None:
-            self.volume_threshold = None
-        elif isinstance(volume_threshold, str):
-            self.volume_threshold = ArgVB(volume_threshold)
+        if threshold is None:
+            self.threshold = None
+        elif isinstance(threshold, str):
+            self.threshold = ArgThreshold(threshold)
         else:
-            self.volume_threshold = volume_threshold
-
-        if dollar_threshold is None:
-            self.dollar_threshold = None
-        elif isinstance(dollar_threshold, str):
-            self.dollar_threshold = ArgDB(dollar_threshold)
-        else:
-            self.dollar_threshold = dollar_threshold
-
-        if tick_threshold is None:
-            self.tick_threshold = None
-        elif isinstance(tick_threshold, str):
-            self.tick_threshold = ArgTB(tick_threshold)
-        else:
-            self.tick_threshold = tick_threshold
+            self.threshold = threshold
 
         self.contract = contract
 
@@ -85,14 +67,8 @@ class ArgFeed:
         if self.timeframe is not None:
             feed_str += f" {self.timeframe}"
 
-        if self.volume_threshold is not None:
-            feed_str += f" {self.volume_threshold}"
-
-        if self.tick_threshold is not None:
-            feed_str += f" {self.tick_threshold}"
-
-        if self.dollar_threshold is not None:
-            feed_str += f" {self.dollar_threshold}"
+        if self.threshold is not None:
+            feed_str += f" {self.threshold}"
 
         return feed_str
 
@@ -103,9 +79,7 @@ class ArgFeed:
             and str(self.signal) == str(other.signal)
             and str(self.pair) == str(other.pair)
             and str(self.timeframe) == str(other.timeframe)
-            and str(self.volume_threshold) == str(other.volume_threshold)
-            and str(self.tick_threshold) == str(other.tick_threshold)
-            and str(self.dollar_threshold) == str(other.dollar_threshold)
+            and str(self.threshold) == str(other.threshold)
         )
 
     def __hash__(self):
@@ -170,26 +144,12 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     threshold_str = feeds_str_split[-1]
     offset_end = None
 
-    if vb_str_ok(threshold_str):
+    if threshold_str_ok(threshold_str):
         # last part is a valid volume_threshold
-        vb_str_list = ArgVBs.from_str(threshold_str)
+        threshold_str_list = ArgThresholds.from_str(threshold_str)
         feeds_str_split = feeds_str_split[:-1]
-        db_str_list = [None]
-        tb_str_list = [None]
-    elif tb_str_ok(threshold_str):
-        tb_str_list = ArgTBs.from_str(threshold_str)
-        feeds_str_split = feeds_str_split[:-1]
-        vb_str_list = [None]
-        db_str_list = [None]
-    elif db_str_ok(threshold_str):
-        db_str_list = ArgDBs.from_str(threshold_str)
-        feeds_str_split = feeds_str_split[:-1]
-        vb_str_list = [None]
-        tb_str_list = [None]
     else:
-        vb_str_list = [None]
-        db_str_list = [None]
-        tb_str_list = [None]
+        threshold_str_list = [None]
 
     timeframe_str = feeds_str_split[-1]
     if timeframes_str_ok(timeframe_str):
@@ -209,7 +169,6 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     else:
         # last part is not a valid timeframe, but it might be a signal
         timeframe_str_list = [None]
-        vb_str_list = [None]
         signal_char_str = feeds_str_split[-1]
 
         if verify_signalchar_str(signal_char_str, True):
@@ -225,62 +184,27 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
 
     pairs = ArgPairs.from_str(pairs_list_str)
 
-    if isinstance(vb_str_list[0], ArgVB):
-        if len(pairs) != len(vb_str_list):
+    if isinstance(threshold_str_list[0], ArgThreshold):
+        if len(pairs) != len(threshold_str_list):
             raise ValueError(
-                "The lists 'pairs' and 'volume_thresholds' do not have the same length."
+                "The lists 'pairs' and 'thresholds' do not have the same length."
             )
         feeds = [
             ArgFeed(
-                exchange_str, signal_str, pair_str, timeframe_str, volume_threshold_str
+                exchange_str, signal_str, pair_str, timeframe_str, threshold_str
             )
             for signal_str in signal_str_list
-            for pair_str, volume_threshold_str in zip(pairs, vb_str_list)
-            for timeframe_str in timeframe_str_list
-        ]
-    elif isinstance(tb_str_list[0], ArgTB):
-        if len(pairs) != len(tb_str_list):
-            raise ValueError(
-                "The lists 'pairs' and 'tick_thresholds' do not have the same length."
-            )
-        feeds = [
-            ArgFeed(
-                exchange_str,
-                signal_str,
-                pair_str,
-                timeframe_str,
-                tick_threshold=tick_threshold_str,
-            )
-            for signal_str in signal_str_list
-            for pair_str, tick_threshold_str in zip(pairs, tb_str_list)
-            for timeframe_str in timeframe_str_list
-        ]
-    elif isinstance(db_str_list[0], ArgDB):
-        if len(pairs) != len(db_str_list):
-            raise ValueError(
-                "The lists 'pairs' and 'dollar_thresholds' do not have the same length."
-            )
-        feeds = [
-            ArgFeed(
-                exchange_str,
-                signal_str,
-                pair_str,
-                timeframe_str,
-                dollar_threshold=dollar_threshold_str,
-            )
-            for signal_str in signal_str_list
-            for pair_str, dollar_threshold_str in zip(pairs, db_str_list)
+            for pair_str, threshold_str in zip(pairs, threshold_str_list)
             for timeframe_str in timeframe_str_list
         ]
     else:
         feeds = [
             ArgFeed(
-                exchange_str, signal_str, pair_str, timeframe_str, volume_threshold_str
+                exchange_str, signal_str, pair_str, timeframe_str
             )
             for signal_str in signal_str_list
             for pair_str in pairs
             for timeframe_str in timeframe_str_list
-            for volume_threshold_str in vb_str_list
         ]
 
     return feeds

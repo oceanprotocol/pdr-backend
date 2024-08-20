@@ -72,7 +72,6 @@ def test_ArgFeeds_from_str():
             ArgFeed("binance", None, "BTC/USDT", "1s", "vb_190"),
         ]
     )
-    print(ArgFeeds.from_str("binance ADA/USDT,BTC/USDT 1s vb_20,vb_190"))
     assert ArgFeeds.from_str("binance ADA/USDT,BTC/USDT 1s vb_20,vb_190") == target
 
     # unhappy paths. Verify section has way more, this is just for baseline

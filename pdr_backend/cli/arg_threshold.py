@@ -12,23 +12,19 @@ class ArgThreshold:
         
         if prefix not in ['vb', 'db', 'tb']:
             raise ValueError('threshold should start with vb, db or tb')
-        
-        try:
-            float(value_str)
-        except ValueError:
-            print(f"Invalid float value: '{value_str}'")
 
         self.prefix = prefix  # 'db', 'vb', 'tb'
-        self.value = value_str
+        self.value_str = value_str
+        self.value = float(self.value_str)
 
     def __eq__(self, other):
         return str(self) == str(other)
 
     def __str__(self):
-        return self.prefix+'_'+self.value
+        return self.prefix+'_'+self.value_str
 
     def threshold(self) -> float:
-        return float(self.value)
+        return self.value
 
 
 class ArgThresholds(List[ArgThreshold]):

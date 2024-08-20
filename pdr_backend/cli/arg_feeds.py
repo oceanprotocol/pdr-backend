@@ -14,7 +14,6 @@ from pdr_backend.cli.arg_feed import (
 )
 from pdr_backend.cli.arg_pair import ArgPair
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.cli.arg_vb import ArgVB
 
 
 class ArgFeeds(List[ArgFeed]):
@@ -91,9 +90,7 @@ class ArgFeeds(List[ArgFeed]):
                     contract=row["contract"],
                     exchange=row["source"],
                     timeframe=row["timeframe"],
-                    volume_threshold=row["volume_threshold"],
-                    tick_threshold=row["tick_threshold"],
-                    dollar_threshold=row["dollar_threshold"],
+                    threshold=row["threshold"],
                 )
                 for row in table_data
             ]
