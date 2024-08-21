@@ -234,8 +234,8 @@ def get_callbacks_predictoors(app):
         predictoor_figures: PredictoorModalFigures = get_predictoor_figures(payouts)
 
         children = [
-            predictoors_page.get_feed_graphs_modal_header(selected_row),
-            predictoors_page.get_feed_graphs_modal_body(
+            predictoors_page.get_predictoor_graphs_modal_header(selected_row),
+            predictoors_page.get_predictoor_graphs_modal_body(
                 predictoor_figures.get_figures()
             ),
         ]

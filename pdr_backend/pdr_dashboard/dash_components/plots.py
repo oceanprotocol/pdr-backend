@@ -124,6 +124,11 @@ class PredictoorModalFigures:
                 "yaxis_title": "Profit (OCEAN)",
                 "show_legend": False,
             },
+            "nr_of_feeds_fig": {
+                "title": "Nr. of Feeds",
+                "yaxis_title": "Feeds",
+                "show_legend": False,
+            },
         }
 
         for key, value in fig_config.items():
@@ -134,6 +139,7 @@ class PredictoorModalFigures:
         self.accuracies = []
         self.profits = []
         self.incomes = []
+        self.nr_of_feeds = []
 
     def update_figures(self):
         defaults = {
@@ -151,6 +157,9 @@ class PredictoorModalFigures:
         self.profits_fig.add_traces(
             go.Scatter(x=self.slots, y=self.profits, **defaults)
         )
+        self.nr_of_feeds_fig.add_traces(
+            go.Scatter(x=self.slots, y=self.nr_of_feeds, **defaults)
+        )
 
     def get_figures(self):
         return [
@@ -158,6 +167,7 @@ class PredictoorModalFigures:
             self.accuracies_fig,
             self.stakes_fig,
             self.profits_fig,
+            self.nr_of_feeds_fig,
         ]
 
 
@@ -580,6 +590,7 @@ def get_predictoor_figures(payouts: List):
         result.profits.append(slot_profit)
         result.accuracies.append((correct_predictions / total_predictions) * 100)
         result.slots.append(UnixTimeS(int(slot)).to_milliseconds())
+        result.nr_of_feeds.append(slot_predictions)
 
     # Update figures with the processed data
     result.update_figures()
