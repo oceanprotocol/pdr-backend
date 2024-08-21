@@ -14,7 +14,7 @@ def _extract_bars(
     """
     For loop which compiles the various bars: dollar, volume, or tick.
 
-    :param data: raw ohlcv data from kaiko Contains 6 columns 
+    :param data: raw ohlcv data from kaiko Contains 6 columns
                 - timestamp, open, high, low, close and volume.
     :param metric: cum_ticks, cum_dollar_value, cum_volume
     :param threshold: A cumulative value above this threshold triggers a sample to be taken.

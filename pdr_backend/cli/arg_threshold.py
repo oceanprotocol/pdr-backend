@@ -9,7 +9,10 @@ class ArgThreshold:
         @arguments
           threshold_str -- e.g. "vb_2100" "db_2090.5" "tb_208"
         """
-        prefix, value_str = _unpack_threshold_str(threshold_str)
+        res = threshold_str.split("_")
+        if len(res) != 2:
+            raise ValueError("wrong format for threshold")
+        prefix, value_str = res
 
         if prefix not in ["vb", "db", "tb"]:
             raise ValueError("threshold should start with vb, db or tb")
@@ -77,17 +80,3 @@ def verify_threshold_str(s: str):
 def verify_thresholds_str(s: str):
     """Raise an error if input string is invalid."""
     _ = ArgThresholds.from_str(s)
-
-
-def _unpack_threshold_str(th_str: str) -> tuple:
-    """
-    Unpacks the vb_str into prefix and value_str.
-
-    Example: Given 'vb_2100.5'
-    Return ('vb', '2100.5')
-    """
-    res = th_str.split("_")
-    if len(res) != 2:
-        raise ValueError("wrong format for threshold")
-    prefix, value_str = res
-    return (prefix, value_str)

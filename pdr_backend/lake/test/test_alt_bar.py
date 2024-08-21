@@ -21,6 +21,7 @@ def fixture_sample_data():
     df = pd.DataFrame(data)
     return df.sort_values(by="timestamp", ascending=True)
 
+
 def test_extract_bars_dollar_metric(sample_data):
     bars, start_tm = _extract_bars(
         sample_data, metric="cum_dollar_value", threshold=1000000
