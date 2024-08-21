@@ -269,7 +269,9 @@ def argfeed_with_threshold(
 ):
     if len(pairs) != len(threshold_str_list):
         raise ValueError(
-            "The lists 'pairs' and 'thresholds' do not have the same length."
+            f"The lists 'pairs' and 'thresholds' do not have the same length,\
+                Found: {len(pairs)} pairs: {str(pairs)}, {threshold_str_list} ;\
+                thresholds: {str(threshold_str_list)}."
         )
     return [
         ArgFeed(exchange_str, signal_str, pair_str, timeframe_str, threshold_str)
