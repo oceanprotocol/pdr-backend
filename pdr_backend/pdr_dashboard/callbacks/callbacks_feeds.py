@@ -13,7 +13,7 @@ from pdr_backend.pdr_dashboard.util.filters import (
     filter_table_by_range,
     check_condition,
 )
-
+from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
 
 def get_callbacks_feeds(app):
     @app.callback(
@@ -156,34 +156,23 @@ def get_callbacks_feeds(app):
         return ([], [], [], [], None, None, None, None, None, None, None, None, "")
 
     @app.callback(
-        Output("modal", "is_open"),
+        Output("feeds_modal", "is_open"),
         Output("feeds_page_table", "selected_rows"),
-        [Input("feeds_page_table", "selected_rows"), Input("modal", "is_open")],
+        [Input("feeds_page_table", "selected_rows"), Input("feeds_modal", "is_open")],
     )
     def toggle_modal(selected_rows, is_open_input):
         ctx = dash.callback_context
-        triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-        if triggered_id not in ["feeds_page_table", "modal"]:
-            return dash.no_update, dash.no_update
-
-        if triggered_id == "modal":
-            if is_open_input:
-                return dash.no_update, dash.no_update
-
-            # Modal close button is clicked, clear the selection
-            return False, []
-
-        # triggered_id == "feeds_page_table"
-        if selected_rows and not is_open_input:
-            return True, dash.no_update
-
-        # Clear the selection if modal is not opened
-        return False, []
+        return toggle_modal_helper(
+            ctx,
+            selected_rows,
+            is_open_input,
+            ["feeds_page_table", "feeds_modal"],
+            "feeds_modal"
+        )
 
     @app.callback(
-        Output("modal", "children"),
-        Input("modal", "is_open"),
+        Output("feeds_modal", "children"),
+        Input("feeds_modal", "is_open"),
         State("feeds_page_table", "selected_rows"),
         State("feeds_page_table", "data"),
     )

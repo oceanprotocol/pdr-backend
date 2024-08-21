@@ -252,7 +252,7 @@ class FeedsPage(TabularPage):
     def get_modal(self):
         return dbc.Modal(
             self.get_default_modal_content(),
-            id="modal",
+            id="feeds_modal",
         )
 
     def get_default_modal_content(self):

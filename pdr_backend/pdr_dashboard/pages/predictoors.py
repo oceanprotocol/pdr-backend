@@ -144,6 +144,7 @@ class PredictoorsPage(TabularPage):
         for data_item in temp_data:
             temp_pred_item = {}
             temp_pred_item["addr"] = str(data_item["user"])
+            temp_pred_item["full_addr"] = str(data_item["user"])
             temp_pred_item["gross_income_(OCEAN)"] = data_item["total_payout"]
             temp_pred_item["accuracy"] = data_item["avg_accuracy"]
             temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
@@ -166,25 +167,24 @@ class PredictoorsPage(TabularPage):
     def get_modal(self):
         return dbc.Modal(
             self.get_default_modal_content(),
-            id="modal",
+            id="predictoors_modal",
         )
 
     def get_default_modal_content(self):
         figures = FeedModalFigures()
         return [
-            dbc.ModalHeader("Loading feed data", id="feeds-modal-header"),
+            dbc.ModalHeader("Loading Predictoor data", id="predictoors-modal-header"),
             self.get_feed_graphs_modal_body(figures.get_figures()),
         ]
 
     def get_feed_graphs_modal_header(self, selected_row):
         return html.Div(
             html.Span(
-                f"""{selected_row["base_token"]}-{selected_row["quote_token"]}
-                {selected_row["time"]} {selected_row["exchange"]}
+                f"""{selected_row["addr"]} - Predictoor Data
                 """,
                 style={"fontWeight": "bold", "fontSize": "20px"},
             ),
-            id="feeds-modal-header",
+            id="predictoors-modal-header",
         )
 
     def get_feed_graphs_modal_body(self, figures):
@@ -193,7 +193,7 @@ class PredictoorsPage(TabularPage):
                 html.Div(get_graph(fig), style={"width": "45%", "margin": "0 auto"})
                 for fig in figures
             ],
-            id="feeds-modal-body",
+            id="predictoors-modal-body",
         )
 
 

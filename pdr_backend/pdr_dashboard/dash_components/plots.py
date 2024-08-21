@@ -98,6 +98,73 @@ class FeedModalFigures:
         ]
 
 
+
+
+# pylint: disable=too-many-instance-attributes
+class PredictoorModalFigures:
+    def __init__(self):
+        fig_config = {
+            "incomes_fig": {
+                "title": "Incomes",
+                "yaxis_title": "Gross Income (OCEAN)",
+                "show_legend": False,
+                "ticker_format": "%m-%d",
+            },
+            "accuracies_fig": {
+                "title": "Accuracy",
+                "yaxis_title": "Avg Accuracy (OCEAN)",
+                "show_legend": False,
+                "yaxis_range": [40, 70],
+            },
+            "stakes_fig": {
+                "title": "Stakes",
+                "yaxis_title": "Stake (OCEAN)",
+                "show_legend": False,
+            },
+            "profits_fig": {
+                "title": "Profits",
+                "yaxis_title": "Profit (OCEAN)",
+                "show_legend": False,
+            },
+        }
+
+        for key, value in fig_config.items():
+            setattr(self, key, create_figure([], **value))
+
+        self.slots = []
+        self.stakes = []
+        self.accuracies = []
+        self.profits = []
+        self.incomes = []
+
+    def update_figures(self):
+        defaults = {
+            "mode": "lines",
+            "showlegend": False,
+        }
+
+        self.incomes_fig.add_traces(
+            go.Scatter(x=self.slots, y=self.incomes, **defaults)
+        )
+        self.accuracies_fig.add_traces(
+            go.Scatter(x=self.slots, y=self.accuracies, **defaults)
+        )
+        self.stakes_fig.add_traces(go.Scatter(x=self.slots, y=self.stakes, **defaults))
+        self.profits_fig.add_traces(
+            go.Scatter(x=self.slots, y=self.profits, **defaults)
+        )
+
+    def get_figures(self):
+        return [
+            self.incomes_fig,
+            self.accuracies_fig,
+            self.stakes_fig,
+            self.profits_fig,
+        ]
+
+
+
+
 # pylint: disable=too-many-instance-attributes
 class FiguresAndMetricsResult:
     def __init__(self):
@@ -475,6 +542,48 @@ def get_feed_figures(payouts: Optional[List], subscriptions: List) -> FeedModalF
         result.accuracies.append((correct_predictions / total_predictions) * 100)
         result.slots.append(UnixTimeS(int(slot)).to_milliseconds())
         result.predictions_list.append(slot_predictions)
+
+    # Update figures with the processed data
+    result.update_figures()
+
+    return result
+
+
+@enforce_types
+def get_predictoor_figures(payouts: List):
+    """
+    Return figures for a selected feed from the feeds table.
+    """
+
+    # Initialize empty figures with default settings
+    result = PredictoorModalFigures()
+
+    if not payouts:
+        return result
+    
+    # Sort payouts by slots and group by slot
+    payouts.sort(key=itemgetter("slot"))
+    grouped_payouts = {
+        slot: list(group) for slot, group in groupby(payouts, key=itemgetter("slot"))
+    }
+
+    correct_predictions = 0
+    total_predictions = 0
+
+    # Process each slot's payouts
+    for slot, payout_group in grouped_payouts.items():
+        slot_stake = sum(p["stake"] for p in payout_group)
+        slot_profit = sum(max(p["payout"], 0) - p["stake"] for p in payout_group)
+        slot_predictions = len(payout_group)
+
+        correct_predictions += sum(1 for p in payout_group if p["payout"] > 0)
+        total_predictions += slot_predictions
+
+        result.incomes.append(sum(p["payout"] for p in payout_group))
+        result.stakes.append(slot_stake)
+        result.profits.append(slot_profit)
+        result.accuracies.append((correct_predictions / total_predictions) * 100)
+        result.slots.append(UnixTimeS(int(slot)).to_milliseconds())
 
     # Update figures with the processed data
     result.update_figures()

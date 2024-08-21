@@ -7,7 +7,12 @@ from pdr_backend.pdr_dashboard.util.filters import (
     filter_table_by_range,
     check_condition,
 )
-
+from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
+from pdr_backend.pdr_dashboard.pages.predictoors import PredictoorsPage
+from pdr_backend.pdr_dashboard.dash_components.plots import (
+    PredictoorModalFigures,
+    get_predictoor_figures,
+)
 
 def get_callbacks_predictoors(app):
     @app.callback(
@@ -190,4 +195,46 @@ def get_callbacks_predictoors(app):
             "",
         )
 
-    # TODO: modals and graph
+
+    @app.callback(
+        Output("predictoors_modal", "is_open"),
+        Output("predictoors_page_table", "selected_rows"),
+        [Input("predictoors_page_table", "selected_rows"), Input("predictoors_modal", "is_open")],
+    )
+    def toggle_modal(selected_rows, is_open_input):
+        ctx = dash.callback_context
+        return toggle_modal_helper(
+            ctx,
+            selected_rows,
+            is_open_input,
+            ["predictoors_page_table", "predictoors_modal"],
+            "predictoors_modal",
+        )
+
+    @app.callback(
+        Output("predictoors_modal", "children"),
+        Input("predictoors_modal", "is_open"),
+        State("predictoors_page_table", "selected_rows"),
+        State("predictoors_page_table", "data"),
+    )
+    def update_graphs(is_open, selected_rows, predictoors_table_data):
+        predictoors_page = PredictoorsPage(app)
+        if not is_open or not selected_rows:
+            return predictoors_page.get_default_modal_content()
+
+        selected_row = predictoors_table_data[selected_rows[0]]
+
+        payouts = app.db_getter.payouts(
+            feed_addrs = [],
+            predictoor_addrs = [selected_row["full_addr"]],
+            start_date = 0
+        )
+
+        predictoor_figures: PredictoorModalFigures = get_predictoor_figures(payouts)
+
+        children = [
+            predictoors_page.get_feed_graphs_modal_header(selected_row),
+            predictoors_page.get_feed_graphs_modal_body(predictoor_figures.get_figures()),
+        ]
+
+        return children
