@@ -9,7 +9,9 @@ import pandas as pd
 
 
 @enforce_types
-def _extract_bars(data: pd.DataFrame, metric: str, threshold: float = 50000):
+def _extract_bars(
+    data: pd.DataFrame, metric: str, threshold: Union[float, int] = 50000
+):
     """
     For loop which compiles the various bars: dollar, volume, or tick.
 
@@ -24,14 +26,12 @@ def _extract_bars(data: pd.DataFrame, metric: str, threshold: float = 50000):
     list_bars = []
     cache: list = []
     start_tm = None
-    cum_ticks, cum_dollar_value, cum_volume, cache, high_price, low_price = (
-        0,
-        0.0,
-        0.0,
-        [],
-        -np.inf,
-        np.inf,
-    )
+    cum_ticks = 0
+    cum_dollar_value = 0.0
+    cum_volume = 0.0
+    bar_cache = []
+    high_price = -np.inf
+    low_price = np.inf
 
     # Iterate over rows
     for row in data.values:
@@ -56,7 +56,7 @@ def _extract_bars(data: pd.DataFrame, metric: str, threshold: float = 50000):
             low_price = low
 
         # Update cache
-        cache.append(
+        bar_cache.append(
             [
                 timestamp,
                 open_price,
@@ -92,17 +92,15 @@ def _extract_bars(data: pd.DataFrame, metric: str, threshold: float = 50000):
                     cum_ticks,
                 ]
             )
-            cum_ticks, cum_dollar_value, cum_volume, cache, high_price, low_price = (
-                0,
-                0.0,
-                0.0,
-                [],
-                -np.inf,
-                np.inf,
-            )
+            cum_ticks = 0
+            cum_dollar_value = 0.0
+            cum_volume = 0.0
+            bar_cache = []
+            high_price = -np.inf
+            low_price = np.inf
 
     if not start_tm:
-        start_tm = cache[0][0]
+        start_tm = bar_cache[0][0]
     return list_bars, start_tm
 
 

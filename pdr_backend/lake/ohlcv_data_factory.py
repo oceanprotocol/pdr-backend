@@ -86,7 +86,6 @@ class OhlcvDataFactory:
         asyncio.run(self._update_rawohlcv_files(fin_ut))
         logger.info("Update all rawohlcv files: done")
         rawohlcv_dfs = self._load_rawohlcv_files(fin_ut)
-
         for feed in self.ss.feeds:
             columns = [
                 "timestamp",
@@ -99,29 +98,24 @@ class OhlcvDataFactory:
                 "Cumulative Ticks",
             ]
             df = rawohlcv_dfs[str(feed.exchange)][str(feed.pair)]
-            for threshold_type in ["volume", "tick", "dollar"]:
-                if getattr(feed, f"{threshold_type}_threshold") is not None:
-                    logger.info(f"Get {threshold_type} bars for %s", feed)
-                    bars = []
-                    df_pandas = df.to_pandas()
-                    if threshold_type == "volume" and feed.volume_threshold:
-                        bars, _ = get_volume_bars(
-                            df_pandas, feed.volume_threshold.threshold()
-                        )
-                    elif threshold_type == "tick" and feed.tick_threshold:
-                        bars, _ = get_tick_bars(
-                            df_pandas, feed.tick_threshold.threshold()
-                        )
-                    elif threshold_type == "dollar" and feed.dollar_threshold:
-                        bars, _ = get_dollar_bars(
-                            df_pandas, feed.dollar_threshold.threshold()
-                        )
-                    else:
-                        raise ValueError(f"Unknown threshold type: {threshold_type}")
-                    bars_df = pl.DataFrame(bars, schema=columns).with_columns(
-                        pl.col("timestamp").cast(pl.Int64)
-                    )
-                    rawohlcv_dfs[str(feed.exchange)][str(feed.pair)] = bars_df
+            prefix_to_threshold_type = {"vb": "volume", "db": "dollar", "tb": "tick"}
+            if feed.threshold is not None:
+                threshold_type = prefix_to_threshold_type.get(feed.threshold.prefix)
+                logger.info(f"Get {threshold_type} bars for %s", feed)
+                bars = []
+                df_pandas = df.to_pandas()
+                if threshold_type == "volume":
+                    bars, _ = get_volume_bars(df_pandas, feed.threshold.threshold())
+                elif threshold_type == "tick":
+                    bars, _ = get_tick_bars(df_pandas, feed.threshold.threshold())
+                elif threshold_type == "dollar":
+                    bars, _ = get_dollar_bars(df_pandas, feed.threshold.threshold())
+                else:
+                    raise ValueError(f"Unknown threshold type: {threshold_type}")
+                bars_df = pl.DataFrame(bars, schema=columns).with_columns(
+                    pl.col("timestamp").cast(pl.Int64)
+                )
+                rawohlcv_dfs[str(feed.exchange)][str(feed.pair)] = bars_df
 
         mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
         logger.info("Get historical data, across many exchanges & pairs: done.")
