@@ -185,23 +185,13 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
     pairs = ArgPairs.from_str(pairs_list_str)
 
     if isinstance(threshold_str_list[0], ArgThreshold):
-        if len(pairs) != len(threshold_str_list):
-            raise ValueError(
-                "The lists 'pairs' and 'thresholds' do not have the same length."
-            )
-        feeds = [
-            ArgFeed(exchange_str, signal_str, pair_str, timeframe_str, threshold_str)
-            for signal_str in signal_str_list
-            for pair_str, threshold_str in zip(pairs, threshold_str_list)
-            for timeframe_str in timeframe_str_list
-        ]
+        feeds = argfeed_with_threshold(
+            exchange_str, signal_str_list, pairs, timeframe_str_list, threshold_str_list
+        )
     else:
-        feeds = [
-            ArgFeed(exchange_str, signal_str, pair_str, timeframe_str)
-            for signal_str in signal_str_list
-            for pair_str in pairs
-            for timeframe_str in timeframe_str_list
-        ]
+        feeds = argfeed_without_threshold(
+            exchange_str, signal_str_list, pairs, timeframe_str_list
+        )
 
     return feeds
 
@@ -260,3 +250,27 @@ def _pack_feeds_str(feeds: List[ArgFeed]) -> List[str]:
         strs.append(s)
 
     return strs
+
+
+def argfeed_with_threshold(
+    exchange_str, signal_str_list, pairs, timeframe_str_list, threshold_str_list
+):
+    if len(pairs) != len(threshold_str_list):
+        raise ValueError(
+            "The lists 'pairs' and 'thresholds' do not have the same length."
+        )
+    return [
+        ArgFeed(exchange_str, signal_str, pair_str, timeframe_str, threshold_str)
+        for signal_str in signal_str_list
+        for pair_str, threshold_str in zip(pairs, threshold_str_list)
+        for timeframe_str in timeframe_str_list
+    ]
+
+
+def argfeed_without_threshold(exchange_str, signal_str_list, pairs, timeframe_str_list):
+    return [
+        ArgFeed(exchange_str, signal_str, pair_str, timeframe_str)
+        for signal_str in signal_str_list
+        for pair_str in pairs
+        for timeframe_str in timeframe_str_list
+    ]
