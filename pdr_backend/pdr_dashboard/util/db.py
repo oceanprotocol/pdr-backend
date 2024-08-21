@@ -118,7 +118,6 @@ class DBGetter:
 
         return self._query_db(query)
 
-
     @enforce_types
     def feed_subscription_stats(self, network_name: str):
         opf_addresses = get_opf_addresses(network_name)
