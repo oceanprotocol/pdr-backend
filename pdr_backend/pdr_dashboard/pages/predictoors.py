@@ -36,7 +36,7 @@ class PredictoorsPage(TabularPage):
     def get_filters(self):
         return html.Div(
             [
-                self.get_input_filter("APY"),
+                self.get_input_filter("APR"),
                 self.get_input_filter("Accuracy", "predictoors"),
                 self.get_input_filter("Gross Income"),
                 self.get_input_filter("Nr Feeds"),
@@ -152,7 +152,7 @@ class PredictoorsPage(TabularPage):
                 data_item["stake_count"]
             )
             temp_pred_item["income_from_stakes_(OCEAN)"] = data_item["total_profit"]
-            temp_pred_item["apy"] = data_item["apy"]
+            temp_pred_item["apr"] = data_item["apr"]
 
             new_predictoor_data.append(temp_pred_item)
 
