@@ -8,8 +8,8 @@ from pdr_backend.lake.alt_bar import (
 )
 
 
-@pytest.fixture
-def sample_data():
+@pytest.fixture(name="sample_data")
+def fixture_sample_data():
     data = {
         "timestamp": pd.date_range(start="2024-01-01", periods=5, freq="min"),
         "open": [100, 101, 102, 103, 104],
@@ -19,9 +19,7 @@ def sample_data():
         "volume": [1000, 1500, 2000, 2500, 3000],
     }
     df = pd.DataFrame(data)
-    print(sample_data)
     return df.sort_values(by="timestamp", ascending=True)
-
 
 def test_extract_bars_dollar_metric(sample_data):
     bars, start_tm = _extract_bars(

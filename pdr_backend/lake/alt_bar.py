@@ -1,5 +1,4 @@
-import logging
-from typing import List, Union
+from typing import Union
 import numpy as np
 
 from enforce_typing import enforce_types
@@ -15,12 +14,11 @@ def _extract_bars(
     """
     For loop which compiles the various bars: dollar, volume, or tick.
 
-    We did investigate the use of trying to solve this in a vectorised manner but found that a For loop worked well.
-
-    :param data: raw ohlcv data from kaiko Contains 6 columns - timestamp, open, high, low, close and volume.
+    :param data: raw ohlcv data from kaiko Contains 6 columns 
+                - timestamp, open, high, low, close and volume.
     :param metric: cum_ticks, cum_dollar_value, cum_volume
     :param threshold: A cumulative value above this threshold triggers a sample to be taken.
-    :return: The financial data structure with the updated start timestamp since last bar.
+    :return: list of bars and updated start timestamp since last bar.
     """
 
     list_bars = []
@@ -105,14 +103,9 @@ def get_dollar_bars(rawohlcv_df: pd.DataFrame, threshold: float):
     """
     Creates the dollar bars: timestamp, open, high, low, close, cum_vol, cum_dollar, and cum_ticks.
 
-    Following the paper "The Volume Clock: Insights into the high frequency paradigm" by Lopez de Prado, et al,
-    it is suggested that using 1/50 of the average daily dollar value, would result in more desirable statistical
-    properties.
-
-    :param file_path: File path pointing to csv data.
+    :param rawohlcv: from kaiko
     :param threshold: A cumulative value above this threshold triggers a sample to be taken.
-    :param batch_size: The number of rows per batch. Less RAM = smaller batch size.
-    :return: Dataframe of dollar bars
+    :return: list of of dollar bars and updated starting timestamp
     """
     list_bars, newest_ut_value = _extract_bars(
         rawohlcv_df, metric="cum_dollar_value", threshold=threshold
@@ -124,13 +117,9 @@ def get_volume_bars(rawohlcv_df: pd.DataFrame, threshold: float):
     """
     Creates the volume bars: date_time, open, high, low, close, cum_vol, cum_dollar, and cum_ticks.
 
-    Following the paper "The Volume Clock: Insights into the high frequency paradigm" by Lopez de Prado, et al,
-    it is suggested that using 1/50 of the average daily volume, would result in more desirable statistical properties.
-
-    :param file_path: File path pointing to csv data.
+    :param rawohlcv: from kaiko
     :param threshold: A cumulative value above this threshold triggers a sample to be taken.
-    :param batch_size: The number of rows per batch. Less RAM = smaller batch size.
-    :return: Dataframe of volume bars
+    :return: list of of dollar bars and updated starting timestamp
     """
     list_bars, newest_ut_value = _extract_bars(
         rawohlcv_df, metric="cum_volume", threshold=threshold
@@ -142,10 +131,9 @@ def get_tick_bars(rawohlcv_df: pd.DataFrame, threshold: float):
     """
     Creates the tick bars: date_time, open, high, low, close, cum_vol, cum_dollar, and cum_ticks.
 
-    :param file_path: File path pointing to csv data.
+    :param rawohlcv: from kaiko
     :param threshold: A cumulative value above this threshold triggers a sample to be taken.
-    :param batch_size: The number of rows per batch. Less RAM = smaller batch size.
-    :return: Dataframe of tick bars
+    :return: list of of dollar bars and updated starting timestamp
     """
     list_bars, newest_ut_value = _extract_bars(
         rawohlcv_df, metric="cum_ticks", threshold=float(int(threshold))
