@@ -24,6 +24,7 @@ def test_feeds_search_input(setup_app, dash_duo):
     _input_action(dash_duo, "#search-input-Feeds", "#feeds_table", "ADA", 2)
 
 
+# pylint: disable=too-many-statements
 def test_predictoors_search_input(setup_app, dash_duo):
     """
     Test the search input in the "Predictoors" table.
@@ -130,7 +131,7 @@ def test_timeframe_metrics(setup_app, dash_duo):
         "#predictoors_table tbody tr:nth-child(2) td:nth-child(4)"
     ).text
     metric_accuracy = dash_duo.find_element("#accuracy_metric").text
-    assert table_accuracy + ".0%" == metric_accuracy
+    assert table_accuracy == metric_accuracy
 
     table_stake = dash_duo.find_element(
         "#predictoors_table tbody tr:nth-child(2) td:nth-child(5)"
@@ -162,3 +163,20 @@ def test_predictoors_feed_only_switch(setup_app, dash_duo):
 
     feeds_table_len = len(dash_duo.find_elements("#feeds_table tbody tr"))
     assert feeds_table_len == 6
+
+
+def test_navigation(setup_app, dash_duo):
+    app = setup_app
+    start_server_and_wait(dash_duo, app)
+
+    # Default page is Home
+    dash_duo.wait_for_element_by_id("plots_container", timeout=10)
+
+    # Navigate to Feeds
+    dash_duo.wait_for_element("#navbar-container a[href='/feeds']").click()
+    dash_duo.wait_for_element_by_id("feeds_page_metrics_row", timeout=10)
+    dash_duo.wait_for_element_by_id("feeds_page_table", timeout=10)
+
+    # Navigate to Home
+    dash_duo.wait_for_element("#navbar-container a[href='/']").click()
+    dash_duo.wait_for_element_by_id("plots_container", timeout=10)

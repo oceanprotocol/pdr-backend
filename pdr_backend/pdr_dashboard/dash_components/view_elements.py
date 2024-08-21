@@ -1,208 +1,25 @@
+import os
+from pathlib import Path
+
 import dash_bootstrap_components as dbc
-from dash import dash_table, dcc, html
-from pdr_backend.pdr_dashboard.dash_components.util import (
-    get_feed_ids_based_on_predictoors_from_db,
-)
+import yaml
+from dash import dcc, html
+from pdr_backend.pdr_dashboard.util.format import format_value
 
-
-def col_to_human(col):
-    col = col.replace("avg_", "")
-    col = col.replace("total_", "")
-
-    return col.replace("_", " ").title()
+NAV_ITEMS = [{"text": "Home", "location": "/"}, {"text": "Feeds", "location": "/feeds"}]
 
 
 # pylint: disable=too-many-return-statements
 def get_information_text(tooltip_id: str):
-    match tooltip_id:
-        case "tooltip-accuracy_metric":
-            return """Average accuracy of predictions
-                within the selected timeframe and for the selected predictoors and feeds."""
-        case "tooltip-profit_metric":
-            return """Total profit generated from predictions
-                within the selected timeframe and for the selected predictoors and feeds."""
-        case "tooltip-costs_metric":
-            return """Transaction fee costs for predicting and claiming payouts
-                for each slot individually within the selected timeframe 
-                and for the selected predictoors and feeds."""
-        case "tooltip-stake_metric":
-            return """Average stake placed on each prediction
-                within the selected timeframe and for the selected predictoors and feeds."""
-        case "tooltip-switch-predictoors":
-            return """Toggle this switch to automatically select predictoors
-                that are pre-configured in the ppss.yaml settings."""
-        case "tooltip-switch-feeds":
-            return """Toggle this switch to view only the feeds associated with
-                the selected predictoors."""
-        case _:
-            return ""
+    fiile = os.path.join(Path(__file__).parent, "tooltips.yaml")
 
+    try:
+        with open(fiile, "r") as file:
+            tooltips = yaml.safe_load(file.read())
+    except FileNotFoundError:
+        return ""
 
-def get_tooltip_and_button(value_id: str):
-    return html.Span(
-        [
-            dbc.Button(
-                "?", id=f"tooltip-target-{value_id}", className="tooltip-question-mark"
-            ),
-            dbc.Tooltip(
-                get_information_text(f"tooltip-{value_id}"),
-                target=f"tooltip-target-{value_id}",
-                placement="right",
-            ),
-        ]
-    )
-
-
-def get_feeds_switch():
-    return html.Div(
-        [
-            dbc.Switch(
-                id="toggle-switch-predictoor-feeds",
-                label="Predictoor feeds only",
-                value=True,
-            ),
-            get_tooltip_and_button("switch-feeds"),
-        ],
-        style={"display": "flex"},
-    )
-
-
-def get_predictoors_switch(selected_items):
-    return html.Div(
-        [
-            dbc.Switch(
-                id="show-favourite-addresses",
-                label="Select configured predictoors",
-                value=bool(selected_items),
-            ),
-            get_tooltip_and_button("switch-predictoors"),
-        ],
-        style={"display": "flex"},
-    )
-
-
-def get_feeds_data(app):
-    data = app.feeds_data
-
-    columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
-    hidden_columns = ["contract"]
-
-    return (columns, hidden_columns), data
-
-
-def get_predictoors_data(app):
-    columns = [
-        {"name": col_to_human(col), "id": col} for col in app.predictoors_data[0].keys()
-    ]
-    hidden_columns = ["user"]
-
-    if app.favourite_addresses:
-        data = [
-            p for p in app.predictoors_data if p["user"] in app.favourite_addresses
-        ] + [
-            p for p in app.predictoors_data if p["user"] not in app.favourite_addresses
-        ]
-    else:
-        data = app.predictoors_data
-
-    return (columns, hidden_columns), data
-
-
-def get_input_column(app):
-    feed_cols, feed_data = get_feeds_data(app)
-    predictoor_cols, predictoor_data = get_predictoors_data(app)
-
-    selected_predictoors = list(range(len(app.favourite_addresses)))
-
-    if app.favourite_addresses:
-        feed_ids = get_feed_ids_based_on_predictoors_from_db(
-            app.lake_dir,
-            app.favourite_addresses,
-        )
-
-        if feed_ids:
-            feed_data = [
-                feed for feed in app.feeds_data if feed["contract"] in feed_ids
-            ]
-
-        selected_feeds = list(range(len(feed_ids)))
-    else:
-        selected_feeds = []
-
-    return html.Div(
-        [
-            html.Div(
-                get_table(
-                    table_id="predictoors_table",
-                    table_name="Predictoors",
-                    searchable_field="user",
-                    columns=predictoor_cols,
-                    selected_items=selected_predictoors,
-                    data=predictoor_data,
-                    length=len(app.predictoors_data),
-                ),
-                id="predictoors_container",
-            ),
-            html.Div(
-                get_table(
-                    table_id="feeds_table",
-                    table_name="Feeds",
-                    searchable_field="pair",
-                    columns=feed_cols,
-                    data=feed_data,
-                    selected_items=selected_feeds,
-                    length=len(app.feeds_data),
-                ),
-                id="feeds_container",
-                style={
-                    "marginTop": "20px",
-                    "display": "flex",
-                    "flexDirection": "column",
-                    "justifyContent": "flex-end",
-                },
-            ),
-        ],
-        style={
-            "height": "100%",
-            "width": "30%",
-            "display": "flex",
-            "flexDirection": "column",
-            "justifyContent": "space-between",
-        },
-    )
-
-
-def get_graphs_column():
-    return html.Div(
-        [get_graphs_column_metrics_row(), get_graphs_column_plots_row()],
-        id="graphs_container",
-        style={
-            "height": "100%",
-            "width": "70%",
-            "display": "flex",
-            "flexDirection": "column",
-            "justifyContent": "start",
-            "paddingLeft": "50px",
-        },
-    )
-
-
-def get_graphs_column_metrics_row():
-    return html.Div(
-        [
-            get_metric(label="Avg Accuracy", value="0%", value_id="accuracy_metric"),
-            get_metric(label="Pred Profit", value="0 OCEAN", value_id="profit_metric"),
-            get_metric(label="Tx Costs", value="0 OCEAN", value_id="costs_metric"),
-            get_metric(label="Avg Stake", value="0 OCEAN", value_id="stake_metric"),
-            get_date_period_selection_component(),
-        ],
-        id="metrics_container",
-        style={
-            "height": "12%",
-            "display": "flex",
-            "justifyContent": "space-between",
-        },
-    )
+    return tooltips.get(tooltip_id, "")
 
 
 def get_date_period_selection_component():
@@ -224,30 +41,18 @@ def get_date_period_selection_component():
     )
 
 
-def get_graphs_column_plots_row():
-    return html.Div(
+def get_tooltip_and_button(value_id: str):
+    return html.Span(
         [
-            html.Div(id="accuracy_chart"),
-            html.Div(id="profit_chart"),
-            html.Div(
-                [
-                    html.Div(id="cost_chart", style={"width": "48%"}),
-                    html.Div(id="stake_chart", style={"width": "48%"}),
-                ],
-                style={
-                    "width": "100%",
-                    "display": "flex",
-                    "justifyContent": "space-between",
-                },
+            dbc.Button(
+                "?", id=f"tooltip-target-{value_id}", className="tooltip-question-mark"
             ),
-        ],
-        id="plots_container",
-        style={
-            "height": "88%",
-            "display": "flex",
-            "flexDirection": "column",
-            "justifyContent": "space-between",
-        },
+            dbc.Tooltip(
+                get_information_text(f"tooltip-{value_id}"),
+                target=f"tooltip-target-{value_id}",
+                placement="right",
+            ),
+        ]
     )
 
 
@@ -265,130 +70,70 @@ def get_metric(label, value, value_id):
                     "alignItems": "center",
                 },
             ),
-            html.Span(value, id=value_id, style={"fontWeight": "bold"}),
+            dcc.Loading(
+                id="loading",
+                type="default",
+                children=html.Span(
+                    format_value(value, value_id),
+                    id=value_id,
+                    style={"fontWeight": "bold"},
+                ),
+                custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
+            ),
         ],
         style={"display": "flex", "flexDirection": "column", "font-size": "20px"},
     )
 
 
-def get_layout(app):
+def get_layout():
     return html.Div(
         [
-            dcc.Store(id="user-payout-stats"),
-            html.H1(
-                "Predictoor dashboard",
-                id="page_title",
-            ),
-            dcc.Loading(
-                id="loading",
-                type="default",
-                children=get_main_container(app),
-                custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
-            ),
-        ],
-        style={"height": "100%"},
-    )
-
-
-def get_main_container(app):
-    return html.Div(
-        [get_input_column(app), get_graphs_column()],
-        className="main-container",
-    )
-
-
-def get_table(
-    table_id,
-    table_name,
-    searchable_field,
-    columns,
-    data,
-    selected_items=None,
-    length=0,
-):
-    return html.Div(
-        [
-            html.Div(
-                [
-                    html.Div(
-                        [
-                            html.Span(
-                                table_name, style={"fontSize": "20px", "height": "100%"}
-                            ),
-                            html.Span(
-                                id=f"table-rows-count-{table_id}",
-                                children=f"({length})",
-                                style={
-                                    "fontSize": "16px",
-                                    "color": "gray",
-                                    "hight": "100%",
-                                    "marginLeft": "4px",
-                                },
-                            ),
-                        ],
-                        style={
-                            "display": "flex",
-                            "justifyContet": "center",
-                            "alignItems": "center",
-                        },
-                    ),
-                    (
-                        get_feeds_switch()
-                        if table_name == "Feeds"
-                        else get_predictoors_switch(selected_items=selected_items)
-                    ),
-                ],
-                className="table-title",
-            ),
-            html.Div(
-                [
-                    dcc.Input(
-                        id=f"search-input-{table_name}",
-                        type="text",
-                        placeholder=f"Search for {searchable_field}",
-                        debounce=True,  # Trigger the input event after user stops typing
-                        style={"fontSize": "15px", "min-width": "100px"},
-                    ),
-                    html.Div(
-                        [
-                            html.Button(
-                                "Select All",
-                                id=f"select-all-{table_id}",
-                                n_clicks=0,
-                                className="button-select-all",
-                            ),
-                            html.Button(
-                                "Clear",
-                                id=f"clear-all-{table_id}",
-                                n_clicks=0,
-                                className="button-clear-all",
-                            ),
-                        ],
-                        className="wrap-with-gap",
-                    ),
-                ],
-                className="wrap-with-gap",
-            ),
-            dash_table.DataTable(
-                id=table_id,
-                columns=columns[0],
-                hidden_columns=columns[1],
-                data=data,
-                row_selectable="multi",  # Can be 'multi' for multiple rows
-                selected_rows=selected_items if selected_items else [],
-                sort_action="native",  # Enables data to be sorted
-                style_cell={"textAlign": "left"},
-                style_table={
-                    "height": "30vh",
-                    "width": "100%",
-                    "overflow": "auto",
-                    "paddingTop": "5px",
-                },
-                fill_width=True,
-            ),
-        ],
+            dcc.Location(id="url", refresh=False),
+            html.Div(id="navbar-container"),
+            html.Div(id="page-content"),
+        ]
     )
 
 
 def get_graph(figure):
     return dcc.Graph(figure=figure, style={"width": "100%", "height": "25vh"})
+
+
+def get_navbar(nav_items):
+    return dbc.NavbarSimple(
+        children=[
+            get_nav_item(item["text"], item["location"], item.get("active", False))
+            for item in nav_items
+        ],
+        brand_href="/",
+        color="transparent",
+        style={
+            "display": "flex",
+            "justifyContent": "center",
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+        },
+    )
+
+
+def get_nav_item(text: str, location: str, active: bool):
+    return dbc.NavItem(
+        dbc.NavLink(
+            text,
+            id=text.lower(),
+            href=location,
+            active=active,
+            style={"fontSize": "26px", "margin": "0 10px"},
+        )
+    )
+
+
+def get_search_bar(component_id, placeholder):
+    return (
+        dcc.Input(
+            id=component_id,
+            className="search-input",
+            type="text",
+            placeholder=placeholder,
+        ),
+    )

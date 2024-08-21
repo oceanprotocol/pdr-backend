@@ -71,19 +71,18 @@ class Subscription(LakeMapper):
 @enforce_types
 def mock_subscription(subscription_tuple: tuple) -> Subscription:
     (
+        subscription_id,
         pair_str,
         timeframe_str,
         source,
         timestamp,
         tx_id,
         last_price_value,
-        event_index,
         user,
     ) = subscription_tuple
 
-    ID = f"{pair_str}-{tx_id}-{event_index}"
     return Subscription(
-        ID=ID,
+        ID=subscription_id,
         pair=pair_str,
         timeframe=timeframe_str,
         source=source,
@@ -104,81 +103,100 @@ def mock_subscriptions() -> List[Subscription]:
 
 _SUBSCRIPTION_TUPS = [
     (
+        """0x18f54cc21b7a2fdd011bea06bba7801b280e3151-
+        0xe4599d8d1a02330fbc3a2a8fb4950f6d5a44d2e85fe750438246f535b47eda35-98""",
         "ETH/USDT",
         "5m",
         "binance",
         1698850800,  # Nov 01 2023 15:00 GMT/UTC
-        "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809592",
         "2.4979184013322233",
         98,
         "0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d",
     ),
     (
+        """0x18f54cc21b7a2fdd011bea06bba7801b280e3151-
+        0xe4599d8d1a02330fbc3a2a8fb4950f6d5a44d2e85fe750438246f535b47eda35-98""",
+        "ETH/USDT",
+        "5m",
+        "binance",
+        1699870200,  # Nov 01 2023 15:00 GMT/UTC
+        "4.11",
+        99,
+        "0x2433e002ed10b5d6a3d8d1e0c5d2083be9e37f1d",
+    ),
+    (
+        """0x9c4a2406e5aa0f908d6e816e5318b9fc8a507e1f-
+        0xe4599d8d1a02330fbc3a2a8fb4950f6d5a44d2e85fe750438246f535b47eda35-84""",
         "BTC/USDT",
         "5m",
         "kraken",
         1698937200,  # Nov 02 2023 15:00 GMT/UTC
-        "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809593",
         "2.4979184013322233",
         99,
         "0xabcdef0123456789abcdef0123456789abcdef01",
     ),
     (
+        """0x8165caab33131a4ddbf7dc79f0a8a4920b0b2553-
+        0x98cbb35e6180d2f8e7b50ee8cfbf9bb700a45dc56f0383fa448a782b80252457-28""",
         "LTC/USDT",
         "1h",
         "kraken",
         1699110000,  # Nov 04 2023 15:00 GMT/UTC
-        "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809594",
         "2.4979184013322233",
         100,
         "0x123456789abcdef0123456789abcdef01234567",
     ),
     (
+        """0x74a61f733bd9a2ce40d2e39738fe4912925c06dd-
+        0x98cbb35e6180d2f8e7b50ee8cfbf9bb700a45dc56f0383fa448a782b80252457-266""",
         "XRP/USDT",
         "5m",
         "binance",
         1699110000,  # Nov 04 2023 15:00 GMT/UTC
-        "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809595",
         "2.4979184013322233",
         101,
         "0xabcdef0123456789abcdef0123456789abcdef02",
     ),
     (
+        """0x55c6c33514f80b51a1f1b63c8ba229feb132cedb-
+        0x98cbb35e6180d2f8e7b50ee8cfbf9bb700a45dc56f0383fa448a782b80252457-252""",
         "DOGE/USDT",
         "5m",
         "kraken",
         1699110000,  # Nov 04 2023 15:00 GMT/UTC
-        "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809596",
         "2.4979184013322233",
         102,
         "0xabcdef0123456789abcdef0123456789abcdef03",
     ),
     (
+        """0x31fabe1fc9887af45b77c7d1e13c5133444ebfbd-
+        0x98cbb35e6180d2f8e7b50ee8cfbf9bb700a45dc56f0383fa448a782b80252457-238""",
         "ADA/USDT",
         "1h",
         "kraken",
         1699200000,  # Nov 05 2023 15:00 GMT/UTC
-        "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809597",
         "2.4979184013322233",
         103,
         "0xabcdef0123456789abcdef0123456789abcdef04",
     ),
     (
+        """0x30f1c55e72fe105e4a1fbecdff3145fc14177695-
+        0x98cbb35e6180d2f8e7b50ee8cfbf9bb700a45dc56f0383fa448a782b80252457-224""",
         "DOT/USDT",
         "5m",
         "binance",
         1699200000,  # Nov 05 2023 15:00 GMT/UTC
-        "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809598",
         "2.4979184013322233",
         104,
         "0xabcdef0123456789abcdef0123456789abcdef05",
     ),
     (
+        """0x2d8e2267779d27c2b3ed5408408ff15d9f3a3152-
+        0x98cbb35e6180d2f8e7b50ee8cfbf9bb700a45dc56f0383fa448a782b80252457-210""",
         "LINK/USDT",
         "1h",
         "kraken",
         1699286400,  # Nov 06 2023 15:00 GMT/UTC
-        "0x01d3285e0e3b83a4c029142477c0573c3be5317ff68223703696093b27809599",
         "2.4979184013322233",
         105,
         "0xabcdef0123456789abcdef0123456789abcdef06",

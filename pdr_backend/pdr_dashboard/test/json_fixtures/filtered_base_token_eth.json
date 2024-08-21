@@ -1,0 +1,30 @@
+[
+  {
+    "": "",
+    "Addr": "0x30f...77695",
+    "Base Token": "ETH",
+    "Quote Token": "USDT",
+    "Exchange": "Binance",
+    "Time": "5m",
+    "Avg Accuracy": "48.94%",
+    "Avg Stake Per Epoch (Ocean)": "159.64",
+    "Volume (Ocean)": "37.51K",
+    "Price (Ocean)": "0.0",
+    "Sales": "107 (107 DF)",
+    "Sales Revenue (Ocean)": "0.0"
+  },
+  {
+    "": "",
+    "Addr": "0xaa6...710c5",
+    "Base Token": "ETH",
+    "Quote Token": "USDT",
+    "Exchange": "Binance",
+    "Time": "1h",
+    "Avg Accuracy": "50.0%",
+    "Avg Stake Per Epoch (Ocean)": "931.99",
+    "Volume (Ocean)": "14.91K",
+    "Price (Ocean)": "0.0",
+    "Sales": "107 (107 DF)",
+    "Sales Revenue (Ocean)": "0.0"
+  }
+]

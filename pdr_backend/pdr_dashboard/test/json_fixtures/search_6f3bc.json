@@ -1,0 +1,16 @@
+[
+  {
+    "": "",
+    "Addr": "0x3fb...6f3bc",
+    "Base Token": "SOL",
+    "Quote Token": "USDT",
+    "Exchange": "Binance",
+    "Time": "5m",
+    "Avg Accuracy": "49.06%",
+    "Avg Stake Per Epoch (Ocean)": "182.83",
+    "Volume (Ocean)": "38.76K",
+    "Price (Ocean)": "0.0",
+    "Sales": "107 (107 DF)",
+    "Sales Revenue (Ocean)": "0.0"
+  }
+]
