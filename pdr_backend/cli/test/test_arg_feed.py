@@ -40,6 +40,7 @@ def test_ArgFeed_main_constructor():
     # not ok - Type Error
     tups = [
         (),
+        ("binance"),
     ]
     for feed_tup in tups:
         with pytest.raises(TypeError):
