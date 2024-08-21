@@ -1,12 +1,13 @@
 import dash
 
+
 def toggle_modal_helper(
-        ctx,
-        selected_rows,
-        is_open_input,
-        safe_trigger_ids=None,
-        modal_id=None,
-    ):
+    ctx,
+    selected_rows,
+    is_open_input,
+    safe_trigger_ids=None,
+    modal_id=None,
+):
     triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     if triggered_id not in safe_trigger_ids:

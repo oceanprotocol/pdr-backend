@@ -163,7 +163,6 @@ class PredictoorsPage(TabularPage):
 
         return columns, formatted_data, new_predictoor_data
 
-    # TODO: remove/adjust everything below
     def get_modal(self):
         return dbc.Modal(
             self.get_default_modal_content(),
@@ -174,10 +173,10 @@ class PredictoorsPage(TabularPage):
         figures = FeedModalFigures()
         return [
             dbc.ModalHeader("Loading Predictoor data", id="predictoors-modal-header"),
-            self.get_feed_graphs_modal_body(figures.get_figures()),
+            self.get_predictoor_graphs_modal_body(figures.get_figures()),
         ]
 
-    def get_feed_graphs_modal_header(self, selected_row):
+    def get_predictoor_graphs_modal_header(self, selected_row):
         return html.Div(
             html.Span(
                 f"""{selected_row["addr"]} - Predictoor Data
@@ -187,7 +186,7 @@ class PredictoorsPage(TabularPage):
             id="predictoors-modal-header",
         )
 
-    def get_feed_graphs_modal_body(self, figures):
+    def get_predictoor_graphs_modal_body(self, figures):
         return html.Div(
             [
                 html.Div(get_graph(fig), style={"width": "45%", "margin": "0 auto"})

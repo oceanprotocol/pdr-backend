@@ -98,8 +98,6 @@ class FeedModalFigures:
         ]
 
 
-
-
 # pylint: disable=too-many-instance-attributes
 class PredictoorModalFigures:
     def __init__(self):
@@ -161,8 +159,6 @@ class PredictoorModalFigures:
             self.stakes_fig,
             self.profits_fig,
         ]
-
-
 
 
 # pylint: disable=too-many-instance-attributes
@@ -560,7 +556,7 @@ def get_predictoor_figures(payouts: List):
 
     if not payouts:
         return result
-    
+
     # Sort payouts by slots and group by slot
     payouts.sort(key=itemgetter("slot"))
     grouped_payouts = {

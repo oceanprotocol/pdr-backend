@@ -237,7 +237,6 @@ class DBGetter:
         # Execute the query
         return self._query_db(query, scalar=True)
 
-
     def payouts(
         self,
         feed_addrs: Union[List[str], None],
@@ -256,7 +255,7 @@ class DBGetter:
 
         # Start constructing the SQL query
         query = f"SELECT * FROM {Payout.get_lake_table_name()}"
-        
+
         # List to hold the WHERE clause conditions
         conditions = []
 
@@ -267,7 +266,9 @@ class DBGetter:
 
         # Adding conditions for predictoor addresses if provided
         if predictoor_addrs:
-            predictoor_conditions = " OR ".join(["ID LIKE %s" for _ in predictoor_addrs])
+            predictoor_conditions = " OR ".join(
+                ["ID LIKE %s" for _ in predictoor_addrs]
+            )
             conditions.append(f"({predictoor_conditions})")
 
         # Adding condition for the start date if provided
@@ -295,8 +296,6 @@ class DBGetter:
 
         # Execute the query
         return self._query_db(query)
-
-
 
     @enforce_types
     def feeds_stats(self):

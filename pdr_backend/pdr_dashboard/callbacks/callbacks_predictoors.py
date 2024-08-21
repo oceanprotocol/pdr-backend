@@ -14,6 +14,7 @@ from pdr_backend.pdr_dashboard.dash_components.plots import (
     get_predictoor_figures,
 )
 
+
 def get_callbacks_predictoors(app):
     @app.callback(
         Output("predictoors_page_table", "data"),
@@ -195,11 +196,13 @@ def get_callbacks_predictoors(app):
             "",
         )
 
-
     @app.callback(
         Output("predictoors_modal", "is_open"),
         Output("predictoors_page_table", "selected_rows"),
-        [Input("predictoors_page_table", "selected_rows"), Input("predictoors_modal", "is_open")],
+        [
+            Input("predictoors_page_table", "selected_rows"),
+            Input("predictoors_modal", "is_open"),
+        ],
     )
     def toggle_modal(selected_rows, is_open_input):
         ctx = dash.callback_context
@@ -225,16 +228,16 @@ def get_callbacks_predictoors(app):
         selected_row = predictoors_table_data[selected_rows[0]]
 
         payouts = app.db_getter.payouts(
-            feed_addrs = [],
-            predictoor_addrs = [selected_row["full_addr"]],
-            start_date = 0
+            feed_addrs=[], predictoor_addrs=[selected_row["full_addr"]], start_date=0
         )
 
         predictoor_figures: PredictoorModalFigures = get_predictoor_figures(payouts)
 
         children = [
             predictoors_page.get_feed_graphs_modal_header(selected_row),
-            predictoors_page.get_feed_graphs_modal_body(predictoor_figures.get_figures()),
+            predictoors_page.get_feed_graphs_modal_body(
+                predictoor_figures.get_figures()
+            ),
         ]
 
         return children

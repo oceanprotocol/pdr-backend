@@ -15,6 +15,7 @@ from pdr_backend.pdr_dashboard.util.filters import (
 )
 from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
 
+
 def get_callbacks_feeds(app):
     @app.callback(
         Output("feeds_page_table", "data"),
@@ -167,7 +168,7 @@ def get_callbacks_feeds(app):
             selected_rows,
             is_open_input,
             ["feeds_page_table", "feeds_modal"],
-            "feeds_modal"
+            "feeds_modal",
         )
 
     @app.callback(
