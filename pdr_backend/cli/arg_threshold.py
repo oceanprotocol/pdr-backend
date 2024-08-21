@@ -31,7 +31,7 @@ class ArgThreshold:
 class ArgThresholds(List[ArgThreshold]):
     def __init__(self, thresholds: Union[List[str], List[ArgThreshold]]):
         if not isinstance(thresholds, list):
-            raise TypeError("hresholds must be a list")
+            raise TypeError("thresholds must be a list")
 
         thres = []
         for thre in thresholds:

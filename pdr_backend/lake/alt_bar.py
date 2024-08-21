@@ -24,7 +24,6 @@ def _extract_bars(
     """
 
     list_bars = []
-    cache: list = []
     start_tm = None
     cum_ticks = 0
     cum_dollar_value = 0.0
@@ -50,10 +49,8 @@ def _extract_bars(
         cum_volume = cum_volume + volume
 
         # Check min max
-        if high > high_price:
-            high_price = high
-        if low <= low_price:
-            low_price = low
+        high_price = max(high_price, high)
+        low_price = min(low_price, low)
 
         # Update cache
         bar_cache.append(
@@ -73,8 +70,8 @@ def _extract_bars(
         if eval(metric) >= threshold:  # pylint: disable=eval-used
             # Create bars
             start_tm = timestamp
-            tp = cache[0][0]
-            open_price = cache[0][1]
+            tp = bar_cache[0][0]
+            open_price = bar_cache[0][1]
             low_price = min(low_price, low)
             high_price = max(high_price, high)
             close_price = close
