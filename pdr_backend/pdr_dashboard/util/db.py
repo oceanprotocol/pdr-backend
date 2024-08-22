@@ -267,8 +267,6 @@ class DBGetter:
 
         query = query % tuple(params)
 
-        print("query--->", query)
-
         # Execute the query
         return self._query_db(query)
 

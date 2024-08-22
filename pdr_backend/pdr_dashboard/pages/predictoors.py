@@ -1,21 +1,17 @@
 from typing import List, Dict, Any, Tuple
 
 from dash import html, dash_table
-import dash_bootstrap_components as dbc
 from pdr_backend.pdr_dashboard.util.data import (
     get_feed_column_ids,
 )
-from pdr_backend.pdr_dashboard.dash_components.plots import (
-    FeedModalFigures,
-)
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
-    get_graph,
     get_search_bar,
 )
 from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.pages.common import TabularPage
 from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
+from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 
 
 class PredictoorsPage(TabularPage):
@@ -28,7 +24,9 @@ class PredictoorsPage(TabularPage):
                 self.get_metrics_row(),
                 self.get_search_bar_row(),
                 self.get_main_container(),
-                self.get_modal(),
+                get_modal(
+                    modal_id="predictoors_modal",
+                ),
             ],
             className="page-layout",
         )
@@ -162,38 +160,6 @@ class PredictoorsPage(TabularPage):
         formatted_data = format_table(new_predictoor_data, columns)
 
         return columns, formatted_data, new_predictoor_data
-
-    def get_modal(self):
-        return dbc.Modal(
-            self.get_default_modal_content(),
-            id="predictoors_modal",
-        )
-
-    def get_default_modal_content(self):
-        figures = FeedModalFigures()
-        return [
-            dbc.ModalHeader("Loading Predictoor data", id="predictoors-modal-header"),
-            self.get_predictoor_graphs_modal_body(figures.get_figures()),
-        ]
-
-    def get_predictoor_graphs_modal_header(self, selected_row):
-        return html.Div(
-            html.Span(
-                f"""{selected_row["addr"]} - Predictoor Data
-                """,
-                style={"fontWeight": "bold", "fontSize": "20px"},
-            ),
-            id="predictoors-modal-header",
-        )
-
-    def get_predictoor_graphs_modal_body(self, figures):
-        return html.Div(
-            [
-                html.Div(get_graph(fig), style={"width": "45%", "margin": "0 auto"})
-                for fig in figures
-            ],
-            id="predictoors-modal-body",
-        )
 
 
 def key_id_name(key: str) -> str:

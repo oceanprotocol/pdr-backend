@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from itertools import product, groupby
 from typing import List, Optional, Union, NamedTuple
 from operator import itemgetter
@@ -11,8 +12,19 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.util.time_types import UnixTimeS
 
 
+class ModalFigures(ABC):
+
+    @abstractmethod
+    def get_figures(self):
+        pass
+
+    @abstractmethod
+    def update_figures(self):
+        pass
+
+
 # pylint: disable=too-many-instance-attributes
-class FeedModalFigures:
+class FeedModalFigures(ModalFigures):
     def __init__(self):
         fig_config = {
             "sales_fig": {
@@ -99,7 +111,7 @@ class FeedModalFigures:
 
 
 # pylint: disable=too-many-instance-attributes
-class PredictoorModalFigures:
+class PredictoorModalFigures(ModalFigures):
     def __init__(self):
         fig_config = {
             "incomes_fig": {

@@ -1,22 +1,17 @@
 from typing import List, Dict, Any, Tuple, Union
 
 from dash import html, dcc, dash_table
-import dash_bootstrap_components as dbc
 from pdr_backend.pdr_dashboard.util.data import (
     get_feed_column_ids,
     find_with_key_value,
 )
-from pdr_backend.pdr_dashboard.dash_components.plots import (
-    FeedModalFigures,
-)
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
-    get_graph,
     get_search_bar,
 )
 from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.pages.common import TabularPage, Filter, add_to_filter
-
+from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 
 filters = [
     {"name": "base_token", "placeholder": "Base Token", "options": []},
@@ -54,7 +49,9 @@ class FeedsPage(TabularPage):
                 self.get_metrics_row(),
                 self.get_search_bar_row(),
                 self.get_main_container(),
-                self.get_modal(),
+                get_modal(
+                    modal_id="feeds_modal",
+                ),
             ],
             className="page-layout",
         )
@@ -248,36 +245,3 @@ class FeedsPage(TabularPage):
         formatted_data = format_table(new_feed_data, columns)
 
         return columns, formatted_data, new_feed_data
-
-    def get_modal(self):
-        return dbc.Modal(
-            self.get_default_modal_content(),
-            id="feeds_modal",
-        )
-
-    def get_default_modal_content(self):
-        figures = FeedModalFigures()
-        return [
-            dbc.ModalHeader("Loading feed data", id="feeds-modal-header"),
-            self.get_feed_graphs_modal_body(figures.get_figures()),
-        ]
-
-    def get_feed_graphs_modal_header(self, selected_row):
-        return html.Div(
-            html.Span(
-                f"""{selected_row["base_token"]}-{selected_row["quote_token"]}
-                {selected_row["time"]} {selected_row["exchange"]}
-                """,
-                style={"fontWeight": "bold", "fontSize": "20px"},
-            ),
-            id="feeds-modal-header",
-        )
-
-    def get_feed_graphs_modal_body(self, figures):
-        return html.Div(
-            [
-                html.Div(get_graph(fig), style={"width": "45%", "margin": "0 auto"})
-                for fig in figures
-            ],
-            id="feeds-modal-body",
-        )

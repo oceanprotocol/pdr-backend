@@ -8,10 +8,15 @@ from pdr_backend.pdr_dashboard.util.filters import (
     check_condition,
 )
 from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
-from pdr_backend.pdr_dashboard.pages.predictoors import PredictoorsPage
 from pdr_backend.pdr_dashboard.dash_components.plots import (
     PredictoorModalFigures,
     get_predictoor_figures,
+)
+
+from pdr_backend.pdr_dashboard.dash_components.modal import (
+    get_graphs_modal_header,
+    get_graphs_modal_body,
+    get_default_modal_content,
 )
 
 
@@ -221,9 +226,8 @@ def get_callbacks_predictoors(app):
         State("predictoors_page_table", "data"),
     )
     def update_graphs(is_open, selected_rows, predictoors_table_data):
-        predictoors_page = PredictoorsPage(app)
         if not is_open or not selected_rows:
-            return predictoors_page.get_default_modal_content()
+            return get_default_modal_content(modal_id="predictoors_modal")
 
         selected_row = predictoors_table_data[selected_rows[0]]
 
@@ -234,9 +238,12 @@ def get_callbacks_predictoors(app):
         predictoor_figures: PredictoorModalFigures = get_predictoor_figures(payouts)
 
         children = [
-            predictoors_page.get_predictoor_graphs_modal_header(selected_row),
-            predictoors_page.get_predictoor_graphs_modal_body(
-                predictoor_figures.get_figures()
+            get_graphs_modal_header(
+                modal_header_title=f"{selected_row['addr']} - Predictoor Data",
+                modal_id="predictoors_modal",
+            ),
+            get_graphs_modal_body(
+                figures=predictoor_figures.get_figures(), modal_id="predictoors_modal"
             ),
         ]
 

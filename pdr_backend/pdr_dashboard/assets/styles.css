@@ -339,3 +339,21 @@ button {
   width: 500px !important;
   text-align: center;
 }
+
+.modal-graph-header {
+    text-align: center;
+}
+
+.modal-graph-body {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.modal-graph-item {
+    margin: 0 auto;
+    display: flex;
+    flex: 1 0 50%;
+    max-width: 50%;
+}
