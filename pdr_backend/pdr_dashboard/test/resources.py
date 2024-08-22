@@ -119,6 +119,11 @@ def _clear_feeds_filters(dash_duo):
     time.sleep(1)
 
 
+def _clear_predictoors_filters(dash_duo):
+    dash_duo.find_element("#clear_predictoors_filters_button").click()
+    time.sleep(1)
+
+
 def _set_dropdown_and_verify_row_count(
     dash_duo, dropdown_id, option_text, expected_row_count
 ):

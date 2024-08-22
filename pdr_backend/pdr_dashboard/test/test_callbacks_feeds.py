@@ -33,14 +33,6 @@ def _prepare_table_data_to_be_saved_as_json(table):
 def _verify_table_data(table, filename):
     table_data = _prepare_table_data_to_be_saved_as_json(table)
 
-    # TODO: remove this block after the first run
-    """
-    if filename.startswith("search"):
-        with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename, 'w') as f:
-            f.write(json.dumps(table_data))
-        import pdb; pdb.set_trace()
-    """
-
     with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename) as f:
         expected_data = json.load(f)
 

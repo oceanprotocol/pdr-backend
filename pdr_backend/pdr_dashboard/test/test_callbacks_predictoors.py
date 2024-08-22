@@ -1,12 +1,9 @@
-import time
-
 from selenium.webdriver.common.by import By
 from pdr_backend.pdr_dashboard.test.resources import (
     _navigate_to_predictoors_page,
     _assert_table_row_count,
     start_server_and_wait,
-    _clear_feeds_filters,
-    _set_dropdown_and_verify_row_count,
+    _clear_predictoors_filters,
     _set_input_value_and_submit,
     _remove_tags,
     _set_searchbar_value,
@@ -75,66 +72,50 @@ def test_feeds_page_metrics_row(_sample_app, dash_duo):
         assert metric in metric_texts[i]
 
 
-# TODO
-"""
-def test_feeds_table_filters(_sample_app, dash_duo):
+def test_predictoors_table_filters(_sample_app, dash_duo):
     app = _sample_app
     start_server_and_wait(dash_duo, app)
 
-    _navigate_to_feeds_page(dash_duo)
-    dash_duo.wait_for_element("#feeds_page_table")
-    dash_duo.wait_for_element("#base_token")
+    _navigate_to_predictoors_page(dash_duo)
+    dash_duo.wait_for_element("#predictoors_page_table")
+    dash_duo.wait_for_element("#p_accuracy_dropdown")
 
-    table = dash_duo.find_element("#feeds_page_table table")
+    table = dash_duo.find_element("#predictoors_page_table table")
 
-    # Test filtering with base token
-    _set_dropdown_and_verify_row_count(dash_duo, "#base_token", "ETH", 3)
-    _verify_table_data(table, "filtered_base_token_eth.json")
-
-    # Test filtering with time
-    _set_dropdown_and_verify_row_count(dash_duo, "#time", "5m", 2)
-    _verify_table_data(table, "filtered_base_token_eth_5m.json")
-
-    _clear_feeds_filters(dash_duo)
-    _assert_table_row_count(dash_duo, "#feeds_page_table", 21)
-    _verify_table_data(table, "expected_feeds_table_data.json")
-
-    # Test filtering with ADA base token and accuracy range
-    _set_dropdown_and_verify_row_count(dash_duo, "#base_token", "ADA", 3)
-    _verify_table_data(table, "filtered_base_token_ada.json")
-
-    _clear_feeds_filters(dash_duo)
+    _clear_predictoors_filters(dash_duo)
     # Test filtering with accuracy min value
     _set_input_value_and_submit(
-        dash_duo, "#accuracy_dropdown", "#accuracy_min", "90", "#accuracy_button"
+        dash_duo, "#p_accuracy_dropdown", "#p_accuracy_min", "90", "#p_accuracy_button"
     )
-    _assert_table_row_count(dash_duo, "#feeds_page_table", 1)
-    _verify_table_data(table, "filtered_accuracy_min_90.json")
+    _assert_table_row_count(dash_duo, "#predictoors_page_table", 7)
+    _verify_table_data(table, "filtered_p_accuracy_min_90.json")
 
     # Test filtering with accuracy min value
     _set_input_value_and_submit(
-        dash_duo, None, "#accuracy_min", "55", "#accuracy_button"
+        dash_duo, None, "#p_accuracy_min", "55", "#p_accuracy_button"
     )
-    _assert_table_row_count(dash_duo, "#feeds_page_table", 2)
-    _verify_table_data(table, "filtered_accuracy_min_55.json")
+    _assert_table_row_count(dash_duo, "#predictoors_page_table", 17)
+    _verify_table_data(table, "filtered_p_accuracy_min_55.json")
 
-    # Test filtering with volume max value
+    # Test filtering with staked max value + natural language
     _set_input_value_and_submit(
-        dash_duo, "#volume_dropdown", "#volume_max", "14000", "#volume_button"
+        dash_duo, "#stake_dropdown", "#stake_max", "4K", "#stake_button"
     )
-    _assert_table_row_count(dash_duo, "#feeds_page_table", 1)
-    _verify_table_data(table, "filtered_volume_max_1400.json")
+    _assert_table_row_count(dash_duo, "#predictoors_page_table", 5)
+    _verify_table_data(table, "filtered_stake_max_4K.json")
 
-    _clear_feeds_filters(dash_duo)
-    _assert_table_row_count(dash_duo, "#feeds_page_table", 21)
-    _verify_table_data(table, "expected_feeds_table_data.json")
+    _clear_predictoors_filters(dash_duo)
+    _assert_table_row_count(dash_duo, "#predictoors_page_table", 58)
+    _verify_table_data(table, "expected_predictoors_table_data.json")
 
 
+# TODO: reimplement after finishing the modal
+"""
 def test_feeds_table_modal(_sample_app, dash_duo):
     app = _sample_app
     start_server_and_wait(dash_duo, app)
 
-    _navigate_to_feeds_page(dash_duo)
+    _navigate_to_predictoors_page(dash_duo)
     dash_duo.wait_for_element("#feeds_page_table")
 
     # Select a row
