@@ -1,9 +1,8 @@
-import json
 import time
 
 from selenium.webdriver.common.by import By
 from pdr_backend.pdr_dashboard.test.resources import (
-    _navigate_to_feeds_page,
+    _navigate_to_predictoors_page,
     _assert_table_row_count,
     start_server_and_wait,
     _clear_feeds_filters,
@@ -12,105 +11,72 @@ from pdr_backend.pdr_dashboard.test.resources import (
     _remove_tags,
     _set_searchbar_value,
 )
+from pdr_backend.pdr_dashboard.test.test_callbacks_feeds import _verify_table_data
 
 
-def _prepare_table_data_to_be_saved_as_json(table):
-    rows = table.find_elements(By.XPATH, ".//tr")
-    header = rows[0].find_elements(By.XPATH, ".//th")
-
-    headers = [_remove_tags(th.text) for th in header]
-
-    table_data = []
-
-    for row in rows[1:]:  # Skip header row
-        cells = row.find_elements(By.XPATH, ".//td")
-        row_data = {headers[i]: _remove_tags(cells[i].text) for i in range(len(cells))}
-        table_data.append(row_data)
-
-    return table_data
-
-
-def _verify_table_data(table, filename):
-    table_data = _prepare_table_data_to_be_saved_as_json(table)
-
-    # TODO: remove this block after the first run
-    """
-    with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename, 'w') as f:
-        f.write(json.dumps(table_data))
-    import pdb; pdb.set_trace()
-    """
-    with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename) as f:
-        expected_data = json.load(f)
-
-    for _, row in enumerate(table_data):
-        assert row in expected_data
-
-
-def test_feeds_table(_sample_app, dash_duo):
+def test_predictoors_table(_sample_app, dash_duo):
     app = _sample_app
     start_server_and_wait(dash_duo, app)
 
-    _navigate_to_feeds_page(dash_duo)
-    dash_duo.wait_for_element("#feeds_page_table table")
+    _navigate_to_predictoors_page(dash_duo)
+    dash_duo.wait_for_element("#predictoors_page_table table")
 
-    table = dash_duo.find_element("#feeds_page_table table")
+    table = dash_duo.find_element("#predictoors_page_table table")
 
     # Validate row and column count
     rows = table.find_elements(By.XPATH, ".//tr")
-    assert len(rows) == 21
+    assert len(rows) == 58
 
     header = rows[0].find_elements(By.XPATH, ".//th")
     columns = header
-    assert len(columns) == 12
+    assert len(columns) == 9
 
     # Validate headers
     header_texts = [_remove_tags(c.text) for c in columns]
     expected_headers = [
         "",
         "Addr",
-        "Base Token",
-        "Quote Token",
-        "Exchange",
-        "Time",
-        "Avg Accuracy",
-        "Avg Stake Per Epoch (Ocean)",
-        "Volume (Ocean)",
-        "Price (Ocean)",
-        "Sales",
-        "Sales Revenue (Ocean)",
+        "Gross Income (Ocean)",
+        "Accuracy",
+        "Staked (Ocean)",
+        "Number Of Feeds",
+        "Tx Costs (Ocean)",
+        "Income From Stakes (Ocean)",
+        "Apr",
     ]
     assert header_texts == expected_headers
 
-    _verify_table_data(table, "expected_feeds_table_data.json")
+    _verify_table_data(table, "expected_predictoors_table_data.json")
 
 
 def test_feeds_page_metrics_row(_sample_app, dash_duo):
     app = _sample_app
     start_server_and_wait(dash_duo, app)
 
-    _navigate_to_feeds_page(dash_duo)
-    dash_duo.wait_for_element("#feeds_page_metrics_row")
+    _navigate_to_predictoors_page(dash_duo)
+    dash_duo.wait_for_element("#predictoors_page_metrics_row")
 
-    metrics_row = dash_duo.find_element("#feeds_page_metrics_row")
+    metrics_row = dash_duo.find_element("#predictoors_page_metrics_row")
 
     # Validate metrics
     # select first level divs
     metrics = metrics_row.find_elements(By.XPATH, "./div")
-    assert len(metrics) == 5
+    assert len(metrics) == 4
 
     metric_texts = [_remove_tags(m.text) for m in metrics]
     expected_metrics = [
-        "Feeds",
-        "Accuracy",
-        "Volume",
-        "Sales",
-        "Revenue",
+        "Predictoors",
+        "Accuracy(avg)",
+        "Stake(avg)",
+        "Gross Income(avg)",
     ]
 
     for i, metric in enumerate(expected_metrics):
         assert metric in metric_texts[i]
 
 
+# TODO
+"""
 def test_feeds_table_filters(_sample_app, dash_duo):
     app = _sample_app
     start_server_and_wait(dash_duo, app)
@@ -233,3 +199,4 @@ def test_feeds_searchbar(_sample_app, dash_duo):
         dash_duo, "#search-input-feeds-table", "NO_ROWS", "#feeds_page_table", 1
     )
     _verify_table_data(table, "search_no_rows.json")
+"""

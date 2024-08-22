@@ -91,6 +91,11 @@ def _navigate_to_feeds_page(dash_duo):
     dash_duo.find_element("#feeds").click()
 
 
+def _navigate_to_predictoors_page(dash_duo):
+    dash_duo.wait_for_element("#predictoors")
+    dash_duo.find_element("#predictoors").click()
+
+
 def _remove_tags(text):
     """
     Removes HTML or XML tags from the input string.
