@@ -30,6 +30,12 @@ def _extract_bars(
     high_price = -np.inf
     low_price = np.inf
 
+    metric_dict = {
+        "cum_ticks": lambda: cum_ticks,
+        "cum_dollar_value": lambda: cum_dollar_value,
+        "cum_volume": lambda: cum_volume,
+    }
+
     # Iterate over rows
     for row in data.values:
         # Set variables
@@ -65,7 +71,7 @@ def _extract_bars(
         )
 
         # If threshold reached then take a sample
-        if eval(metric) >= threshold:  # pylint: disable=eval-used
+        if metric_dict[metric]() >= threshold:
             # Create bars
             start_tm = timestamp
             tp = bar_cache[0][0]
