@@ -1,28 +1,29 @@
 import os
-import pytest
-import dash_bootstrap_components as dbc
+from unittest.mock import patch
 
+import dash_bootstrap_components as dbc
+import pytest
 from dash import Dash
 from selenium.webdriver.chrome.options import Options
 
-from pdr_backend.lake.payout import mock_payouts, mock_payouts_related_with_predictions
-from pdr_backend.lake.prediction import mock_daily_predictions, mock_first_predictions
-from pdr_backend.lake.subscription import mock_subscriptions, Subscription
-from pdr_backend.lake.test.resources import (
-    create_sample_raw_data,
-    create_sample_etl,
+from pdr_backend.lake.payout import (
+    Payout,
+    mock_payouts,
+    mock_payouts_related_with_predictions,
 )
-
+from pdr_backend.lake.prediction import (
+    Prediction,
+    mock_daily_predictions,
+    mock_first_predictions,
+)
+from pdr_backend.lake.subscription import Subscription, mock_subscriptions
+from pdr_backend.lake.test.resources import create_sample_etl, create_sample_raw_data
+from pdr_backend.pdr_dashboard.predictoor_dash import setup_app as setup_app_main
 from pdr_backend.pdr_dashboard.test.resources import (
-    _prepare_test_db,
     _clear_test_db,
     _get_test_DuckDB,
+    _prepare_test_db,
 )
-from pdr_backend.pdr_dashboard.predictoor_dash import (
-    setup_app as setup_app_main,
-)
-from pdr_backend.lake.payout import Payout
-from pdr_backend.lake.prediction import Prediction
 
 
 @pytest.fixture()
@@ -134,7 +135,12 @@ def setup_app(
     app.config["suppress_callback_exceptions"] = True
 
     app = _add_css(app)
-    setup_app_main(app, ppss)
+
+    with patch(
+        "pdr_backend.pdr_dashboard.predictoor_dash.calculate_tx_gas_fee_cost_in_OCEAN",
+        return_value=0.2,
+    ):
+        setup_app_main(app, ppss)
 
     return app
 
@@ -171,7 +177,11 @@ def setup_app_with_favourite_addresses(
     app.config["suppress_callback_exceptions"] = True
 
     app = _add_css(app)
-    setup_app_main(app, ppss)
+    with patch(
+        "pdr_backend.pdr_dashboard.predictoor_dash.calculate_tx_gas_fee_cost_in_OCEAN",
+        return_value=0.2,
+    ):
+        setup_app_main(app, ppss)
 
     return app
 
@@ -205,6 +215,10 @@ def _sample_app(tmpdir):
     app.config["suppress_callback_exceptions"] = True
 
     app = _add_css(app)
-    setup_app_main(app, etl.ppss)
+    with patch(
+        "pdr_backend.pdr_dashboard.predictoor_dash.calculate_tx_gas_fee_cost_in_OCEAN",
+        return_value=0.2,
+    ):
+        setup_app_main(app, etl.ppss)
 
     return app

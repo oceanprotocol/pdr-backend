@@ -1,24 +1,16 @@
 import dash
-
 from dash import Input, Output, State
 
-from pdr_backend.pdr_dashboard.dash_components.plots import (
-    get_figures_and_metrics,
-)
-
+from pdr_backend.cli.arg_feeds import ArgFeeds
+from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
+from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
     filter_objects_by_field,
     get_date_period_text,
     get_start_date_from_period,
     select_or_clear_all_by_table,
 )
-from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
 from pdr_backend.pdr_dashboard.util.format import format_value
-from pdr_backend.pdr_dashboard.dash_components.view_elements import (
-    get_graph,
-)
-
-from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
 # pylint: disable=too-many-statements
@@ -73,21 +65,12 @@ def get_callbacks_home(app):
                 start_date,
             )
 
-        # get fee estimate
-        fee_cost = (
-            calculate_tx_gas_fee_cost_in_OCEAN(
-                app.web3_pp, feeds[0].contract, app.prices
-            )
-            if feeds
-            else 0.0
-        )
-
         # get figures
         figs_metrics = get_figures_and_metrics(
             payouts,
             feeds,
             predictoors_addrs,
-            fee_cost,
+            app.fee_cost,
         )
 
         # get available period date text

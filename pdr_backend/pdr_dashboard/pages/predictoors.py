@@ -1,21 +1,17 @@
-from typing import List, Dict, Any, Tuple
+from typing import Any, Dict, List, Tuple
 
-from dash import html, dash_table
 import dash_bootstrap_components as dbc
-from pdr_backend.pdr_dashboard.util.data import (
-    get_feed_column_ids,
-)
-from pdr_backend.pdr_dashboard.dash_components.plots import (
-    FeedModalFigures,
-)
+from dash import dash_table, html
+
+from pdr_backend.pdr_dashboard.dash_components.plots import FeedModalFigures
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
-    get_metric,
     get_graph,
+    get_metric,
     get_search_bar,
 )
-from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.pages.common import TabularPage
-from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
+from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
+from pdr_backend.pdr_dashboard.util.format import format_table
 
 
 class PredictoorsPage(TabularPage):
@@ -135,12 +131,6 @@ class PredictoorsPage(TabularPage):
 
         new_predictoor_data = []
 
-        appr_cost = calculate_tx_gas_fee_cost_in_OCEAN(
-            self.app.web3_pp,
-            "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
-            self.app.prices,
-        )
-
         ## split the pair column into two columns
         for data_item in temp_data:
             temp_pred_item = {}
@@ -149,7 +139,7 @@ class PredictoorsPage(TabularPage):
             temp_pred_item["accuracy"] = data_item["avg_accuracy"]
             temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
             temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
-            temp_pred_item["tx_costs_(OCEAN)"] = appr_cost * float(
+            temp_pred_item["tx_costs_(OCEAN)"] = self.app.fee_cost * float(
                 data_item["stake_count"]
             )
             temp_pred_item["income_from_stakes_(OCEAN)"] = data_item["total_profit"]

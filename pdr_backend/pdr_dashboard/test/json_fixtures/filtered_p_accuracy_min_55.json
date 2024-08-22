@@ -1,0 +1,178 @@
+[
+    {
+        "": "",
+        "Addr": "0x142...6d70b",
+        "Gross Income (Ocean)": "13.94K",
+        "Accuracy": "75.0%",
+        "Staked (Ocean)": "11.83K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "4.8",
+        "Income From Stakes (Ocean)": "2.11K",
+        "Apr": "17.86%"
+    },
+    {
+        "": "",
+        "Addr": "0x441...69148",
+        "Gross Income (Ocean)": "8.48K",
+        "Accuracy": "100.0%",
+        "Staked (Ocean)": "4.27K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "0.4",
+        "Income From Stakes (Ocean)": "4.21K",
+        "Apr": "98.82%"
+    },
+    {
+        "": "",
+        "Addr": "0x435...a2d5c",
+        "Gross Income (Ocean)": "19.45K",
+        "Accuracy": "66.67%",
+        "Staked (Ocean)": "14.86K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "4.8",
+        "Income From Stakes (Ocean)": "4.58K",
+        "Apr": "30.84%"
+    },
+    {
+        "": "",
+        "Addr": "0xac8...95f04",
+        "Gross Income (Ocean)": "18.17K",
+        "Accuracy": "60.38%",
+        "Staked (Ocean)": "11.56K",
+        "Number Of Feeds": "20",
+        "Tx Costs (Ocean)": "52.0",
+        "Income From Stakes (Ocean)": "6.61K",
+        "Apr": "57.14%"
+    },
+    {
+        "": "",
+        "Addr": "0x358...73d5c",
+        "Gross Income (Ocean)": "103.93K",
+        "Accuracy": "61.6%",
+        "Staked (Ocean)": "86.41K",
+        "Number Of Feeds": "20",
+        "Tx Costs (Ocean)": "50.0",
+        "Income From Stakes (Ocean)": "17.52K",
+        "Apr": "20.27%"
+    },
+    {
+        "": "",
+        "Addr": "0x1a4...cf8ef",
+        "Gross Income (Ocean)": "8.03K",
+        "Accuracy": "100.0%",
+        "Staked (Ocean)": "3.99K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "0.4",
+        "Income From Stakes (Ocean)": "4.04K",
+        "Apr": "101.27%"
+    },
+    {
+        "": "",
+        "Addr": "0x06a...b9d45",
+        "Gross Income (Ocean)": "7.48K",
+        "Accuracy": "100.0%",
+        "Staked (Ocean)": "3.74K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "0.4",
+        "Income From Stakes (Ocean)": "3.74K",
+        "Apr": "99.91%"
+    },
+    {
+        "": "",
+        "Addr": "0xa54...4345f",
+        "Gross Income (Ocean)": "14.37K",
+        "Accuracy": "62.5%",
+        "Staked (Ocean)": "11.41K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "4.8",
+        "Income From Stakes (Ocean)": "2.96K",
+        "Apr": "25.91%"
+    },
+    {
+        "": "",
+        "Addr": "0x4f4...b9da6",
+        "Gross Income (Ocean)": "28.26K",
+        "Accuracy": "59.2%",
+        "Staked (Ocean)": "18.01K",
+        "Number Of Feeds": "20",
+        "Tx Costs (Ocean)": "50.0",
+        "Income From Stakes (Ocean)": "10.25K",
+        "Apr": "56.89%"
+    },
+    {
+        "": "",
+        "Addr": "0x1a1...86b3e",
+        "Gross Income (Ocean)": "15.78K",
+        "Accuracy": "58.33%",
+        "Staked (Ocean)": "13.33K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "4.8",
+        "Income From Stakes (Ocean)": "2.45K",
+        "Apr": "18.37%"
+    },
+    {
+        "": "",
+        "Addr": "0x4ac...05f88",
+        "Gross Income (Ocean)": "12.91K",
+        "Accuracy": "58.33%",
+        "Staked (Ocean)": "11K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "4.8",
+        "Income From Stakes (Ocean)": "1.91K",
+        "Apr": "17.37%"
+    },
+    {
+        "": "",
+        "Addr": "0xece...da47b",
+        "Gross Income (Ocean)": "6.2K",
+        "Accuracy": "100.0%",
+        "Staked (Ocean)": "3.09K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "0.4",
+        "Income From Stakes (Ocean)": "3.11K",
+        "Apr": "100.42%"
+    },
+    {
+        "": "",
+        "Addr": "0xcdc...adbee",
+        "Gross Income (Ocean)": "9.79K",
+        "Accuracy": "58.33%",
+        "Staked (Ocean)": "11.83K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "4.8",
+        "Income From Stakes (Ocean)": "-2.04K",
+        "Apr": "-17.24%"
+    },
+    {
+        "": "",
+        "Addr": "0xe1d...bdfa4",
+        "Gross Income (Ocean)": "8.18K",
+        "Accuracy": "100.0%",
+        "Staked (Ocean)": "4.08K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "0.4",
+        "Income From Stakes (Ocean)": "4.11K",
+        "Apr": "100.73%"
+    },
+    {
+        "": "",
+        "Addr": "0xeaf...df423",
+        "Gross Income (Ocean)": "13.28K",
+        "Accuracy": "58.33%",
+        "Staked (Ocean)": "11.29K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "4.8",
+        "Income From Stakes (Ocean)": "2K",
+        "Apr": "17.69%"
+    },
+    {
+        "": "",
+        "Addr": "0x94b...2ad83",
+        "Gross Income (Ocean)": "7.17K",
+        "Accuracy": "100.0%",
+        "Staked (Ocean)": "3.59K",
+        "Number Of Feeds": "1",
+        "Tx Costs (Ocean)": "0.4",
+        "Income From Stakes (Ocean)": "3.59K",
+        "Apr": "100.03%"
+    }
+]
