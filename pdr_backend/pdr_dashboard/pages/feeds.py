@@ -150,7 +150,8 @@ class FeedsPage(TabularPage):
                     hidden_columns=["full_addr", "sales_raw"],
                     row_selectable="single",
                     data=feeds_data,
-                    sort_action="native",  # Enables sorting feature
+                    sort_action="custom",
+                    sort_mode="single",
                 ),
             ],
             style={"width": "100%", "overflow": "scroll"},
