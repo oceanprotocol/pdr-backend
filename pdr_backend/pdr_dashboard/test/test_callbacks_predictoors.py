@@ -171,32 +171,22 @@ def test_feeds_table_modal(_sample_app, dash_duo):
         "selected" in row.get_attribute("class")
         for row in table.find_elements(By.XPATH, ".//tr")
     )
+"""
 
 
-def test_feeds_searchbar(_sample_app, dash_duo):
+def test_predictoors_searchbar(_sample_app, dash_duo):
     app = _sample_app
     start_server_and_wait(dash_duo, app)
 
-    _navigate_to_feeds_page(dash_duo)
-    dash_duo.wait_for_element("#search-input-feeds-table")
-    table = dash_duo.find_element("#feeds_page_table")
-    _set_searchbar_value(
-        dash_duo, "#search-input-feeds-table", "ETH", "#feeds_page_table", 3
-    )
-    _verify_table_data(table, "search_eth.json")
+    _navigate_to_predictoors_page(dash_duo)
+    dash_duo.wait_for_element("#search-input-predictoors-table")
+    table = dash_duo.find_element("#predictoors_page_table")
 
     _set_searchbar_value(
-        dash_duo, "#search-input-feeds-table", "ADA", "#feeds_page_table", 3
+        dash_duo,
+        "#search-input-predictoors-table",
+        "xac8",
+        "#predictoors_page_table",
+        2,
     )
-    _verify_table_data(table, "search_ada.json")
-
-    _set_searchbar_value(
-        dash_duo, "#search-input-feeds-table", "6f3bc", "#feeds_page_table", 2
-    )
-    _verify_table_data(table, "search_6f3bc.json")
-
-    _set_searchbar_value(
-        dash_duo, "#search-input-feeds-table", "NO_ROWS", "#feeds_page_table", 1
-    )
-    _verify_table_data(table, "search_no_rows.json")
-"""
+    _verify_table_data(table, "search_p_xac8.json")
