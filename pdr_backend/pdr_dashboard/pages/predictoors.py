@@ -138,7 +138,7 @@ class PredictoorsPage(TabularPage):
             temp_pred_item["accuracy"] = data_item["avg_accuracy"]
             temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
             temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
-            temp_pred_item["tx_costs_(OCEAN)"] = self.app.appr_cost * float(
+            temp_pred_item["tx_costs_(OCEAN)"] = self.app.fee_cost * float(
                 data_item["stake_count"]
             )
             temp_pred_item["income_from_stakes_(OCEAN)"] = data_item["total_profit"]
