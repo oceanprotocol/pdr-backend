@@ -341,19 +341,24 @@ button {
 }
 
 .modal-graph-header {
-    text-align: center;
+  text-align: center;
 }
 
 .modal-graph-body {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    flex-wrap: wrap;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .modal-graph-item {
-    margin: 0 auto;
-    display: flex;
-    flex: 1 0 50%;
-    max-width: 50%;
+  margin: 0 auto;
+  display: flex;
+  flex: 1 0 50%;
+  max-width: 50%;
+}
+
+.modal-graph-title {
+  font-weight: bold;
+  font-size: 20px;
 }

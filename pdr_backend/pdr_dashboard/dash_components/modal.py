@@ -16,7 +16,7 @@ def get_modal(
 
 def get_default_modal_content(modal_id: str):
     return [
-        dbc.ModalHeader("Loading Predictoor data", id=f"{modal_id}-header"),
+        dbc.ModalHeader("Loading data", id=f"{modal_id}-header"),
         get_graphs_modal_body([], modal_id),
     ]
 
@@ -25,7 +25,7 @@ def get_graphs_modal_header(modal_header_title: str, modal_id: str):
     return html.Div(
         html.Span(
             modal_header_title,
-            style={"fontWeight": "bold", "fontSize": "20px"},
+            className="modal-graph-title",
         ),
         id=f"{modal_id}-header",
         className="modal-graph-header",
