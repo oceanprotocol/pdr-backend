@@ -227,7 +227,10 @@ def get_callbacks_predictoors(app):
     )
     def update_graphs(is_open, selected_rows, predictoors_table_data):
         if not is_open or not selected_rows:
-            return get_default_modal_content(modal_id="predictoors_modal")
+            return get_default_modal_content(
+                modal_id="predictoors_modal",
+                figures=get_predictoor_figures([]).get_figures(),
+            )
 
         selected_row = predictoors_table_data[selected_rows[0]]
 

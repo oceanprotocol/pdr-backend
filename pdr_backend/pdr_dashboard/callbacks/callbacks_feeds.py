@@ -185,6 +185,7 @@ def get_callbacks_feeds(app):
         if not is_open or not selected_rows:
             return get_default_modal_content(
                 modal_id="feeds-modal",
+                figures=get_feed_figures([], []).get_figures(),
             )
 
         selected_row = feeds_table_data[selected_rows[0]]

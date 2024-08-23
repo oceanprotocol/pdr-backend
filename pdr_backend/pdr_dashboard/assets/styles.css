@@ -349,13 +349,14 @@ button {
   flex-direction: row;
   width: 100%;
   flex-wrap: wrap;
+  column-gap: 30px;
 }
 
 .modal-graph-item {
   margin: 0 auto;
   display: flex;
   flex: 1 0 50%;
-  max-width: 50%;
+  max-width: calc(50% - 15px);
 }
 
 .modal-graph-title {

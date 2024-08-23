@@ -14,10 +14,10 @@ def get_modal(
     )
 
 
-def get_default_modal_content(modal_id: str):
+def get_default_modal_content(modal_id: str, figures: List = []):
     return [
         dbc.ModalHeader("Loading data", id=f"{modal_id}-header"),
-        get_graphs_modal_body([], modal_id),
+        get_graphs_modal_body(figures, modal_id),
     ]
 
 
