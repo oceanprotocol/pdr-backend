@@ -47,7 +47,9 @@ class ArgFeed:
         else:
             self.timeframe = timeframe
 
-        if isinstance(threshold, str):
+        if threshold is None:
+            self.threshold = None
+        elif isinstance(threshold, str):
             self.threshold = ArgThreshold(threshold)
         else:
             self.threshold = threshold
@@ -269,7 +271,7 @@ def argfeed_with_threshold(
         raise ValueError(
             f"The lists 'pairs' and 'thresholds' do not have the same length,\
                 Found: {len(pairs)} pairs: {str(pairs)}, {threshold_str_list} ;\
-                thresholds: {str(threshold_str_list)}."
+                    thresholds: {str(threshold_str_list)}."
         )
     return [
         ArgFeed(exchange_str, signal_str, pair_str, timeframe_str, threshold_str)
