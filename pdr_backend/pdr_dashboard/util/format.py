@@ -26,6 +26,7 @@ FORMAT_CONFIG = {
     "gross_income_(OCEAN)": "currency_conditional",
     "stake_loss_(OCEAN)": "currency_conditional",
     "tx_costs_(OCEAN)": "currency_conditional",
+    "net_income_(OCEAN)": "currency_conditional",
     "apr": "percentage",
     "accuracy": "percentage",
     "predictoors_page_accuracy_metric": "percentage",
