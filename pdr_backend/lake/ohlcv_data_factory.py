@@ -300,7 +300,7 @@ class OhlcvDataFactory:
         filename = os.path.join(self.ss.lake_dir, basename)
         return filename
 
-    def _get_threshold_bars(df_pandas, prefix, threshold):
+    def _get_threshold_bars(self, df_pandas, prefix, threshold):
         if prefix == "vb":
             bars, _ = get_volume_bars(df_pandas, threshold)
         elif prefix == "db":
