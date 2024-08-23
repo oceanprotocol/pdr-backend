@@ -30,7 +30,7 @@ FORMAT_CONFIG = {
     "apr": "percentage",
     "accuracy": "percentage",
     "predictoors_page_accuracy_metric": "percentage",
-    "predictoors_page_stake_metric": "currency",
+    "predictoors_page_staked_metric": "currency",
     "predictoors_page_gross_income_metric": "currency",
 }
 
