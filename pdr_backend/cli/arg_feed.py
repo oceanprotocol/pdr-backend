@@ -165,7 +165,6 @@ def _unpack_feeds_str(feeds_str: str) -> List[ArgFeed]:
 
     timeframe_str = feeds_str_split[-1]
     if timeframes_str_ok(timeframe_str):
-        timeframe_str = feeds_str_split[-1]
         timeframe_str_list = ArgTimeframes.from_str(timeframe_str)
         # last part is a valid timeframe, and we might have a signal before it
         signal_char_str = feeds_str_split[-2]
