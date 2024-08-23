@@ -142,9 +142,6 @@ class PredictoorsPage(TabularPage):
             temp_pred_item["tx_costs_(OCEAN)"] = self.app.fee_cost * float(
                 data_item["stake_count"]
             )
-            temp_pred_item["income_from_stakes_(OCEAN)"] = data_item[
-                "income_from_stakes"
-            ]
             temp_pred_item["apr"] = data_item["apr"]
 
             new_predictoor_data.append(temp_pred_item)

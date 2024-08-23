@@ -99,8 +99,6 @@ class DBGetter:
                 SUM(p.stake) AS total_stake,
                 -- Calculate gross income: only include positive differences when payout > stake
                 SUM(CASE WHEN p.payout > 0 THEN p.payout - p.stake ELSE 0 END) AS gross_income,
-                -- Calculate total profit: sum up the positive income, capping negatives at 0
-                SUM(CASE WHEN p.payout > 0 THEN p.payout ELSE 0 END) AS income_from_stakes,
                 -- Calculate total loss: sum up the negative income, capping positives at 0
                 SUM(CASE WHEN p.payout = 0 THEN p.stake ELSE 0 END) AS stake_loss,
                 SUM(p.payout) AS total_payout,
