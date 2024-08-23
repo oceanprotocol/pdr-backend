@@ -102,9 +102,7 @@ class OhlcvDataFactory:
                 logger.info(f"Get {feed.threshold.prefix} bars for %s", feed)
                 bars = []
                 df_pandas = df.to_pandas()
-                bars = self._get_threshold_bars(
-                    df_pandas, feed.threshold.prefix, feed.threshold.threshold
-                )
+                bars = self._get_threshold_bars(df_pandas, feed)
                 bars_df = pl.DataFrame(bars, schema=columns).with_columns(
                     pl.col("timestamp").cast(pl.Int64)
                 )
@@ -300,7 +298,8 @@ class OhlcvDataFactory:
         filename = os.path.join(self.ss.lake_dir, basename)
         return filename
 
-    def _get_threshold_bars(self, df_pandas, prefix, threshold):
+    def _get_threshold_bars(self, df_pandas: pl.DataFrame, feed: ArgFeed):
+        prefix, threshold = feed.threshold.prefix, feed.threshold.threshold
         if prefix == "vb":
             bars, _ = get_volume_bars(df_pandas, threshold)
         elif prefix == "db":
