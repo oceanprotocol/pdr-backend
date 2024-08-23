@@ -98,20 +98,13 @@ class OhlcvDataFactory:
                 "Cumulative Ticks",
             ]
             df = rawohlcv_dfs[str(feed.exchange)][str(feed.pair)]
-            prefix_to_threshold_type = {"vb": "volume", "db": "dollar", "tb": "tick"}
             if feed.threshold is not None:
-                threshold_type = prefix_to_threshold_type.get(feed.threshold.prefix)
-                logger.info(f"Get {threshold_type} bars for %s", feed)
+                logger.info(f"Get {feed.threshold.prefix} bars for %s", feed)
                 bars = []
                 df_pandas = df.to_pandas()
-                if threshold_type == "volume":
-                    bars, _ = get_volume_bars(df_pandas, feed.threshold.threshold())
-                elif threshold_type == "tick":
-                    bars, _ = get_tick_bars(df_pandas, feed.threshold.threshold())
-                elif threshold_type == "dollar":
-                    bars, _ = get_dollar_bars(df_pandas, feed.threshold.threshold())
-                else:
-                    raise ValueError(f"Unknown threshold type: {threshold_type}")
+                bars = self._get_threshold_bars(
+                    df_pandas, feed.threshold.prefix, feed.threshold.threshold
+                )
                 bars_df = pl.DataFrame(bars, schema=columns).with_columns(
                     pl.col("timestamp").cast(pl.Int64)
                 )
@@ -306,3 +299,14 @@ class OhlcvDataFactory:
         basename = f"volume_bar_{feed.exchange}_{pair_str}.parquet"
         filename = os.path.join(self.ss.lake_dir, basename)
         return filename
+
+    def _get_threshold_bars(df_pandas, prefix, threshold):
+        if prefix == "vb":
+            bars, _ = get_volume_bars(df_pandas, threshold)
+        elif prefix == "db":
+            bars, _ = get_dollar_bars(df_pandas, threshold)
+        elif prefix == "tb":
+            bars, _ = get_tick_bars(df_pandas, threshold)
+        else:
+            raise ValueError(f"Unknown threshold type with prefix: {prefix}")
+        return bars

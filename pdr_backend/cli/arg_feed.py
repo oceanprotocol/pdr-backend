@@ -47,9 +47,7 @@ class ArgFeed:
         else:
             self.timeframe = timeframe
 
-        if threshold is None:
-            self.threshold = None
-        elif isinstance(threshold, str):
+        if isinstance(threshold, str):
             self.threshold = ArgThreshold(threshold)
         else:
             self.threshold = threshold
