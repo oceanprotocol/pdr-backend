@@ -97,17 +97,23 @@ class DBGetter:
             SELECT
                 p."user",
                 SUM(p.stake) AS total_stake,
-                SUM(p.payout - p.stake) AS total_profit,
+                -- Calculate gross income: only include positive differences when payout > stake
+                SUM(CASE WHEN p.payout > 0 THEN p.payout - p.stake ELSE 0 END) AS gross_income,
+                -- Calculate total profit: sum up the positive income, capping negatives at 0
+                SUM(CASE WHEN p.payout > 0 THEN p.payout ELSE 0 END) AS income_from_stakes,
+                -- Calculate total loss: sum up the negative income, capping positives at 0
+                SUM(CASE WHEN p.payout = 0 THEN p.stake ELSE 0 END) AS stake_loss,
                 SUM(p.payout) AS total_payout,
                 COUNT(p.ID) AS stake_count,
                 COUNT(DISTINCT SPLIT_PART(p.ID, '-', 1)) AS feed_count,
+                -- Count correct predictions where payout > 0
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) AS correct_predictions,
                 COUNT(*) AS predictions,
                 AVG(p.stake) AS avg_stake,
                 MIN(p.slot) AS first_payout_time,
                 MAX(p.slot) AS last_payout_time,
                 -- Calculate the APR
-                total_profit / total_stake * 100 AS apr,
+                (SUM(CASE WHEN p.payout > p.stake THEN p.payout - p.stake ELSE 0 END) / NULLIF(SUM(p.stake), 0)) * 100 AS apr,
                 -- Calculate average accuracy
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy
             FROM

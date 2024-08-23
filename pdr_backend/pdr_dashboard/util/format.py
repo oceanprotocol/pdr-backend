@@ -24,6 +24,7 @@ FORMAT_CONFIG = {
     "avg_stake_per_epoch_(OCEAN)": "currency_conditional",
     "staked_(OCEAN)": "currency_conditional",
     "gross_income_(OCEAN)": "currency_conditional",
+    "stake_loss_(OCEAN)": "currency_conditional",
     "income_from_stakes_(OCEAN)": "currency_conditional",
     "tx_costs_(OCEAN)": "currency_conditional",
     "apr": "percentage",
