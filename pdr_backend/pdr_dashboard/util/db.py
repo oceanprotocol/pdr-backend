@@ -300,12 +300,12 @@ class DBGetter:
             scalar=True,
         )
 
-        tot_accuracy, tot_stake, tot_gross_income = self._query_db(
+        avg_accuracy, tot_stake, tot_gross_income = self._query_db(
             f"""
                 SELECT
-                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100 / COUNT(*) AS tot_accuracy,
+                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100 / COUNT(*) AS avg_accuracy,
                     SUM(stake) as tot_stake,
-                    SUM(payout) AS tot_gross_income
+                    SUM(CASE WHEN payout > stake THEN payout - stake ELSE 0 END) AS tot_gross_income
                 FROM
                     {Payout.get_lake_table_name()}
             """,
@@ -314,7 +314,7 @@ class DBGetter:
 
         return {
             "Predictoors": predictoors,
-            "Accuracy(avg)": tot_accuracy / predictoors,
-            "Stake(avg)": tot_stake / predictoors,
-            "Gross Income(avg)": tot_gross_income / predictoors,
+            "Accuracy(avg)": avg_accuracy,
+            "Staked": tot_stake,
+            "Gross Income": tot_gross_income,
         }
