@@ -62,7 +62,7 @@ trader_ss:
     buy_amt: 1000 USD # buy this amount in each epoch
     fee_percent: 0.0 # simulated % fee
     confidence_threshold: 0.02 # skip trade if confidence < this
-    stop_loss_percent: 1.0 # sell if price drops by this %, . 1.0 = disabled
+    stop_loss_percent: 100.0 # sell if price drops by this %, . 100.0 = disabled
     take_profit_percent: 100.0 # sell if price rises by this %, . 100.0 = disabled
 
   bot_only:
