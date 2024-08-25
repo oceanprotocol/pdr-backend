@@ -1,68 +1,74 @@
 [
     {
         "": "",
-        "Addr": "0x441...69148",
-        "Gross Income (Ocean)": "8.48K",
-        "Accuracy": "100.0%",
-        "Staked (Ocean)": "4.27K",
-        "Number Of Feeds": "1",
-        "Tx Costs (Ocean)": "0.4",
-        "Income From Stakes (Ocean)": "4.21K",
-        "Apr": "98.82%"
-    },
-    {
-        "": "",
         "Addr": "0x1a4...cf8ef",
-        "Gross Income (Ocean)": "8.03K",
+        "Apr": "101.27%",
         "Accuracy": "100.0%",
-        "Staked (Ocean)": "3.99K",
         "Number Of Feeds": "1",
-        "Tx Costs (Ocean)": "0.4",
-        "Income From Stakes (Ocean)": "4.04K",
-        "Apr": "101.27%"
+        "Staked (Ocean)": "3.99K",
+        "Gross Income (Ocean)": "4.04K",
+        "Net Income (Ocean)": "4.04K",
+        "Stake Loss (Ocean)": "0.0",
+        "Tx Costs (Ocean)": "0.4"
     },
     {
         "": "",
         "Addr": "0x06a...b9d45",
-        "Gross Income (Ocean)": "7.48K",
+        "Apr": "99.91%",
         "Accuracy": "100.0%",
+        "Number Of Feeds": "1",
         "Staked (Ocean)": "3.74K",
-        "Number Of Feeds": "1",
-        "Tx Costs (Ocean)": "0.4",
-        "Income From Stakes (Ocean)": "3.74K",
-        "Apr": "99.91%"
-    },
-    {
-        "": "",
-        "Addr": "0xece...da47b",
-        "Gross Income (Ocean)": "6.2K",
-        "Accuracy": "100.0%",
-        "Staked (Ocean)": "3.09K",
-        "Number Of Feeds": "1",
-        "Tx Costs (Ocean)": "0.4",
-        "Income From Stakes (Ocean)": "3.11K",
-        "Apr": "100.42%"
+        "Gross Income (Ocean)": "3.74K",
+        "Net Income (Ocean)": "3.74K",
+        "Stake Loss (Ocean)": "0.0",
+        "Tx Costs (Ocean)": "0.4"
     },
     {
         "": "",
         "Addr": "0xe1d...bdfa4",
-        "Gross Income (Ocean)": "8.18K",
+        "Apr": "100.73%",
         "Accuracy": "100.0%",
-        "Staked (Ocean)": "4.08K",
         "Number Of Feeds": "1",
-        "Tx Costs (Ocean)": "0.4",
-        "Income From Stakes (Ocean)": "4.11K",
-        "Apr": "100.73%"
+        "Staked (Ocean)": "4.08K",
+        "Gross Income (Ocean)": "4.11K",
+        "Net Income (Ocean)": "4.11K",
+        "Stake Loss (Ocean)": "0.0",
+        "Tx Costs (Ocean)": "0.4"
+    },
+    {
+        "": "",
+        "Addr": "0x441...69148",
+        "Apr": "98.82%",
+        "Accuracy": "100.0%",
+        "Number Of Feeds": "1",
+        "Staked (Ocean)": "4.27K",
+        "Gross Income (Ocean)": "4.21K",
+        "Net Income (Ocean)": "4.21K",
+        "Stake Loss (Ocean)": "0.0",
+        "Tx Costs (Ocean)": "0.4"
     },
     {
         "": "",
         "Addr": "0x94b...2ad83",
-        "Gross Income (Ocean)": "7.17K",
+        "Apr": "100.03%",
         "Accuracy": "100.0%",
-        "Staked (Ocean)": "3.59K",
         "Number Of Feeds": "1",
-        "Tx Costs (Ocean)": "0.4",
-        "Income From Stakes (Ocean)": "3.59K",
-        "Apr": "100.03%"
+        "Staked (Ocean)": "3.59K",
+        "Gross Income (Ocean)": "3.59K",
+        "Net Income (Ocean)": "3.59K",
+        "Stake Loss (Ocean)": "0.0",
+        "Tx Costs (Ocean)": "0.4"
+    },
+    {
+        "": "",
+        "Addr": "0xece...da47b",
+        "Apr": "100.42%",
+        "Accuracy": "100.0%",
+        "Number Of Feeds": "1",
+        "Staked (Ocean)": "3.09K",
+        "Gross Income (Ocean)": "3.11K",
+        "Net Income (Ocean)": "3.11K",
+        "Stake Loss (Ocean)": "0.0",
+        "Tx Costs (Ocean)": "0.4"
     }
 ]

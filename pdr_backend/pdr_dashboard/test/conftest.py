@@ -68,6 +68,7 @@ def pytest_setup_options():
     options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-search-engine-choice-screen")
+    options.add_argument("--window-size=1920,1080")
 
     return options
 
