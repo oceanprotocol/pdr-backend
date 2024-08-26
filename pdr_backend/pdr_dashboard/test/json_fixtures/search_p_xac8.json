@@ -2,12 +2,13 @@
     {
         "": "",
         "Addr": "0xac8...95f04",
-        "Gross Income (Ocean)": "18.17K",
+        "Apr": "57.14%",
         "Accuracy": "60.38%",
-        "Staked (Ocean)": "11.56K",
         "Number Of Feeds": "20",
-        "Tx Costs (Ocean)": "52.0",
-        "Income From Stakes (Ocean)": "6.61K",
-        "Apr": "57.14%"
+        "Staked (Ocean)": "11.56K",
+        "Gross Income (Ocean)": "9.07K",
+        "Net Income (Ocean)": "6.55K",
+        "Stake Loss (Ocean)": "2.46K",
+        "Tx Costs (Ocean)": "52.0"
     }
 ]

@@ -132,17 +132,18 @@ class PredictoorsPage(TabularPage):
 
         ## split the pair column into two columns
         for data_item in temp_data:
+            tx_costs = self.app.fee_cost * float(data_item["stake_count"])
+
             temp_pred_item = {}
             temp_pred_item["addr"] = str(data_item["user"])
-            temp_pred_item["gross_income_(OCEAN)"] = data_item["total_payout"]
-            temp_pred_item["accuracy"] = data_item["avg_accuracy"]
-            temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
-            temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
-            temp_pred_item["tx_costs_(OCEAN)"] = self.app.fee_cost * float(
-                data_item["stake_count"]
-            )
-            temp_pred_item["income_from_stakes_(OCEAN)"] = data_item["total_profit"]
             temp_pred_item["apr"] = data_item["apr"]
+            temp_pred_item["accuracy"] = data_item["avg_accuracy"]
+            temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
+            temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
+            temp_pred_item["gross_income_(OCEAN)"] = data_item["gross_income"]
+            temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
+            temp_pred_item["stake_loss_(OCEAN)"] = data_item["stake_loss"]
+            temp_pred_item["tx_costs_(OCEAN)"] = tx_costs
 
             new_predictoor_data.append(temp_pred_item)
 
