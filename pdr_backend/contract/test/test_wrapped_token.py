@@ -16,10 +16,18 @@ def test_native_token(web3_pp):
     mock_wrapped_contract = Mock()
     mock_transaction = Mock()
     mock_transaction.transact.return_value = "mock_tx"
-    mock_wrapped_contract.functions.withdraw.return_value = mock_transaction
+    mock_wrapped_contract.functions.withdraw().build_transaction.return_value = {
+        "nonce": 1,
+        "gasPrice": 1,
+        "from": web3_pp.web3_config.owner,
+        "gas": 250000,
+    }
 
     with patch("web3.eth.Eth.contract") as mock:
         mock.return_value = mock_wrapped_contract
         token = WrappedToken(web3_pp, token_address)
+        with patch.object(token, "_sign_and_send_transaction") as mock_sign:
+            mock_sign.return_value = "mock_tx"
+            result = token.withdraw(Wei(100), False)
 
-    assert token.withdraw(Wei(100), False) == "mock_tx"
+    assert result == "mock_tx"

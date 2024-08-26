@@ -32,7 +32,7 @@ class WrappedToken(Token):
         unsigned = self.contract_instance_wrapped.functions.withdraw(
             amount.amt_wei
         ).build_transaction(call_params)
-        tx = self._sign_and_send_transaction(unsigned, wait_for_receipt)
+        tx = self._sign_and_send_transaction(unsigned, call_params)
 
         if not wait_for_receipt:
             return tx
