@@ -77,14 +77,19 @@ def test_transfer_erc20(pred_submitter_mgr: PredSubmitterMgr, OCEAN, web3_config
 
 
 def test_transfer(pred_submitter_mgr: PredSubmitterMgr, web3_config):
-    tx = web3_config.w3.eth.send_transaction(
-        {
-            "to": pred_submitter_mgr.contract_address,
-            "value": 100,
-            "gasPrice": web3_config.w3.eth.gas_price,
-            "from": web3_config.owner,
-        }
+    unsigned = {
+        "to": pred_submitter_mgr.contract_address,
+        "value": 100,
+        "gasPrice": web3_config.w3.eth.gas_price,
+        "from": web3_config.owner,
+        "gas": 25000,
+    }
+    unsigned["nonce"] = web3_config.w3.eth.get_transaction_count(web3_config.owner)
+    signed = web3_config.w3.eth.account.sign_transaction(
+        unsigned, private_key=web3_config.private_key
     )
+    tx = web3_config.w3.eth.send_raw_transaction(signed.raw_transaction)
+
     web3_config.w3.eth.wait_for_transaction_receipt(tx)
     assert web3_config.w3.eth.get_balance(pred_submitter_mgr.contract_address) == 100
     before = web3_config.w3.eth.get_balance(web3_config.owner)
@@ -104,13 +109,20 @@ def test_claim_dfrewards(pred_submitter_mgr: PredSubmitterMgr, web3_pp, OCEAN):
     # approve rewards
     OCEAN.approve(dfrewards_addr, Wei(200), web3_pp.web3_config.owner)
 
+    call_params = web3_pp.tx_call_params()
+
     # allocate rewards
-    tx = dfrewards.contract_instance.functions.allocate(
+    unsigned = dfrewards.contract_instance.functions.allocate(
         [pmup, pmdown],
         [100, 100],
         OCEAN.contract_address,
-    ).transact(web3_pp.tx_call_params())
-    web3_pp.web3_config.w3.eth.wait_for_transaction_receipt(tx)
+    ).build_transaction(call_params)
+
+    w3 = web3_pp.web3_config.w3
+    unsigned["nonce"] = w3.eth.get_transaction_count(call_params["from"])
+    signed = w3.eth.account.sign_transaction(unsigned, private_key=web3_pp.private_key)
+    tx = w3.eth.send_raw_transaction(signed.raw_transaction)
+    w3.eth.wait_for_transaction_receipt(tx)
 
     # record before balances
     before_up = OCEAN.balanceOf(pmup)

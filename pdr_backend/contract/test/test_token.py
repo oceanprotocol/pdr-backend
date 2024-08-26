@@ -21,7 +21,14 @@ def test_token(web3_pp, web3_config):
     alice = accounts[1]
 
     call_params = web3_pp.tx_call_params()
-    token.contract_instance.functions.mint(owner_addr, 1000000000).transact(call_params)
+    unsigned = token.contract_instance.functions.mint(
+        owner_addr, 1000000000
+    ).build_transaction(call_params)
+    unsigned["nonce"] = web3_config.w3.eth.get_transaction_count(call_params["from"])
+    signed = web3_config.w3.eth.account.sign_transaction(
+        unsigned, private_key=web3_pp.private_key
+    )
+    web3_config.w3.eth.send_raw_transaction(signed.raw_transaction)
 
     allowance_start = token.allowance(owner_addr, alice)
     token.approve(alice, allowance_start + 100, True)
