@@ -6,6 +6,7 @@ from abc import ABC
 
 from enforce_typing import enforce_types
 from sapphirepy import wrapper
+from web3.utils.abi import get_abi_element
 
 
 @enforce_types
@@ -49,7 +50,9 @@ class BaseContract(ABC):
         receiver = self.contract_instance.address if receiver is None else receiver
         pk = self.config.account.key.hex()[2:] if pk is None else pk
 
-        data = self.contract_instance.encode_abi(fn_name=function_name, args=args)
+        data = self.contract_instance.encode_abi(
+            abi_element_identifier=function_name, args=args
+        )
         rpc_url = self.config.rpc_url
 
         return wrapper.send_encrypted_sapphire_tx(
