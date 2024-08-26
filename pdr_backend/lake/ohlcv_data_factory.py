@@ -12,6 +12,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
+from pdr_backend.cli.arg_threshold import ArgThreshold
 from pdr_backend.exchange.fetch_ohlcv import fetch_ohlcv
 from pdr_backend.lake.alt_bar import get_dollar_bars, get_tick_bars, get_volume_bars
 from pdr_backend.lake.clean_raw_ohlcv import clean_raw_ohlcv
@@ -102,7 +103,7 @@ class OhlcvDataFactory:
                 logger.info(f"Get {feed.threshold.prefix} bars for %s", feed)
                 bars = []
                 df_pandas = df.to_pandas()
-                bars = self._get_threshold_bars(df_pandas, feed)
+                bars = self._get_threshold_bars(df_pandas, feed.threshold)
                 bars_df = pl.DataFrame(bars, schema=columns).with_columns(
                     pl.col("timestamp").cast(pl.Int64)
                 )
@@ -298,14 +299,14 @@ class OhlcvDataFactory:
         filename = os.path.join(self.ss.lake_dir, basename)
         return filename
 
-    def _get_threshold_bars(self, df_pandas: pl.DataFrame, feed: ArgFeed):
-        prefix, threshold = feed.threshold.prefix, feed.threshold.threshold
+    def _get_threshold_bars(self, df_pandas: pl.DataFrame, threshold: ArgThreshold):
+        prefix, threshold_val = threshold.prefix, threshold.threshold()
         if prefix == "vb":
-            bars, _ = get_volume_bars(df_pandas, threshold)
+            bars, _ = get_volume_bars(df_pandas, threshold_val)
         elif prefix == "db":
-            bars, _ = get_dollar_bars(df_pandas, threshold)
+            bars, _ = get_dollar_bars(df_pandas, threshold_val)
         elif prefix == "tb":
-            bars, _ = get_tick_bars(df_pandas, threshold)
+            bars, _ = get_tick_bars(df_pandas, threshold_val)
         else:
             raise ValueError(f"Unknown threshold type with prefix: {prefix}")
         return bars
