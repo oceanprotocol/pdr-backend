@@ -10,10 +10,7 @@ It also serves users who want to understand any issues and caveats in the instal
 
 ## Frozen Dependencies
 
-- `pytest-asyncio` is frozen at version 0.21.1. This is because later versions have a known issue with event loops.
-
-For more details, see the [the pytest-asyncio changelog](https://pytest-asyncio.readthedocs.io/en/latest/reference/changelog.html#id1), under Known Issues.
-The library itself recommends using version 0.21 until the issue is resolved.
+none, currently.
 
 ## For new dependencies: Types Management
 
