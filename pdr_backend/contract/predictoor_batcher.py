@@ -34,9 +34,11 @@ class PredictoorBatcher(BaseContract):
         wait_for_receipt=True,
     ):
         call_params = self.web3_pp.tx_call_params(gas=14_000_000)
-        tx = self.contract_instance.functions.consumeMultiple(
+        unsigned = self.contract_instance.functions.consumeMultiple(
             addresses, times, token_addr
-        ).transact(call_params)
+        ).build_transaction(call_params)
+
+        tx = self._sign_and_send_transaction(unsigned, call_params)
 
         if not wait_for_receipt:
             return tx
@@ -53,9 +55,11 @@ class PredictoorBatcher(BaseContract):
         wait_for_receipt=True,
     ):
         call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.submitTruevalContracts(
+        unsigned = self.contract_instance.functions.submitTruevalContracts(
             contract_addrs, epoch_starts, trueVals, cancelRounds
-        ).transact(call_params)
+        ).build_transaction(call_params)
+
+        tx = self._sign_and_send_transaction(unsigned, call_params)
 
         if not wait_for_receipt:
             return tx
@@ -72,9 +76,11 @@ class PredictoorBatcher(BaseContract):
         wait_for_receipt=True,
     ):
         call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.submitTruevals(
+        unsigned = self.contract_instance.functions.submitTruevals(
             contract_addr, epoch_starts, trueVals, cancelRounds
-        ).transact(call_params)
+        ).build_transaction(call_params)
+
+        tx = self._sign_and_send_transaction(unsigned, call_params)
 
         if not wait_for_receipt:
             return tx

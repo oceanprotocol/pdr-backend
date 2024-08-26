@@ -20,9 +20,18 @@ class Erc721Factory(BaseContract):
 
     def createNftWithErc20WithFixedRate(self, NftCreateData, ErcCreateData, FixedData):
         call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.createNftWithErc20WithFixedRate(
+
+        unsigned = self.contract_instance.functions.createNftWithErc20WithFixedRate(
             NftCreateData, ErcCreateData, FixedData
-        ).transact(call_params)
+        ).build_transaction(call_params)
+        unsigned["nonce"] = self.config.w3.eth.get_transaction_count(
+            call_params["from"]
+        )
+
+        signed = self.config.w3.eth.account.sign_transaction(
+            unsigned, private_key=self.web3_pp.private_key
+        )
+        tx = self.config.w3.eth.send_raw_transaction(signed.raw_transaction)
         receipt = self.config.w3.eth.wait_for_transaction_receipt(tx)
 
         if receipt["status"] != 1:

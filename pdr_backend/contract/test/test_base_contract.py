@@ -7,8 +7,6 @@ from unittest.mock import Mock
 
 import pytest
 from enforce_typing import enforce_types
-from web3.utils.abi import get_abi_element
-
 from pdr_backend.contract.token import Token
 
 

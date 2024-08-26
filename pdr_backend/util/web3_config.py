@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 import logging
-import requests
 import time
 from typing import Optional
 
+import requests
 from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from eth_keys import KeyAPI

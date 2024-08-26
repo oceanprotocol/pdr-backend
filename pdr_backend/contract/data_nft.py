@@ -24,18 +24,24 @@ class DataNft(BaseContract):
         field_value_bytes = field_value.encode()  # to array of bytes
 
         call_params = self.web3_pp.tx_call_params(gas=100000)
-        tx = self.contract_instance.functions.setNewData(
+        unsigned = self.contract_instance.functions.setNewData(
             field_label_hash, field_value_bytes
-        ).transact(call_params)
+        ).build_transaction(call_params)
+
+        tx = self._sign_and_send_transaction(unsigned, call_params)
+
         if wait_for_receipt:
             self.config.w3.eth.wait_for_transaction_receipt(tx)
         return tx
 
     def add_erc20_deployer(self, address, wait_for_receipt=True):
         call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.addToCreateERC20List(
+        unsigned = self.contract_instance.functions.addToCreateERC20List(
             self.config.w3.to_checksum_address(address)
-        ).transact(call_params)
+        ).build_transaction(call_params)
+
+        tx = self._sign_and_send_transaction(unsigned, call_params)
+
         if wait_for_receipt:
             self.config.w3.eth.wait_for_transaction_receipt(tx)
         return tx
@@ -44,7 +50,7 @@ class DataNft(BaseContract):
         js = json.dumps(ddo)
         stored_ddo = Web3.to_bytes(text=js)
         call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.setMetaData(
+        unsigned = self.contract_instance.functions.setMetaData(
             1,
             "",
             str(self.config.owner),
@@ -52,7 +58,10 @@ class DataNft(BaseContract):
             stored_ddo,
             Web3.to_bytes(hexstr=hashlib.sha256(js.encode("utf-8")).hexdigest()),
             [],
-        ).transact(call_params)
+        ).build_transaction(call_params)
+
+        tx = self._sign_and_send_transaction(unsigned, call_params)
+
         if wait_for_receipt:
             self.config.w3.eth.wait_for_transaction_receipt(tx)
         return tx
@@ -61,9 +70,11 @@ class DataNft(BaseContract):
         self, addr: str, wait_for_receipt=True
     ) -> Union[HexBytes, TxReceipt]:
         call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.addToCreateERC20List(addr).transact(
-            call_params
-        )
+        unsigned = self.contract_instance.functions.addToCreateERC20List(
+            addr
+        ).build_transaction(call_params)
+
+        tx = self._sign_and_send_transaction(unsigned, call_params)
 
         if not wait_for_receipt:
             return tx

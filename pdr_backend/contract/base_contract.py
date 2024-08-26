@@ -6,7 +6,6 @@ from abc import ABC
 
 from enforce_typing import enforce_types
 from sapphirepy import wrapper
-from web3.utils.abi import get_abi_element
 
 
 @enforce_types
@@ -66,3 +65,13 @@ class BaseContract(ABC):
             gasCost,
             nonce,
         )
+
+    def _sign_and_send_transaction(self, unsigned, call_params):
+        unsigned["nonce"] = self.config.w3.eth.get_transaction_count(
+            call_params["from"]
+        )
+        signed = self.config.w3.eth.account.sign_transaction(
+            unsigned, private_key=self.web3_pp.private_key
+        )
+        tx = self.config.w3.eth.send_raw_transaction(signed.raw_transaction)
+        return tx

@@ -115,9 +115,10 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
 
         try:
             logger.info("buyFromFreAndOrder: begin")
-            tx = self.contract_instance.functions.buyFromFreAndOrder(
+            unsigned = self.contract_instance.functions.buyFromFreAndOrder(
                 orderParams, freParams
-            ).transact(call_params)
+            ).build_transaction(call_params)
+            tx = self._sign_and_send_transaction(unsigned, call_params)
             if not wait_for_receipt:
                 logger.info("buyFromFreAndOrder: WIP, didn't wait around")
                 return tx
@@ -222,9 +223,11 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         """Claims the payout for given slots"""
         call_params = self.web3_pp.tx_call_params()
         try:
-            tx = self.contract_instance.functions.payoutMultiple(
+            unsigned = self.contract_instance.functions.payoutMultiple(
                 slots, self.config.owner
-            ).transact(call_params)
+            ).build_transaction(call_params)
+
+            tx = self._sign_and_send_transaction(unsigned, call_params)
 
             if not wait_for_receipt:
                 return tx
@@ -238,9 +241,11 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         """Claims the payout for one slot"""
         call_params = self.web3_pp.tx_call_params()
         try:
-            tx = self.contract_instance.functions.payout(
+            unsigned = self.contract_instance.functions.payout(
                 slot, self.config.owner
-            ).transact(call_params)
+            ).build_transaction(call_params)
+
+            tx = self._sign_and_send_transaction(unsigned, call_params)
 
             if not wait_for_receipt:
                 return tx
@@ -310,9 +315,10 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
                 )
                 logger.info("Encrypted transaction status code: %s", res)
             else:
-                tx = self.contract_instance.functions.submitPredval(
+                unsigned = self.contract_instance.functions.submitPredval(
                     predicted_value, stake_amt_wei.amt_wei, prediction_ts
-                ).transact(call_params)
+                ).build_transaction(call_params)
+                tx = self._sign_and_send_transaction(unsigned, call_params)
                 txhash = tx.hex()
             self.last_allowance[self.config.owner] -= stake_amt_wei  # type: ignore
             logger.info("Submitted prediction, txhash: %s", txhash)
@@ -345,9 +351,10 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         Returns the hash of the transaction.
         """
         call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.submitTrueVal(
+        unsigned = self.contract_instance.functions.submitTrueVal(
             timestamp, trueval, cancel_round
-        ).transact(call_params)
+        ).build_transaction(call_params)
+        tx = self._sign_and_send_transaction(unsigned, call_params)
         logger.info("Submit trueval: txhash=%s", tx.hex())
 
         if wait_for_receipt:
@@ -359,9 +366,11 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         """Redeem unused slot revenue."""
         call_params = self.web3_pp.tx_call_params()
         try:
-            tx = self.contract_instance.functions.redeemUnusedSlotRevenue(
+            unsigned = self.contract_instance.functions.redeemUnusedSlotRevenue(
                 timestamp
-            ).transact(call_params)
+            ).build_transaction(call_params)
+
+            tx = self._sign_and_send_transaction(unsigned, call_params)
 
             if not wait_for_receipt:
                 return tx
