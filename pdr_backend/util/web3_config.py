@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 import logging
+import requests
 import time
 from typing import Optional
 
@@ -13,7 +14,10 @@ from eth_keys.backends import NativeECCBackend
 from eth_typing import BlockIdentifier
 from web3 import Web3
 from web3.middleware import SignAndSendRawMiddlewareBuilder
-from web3.providers.rpc.utils import ExceptionRetryConfiguration
+from web3.providers.rpc.utils import (
+    REQUEST_RETRY_ALLOWLIST,
+    ExceptionRetryConfiguration,
+)
 from web3.types import BlockData
 
 from pdr_backend.util.constants import (
@@ -25,6 +29,7 @@ from pdr_backend.util.time_types import UnixTimeS
 
 _KEYS = KeyAPI(NativeECCBackend)
 logger = logging.getLogger("web3_config")
+DEFAULT_EXCEPTIONS = (ConnectionError, requests.HTTPError, requests.Timeout)
 
 
 @enforce_types
@@ -34,7 +39,12 @@ class Web3Config:
         self.w3 = Web3(
             Web3.HTTPProvider(
                 rpc_url,
-                exception_retry_configuration=ExceptionRetryConfiguration(),
+                exception_retry_configuration=ExceptionRetryConfiguration(
+                    errors=DEFAULT_EXCEPTIONS,
+                    retries=5,
+                    backoff_factor=0.125,
+                    method_allowlist=REQUEST_RETRY_ALLOWLIST,
+                ),
             )
         )
 
