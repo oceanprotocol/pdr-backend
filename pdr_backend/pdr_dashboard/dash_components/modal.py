@@ -39,7 +39,7 @@ class ModalContent:
         if self.selected_row:
             if self.modal_id == "predictoors_modal":
                 modal_header_title = f"{self.selected_row['addr']} - Predictoor Data"
-            elif self.modal_id == "feeds-modal":
+            elif self.modal_id == "feeds_modal":
                 sr = self.selected_row
                 modal_header_title = f"""{sr["base_token"]}-{sr["quote_token"]}
                 {sr["time"]} {sr["exchange"]}

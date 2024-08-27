@@ -261,8 +261,8 @@ button {
   margin-bottom: 5px;
 }
 
-#feeds-modal-header,
-#predictoors-modal-header {
+#feeds_modal-header,
+#predictoors_modal-header {
   display: flex;
   justify-content: center;
   width: 100%;
@@ -270,8 +270,8 @@ button {
   margin-bottom: 10px;
 }
 
-#feeds-modal-body,
-#predictoors-modal-body {
+#feeds_modal-body,
+#predictoors_modal-body {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -364,6 +364,6 @@ button {
   font-size: 20px;
 }
 
-#predictoors_modal-body .modal-graph-item, #feeds-modal-body .modal-graph-item{
+#predictoors_modal-body .modal-graph-item, #feeds_modal-body .modal-graph-item{
     margin-bottom: 30px;
 }

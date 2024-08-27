@@ -186,7 +186,7 @@ def get_callbacks_feeds(app):
     )
     # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, feeds_table_data):
-        content = ModalContent("feeds-modal", app.db_getter)
+        content = ModalContent("feeds_modal", app.db_getter)
         content.selected_row = (
             feeds_table_data[selected_rows[0]] if selected_rows else None
         )

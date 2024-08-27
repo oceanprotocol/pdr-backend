@@ -190,12 +190,12 @@ def test_feeds_table_modal(_sample_app, dash_duo):
     # Validate modal content
     modal = dash_duo.find_element("#feeds_modal")
     header_text = modal.find_element(
-        By.XPATH, "//div[@id='feeds-modal-header']//span"
+        By.XPATH, "//div[@id='feeds_modal-header']//span"
     ).text
     assert header_text == f"{base_token}-{quote_token} {timeframe} {exchange}"
 
     number_of_plots = len(
-        modal.find_element(By.ID, "feeds-modal-body").find_elements(
+        modal.find_element(By.ID, "feeds_modal-body").find_elements(
             By.CLASS_NAME, "dash-graph"
         )
     )
