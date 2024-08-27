@@ -22,6 +22,7 @@ def get_callbacks_predictoors(app):
             Input("stake_button", "n_clicks"),
             Input("costs_button", "n_clicks"),
             Input("search-input-predictoors-table", "value"),
+            Input("predictoors_page_table", "sort_by"),
         ],
         State("apr_min", "value"),
         State("apr_max", "value"),
@@ -45,6 +46,7 @@ def get_callbacks_predictoors(app):
         _n_clicks_stake,
         _n_clicks_costs,
         search_input_value,
+        sort_by,
         apr_min,
         apr_max,
         p_accuracy_min,
@@ -81,6 +83,16 @@ def get_callbacks_predictoors(app):
         columns = []
         if new_table_data:
             columns = get_feed_column_ids(new_table_data[0])
+
+        if sort_by:
+            # Extract sort criteria
+            sort_col = sort_by[0]["column_id"]
+            ascending = sort_by[0]["direction"] == "asc"
+
+            # Sort by raw "Price" even if the "Formatted Price" is displayed
+            new_table_data = sorted(
+                new_table_data, key=lambda x: x[sort_col], reverse=not ascending
+            )
 
         return format_table(new_table_data, columns)
 

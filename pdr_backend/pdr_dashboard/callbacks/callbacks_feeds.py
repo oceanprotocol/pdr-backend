@@ -24,6 +24,7 @@ def get_callbacks_feeds(app):
             Input("accuracy_button", "n_clicks"),
             Input("volume_button", "n_clicks"),
             Input("search-input-feeds-table", "value"),
+            Input("feeds_page_table", "sort_by"),
         ],
         State("sales_min", "value"),
         State("sales_max", "value"),
@@ -45,6 +46,7 @@ def get_callbacks_feeds(app):
         _n_clicks_accuracy,
         _n_clicks_volume,
         search_input_value,
+        sort_by,
         sales_min,
         sales_max,
         revenue_min,
@@ -79,6 +81,16 @@ def get_callbacks_feeds(app):
         columns = []
         if new_table_data:
             columns = get_feed_column_ids(new_table_data[0])
+
+        if sort_by:
+            # Extract sort criteria
+            sort_col = sort_by[0]["column_id"]
+            ascending = sort_by[0]["direction"] == "asc"
+
+            # Sort by raw "Price" even if the "Formatted Price" is displayed
+            new_table_data = sorted(
+                new_table_data, key=lambda x: x[sort_col], reverse=not ascending
+            )
 
         return format_table(new_table_data, columns)
 

@@ -114,7 +114,8 @@ class PredictoorsPage(TabularPage):
                     hidden_columns=["full_addr"],
                     row_selectable="single",
                     data=predictoor_data,
-                    sort_action="native",  # Enables sorting feature
+                    sort_action="custom",
+                    sort_mode="single",
                 ),
             ],
             style={"width": "100%", "overflow": "scroll"},
