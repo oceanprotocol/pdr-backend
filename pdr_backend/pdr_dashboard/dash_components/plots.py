@@ -132,7 +132,7 @@ class PredictoorModalFigures(ModalFigures):
                 "show_legend": False,
             },
             "profits_fig": {
-                "title": "Profits",
+                "title": "Total Profit over time",
                 "yaxis_title": "Profit (OCEAN)",
                 "show_legend": False,
             },
@@ -160,17 +160,19 @@ class PredictoorModalFigures(ModalFigures):
         }
 
         self.incomes_fig.add_traces(
-            go.Scatter(x=self.slots, y=self.incomes, **defaults)
+            go.Bar(x=self.slots, y=self.incomes, showlegend=False)
         )
         self.accuracies_fig.add_traces(
             go.Scatter(x=self.slots, y=self.accuracies, **defaults)
         )
-        self.stakes_fig.add_traces(go.Scatter(x=self.slots, y=self.stakes, **defaults))
+        self.stakes_fig.add_traces(
+            go.Bar(x=self.slots, y=self.stakes, showlegend=False)
+        )
         self.profits_fig.add_traces(
             go.Scatter(x=self.slots, y=self.profits, **defaults)
         )
         self.nr_of_feeds_fig.add_traces(
-            go.Scatter(x=self.slots, y=self.nr_of_feeds, **defaults)
+            go.Bar(x=self.slots, y=self.nr_of_feeds, showlegend=False)
         )
 
     def get_figures(self):
@@ -587,6 +589,7 @@ def get_predictoor_figures(payouts: List):
 
     correct_predictions = 0
     total_predictions = 0
+    total_profit = 0
 
     # Process each slot's payouts
     for slot, payout_group in grouped_payouts.items():
@@ -596,10 +599,11 @@ def get_predictoor_figures(payouts: List):
 
         correct_predictions += sum(1 for p in payout_group if p["payout"] > 0)
         total_predictions += slot_predictions
+        total_profit += slot_profit
 
         result.incomes.append(sum(p["payout"] for p in payout_group))
         result.stakes.append(slot_stake)
-        result.profits.append(slot_profit)
+        result.profits.append(total_profit)
         result.accuracies.append((correct_predictions / total_predictions) * 100)
         result.slots.append(UnixTimeS(int(slot)).to_milliseconds())
         result.nr_of_feeds.append(slot_predictions)

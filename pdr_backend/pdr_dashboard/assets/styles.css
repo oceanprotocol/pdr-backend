@@ -363,3 +363,7 @@ button {
   font-weight: bold;
   font-size: 20px;
 }
+
+#predictoors_modal-body .modal-graph-item, #feeds-modal-body .modal-graph-item{
+    margin-bottom: 30px;
+}
