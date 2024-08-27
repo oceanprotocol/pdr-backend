@@ -60,10 +60,10 @@ trader_ss:
   feed: binance BTC/USDT c 5m
   sim_only:
     buy_amt: 1000 USD # buy this amount in each epoch
-    fee_percent: 0.0 # simulated % fee
-    confidence_threshold: 0.02 # skip trade if confidence < this
-    stop_loss_percent: 1.0 # sell if price drops by this %, in decimal, 1.0 = 100% = disabled
-    take_profit_percent: 100.0 # sell if price rises by this %, . 100.0 = disabled
+    fee_percent: 0.0 # simulated % fee, in decimal, where 1.0 = 100%
+    confidence_threshold: 0.02 # skip trade if confidence < this, in decimal, where 1.0 = 100%
+    stop_loss_percent: 1.0 # sell if price drops by this %, in decimal, where 1.0 = 100%, . 1.0 = disabled
+    take_profit_percent: 100.0 # sell if price rises by this %, where 100.0 = 100%, . 100.0 = disabled
 
   bot_only:
     min_buffer: 30 # in s. only trade if there's > this time left
