@@ -97,7 +97,7 @@ def fetch_ohlcv_kaiko(
     start_time = since.to_dt().strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z"
     params = {"page_size": page_size, "start_time": start_time, "sort": "asc"}
 
-    response = requests.get(url, headers=headers, params=params)
+    response = requests.get(url, headers=headers, params=params, timeout=60)
     if response.status_code == 200:
         data = response.json()
         if data["result"] == "error":

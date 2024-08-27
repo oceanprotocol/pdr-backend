@@ -316,7 +316,12 @@ def test_get_mergedohlcv_df_calls(
     _, factory = _lake_ss_1feed(tmpdir, "binanceus ETH/USDT h 5m")
 
     factory._update_rawohlcv_files = AsyncMock(return_value=None)
-    factory._load_rawohlcv_files = Mock(return_value=None)
+    mockohlcv = {
+        "binanceus": {
+            "ETH/USDT": Mock(spec=pl.DataFrame),
+        }
+    }
+    factory._load_rawohlcv_files = Mock(return_value=mockohlcv)
 
     mergedohlcv_df = factory.get_mergedohlcv_df()
 

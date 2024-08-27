@@ -15,6 +15,9 @@ def test_ArgFeed_main_constructor():
         ("binance", "open", "BTC/USDT"),
         ("kraken", "close", "BTC/DAI"),
         ("kraken", "close", "BTC-DAI"),
+        ("binance", "open", "BTC/USDT", "5m", "vb_201"),
+        ("binance", "open", "BTC/USDT", "5m", "tb_201"),
+        ("binance", "open", "BTC/USDT", "5m", "db_201.5"),
     ]
     for feed_tup in tups:
         ArgFeed(*feed_tup)
@@ -27,6 +30,8 @@ def test_ArgFeed_main_constructor():
         ("binance", "xyz", "BTC/USDT"),
         ("binance", "open", "BTC/XYZ"),
         ("binance", "open"),
+        ("binance", "open", "BTC/USDT", "5m", "201"),
+        ("binance", "open", "BTC/USDT", "5m", "tb-201.5"),
     ]
     for feed_tup in tups:
         with pytest.raises(ValueError):
@@ -35,7 +40,7 @@ def test_ArgFeed_main_constructor():
     # not ok - Type Error
     tups = [
         (),
-        ("binance", "open", "BTC/USDT", "", "", ""),
+        ("binance"),
     ]
     for feed_tup in tups:
         with pytest.raises(TypeError):
@@ -52,6 +57,15 @@ def test_ArgFeed_from_str():
     assert ArgFeed.from_str("binance BTC/USDT c 1h") == target_feed
     assert ArgFeed.from_str("binance BTC-USDT c 1h") == target_feed
 
+    target_feed = ArgFeed("binance", "close", "BTC/USDT", "1s", "vb_201")
+    assert ArgFeed.from_str("binance BTC/USDT c 1s vb_201") == target_feed
+
+    target_feed = ArgFeed("binance", "close", "BTC/USDT", "1s", "tb_201")
+    assert ArgFeed.from_str("binance BTC/USDT c 1s tb_201") == target_feed
+
+    target_feed = ArgFeed("binance", "close", "BTC/USDT", "1s", "db_201.5")
+    assert ArgFeed.from_str("binance BTC/USDT c 1s db_201.5") == target_feed
+
 
 @enforce_types
 def test_ArgFeed_str():
@@ -66,3 +80,11 @@ def test_ArgFeed_str():
     target_feed_str = "binance BTC/USDT 5m"
     assert str(ArgFeed("binance", None, "BTC/USDT", "5m")) == target_feed_str
     assert str(ArgFeed("binance", None, "BTC-USDT", "5m")) == target_feed_str
+
+    target_feed_str = "binance BTC/USDT 5m vb_201"
+    assert str(ArgFeed("binance", None, "BTC/USDT", "5m", "vb_201")) == target_feed_str
+    assert str(ArgFeed("binance", None, "BTC-USDT", "5m", "vb_201")) == target_feed_str
+
+    target_feed_str = "binance BTC/USDT 5m db_201"
+    assert str(ArgFeed("binance", None, "BTC/USDT", "5m", "db_201")) == target_feed_str
+    assert str(ArgFeed("binance", None, "BTC-USDT", "5m", "db_201")) == target_feed_str
