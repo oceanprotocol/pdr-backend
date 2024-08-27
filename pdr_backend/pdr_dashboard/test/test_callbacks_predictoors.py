@@ -26,20 +26,21 @@ def test_predictoors_table(_sample_app, dash_duo):
 
     header = rows[0].find_elements(By.XPATH, ".//th")
     columns = header
-    assert len(columns) == 9
+    assert len(columns) == 10
 
     # Validate headers
     header_texts = [_remove_tags(c.text) for c in columns]
     expected_headers = [
         "",
         "Addr",
-        "Gross Income (Ocean)",
-        "Accuracy",
-        "Staked (Ocean)",
-        "Number Of Feeds",
-        "Tx Costs (Ocean)",
-        "Income From Stakes (Ocean)",
         "Apr",
+        "Accuracy",
+        "Number Of Feeds",
+        "Staked (Ocean)",
+        "Gross Income (Ocean)",
+        "Net Income (Ocean)",
+        "Stake Loss (Ocean)",
+        "Tx Costs (Ocean)",
     ]
     assert header_texts == expected_headers
 
@@ -64,8 +65,8 @@ def test_feeds_page_metrics_row(_sample_app, dash_duo):
     expected_metrics = [
         "Predictoors",
         "Accuracy(avg)",
-        "Stake(avg)",
-        "Gross Income(avg)",
+        "Staked",
+        "Gross Income",
     ]
 
     for i, metric in enumerate(expected_metrics):
