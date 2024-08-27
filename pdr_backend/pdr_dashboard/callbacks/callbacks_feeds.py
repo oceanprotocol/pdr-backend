@@ -1,23 +1,14 @@
 import dash
 from dash import Input, Output, State
 
-from pdr_backend.cli.arg_feeds import ArgFeed
-from pdr_backend.pdr_dashboard.dash_components.plots import (
-    FeedModalFigures,
-    get_feed_figures,
-)
+from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
 from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
-from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.filters import (
-    filter_table_by_range,
     check_condition,
+    filter_table_by_range,
 )
+from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
-from pdr_backend.pdr_dashboard.dash_components.modal import (
-    get_graphs_modal_header,
-    get_graphs_modal_body,
-    get_default_modal_content,
-)
 
 
 def get_callbacks_feeds(app):
@@ -181,38 +172,11 @@ def get_callbacks_feeds(app):
         State("feeds_page_table", "selected_rows"),
         State("feeds_page_table", "data"),
     )
+    # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, feeds_table_data):
-        if not is_open or not selected_rows:
-            return get_default_modal_content(
-                modal_id="feeds-modal",
-                figures=get_feed_figures([], []).get_figures(),
-            )
-
-        selected_row = feeds_table_data[selected_rows[0]]
-
-        feed = ArgFeed(
-            exchange=selected_row["exchange"].lower(),
-            signal=None,
-            pair=f'{selected_row["base_token"]}-{selected_row["quote_token"]}',
-            timeframe=selected_row["time"],
-            contract=selected_row["full_addr"],
+        content = ModalContent("feeds-modal", app.db_getter)
+        content.selected_row = (
+            feeds_table_data[selected_rows[0]] if selected_rows else None
         )
 
-        payouts = app.db_getter.payouts([feed.contract], None, 0)
-        subscriptions = app.db_getter.feed_daily_subscriptions_by_feed_id(feed.contract)
-        feed_figures: FeedModalFigures = get_feed_figures(payouts, subscriptions)
-
-        children = [
-            get_graphs_modal_header(
-                modal_header_title=f"""{selected_row["base_token"]}-{selected_row["quote_token"]}
-                {selected_row["time"]} {selected_row["exchange"]}
-                """,
-                modal_id="feeds-modal",
-            ),
-            get_graphs_modal_body(
-                figures=feed_figures.get_figures(),
-                modal_id="feeds-modal",
-            ),
-        ]
-
-        return children
+        return content.get_content()

@@ -1,23 +1,14 @@
 import dash
 from dash import Input, Output, State
 
+from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
 from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
-from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.filters import (
-    filter_table_by_range,
     check_condition,
+    filter_table_by_range,
 )
+from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
-from pdr_backend.pdr_dashboard.dash_components.plots import (
-    PredictoorModalFigures,
-    get_predictoor_figures,
-)
-
-from pdr_backend.pdr_dashboard.dash_components.modal import (
-    get_graphs_modal_header,
-    get_graphs_modal_body,
-    get_default_modal_content,
-)
 
 
 def get_callbacks_predictoors(app):
@@ -225,29 +216,11 @@ def get_callbacks_predictoors(app):
         State("predictoors_page_table", "selected_rows"),
         State("predictoors_page_table", "data"),
     )
+    # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, predictoors_table_data):
-        if not is_open or not selected_rows:
-            return get_default_modal_content(
-                modal_id="predictoors_modal",
-                figures=get_predictoor_figures([]).get_figures(),
-            )
-
-        selected_row = predictoors_table_data[selected_rows[0]]
-
-        payouts = app.db_getter.payouts(
-            feed_addrs=[], predictoor_addrs=[selected_row["full_addr"]], start_date=0
+        content = ModalContent("predictoors_modal", app.db_getter)
+        content.selected_row = (
+            predictoors_table_data[selected_rows[0]] if selected_rows else None
         )
 
-        predictoor_figures: PredictoorModalFigures = get_predictoor_figures(payouts)
-
-        children = [
-            get_graphs_modal_header(
-                modal_header_title=f"{selected_row['addr']} - Predictoor Data",
-                modal_id="predictoors_modal",
-            ),
-            get_graphs_modal_body(
-                figures=predictoor_figures.get_figures(), modal_id="predictoors_modal"
-            ),
-        ]
-
-        return children
+        return content.get_content()
