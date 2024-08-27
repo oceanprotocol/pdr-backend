@@ -97,10 +97,18 @@ class DBGetter:
             SELECT
                 p."user",
                 SUM(p.stake) AS total_stake,
-                SUM(p.payout - p.stake) AS total_profit,
+                -- Calculate gross income: only include positive differences when payout > stake
+                SUM(CASE WHEN p.payout > 0 THEN p.payout - p.stake ELSE 0 END) AS gross_income,
+                -- Calculate total loss: sum up the negative income, capping positives at 0
+                SUM(CASE WHEN p.payout = 0 THEN p.stake ELSE 0 END) AS stake_loss,
                 SUM(p.payout) AS total_payout,
+                --- Calculate total profit
+                SUM(p.payout - p.stake) AS total_profit,
+                --- Calculate total stake
+                SUM(p.stake) AS total_stake,
                 COUNT(p.ID) AS stake_count,
                 COUNT(DISTINCT SPLIT_PART(p.ID, '-', 1)) AS feed_count,
+                -- Count correct predictions where payout > 0
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) AS correct_predictions,
                 COUNT(*) AS predictions,
                 AVG(p.stake) AS avg_stake,
