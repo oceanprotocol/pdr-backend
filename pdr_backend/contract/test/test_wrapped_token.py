@@ -26,7 +26,7 @@ def test_native_token(web3_pp):
     with patch("web3.eth.Eth.contract") as mock:
         mock.return_value = mock_wrapped_contract
         token = WrappedToken(web3_pp, token_address)
-        with patch.object(token, "_sign_and_send_transaction") as mock_sign:
+        with patch.object(token, "transact") as mock_sign:
             mock_sign.return_value = "mock_tx"
             result = token.withdraw(Wei(100), False)
 

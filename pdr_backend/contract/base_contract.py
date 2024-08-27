@@ -66,7 +66,22 @@ class BaseContract(ABC):
             nonce,
         )
 
-    def _sign_and_send_transaction(self, unsigned, call_params):
+    def transact(
+        self, function_name, params, call_params=None, use_wrapped_instance=False
+    ):
+        if not call_params:
+            call_params = self.web3_pp.tx_call_params()
+
+        instance = (
+            self.contract_instance_wrapped
+            if use_wrapped_instance
+            else self.contract_instance
+        )
+
+        unsigned = getattr(instance.functions, function_name)(
+            *params
+        ).build_transaction(call_params)
+
         unsigned["nonce"] = self.config.w3.eth.get_transaction_count(
             call_params["from"]
         )
@@ -74,4 +89,5 @@ class BaseContract(ABC):
             unsigned, private_key=self.web3_pp.private_key
         )
         tx = self.config.w3.eth.send_raw_transaction(signed.raw_transaction)
+
         return tx

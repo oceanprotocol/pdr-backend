@@ -115,10 +115,9 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
 
         try:
             logger.info("buyFromFreAndOrder: begin")
-            unsigned = self.contract_instance.functions.buyFromFreAndOrder(
-                orderParams, freParams
-            ).build_transaction(call_params)
-            tx = self._sign_and_send_transaction(unsigned, call_params)
+            tx = self.transact(
+                "buyFromFreAndOrder", [orderParams, freParams], call_params
+            )
             if not wait_for_receipt:
                 logger.info("buyFromFreAndOrder: WIP, didn't wait around")
                 return tx
@@ -221,13 +220,8 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
 
     def payout_multiple(self, slots: List[UnixTimeS], wait_for_receipt: bool = True):
         """Claims the payout for given slots"""
-        call_params = self.web3_pp.tx_call_params()
         try:
-            unsigned = self.contract_instance.functions.payoutMultiple(
-                slots, self.config.owner
-            ).build_transaction(call_params)
-
-            tx = self._sign_and_send_transaction(unsigned, call_params)
+            tx = self.transact("payoutMultiple", [slots, self.config.owner])
 
             if not wait_for_receipt:
                 return tx
@@ -239,13 +233,8 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
 
     def payout(self, slot, wait_for_receipt=False):
         """Claims the payout for one slot"""
-        call_params = self.web3_pp.tx_call_params()
         try:
-            unsigned = self.contract_instance.functions.payout(
-                slot, self.config.owner
-            ).build_transaction(call_params)
-
-            tx = self._sign_and_send_transaction(unsigned, call_params)
+            tx = self.transact("payout", [slot, self.config.owner])
 
             if not wait_for_receipt:
                 return tx
@@ -305,7 +294,6 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
                 )
                 return None
 
-        call_params = self.web3_pp.tx_call_params()
         try:
             txhash = None
             if self.config.is_sapphire:
@@ -315,10 +303,10 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
                 )
                 logger.info("Encrypted transaction status code: %s", res)
             else:
-                unsigned = self.contract_instance.functions.submitPredval(
-                    predicted_value, stake_amt_wei.amt_wei, prediction_ts
-                ).build_transaction(call_params)
-                tx = self._sign_and_send_transaction(unsigned, call_params)
+                tx = self.transact(
+                    "submitPredval",
+                    [predicted_value, stake_amt_wei.amt_wei, prediction_ts],
+                )
                 txhash = tx.hex()
             self.last_allowance[self.config.owner] -= stake_amt_wei  # type: ignore
             logger.info("Submitted prediction, txhash: %s", txhash)
@@ -350,11 +338,7 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         Can only be called by the owner.
         Returns the hash of the transaction.
         """
-        call_params = self.web3_pp.tx_call_params()
-        unsigned = self.contract_instance.functions.submitTrueVal(
-            timestamp, trueval, cancel_round
-        ).build_transaction(call_params)
-        tx = self._sign_and_send_transaction(unsigned, call_params)
+        tx = self.transact("submitTrueVal", [timestamp, trueval, cancel_round])
         logger.info("Submit trueval: txhash=%s", tx.hex())
 
         if wait_for_receipt:
@@ -364,13 +348,8 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
 
     def redeem_unused_slot_revenue(self, timestamp, wait_for_receipt=True):
         """Redeem unused slot revenue."""
-        call_params = self.web3_pp.tx_call_params()
         try:
-            unsigned = self.contract_instance.functions.redeemUnusedSlotRevenue(
-                timestamp
-            ).build_transaction(call_params)
-
-            tx = self._sign_and_send_transaction(unsigned, call_params)
+            tx = self.transact("redeemUnusedSlotRevenue", [timestamp])
 
             if not wait_for_receipt:
                 return tx
