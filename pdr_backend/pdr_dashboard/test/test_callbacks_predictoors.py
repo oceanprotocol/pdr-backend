@@ -1,3 +1,4 @@
+import time
 from selenium.webdriver.common.by import By
 from pdr_backend.pdr_dashboard.test.resources import (
     _navigate_to_predictoors_page,
@@ -8,7 +9,10 @@ from pdr_backend.pdr_dashboard.test.resources import (
     _remove_tags,
     _set_searchbar_value,
 )
-from pdr_backend.pdr_dashboard.test.test_callbacks_feeds import _verify_table_data
+from pdr_backend.pdr_dashboard.test.test_callbacks_feeds import (
+    _verify_table_data,
+    _verify_table_data_order,
+)
 
 
 def test_predictoors_table(_sample_app, dash_duo):
@@ -172,3 +176,35 @@ def test_predictoors_searchbar(_sample_app, dash_duo):
         2,
     )
     _verify_table_data(table, "search_p_xac8.json")
+
+
+def test_sort_table(_sample_app, dash_duo):
+    app = _sample_app
+    start_server_and_wait(dash_duo, app)
+
+    _navigate_to_predictoors_page(dash_duo)
+
+    # Wait for the table to be fully rendered
+    dash_duo.wait_for_element("#predictoors_page_table")
+
+    # Select the table element
+    table = dash_duo.find_element("#predictoors_page_table")
+
+    # Click the 'Staked' column header to sort
+    actionables = table.find_elements(
+        By.XPATH, "//div//div[@class='column-actions']//span"
+    )[4]
+    actionables.click()
+
+    # Wait for the sort to apply
+    time.sleep(1)  # Sometimes sorting might take a moment
+
+    # Check if the data is sorted ascending
+    _verify_table_data_order(table, "sorted_predictoors_table_asc_by_stake.json")
+
+    # Click again to sort descending
+    actionables.click()
+    time.sleep(1)  # Wait for the sort to apply
+
+    # Check if the data is sorted descending
+    _verify_table_data_order(table, "sorted_predictoors_table_desc_by_stake.json")

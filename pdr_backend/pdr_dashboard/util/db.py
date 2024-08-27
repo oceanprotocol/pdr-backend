@@ -87,6 +87,7 @@ class DBGetter:
                     {Payout.get_lake_table_name()}
                 GROUP BY
                     contract
+                ORDER BY volume DESC;
             """,
         )
 
@@ -121,7 +122,8 @@ class DBGetter:
             FROM
                 {Payout.get_lake_table_name()} p
             GROUP BY
-                p."user";
+                p."user"
+            ORDER BY apr DESC;
         """
 
         return self._query_db(query)
