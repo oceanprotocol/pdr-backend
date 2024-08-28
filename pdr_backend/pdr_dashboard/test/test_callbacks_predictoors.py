@@ -1,5 +1,7 @@
 import time
+
 from selenium.webdriver.common.by import By
+
 from pdr_backend.pdr_dashboard.test.resources import (
     _assert_table_row_count,
     _clear_predictoors_filters,

@@ -218,7 +218,6 @@ def get_callbacks_predictoors(app):
             ctx,
             selected_rows,
             is_open_input,
-            ["predictoors_page_table", "predictoors_modal"],
             "predictoors_modal",
         )
 

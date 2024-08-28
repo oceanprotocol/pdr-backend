@@ -5,10 +5,12 @@ def toggle_modal_helper(
     ctx,
     selected_rows,
     is_open_input,
-    safe_trigger_ids=None,
     modal_id=None,
 ):
     triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    modal_type = modal_id.split("_")[0]
+    safe_trigger_ids = [f"{modal_type}_page_table", modal_id]
 
     if triggered_id not in safe_trigger_ids:
         return dash.no_update, dash.no_update

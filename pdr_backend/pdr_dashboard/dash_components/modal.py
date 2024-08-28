@@ -72,32 +72,37 @@ class ModalContent:
 
     def create_figures(self):
         selected_row = self.selected_row
+        figures_func = (
+            get_predictoor_figures
+            if self.modal_id == "predictoors_modal"
+            else get_feed_figures
+        )
+
+        if not selected_row:
+            figures_args = [[], []] if self.modal_id == "feeds_modal" else [[]]
+            self.figures = figures_func(*figures_args).get_figures()
+            return
 
         if self.modal_id == "feeds_modal":
-            if selected_row:
-                feed = ArgFeed(
-                    exchange=selected_row["exchange"].lower(),
-                    signal=None,
-                    pair=f'{selected_row["base_token"]}-{selected_row["quote_token"]}',
-                    timeframe=selected_row["time"],
-                    contract=selected_row["full_addr"],
-                )
+            feed = ArgFeed(
+                exchange=selected_row["exchange"].lower(),
+                signal=None,
+                pair=f'{selected_row["base_token"]}-{selected_row["quote_token"]}',
+                timeframe=selected_row["time"],
+                contract=selected_row["full_addr"],
+            )
 
-                payouts = self.db_getter.payouts([feed.contract], None, 0)
-                subscriptions = self.db_getter.feed_daily_subscriptions_by_feed_id(
-                    feed.contract
-                )
-                self.figures = get_feed_figures(payouts, subscriptions).get_figures()
-            else:
-                self.figures = get_feed_figures([], []).get_figures()
-
+            payouts = self.db_getter.payouts([feed.contract], None, 0)
+            subscriptions = self.db_getter.feed_daily_subscriptions_by_feed_id(
+                feed.contract
+            )
+            figures_args = [payouts, subscriptions]
         elif self.modal_id == "predictoors_modal":
-            if selected_row:
-                payouts = self.db_getter.payouts(
-                    feed_addrs=[],
-                    predictoor_addrs=[selected_row["full_addr"]],
-                    start_date=0,
-                )
-                self.figures = get_predictoor_figures(payouts).get_figures()
-            else:
-                self.figures = get_predictoor_figures([]).get_figures()
+            payouts = self.db_getter.payouts(
+                feed_addrs=[],
+                predictoor_addrs=[selected_row["full_addr"]],
+                start_date=0,
+            )
+            figures_args = [payouts]
+
+        self.figures = figures_func(*figures_args).get_figures()

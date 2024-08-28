@@ -174,7 +174,6 @@ def get_callbacks_feeds(app):
             ctx,
             selected_rows,
             is_open_input,
-            ["feeds_page_table", "feeds_modal"],
             "feeds_modal",
         )
 
