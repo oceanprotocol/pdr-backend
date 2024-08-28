@@ -1,13 +1,15 @@
 import time
+
 from selenium.webdriver.common.by import By
+
 from pdr_backend.pdr_dashboard.test.resources import (
-    _navigate_to_predictoors_page,
     _assert_table_row_count,
-    start_server_and_wait,
     _clear_predictoors_filters,
-    _set_input_value_and_submit,
+    _navigate_to_predictoors_page,
     _remove_tags,
+    _set_input_value_and_submit,
     _set_searchbar_value,
+    start_server_and_wait,
 )
 from pdr_backend.pdr_dashboard.test.test_callbacks_feeds import (
     _verify_table_data,
@@ -42,9 +44,9 @@ def test_predictoors_table(_sample_app, dash_duo):
         "Number Of Feeds",
         "Staked (Ocean)",
         "Gross Income (Ocean)",
-        "Net Income (Ocean)",
         "Stake Loss (Ocean)",
         "Tx Costs (Ocean)",
+        "Net Income (Ocean)",
     ]
     assert header_texts == expected_headers
 
@@ -104,50 +106,47 @@ def test_predictoors_table_filters(_sample_app, dash_duo):
 
     # Test filtering with staked max value + natural language
     _set_input_value_and_submit(
-        dash_duo, "#stake_dropdown", "#stake_max", "4K", "#stake_button"
+        dash_duo, "#staked_dropdown", "#staked_max", "4K", "#staked_button"
     )
     _assert_table_row_count(dash_duo, "#predictoors_page_table", 5)
-    _verify_table_data(table, "filtered_stake_max_4K.json")
+    _verify_table_data(table, "filtered_staked_max_4K.json")
 
     _clear_predictoors_filters(dash_duo)
     _assert_table_row_count(dash_duo, "#predictoors_page_table", 58)
     _verify_table_data(table, "expected_predictoors_table_data.json")
 
 
-# TODO: reimplement after finishing the modal
-"""
-def test_feeds_table_modal(_sample_app, dash_duo):
+def test_predictoors_table_modal(_sample_app, dash_duo):
     app = _sample_app
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_predictoors_page(dash_duo)
-    dash_duo.wait_for_element("#feeds_page_table")
+    dash_duo.wait_for_element("#predictoors_page_table")
 
     # Select a row
-    table = dash_duo.find_element("#feeds_page_table")
+    table = dash_duo.find_element("#predictoors_page_table")
     table.find_element(By.XPATH, "//tr[2]//td[1]//input[@type='radio']").click()
     time.sleep(1)
 
-    base_token = table.find_element(By.XPATH, "//tr[2]//td[3]//div").text
-    quote_token = table.find_element(By.XPATH, "//tr[2]//td[4]//div").text
-    timeframe = table.find_element(By.XPATH, "//tr[2]//td[6]//div").text
-    exchange = table.find_element(By.XPATH, "//tr[2]//td[5]//div").text
+    addr_short = table.find_element(By.XPATH, "//tr[2]//td[2]//div").text
 
-    dash_duo.wait_for_element("#modal", timeout=4)
+    dash_duo.wait_for_element("#predictoors_modal", timeout=4)
 
     # Validate modal content
-    modal = dash_duo.find_element("#modal")
+    modal = dash_duo.find_element("#predictoors_modal")
     header_text = modal.find_element(
-        By.XPATH, "//div[@id='feeds-modal-header']//span"
+        By.XPATH, "//div[@id='predictoors_modal-header']//span"
     ).text
-    assert header_text == f"{base_token}-{quote_token} {timeframe} {exchange}"
+    assert (
+        header_text == addr_short[:5] + "..." + addr_short[-5:] + " - Predictoor Data"
+    )
 
     number_of_plots = len(
-        modal.find_element(By.ID, "feeds-modal-body").find_elements(
+        modal.find_element(By.ID, "predictoors_modal-body").find_elements(
             By.CLASS_NAME, "dash-graph"
         )
     )
-    assert number_of_plots == 6
+    assert number_of_plots == 5
 
     # Close modal by clicking the background
     dash_duo.find_element(".modal").click()
@@ -157,7 +156,6 @@ def test_feeds_table_modal(_sample_app, dash_duo):
         "selected" in row.get_attribute("class")
         for row in table.find_elements(By.XPATH, ".//tr")
     )
-"""
 
 
 def test_predictoors_searchbar(_sample_app, dash_duo):

@@ -1,17 +1,14 @@
 from typing import Any, Dict, List, Tuple
 
-import dash_bootstrap_components as dbc
-from dash import dash_table, html
-
-from pdr_backend.pdr_dashboard.dash_components.plots import FeedModalFigures
+from dash import html, dash_table
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
-    get_graph,
     get_metric,
     get_search_bar,
 )
 from pdr_backend.pdr_dashboard.pages.common import TabularPage
 from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
 from pdr_backend.pdr_dashboard.util.format import format_table
+from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 
 
 class PredictoorsPage(TabularPage):
@@ -24,7 +21,9 @@ class PredictoorsPage(TabularPage):
                 self.get_metrics_row(),
                 self.get_search_bar_row(),
                 self.get_main_container(),
-                self.get_modal(),
+                get_modal(
+                    modal_id="predictoors_modal",
+                ),
             ],
             className="page-layout",
         )
@@ -34,10 +33,12 @@ class PredictoorsPage(TabularPage):
             [
                 self.get_input_filter("APR"),
                 self.get_input_filter("Accuracy", "predictoors"),
-                self.get_input_filter("Gross Income"),
                 self.get_input_filter("Nr Feeds"),
-                self.get_input_filter("Stake"),
-                self.get_input_filter("Costs"),
+                self.get_input_filter("Staked"),
+                self.get_input_filter("Gross Income"),
+                self.get_input_filter("Stake Loss"),
+                self.get_input_filter("Tx Costs"),
+                self.get_input_filter("Net Income"),
             ],
             className="filters-container",
         )
@@ -137,14 +138,15 @@ class PredictoorsPage(TabularPage):
 
             temp_pred_item = {}
             temp_pred_item["addr"] = str(data_item["user"])
+            temp_pred_item["full_addr"] = str(data_item["user"])
             temp_pred_item["apr"] = data_item["apr"]
             temp_pred_item["accuracy"] = data_item["avg_accuracy"]
             temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
             temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
             temp_pred_item["gross_income_(OCEAN)"] = data_item["gross_income"]
-            temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
             temp_pred_item["stake_loss_(OCEAN)"] = data_item["stake_loss"]
             temp_pred_item["tx_costs_(OCEAN)"] = tx_costs
+            temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
 
             new_predictoor_data.append(temp_pred_item)
 
@@ -153,40 +155,6 @@ class PredictoorsPage(TabularPage):
         formatted_data = format_table(new_predictoor_data, columns)
 
         return columns, formatted_data, new_predictoor_data
-
-    # TODO: remove/adjust everything below
-    def get_modal(self):
-        return dbc.Modal(
-            self.get_default_modal_content(),
-            id="modal",
-        )
-
-    def get_default_modal_content(self):
-        figures = FeedModalFigures()
-        return [
-            dbc.ModalHeader("Loading feed data", id="feeds-modal-header"),
-            self.get_feed_graphs_modal_body(figures.get_figures()),
-        ]
-
-    def get_feed_graphs_modal_header(self, selected_row):
-        return html.Div(
-            html.Span(
-                f"""{selected_row["base_token"]}-{selected_row["quote_token"]}
-                {selected_row["time"]} {selected_row["exchange"]}
-                """,
-                style={"fontWeight": "bold", "fontSize": "20px"},
-            ),
-            id="feeds-modal-header",
-        )
-
-    def get_feed_graphs_modal_body(self, figures):
-        return html.Div(
-            [
-                html.Div(get_graph(fig), style={"width": "45%", "margin": "0 auto"})
-                for fig in figures
-            ],
-            id="feeds-modal-body",
-        )
 
 
 def key_id_name(key: str) -> str:

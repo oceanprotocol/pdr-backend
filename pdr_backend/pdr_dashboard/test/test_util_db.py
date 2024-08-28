@@ -72,8 +72,8 @@ def test_get_payouts(
     )
 
     db_getter = DBGetter(ppss.lake_ss.lake_dir)
-    result = db_getter.payouts([], [], 1704152700)
-    assert len(result) == 0
+    result = db_getter.payouts([], [], 1704153000)
+    assert len(result) == 4
 
     result = db_getter.payouts(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],

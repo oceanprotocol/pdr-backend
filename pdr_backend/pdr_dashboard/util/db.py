@@ -224,7 +224,7 @@ class DBGetter:
 
     def payouts(
         self,
-        feed_addrs: List[str],
+        feed_addrs: Union[List[str], None],
         predictoor_addrs: Union[List[str], None],
         start_date: int,
     ) -> List[dict]:
@@ -233,29 +233,51 @@ class DBGetter:
         Args:
             feed_addrs (list): List of feed addresses.
             predictoor_addrs (list): List of predictoor addresses.
+            start_date (int): The starting slot (timestamp) for filtering the results.
         Returns:
             list: List of payouts data.
         """
 
-        # Constructing the SQL query
-        query = f"SELECT * FROM {Payout.get_lake_table_name()} WHERE ("
+        # Start constructing the SQL query
+        query = f"SELECT * FROM {Payout.get_lake_table_name()}"
 
-        # Adding conditions for the first list
-        query += " OR ".join([f"ID LIKE '%{item}%'" for item in feed_addrs])
-        query += ")"
+        # List to hold the WHERE clause conditions
+        conditions = []
 
+        # Adding conditions for feed addresses if provided
+        if feed_addrs:
+            feed_conditions = " OR ".join(["ID LIKE %s" for _ in feed_addrs])
+            conditions.append(f"({feed_conditions})")
+
+        # Adding conditions for predictoor addresses if provided
         if predictoor_addrs:
-            # Adding conditions for the second list
-            query += " AND ("
-            query += " OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])
-            query += ")"
+            predictoor_conditions = " OR ".join(
+                ["ID LIKE %s" for _ in predictoor_addrs]
+            )
+            conditions.append(f"({predictoor_conditions})")
 
-        # Add condition for start date
-        if start_date != 0:
-            query += f"AND (slot >= {start_date})"
+        # Adding condition for the start date if provided
+        if start_date:
+            conditions.append("slot >= %s")
+
+        # If there are any conditions, append them to the query
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
 
         query += ";"
 
+        # List of parameters to prevent SQL injection
+        params = []
+        if feed_addrs:
+            params.extend([f"'%{item}%'" for item in feed_addrs])
+        if predictoor_addrs:
+            params.extend([f"'%{item}%'" for item in predictoor_addrs])
+        if start_date:
+            params.append(str(start_date))
+
+        query = query % tuple(params)
+
+        # Execute the query
         return self._query_db(query)
 
     @enforce_types

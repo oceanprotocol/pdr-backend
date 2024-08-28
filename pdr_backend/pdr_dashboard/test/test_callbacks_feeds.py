@@ -185,17 +185,17 @@ def test_feeds_table_modal(_sample_app, dash_duo):
     timeframe = table.find_element(By.XPATH, "//tr[2]//td[6]//div").text
     exchange = table.find_element(By.XPATH, "//tr[2]//td[5]//div").text
 
-    dash_duo.wait_for_element("#modal", timeout=4)
+    dash_duo.wait_for_element("#feeds_modal", timeout=4)
 
     # Validate modal content
-    modal = dash_duo.find_element("#modal")
+    modal = dash_duo.find_element("#feeds_modal")
     header_text = modal.find_element(
-        By.XPATH, "//div[@id='feeds-modal-header']//span"
+        By.XPATH, "//div[@id='feeds_modal-header']//span"
     ).text
     assert header_text == f"{base_token}-{quote_token} {timeframe} {exchange}"
 
     number_of_plots = len(
-        modal.find_element(By.ID, "feeds-modal-body").find_elements(
+        modal.find_element(By.ID, "feeds_modal-body").find_elements(
             By.CLASS_NAME, "dash-graph"
         )
     )
