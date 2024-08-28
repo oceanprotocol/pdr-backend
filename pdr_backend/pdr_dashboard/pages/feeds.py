@@ -1,33 +1,17 @@
 from typing import List, Dict, Any, Tuple, Union
 
 from dash import html, dcc, dash_table
-import dash_bootstrap_components as dbc
 from pdr_backend.pdr_dashboard.util.data import (
     get_feed_column_ids,
     find_with_key_value,
 )
-from pdr_backend.pdr_dashboard.dash_components.plots import (
-    FeedModalFigures,
-)
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
-    get_graph,
     get_search_bar,
 )
 from pdr_backend.pdr_dashboard.util.format import format_table
-
-
-def add_to_filter(filter_options, value):
-    if value not in filter_options:
-        filter_options.append(value)
-
-
-class Filter:
-    def __init__(self, name, placeholder, options):
-        self.name = name
-        self.placeholder = placeholder
-        self.options = options
-
+from pdr_backend.pdr_dashboard.pages.common import TabularPage, Filter, add_to_filter
+from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 
 filters = [
     {"name": "base_token", "placeholder": "Base Token", "options": []},
@@ -39,7 +23,7 @@ filters = [
 filters_objects = [Filter(**item) for item in filters]
 
 
-class FeedsPage:
+class FeedsPage(TabularPage):
     def __init__(self, app):
         self.app = app
 
@@ -65,19 +49,11 @@ class FeedsPage:
                 self.get_metrics_row(),
                 self.get_search_bar_row(),
                 self.get_main_container(),
-                self.get_modal(),
+                get_modal(
+                    modal_id="feeds_modal",
+                ),
             ],
-            id="feeds-page-layout",
-        )
-
-    def get_multiselect_dropdown(self, filter_obj: Filter):
-        return dcc.Dropdown(
-            id=filter_obj.name,
-            options=filter_obj.options,
-            multi=True,
-            value=[],
-            placeholder=filter_obj.placeholder,
-            style={"width": "140px", "borderColor": "#aaa"},
+            className="page-layout",
         )
 
     def get_filters(self):
@@ -92,32 +68,7 @@ class FeedsPage:
                 self.get_input_filter("Sales"),
                 self.get_input_filter("Revenue"),
             ],
-            id="filters-container",
-        )
-
-    def get_input_filter(self, label: str):
-        return dbc.DropdownMenu(
-            [
-                self.get_input_with_label("Min", label),
-                self.get_input_with_label("Max", label),
-                html.Button(
-                    "Apply Filter",
-                    className="btn-apply-filter",
-                    id=f"{label.lower()}_button",
-                ),
-            ],
-            id=f"{label.lower()}_dropdown",
-            label=label,
-            style={
-                "backgroundColor": "white",
-            },
-            toggleClassName="dropdown-toggle-container",
-        )
-
-    def get_input_with_label(self, label: str, name: str):
-        return html.Div(
-            [html.Label(label), dcc.Input(id=f"{name.lower()}_{label.lower()}")],
-            className="input-with-label",
+            className="filters-container",
         )
 
     def get_filters_section(self):
@@ -126,7 +77,8 @@ class FeedsPage:
                 self.get_filters(),
                 html.Button(
                     "Clear All",
-                    id="clear_filters_button",
+                    id="clear_feeds_filters_button",
+                    className="clear-filters-button",
                     style={
                         "width": "100px",
                         "hight": "100%",
@@ -134,7 +86,8 @@ class FeedsPage:
                     },
                 ),
             ],
-            id="filters-section",
+            className="filters-section",
+            id="feeds-filters-section",
         )
 
     def get_metrics_row(self):
@@ -149,6 +102,7 @@ class FeedsPage:
                 )
                 for key, value in stats.items()
             ],
+            className="metrics_row",
             id="feeds_page_metrics_row",
         )
 
@@ -157,7 +111,7 @@ class FeedsPage:
             children=get_search_bar(
                 "search-input-feeds-table", "Search for addrs, token ..."
             ),
-            id="feeds-page-search-bar-row",
+            className="search-bar-row",
         )
 
     def get_main_container(self):
@@ -177,7 +131,7 @@ class FeedsPage:
                 self.get_filters_section(),
                 self.get_feeds_table_area(feed_cols, feed_data),
             ],
-            id="feeds-main-container",
+            className="tabular-main-container",
         )
 
     def get_feeds_table_area(
@@ -193,7 +147,8 @@ class FeedsPage:
                     hidden_columns=["full_addr", "sales_raw"],
                     row_selectable="single",
                     data=feeds_data,
-                    sort_action="native",  # Enables sorting feature
+                    sort_action="custom",
+                    sort_mode="single",
                 ),
             ],
             style={"width": "100%", "overflow": "scroll"},
@@ -291,36 +246,3 @@ class FeedsPage:
         formatted_data = format_table(new_feed_data, columns)
 
         return columns, formatted_data, new_feed_data
-
-    def get_modal(self):
-        return dbc.Modal(
-            self.get_default_modal_content(),
-            id="modal",
-        )
-
-    def get_default_modal_content(self):
-        figures = FeedModalFigures()
-        return [
-            dbc.ModalHeader("Loading feed data", id="feeds-modal-header"),
-            self.get_feed_graphs_modal_body(figures.get_figures()),
-        ]
-
-    def get_feed_graphs_modal_header(self, selected_row):
-        return html.Div(
-            html.Span(
-                f"""{selected_row["base_token"]}-{selected_row["quote_token"]}
-                {selected_row["time"]} {selected_row["exchange"]}
-                """,
-                style={"fontWeight": "bold", "fontSize": "20px"},
-            ),
-            id="feeds-modal-header",
-        )
-
-    def get_feed_graphs_modal_body(self, figures):
-        return html.Div(
-            [
-                html.Div(get_graph(fig), style={"width": "45%", "margin": "0 auto"})
-                for fig in figures
-            ],
-            id="feeds-modal-body",
-        )

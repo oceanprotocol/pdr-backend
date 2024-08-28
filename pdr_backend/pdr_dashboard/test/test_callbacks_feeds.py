@@ -6,7 +6,7 @@ from pdr_backend.pdr_dashboard.test.resources import (
     _navigate_to_feeds_page,
     _assert_table_row_count,
     start_server_and_wait,
-    _clear_filters,
+    _clear_feeds_filters,
     _set_dropdown_and_verify_row_count,
     _set_input_value_and_submit,
     _remove_tags,
@@ -14,7 +14,7 @@ from pdr_backend.pdr_dashboard.test.resources import (
 )
 
 
-def _preapre_table_data_to_be_saved_as_json(table):
+def _prepare_table_data_to_be_saved_as_json(table):
     rows = table.find_elements(By.XPATH, ".//tr")
     header = rows[0].find_elements(By.XPATH, ".//th")
 
@@ -30,8 +30,19 @@ def _preapre_table_data_to_be_saved_as_json(table):
     return table_data
 
 
+def _verify_table_data_order(table, filename):
+    table_data = _prepare_table_data_to_be_saved_as_json(table)
+
+    with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename) as f:
+        expected_data = json.load(f)
+
+    for i, row in enumerate(table_data):
+        assert row == expected_data[i]
+
+
 def _verify_table_data(table, filename):
-    table_data = _preapre_table_data_to_be_saved_as_json(table)
+    table_data = _prepare_table_data_to_be_saved_as_json(table)
+
     with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename) as f:
         expected_data = json.load(f)
 
@@ -122,7 +133,7 @@ def test_feeds_table_filters(_sample_app, dash_duo):
     _set_dropdown_and_verify_row_count(dash_duo, "#time", "5m", 2)
     _verify_table_data(table, "filtered_base_token_eth_5m.json")
 
-    _clear_filters(dash_duo)
+    _clear_feeds_filters(dash_duo)
     _assert_table_row_count(dash_duo, "#feeds_page_table", 21)
     _verify_table_data(table, "expected_feeds_table_data.json")
 
@@ -130,7 +141,7 @@ def test_feeds_table_filters(_sample_app, dash_duo):
     _set_dropdown_and_verify_row_count(dash_duo, "#base_token", "ADA", 3)
     _verify_table_data(table, "filtered_base_token_ada.json")
 
-    _clear_filters(dash_duo)
+    _clear_feeds_filters(dash_duo)
     # Test filtering with accuracy min value
     _set_input_value_and_submit(
         dash_duo, "#accuracy_dropdown", "#accuracy_min", "90", "#accuracy_button"
@@ -152,7 +163,7 @@ def test_feeds_table_filters(_sample_app, dash_duo):
     _assert_table_row_count(dash_duo, "#feeds_page_table", 1)
     _verify_table_data(table, "filtered_volume_max_1400.json")
 
-    _clear_filters(dash_duo)
+    _clear_feeds_filters(dash_duo)
     _assert_table_row_count(dash_duo, "#feeds_page_table", 21)
     _verify_table_data(table, "expected_feeds_table_data.json")
 
@@ -174,17 +185,17 @@ def test_feeds_table_modal(_sample_app, dash_duo):
     timeframe = table.find_element(By.XPATH, "//tr[2]//td[6]//div").text
     exchange = table.find_element(By.XPATH, "//tr[2]//td[5]//div").text
 
-    dash_duo.wait_for_element("#modal", timeout=4)
+    dash_duo.wait_for_element("#feeds_modal", timeout=4)
 
     # Validate modal content
-    modal = dash_duo.find_element("#modal")
+    modal = dash_duo.find_element("#feeds_modal")
     header_text = modal.find_element(
-        By.XPATH, "//div[@id='feeds-modal-header']//span"
+        By.XPATH, "//div[@id='feeds_modal-header']//span"
     ).text
     assert header_text == f"{base_token}-{quote_token} {timeframe} {exchange}"
 
     number_of_plots = len(
-        modal.find_element(By.ID, "feeds-modal-body").find_elements(
+        modal.find_element(By.ID, "feeds_modal-body").find_elements(
             By.CLASS_NAME, "dash-graph"
         )
     )
@@ -226,3 +237,28 @@ def test_feeds_searchbar(_sample_app, dash_duo):
         dash_duo, "#search-input-feeds-table", "NO_ROWS", "#feeds_page_table", 1
     )
     _verify_table_data(table, "search_no_rows.json")
+
+
+def test_sort_table(_sample_app, dash_duo):
+    app = _sample_app
+    start_server_and_wait(dash_duo, app)
+
+    _navigate_to_feeds_page(dash_duo)
+
+    # Wait for the table to be fully rendered
+    dash_duo.wait_for_element("#feeds_page_table")
+
+    # Select the table element
+    table = dash_duo.find_element("#feeds_page_table")
+
+    # Click the 'Staked' column header to sort
+    actionables = table.find_elements(
+        By.XPATH, "//div//div[@class='column-actions']//span"
+    )[7]
+    actionables.click()
+
+    # Wait for the sort to apply
+    time.sleep(1)  # Sometimes sorting might take a moment
+
+    # Check if the data is sorted ascending
+    _verify_table_data_order(table, "sorted_feeds_table_asc_by_volume.json")
