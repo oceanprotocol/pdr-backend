@@ -33,10 +33,12 @@ class PredictoorsPage(TabularPage):
             [
                 self.get_input_filter("APR"),
                 self.get_input_filter("Accuracy", "predictoors"),
-                self.get_input_filter("Gross Income"),
                 self.get_input_filter("Nr Feeds"),
-                self.get_input_filter("Stake"),
-                self.get_input_filter("Costs"),
+                self.get_input_filter("Staked"),
+                self.get_input_filter("Gross Income"),
+                self.get_input_filter("Stake Loss"),
+                self.get_input_filter("Tx Costs"),
+                self.get_input_filter("Net Income"),
             ],
             className="filters-container",
         )
@@ -142,9 +144,9 @@ class PredictoorsPage(TabularPage):
             temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
             temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
             temp_pred_item["gross_income_(OCEAN)"] = data_item["gross_income"]
-            temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
             temp_pred_item["stake_loss_(OCEAN)"] = data_item["stake_loss"]
             temp_pred_item["tx_costs_(OCEAN)"] = tx_costs
+            temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
 
             new_predictoor_data.append(temp_pred_item)
 
