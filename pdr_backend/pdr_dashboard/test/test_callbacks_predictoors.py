@@ -44,9 +44,9 @@ def test_predictoors_table(_sample_app, dash_duo):
         "Number Of Feeds",
         "Staked (Ocean)",
         "Gross Income (Ocean)",
-        "Net Income (Ocean)",
         "Stake Loss (Ocean)",
         "Tx Costs (Ocean)",
+        "Net Income (Ocean)",
     ]
     assert header_texts == expected_headers
 
@@ -106,10 +106,10 @@ def test_predictoors_table_filters(_sample_app, dash_duo):
 
     # Test filtering with staked max value + natural language
     _set_input_value_and_submit(
-        dash_duo, "#stake_dropdown", "#stake_max", "4K", "#stake_button"
+        dash_duo, "#staked_dropdown", "#staked_max", "4K", "#staked_button"
     )
     _assert_table_row_count(dash_duo, "#predictoors_page_table", 5)
-    _verify_table_data(table, "filtered_stake_max_4K.json")
+    _verify_table_data(table, "filtered_staked_max_4K.json")
 
     _clear_predictoors_filters(dash_duo)
     _assert_table_row_count(dash_duo, "#predictoors_page_table", 58)
