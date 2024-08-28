@@ -90,6 +90,7 @@ class ArgFeeds(List[ArgFeed]):
                     contract=row["contract"],
                     exchange=row["source"],
                     timeframe=row["timeframe"],
+                    threshold=row.get("threshold"),
                 )
                 for row in table_data
             ]
