@@ -1,81 +1,14 @@
-from typing import Optional
-
 import dash
-from dash import Input, Output, State, callback_context
-from enforce_typing import enforce_types
+from dash import Input, Output, State
 
-from pdr_backend.cli.arg_feeds import ArgFeed
-from pdr_backend.pdr_dashboard.dash_components.plots import (
-    FeedModalFigures,
-    get_feed_figures,
-)
-from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
+from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
 from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
+from pdr_backend.pdr_dashboard.util.filters import (
+    check_condition,
+    filter_table_by_range,
+)
 from pdr_backend.pdr_dashboard.util.format import format_table
-
-
-@enforce_types
-def filter_table_by_range(
-    min_val: Optional[str], max_val: Optional[str], label_text: str
-):
-    min_val = min_val or ""
-    max_val = max_val or ""
-
-    ctx = callback_context
-    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    if button_id == "clear_filters_button" or (not min_val and not max_val):
-        return label_text
-
-    return f"{label_text} {min_val}-{max_val}"
-
-
-def table_column_filter_condition(item, field, values):
-    return not values or item[field] in values
-
-
-def table_search_condition(item, search_value):
-    if not search_value:
-        return True
-    search_value = search_value.lower()
-    return any(
-        search_value in item.get(key, "").lower()
-        for key in ["addr", "base_token", "quote_token"]
-    )
-
-
-@enforce_types
-def table_column_range_condition(
-    item, field, min_value: Optional[str], max_value: Optional[str]
-):
-    item_value = float(item[field])
-    min_value = min_value or ""
-    max_value = max_value or ""
-
-    if min_value and item_value < float(min_value):
-        return False
-
-    if max_value and item_value > float(max_value):
-        return False
-
-    return True
-
-
-def check_condition(item, condition_type, field, *values):
-    if condition_type == "filter":
-        return table_column_filter_condition(item, field, values[0])
-
-    if condition_type == "range":
-        return table_column_range_condition(
-            item,
-            field,
-            values[0],
-            values[1],
-        )
-
-    if condition_type == "search":
-        return table_search_condition(item, values[0])
-
-    return True
+from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
 
 
 def get_callbacks_feeds(app):
@@ -91,6 +24,7 @@ def get_callbacks_feeds(app):
             Input("accuracy_button", "n_clicks"),
             Input("volume_button", "n_clicks"),
             Input("search-input-feeds-table", "value"),
+            Input("feeds_page_table", "sort_by"),
         ],
         State("sales_min", "value"),
         State("sales_max", "value"),
@@ -112,6 +46,7 @@ def get_callbacks_feeds(app):
         _n_clicks_accuracy,
         _n_clicks_volume,
         search_input_value,
+        sort_by,
         sales_min,
         sales_max,
         revenue_min,
@@ -147,6 +82,16 @@ def get_callbacks_feeds(app):
         if new_table_data:
             columns = get_feed_column_ids(new_table_data[0])
 
+        if sort_by:
+            # Extract sort criteria
+            sort_col = sort_by[0]["column_id"]
+            ascending = sort_by[0]["direction"] == "asc"
+
+            # Sort by raw "Price" even if the "Formatted Price" is displayed
+            new_table_data = sorted(
+                new_table_data, key=lambda x: x[sort_col], reverse=not ascending
+            )
+
         return format_table(new_table_data, columns)
 
     @app.callback(
@@ -154,7 +99,7 @@ def get_callbacks_feeds(app):
         State("sales_min", "value"),
         State("sales_max", "value"),
         Input("sales_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_sales_range(
         min_val, max_val, _n_clicks_sales_btn, _n_clicks_filters_bnt
@@ -166,7 +111,7 @@ def get_callbacks_feeds(app):
         State("revenue_min", "value"),
         State("revenue_max", "value"),
         Input("revenue_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_revenue_range(
         min_val, max_val, _n_clicks_revenue_btn, _n_clicks_filters_bnt
@@ -178,7 +123,7 @@ def get_callbacks_feeds(app):
         State("accuracy_min", "value"),
         State("accuracy_max", "value"),
         Input("accuracy_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_accuracy_range(
         min_val, max_val, _n_clicks_accuracy_btn, _n_clicks_filters_bnt
@@ -190,7 +135,7 @@ def get_callbacks_feeds(app):
         State("volume_min", "value"),
         State("volume_max", "value"),
         Input("volume_button", "n_clicks"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def filter_table_by_volume_range(
         min_val, max_val, _n_clicks_volume_btn, _n_clicks_filters_bnt
@@ -211,7 +156,7 @@ def get_callbacks_feeds(app):
         Output("volume_min", "value"),
         Output("volume_max", "value"),
         Output("search-input-feeds-table", "value"),
-        Input("clear_filters_button", "n_clicks"),
+        Input("clear_feeds_filters_button", "n_clicks"),
     )
     def clear_all_filters(btn_clicks):
         if not btn_clicks:
@@ -219,59 +164,30 @@ def get_callbacks_feeds(app):
         return ([], [], [], [], None, None, None, None, None, None, None, None, "")
 
     @app.callback(
-        Output("modal", "is_open"),
+        Output("feeds_modal", "is_open"),
         Output("feeds_page_table", "selected_rows"),
-        [Input("feeds_page_table", "selected_rows"), Input("modal", "is_open")],
+        [Input("feeds_page_table", "selected_rows"), Input("feeds_modal", "is_open")],
     )
     def toggle_modal(selected_rows, is_open_input):
         ctx = dash.callback_context
-        triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-        if triggered_id not in ["feeds_page_table", "modal"]:
-            return dash.no_update, dash.no_update
-
-        if triggered_id == "modal":
-            if is_open_input:
-                return dash.no_update, dash.no_update
-
-            # Modal close button is clicked, clear the selection
-            return False, []
-
-        # triggered_id == "feeds_page_table"
-        if selected_rows and not is_open_input:
-            return True, dash.no_update
-
-        # Clear the selection if modal is not opened
-        return False, []
+        return toggle_modal_helper(
+            ctx,
+            selected_rows,
+            is_open_input,
+            "feeds_modal",
+        )
 
     @app.callback(
-        Output("modal", "children"),
-        Input("modal", "is_open"),
+        Output("feeds_modal", "children"),
+        Input("feeds_modal", "is_open"),
         State("feeds_page_table", "selected_rows"),
         State("feeds_page_table", "data"),
     )
+    # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, feeds_table_data):
-        feeds_page = FeedsPage(app)
-        if not is_open or not selected_rows:
-            return feeds_page.get_default_modal_content()
-
-        selected_row = feeds_table_data[selected_rows[0]]
-
-        feed = ArgFeed(
-            exchange=selected_row["exchange"].lower(),
-            signal=None,
-            pair=f'{selected_row["base_token"]}-{selected_row["quote_token"]}',
-            timeframe=selected_row["time"],
-            contract=selected_row["full_addr"],
+        content = ModalContent("feeds_modal", app.db_getter)
+        content.selected_row = (
+            feeds_table_data[selected_rows[0]] if selected_rows else None
         )
 
-        payouts = app.db_getter.payouts([feed.contract], None, 0)
-        subscriptions = app.db_getter.feed_daily_subscriptions_by_feed_id(feed.contract)
-        feed_figures: FeedModalFigures = get_feed_figures(payouts, subscriptions)
-
-        children = [
-            feeds_page.get_feed_graphs_modal_header(selected_row),
-            feeds_page.get_feed_graphs_modal_body(feed_figures.get_figures()),
-        ]
-
-        return children
+        return content.get_content()

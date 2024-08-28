@@ -6,7 +6,11 @@ import yaml
 from dash import dcc, html
 from pdr_backend.pdr_dashboard.util.format import format_value
 
-NAV_ITEMS = [{"text": "Home", "location": "/"}, {"text": "Feeds", "location": "/feeds"}]
+NAV_ITEMS = [
+    {"text": "Home", "location": "/"},
+    {"text": "Feeds", "location": "/feeds"},
+    {"text": "Predictoors", "location": "/predictoors"},
+]
 
 
 # pylint: disable=too-many-return-statements
