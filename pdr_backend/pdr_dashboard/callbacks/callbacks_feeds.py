@@ -17,8 +17,8 @@ def get_callbacks_feeds(app):
         [
             Input("base_token", "value"),
             Input("quote_token", "value"),
-            Input("exchange", "value"),
-            Input("time", "value"),
+            Input("source", "value"),
+            Input("timeframe", "value"),
             Input("sales_button", "n_clicks"),
             Input("revenue_button", "n_clicks"),
             Input("accuracy_button", "n_clicks"),
@@ -39,8 +39,8 @@ def get_callbacks_feeds(app):
     def filter_table(
         base_token,
         quote_token,
-        exchange,
-        time,
+        source,
+        timeframe,
         _n_clicks_sales,
         _n_clicks_revenue,
         _n_clicks_accuracy,
@@ -63,8 +63,8 @@ def get_callbacks_feeds(app):
         conditions = [
             ("filter", "base_token", base_token),
             ("filter", "quote_token", quote_token),
-            ("filter", "exchange", exchange),
-            ("filter", "time", time),
+            ("filter", "source", source),
+            ("filter", "timeframe", timeframe),
             ("range", "sales_raw", sales_min, sales_max),
             ("range", "sales_revenue_(OCEAN)", revenue_min, revenue_max),
             ("range", "avg_accuracy", accuracy_min, accuracy_max),
@@ -145,8 +145,8 @@ def get_callbacks_feeds(app):
     @app.callback(
         Output("base_token", "value"),
         Output("quote_token", "value"),
-        Output("exchange", "value"),
-        Output("time", "value"),
+        Output("source", "value"),
+        Output("timeframe", "value"),
         Output("sales_min", "value"),
         Output("sales_max", "value"),
         Output("revenue_min", "value"),

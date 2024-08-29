@@ -46,7 +46,10 @@ def setup_app(app, ppss: PPSS):
     app.db_getter = DBGetter(ppss.lake_ss.lake_dir)
     app.network_name = ppss.web3_pp.network
 
+    app.feed_stats = app.db_getter.feed_payouts_stats()
+    app.feed_subscriptions = app.db_getter.feed_subscription_stats(app.network_name)
     app.feeds_data = app.db_getter.feeds_data()
+
     app.predictoors_data = app.db_getter.predictoor_payouts_stats()
 
     valid_addresses = [p["user"].lower() for p in app.predictoors_data]
