@@ -104,6 +104,7 @@ def test_checkbox_selection(_sample_app, dash_duo):
     # click on the checkbox in the second row of the "Feeds" table
     dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
 
+    time.sleep(2)
     # click on the checkbox in the first row of the "Predictoors" table
     dash_duo.find_element("#predictoors_table tbody tr input").click()
 
