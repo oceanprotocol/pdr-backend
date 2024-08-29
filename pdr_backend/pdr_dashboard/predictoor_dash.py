@@ -11,7 +11,6 @@ from pdr_backend.pdr_dashboard.callbacks.callbacks_predictoors import (
     get_callbacks_predictoors,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_layout
-from pdr_backend.pdr_dashboard.util.data import get_predictoors_data_from_payouts
 from pdr_backend.pdr_dashboard.util.db import DBGetter
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
@@ -48,9 +47,7 @@ def setup_app(app, ppss: PPSS):
     app.network_name = ppss.web3_pp.network
 
     app.feeds_data = app.db_getter.feeds_data()
-    app.predictoors_data = get_predictoors_data_from_payouts(
-        app.db_getter.payouts_stats()
-    )
+    app.predictoors_data = app.db_getter.predictoor_payouts_stats()
 
     valid_addresses = [p["user"].lower() for p in app.predictoors_data]
     app.favourite_addresses = [

@@ -1,5 +1,6 @@
 import logging
 
+from copy import deepcopy
 from datetime import datetime, timedelta
 from typing import Union, List, Dict, Any, Optional
 from enforce_typing import enforce_types
@@ -60,7 +61,7 @@ def select_or_clear_all_by_table(
 
 
 @enforce_types
-def get_predictoors_data_from_payouts(
+def get_predictoors_home_page_table_data(
     user_payout_stats: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
     """
@@ -71,7 +72,8 @@ def get_predictoors_data_from_payouts(
         list: List of processed user payouts stats data.
     """
 
-    for data in user_payout_stats:
+    payout_stats = deepcopy(user_payout_stats)
+    for data in payout_stats:
         formatted_data = format_dict(
             pick_from_dict(
                 data=data, keys=["user", "total_profit", "avg_accuracy", "avg_stake"]
@@ -89,7 +91,7 @@ def get_predictoors_data_from_payouts(
         data.clear()
         data.update(new_data)
 
-    return user_payout_stats
+    return payout_stats
 
 
 def get_start_date_from_period(number_days: int):

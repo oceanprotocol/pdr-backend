@@ -2,7 +2,7 @@ from unittest.mock import Mock
 import dash
 
 from pdr_backend.pdr_dashboard.util.data import (
-    get_predictoors_data_from_payouts,
+    get_predictoors_home_page_table_data,
     select_or_clear_all_by_table,
 )
 
@@ -59,7 +59,7 @@ def test_get_predictoors_data_from_payouts():
         },
     ]
 
-    result = get_predictoors_data_from_payouts(user_payout_stats)
+    result = get_predictoors_home_page_table_data(user_payout_stats)
 
     assert isinstance(result, list)
     assert len(result) == 2

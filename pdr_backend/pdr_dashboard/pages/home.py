@@ -3,6 +3,7 @@ from dash import dash_table, dcc, html
 
 from pdr_backend.pdr_dashboard.util.data import (
     col_to_human,
+    get_predictoors_home_page_table_data,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_date_period_selection_component,
@@ -79,7 +80,8 @@ class HomePage:
         return (columns, hidden_columns), data
 
     def get_predictoors_cols_data(self):
-        data = self.app.predictoors_data
+        predictoor_data = self.app.predictoors_data
+        data = get_predictoors_home_page_table_data(predictoor_data)
 
         columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
         hidden_columns = ["user"]

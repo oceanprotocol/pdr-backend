@@ -87,10 +87,8 @@ class PredictoorsPage(TabularPage):
         )
 
     def get_main_container(self):
-        predictoor_stats = self.app.db_getter.predictoor_payouts_stats()
-
         predictoor_cols, predictoor_data, raw_predictoor_data = (
-            self.get_data_for_predictoors_table(predictoor_stats)
+            self.get_data_for_predictoors_table(self.app.predictoors_data)
         )
 
         self.app.predictoor_table_data = raw_predictoor_data

@@ -50,31 +50,6 @@ class DBGetter:
         )
 
     @enforce_types
-    def predictoors_data(self):
-        return self._query_db(
-            f"""
-                SELECT user FROM {Prediction.get_lake_table_name()}
-                GROUP BY user
-            """,
-        )
-
-    @enforce_types
-    def payouts_stats(self):
-        return self._query_db(
-            f"""
-                SELECT
-                    "user",
-                    SUM(payout - stake) AS total_profit,
-                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
-                    AVG(stake) AS avg_stake
-                FROM
-                    {Payout.get_lake_table_name()}
-                GROUP BY
-                    "user"
-            """,
-        )
-
-    @enforce_types
     def feed_payouts_stats(self):
         return self._query_db(
             f"""
