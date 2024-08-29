@@ -123,6 +123,10 @@ class PredictoorSS(StrMixin):
             raise ValueError(s)
         self.d["approach"] = approach
 
+    @enforce_types
+    def set_my_addresses(self, my_addresses: List[str]):
+        self.d["my_addresses"] = my_addresses
+
     # ------------------------------------------------------------------
     # 'predict_train_feedsets' workers
     @enforce_types
