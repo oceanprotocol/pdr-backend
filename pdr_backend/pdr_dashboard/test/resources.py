@@ -73,6 +73,7 @@ def _select_dropdown_option(dash_duo, dropdown_id, option_text):
         if option.text == option_text:
             option.click()
             break
+    time.sleep(1)
 
 
 def _assert_table_row_count(dash_duo, table_id, expected_count):
