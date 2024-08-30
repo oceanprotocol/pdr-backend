@@ -1,15 +1,21 @@
 import time
 import re
+import os
+from unittest.mock import patch
 
 from enforce_typing import enforce_types
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+import dash_bootstrap_components as dbc
+from dash import Dash
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.payout import Payout
+from pdr_backend.lake.test.resources import create_sample_etl, create_sample_raw_data
+from pdr_backend.pdr_dashboard.predictoor_dash import setup_app as setup_app_main
 
 
 def _prepare_test_db(tmpdir, sample_data, table_name, my_addresses=None):
@@ -67,6 +73,7 @@ def _select_dropdown_option(dash_duo, dropdown_id, option_text):
         if option.text == option_text:
             option.click()
             break
+    time.sleep(1)
 
 
 def _assert_table_row_count(dash_duo, table_id, expected_count):
@@ -78,7 +85,7 @@ def start_server_and_wait(dash_duo, app):
     """
     Start the server and wait for the elements to be rendered.
     """
-
+    dash_duo.driver.set_window_size(1920, 1080)
     dash_duo.start_server(app)
     dash_duo.wait_for_element("#feeds_table")
     dash_duo.wait_for_element("#predictoors_table")
@@ -157,3 +164,81 @@ def _set_searchbar_value(dash_duo, search_input_id, value, table_id, expected_ro
     table = dash_duo.find_element(table_id)
     rows = table.find_elements(By.XPATH, ".//tr")
     assert len(rows) == expected_rows
+
+
+def _add_css(app):
+    style_css = ""
+    # read the styles.css file and add it to the assets folder
+    # Read the styles.css file
+    with open("pdr_backend/pdr_dashboard/assets/styles.css", "r") as f:
+        style_css = f.read()
+
+    # Manually link the CSS file by embedding its contents in a <style> tag
+    app.index_string = f"""
+    <!DOCTYPE html>
+    <html>
+        <head>
+            {{%metas%}}
+            <title>{{%title%}}</title>
+            {{%favicon%}}
+            {{%css%}}
+            <style>{style_css}</style>
+        </head>
+        <body>
+            {{%app_entry%}}
+            <footer>
+                {{%config%}}
+                {{%scripts%}}
+                {{%renderer%}}
+            </footer>
+        </body>
+    </html>
+    """
+
+    return app
+
+
+def _prepare_sample_app(tmpdir, include_my_addresses=False):
+    _clear_test_db(str(tmpdir))
+
+    base_test_dir = os.path.join(
+        os.path.dirname(__file__),
+        "../../lake/test/",
+    )
+    str_dir = str(base_test_dir)
+
+    sample_raw_data = create_sample_raw_data(
+        str_dir,
+    )
+
+    etl, db, _ = create_sample_etl(
+        sample_raw_data,
+        _get_test_DuckDB,
+        str(tmpdir),
+        "2024-07-26_00:00",
+        "2024-07-26_02:00",
+        False,
+    )
+
+    db.duckdb_conn.close()
+
+    app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+    app.config["suppress_callback_exceptions"] = True
+
+    app = _add_css(app)
+
+    if include_my_addresses:
+        etl.ppss.predictoor_ss.set_my_addresses(
+            ["0x016790c9d93e1a0ef9df43646b0c35a0e3242f0a"]
+        )
+
+    with patch(
+        "pdr_backend.pdr_dashboard.predictoor_dash.calculate_tx_gas_fee_cost_in_OCEAN",
+        return_value=0.2,
+    ), patch(
+        "pdr_backend.pdr_dashboard.predictoor_dash.fetch_token_prices",
+        return_value={"ROSE": 0.05612, "OCEAN": 0.48521312000000005},
+    ):
+        setup_app_main(app, etl.ppss)
+
+    return app
