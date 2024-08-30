@@ -23,19 +23,15 @@ class Token(BaseContract):
     def transfer(self, to: str, amount: Wei, sender, wait_for_receipt=True):
         gas_price = self.web3_pp.tx_gas_price()
         call_params = {"from": sender, "gasPrice": gas_price}
-        tx = self.contract_instance.functions.transfer(
-            to, int(amount.amt_wei)
-        ).transact(call_params)
+        tx = self.transact("transfer", [to, amount.amt_wei], call_params)
+
         if not wait_for_receipt:
             return tx
         return self.config.w3.eth.wait_for_transaction_receipt(tx)
 
     def approve(self, spender, amount: Wei, wait_for_receipt=True):
-        call_params = self.web3_pp.tx_call_params()
         # print(f"Approving {amount} for {spender} on contract {self.contract_address}")
-        tx = self.contract_instance.functions.approve(spender, amount.amt_wei).transact(
-            call_params
-        )
+        tx = self.transact("approve", [spender, amount.amt_wei])
 
         if not wait_for_receipt:
             return tx
