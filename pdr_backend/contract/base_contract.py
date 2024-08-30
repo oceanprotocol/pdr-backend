@@ -49,7 +49,9 @@ class BaseContract(ABC):
         receiver = self.contract_instance.address if receiver is None else receiver
         pk = self.config.account.key.hex()[2:] if pk is None else pk
 
-        data = self.contract_instance.encode_abi(fn_name=function_name, args=args)
+        data = self.contract_instance.encode_abi(
+            abi_element_identifier=function_name, args=args
+        )
         rpc_url = self.config.rpc_url
 
         return wrapper.send_encrypted_sapphire_tx(
@@ -63,3 +65,29 @@ class BaseContract(ABC):
             gasCost,
             nonce,
         )
+
+    def transact(
+        self, function_name, params, call_params=None, use_wrapped_instance=False
+    ):
+        if not call_params:
+            call_params = self.web3_pp.tx_call_params()
+
+        instance = (
+            self.contract_instance_wrapped
+            if use_wrapped_instance
+            else self.contract_instance
+        )
+
+        unsigned = getattr(instance.functions, function_name)(
+            *params
+        ).build_transaction(call_params)
+
+        unsigned["nonce"] = self.config.w3.eth.get_transaction_count(
+            call_params["from"]
+        )
+        signed = self.config.w3.eth.account.sign_transaction(
+            unsigned, private_key=self.web3_pp.private_key
+        )
+        tx = self.config.w3.eth.send_raw_transaction(signed.raw_transaction)
+
+        return tx

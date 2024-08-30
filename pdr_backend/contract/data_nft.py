@@ -24,18 +24,19 @@ class DataNft(BaseContract):
         field_value_bytes = field_value.encode()  # to array of bytes
 
         call_params = self.web3_pp.tx_call_params(gas=100000)
-        tx = self.contract_instance.functions.setNewData(
-            field_label_hash, field_value_bytes
-        ).transact(call_params)
+        tx = self.transact(
+            "setNewData", [field_label_hash, field_value_bytes], call_params
+        )
+
         if wait_for_receipt:
             self.config.w3.eth.wait_for_transaction_receipt(tx)
         return tx
 
     def add_erc20_deployer(self, address, wait_for_receipt=True):
-        call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.addToCreateERC20List(
-            self.config.w3.to_checksum_address(address)
-        ).transact(call_params)
+        tx = self.transact(
+            "addToCreateERC20List", [self.config.w3.to_checksum_address(address)]
+        )
+
         if wait_for_receipt:
             self.config.w3.eth.wait_for_transaction_receipt(tx)
         return tx
@@ -43,16 +44,19 @@ class DataNft(BaseContract):
     def set_ddo(self, ddo, wait_for_receipt=True):
         js = json.dumps(ddo)
         stored_ddo = Web3.to_bytes(text=js)
-        call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.setMetaData(
-            1,
-            "",
-            str(self.config.owner),
-            bytes([0]),
-            stored_ddo,
-            Web3.to_bytes(hexstr=hashlib.sha256(js.encode("utf-8")).hexdigest()),
-            [],
-        ).transact(call_params)
+        tx = self.transact(
+            "setMetaData",
+            [
+                1,
+                "",
+                str(self.config.owner),
+                bytes([0]),
+                stored_ddo,
+                Web3.to_bytes(hexstr=hashlib.sha256(js.encode("utf-8")).hexdigest()),
+                [],
+            ],
+        )
+
         if wait_for_receipt:
             self.config.w3.eth.wait_for_transaction_receipt(tx)
         return tx
@@ -60,10 +64,7 @@ class DataNft(BaseContract):
     def add_to_create_erc20_list(
         self, addr: str, wait_for_receipt=True
     ) -> Union[HexBytes, TxReceipt]:
-        call_params = self.web3_pp.tx_call_params()
-        tx = self.contract_instance.functions.addToCreateERC20List(addr).transact(
-            call_params
-        )
+        tx = self.transact("addToCreateERC20List", [addr])
 
         if not wait_for_receipt:
             return tx

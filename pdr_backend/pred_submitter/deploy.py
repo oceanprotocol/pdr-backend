@@ -30,10 +30,14 @@ def deploy_pred_submitter_mgr_contract(web3_pp: Web3PP) -> str:
     with open(bytecode_path, "r") as bytecode_file:
         bytecode = bytecode_file.read()
 
+    call_params = web3_pp.tx_call_params()
     PredSubmitterMgr = web3_config.w3.eth.contract(abi=abi, bytecode=bytecode)
-    tx_hash = PredSubmitterMgr.constructor(ocean_addr).transact(
-        web3_pp.tx_call_params()
+    unsigned = PredSubmitterMgr.constructor(ocean_addr).build_transaction(call_params)
+    unsigned["nonce"] = web3_config.w3.eth.get_transaction_count(call_params["from"])
+    signed = web3_config.w3.eth.account.sign_transaction(
+        unsigned, private_key=web3_pp.private_key
     )
+    tx_hash = web3_config.w3.eth.send_raw_transaction(signed.raw_transaction)
     tx_receipt = web3_config.w3.eth.wait_for_transaction_receipt(tx_hash)
     if tx_receipt["status"] != 1:
         raise ValueError("PredSubmitterMgr contract deployment failed")

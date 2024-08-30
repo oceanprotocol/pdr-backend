@@ -12,7 +12,7 @@ from pdr_backend.util.constants import WHITELIST_FEEDS_MAINNET
 
 @enforce_types
 def key_to_key725(key: str):
-    return Web3.keccak(key.encode("utf-8")).hex()
+    return Web3.keccak(key.encode("utf-8")).to_0x_hex()
 
 
 @enforce_types
