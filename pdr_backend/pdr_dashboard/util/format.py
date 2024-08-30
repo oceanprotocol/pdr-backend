@@ -3,7 +3,6 @@ from typing import Union, Dict, List, Any
 from enforce_typing import enforce_types
 from numerize import numerize
 
-
 FORMAT_CONFIG = {
     "feeds_page_Accuracy_metric": "percentage",
     "accuracy_metric": "percentage",
@@ -11,7 +10,7 @@ FORMAT_CONFIG = {
     "feeds_page_Revenue_metric": "currency",
     "feeds_page_Sales_metric": "currency_without_decimal",
     "profit_metric": "currency_without_decimal_with_suffix",
-    "stake_metric": "currency_with_decimal_and_suffix",
+    "stake_metric": "currency_without_decimal_with_suffix",
     "costs_metric": "approximate_currency_with_decimal",
     "addr": "eth_address",
     "user": "eth_address",
