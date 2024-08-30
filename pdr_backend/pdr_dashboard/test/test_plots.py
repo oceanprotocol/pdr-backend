@@ -1,5 +1,6 @@
+import math
+
 from unittest.mock import patch
-from datetime import datetime, timedelta
 
 from enforce_typing import enforce_types
 
@@ -15,14 +16,13 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 
 
 @enforce_types
-def test_process_payouts(
-    _sample_payouts,
-):
-    ## convert List[Payout] to List[dict]
-    payouts = [p.__dict__ for p in _sample_payouts]
+def test_process_payouts(_sample_app):
 
-    user = "0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"
+    ## convert List[Payout] to List[dict]
+    payouts = _sample_app.db_getter.payouts(None, None, 0)
+
     feed = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
+    user = "0x43584049fe6127ea6745d8ba42274e911f2a2d5c"
 
     ## filter payouts by user and feed
     filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
@@ -42,9 +42,9 @@ def test_process_payouts(
     acc_intervals = result.acc_intervals
     costs = result.tx_cost
 
-    assert correct_predictions == 0
+    assert correct_predictions == 16
     assert costs > 0
-    assert predictions == 2
+    assert predictions == 24
     assert len(slots) == len(filtered_payouts)
     assert slots[0] == UnixTimeS(filtered_payouts[0]["slot"]).to_milliseconds()
 
@@ -61,10 +61,7 @@ def test_process_payouts(
 
     ## calculate profits
     test_profits = [
-        sum(
-            (p["payout"] - p["stake"]) if p["payout"] > 0 else -p["stake"]
-            for p in filtered_payouts[: i + 1]
-        )
+        sum(float(max(p["payout"], 0) - p["stake"]) for p in filtered_payouts[: i + 1])
         for i in range(len(filtered_payouts))
     ]
 
@@ -72,7 +69,7 @@ def test_process_payouts(
 
     # check if profits are the same
     for i, profit in enumerate(profits):
-        assert profit == test_profits[i]
+        assert math.isclose(profit, test_profits[i], rel_tol=1e-9)
 
     test_stakes = [p["stake"] for p in filtered_payouts]
 
@@ -80,8 +77,9 @@ def test_process_payouts(
 
     # check if stakes are the same
     for i, stake in enumerate(stakes):
-        assert stake == test_stakes[i]
+        assert math.isclose(stake, test_stakes[i], rel_tol=1e-9)
 
+    ## calculate accuracy intervals
     assert len(acc_intervals) == len(test_stakes)
 
     for i, acc_interval in enumerate(acc_intervals):
@@ -138,22 +136,22 @@ def test_create_figure():
 
 @enforce_types
 @patch("plotly.graph_objects.Figure", new=MockFigure)
-def test_get_figures_and_metrics(
-    _sample_payouts,
-):
+def test_get_figures_and_metrics(_sample_app):
+    db_getter = _sample_app.db_getter
     ## convert List[Payout] to List[dict]
-    payouts = [p.__dict__ for p in _sample_payouts]
+    payouts = db_getter.payouts(None, None, 0)
+
     sample_feeds = ArgFeeds(
         [
             ArgFeed(
-                contract="b0x18f54cc21b7a2fdd011bea06bba7801b280e315",
-                pair="BTC/USDT",
+                contract="0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+                pair="ADA/USDT",
                 exchange="binance",
                 timeframe="1h",
             ),
         ]
     )
-    sample_predictoors = ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"]
+    sample_predictoors = ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"]
     fee_cost = 0.2
 
     figs_metrics = get_figures_and_metrics(
@@ -172,7 +170,7 @@ def test_get_figures_and_metrics(
     assert isinstance(fig_stakes, MockFigure)
 
     # Check if the figures have the correct layout and data traces
-    assert len(fig_accuracy.data_traces) == 1
+    assert len(fig_accuracy.data_traces) == 3
     assert len(fig_profit.data_traces) == 1
     assert len(fig_costs.data_traces) == 1
     assert len(fig_stakes.data_traces) == 1
@@ -210,13 +208,14 @@ def test_get_figures_and_metrics(
 
 
 def test_get_feed_figures(
-    _sample_payouts,
+    _sample_app,
 ):
-    payouts = [p.__dict__ for p in _sample_payouts]
-    subscriptions = [
-        {"count": 10, "revenue": 500, "day": datetime.today()},
-        {"count": 5, "revenue": 250, "day": datetime.today() - timedelta(days=1)},
-    ]
+    feed_id = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
+    db_getter = _sample_app.db_getter
+    payouts = db_getter.payouts([feed_id], None, 0)
+
+    subscriptions = db_getter.feed_daily_subscriptions_by_feed_id(feed_id)
+
     # Execute the function
     figures = get_feed_figures(payouts, subscriptions)
 

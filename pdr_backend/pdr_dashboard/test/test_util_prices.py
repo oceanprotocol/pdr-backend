@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
 
 
-def test_calculate_tx_gas_fee_cost_in_OCEAN(setup_app):
-    app = setup_app
+def test_calculate_tx_gas_fee_cost_in_OCEAN(_sample_app):
+    app = _sample_app
     assert app.prices is not None
     assert app.prices["ROSE"] > 0
     assert app.prices["OCEAN"] > 0
