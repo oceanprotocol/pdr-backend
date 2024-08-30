@@ -106,35 +106,12 @@ def test_checkbox_selection(_sample_app, dash_duo):
     start_server_and_wait(dash_duo, app)
 
     time.sleep(2)
-    element = dash_duo.driver.find_element(
-        By.CSS_SELECTOR, "#feeds_table tbody tr:nth-child(2) input"
-    )
-    dash_duo.driver.execute_script("arguments[0].scrollIntoView();", element)
-
-    element = WebDriverWait(dash_duo.driver, 10).until(
-        EC.element_to_be_clickable(
-            (By.CSS_SELECTOR, "#feeds_table tbody tr:nth-child(2) input")
-        )
-    )
-    element.click()
     # click on the checkbox in the second row of the "Feeds" table
-    # dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
+    dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
 
     time.sleep(2)
-    element = dash_duo.driver.find_element(
-        By.CSS_SELECTOR, "#predictoors_table tbody tr:nth-child(2) input"
-    )
-    dash_duo.driver.execute_script("arguments[0].scrollIntoView();", element)
-
-    element = WebDriverWait(dash_duo.driver, 10).until(
-        EC.element_to_be_clickable(
-            (By.CSS_SELECTOR, "#predictoors_table tbody tr:nth-child(2) input")
-        )
-    )
-    element.click()
-
     # click on the checkbox in the first row of the "Predictoors" table
-    # dash_duo.find_element("#predictoors_table tbody tr:nth-child(2) input").click()
+    dash_duo.find_element("#predictoors_table tbody tr:nth-child(2) input").click()
 
 
 def test_timeframe_metrics(_sample_app, dash_duo):
