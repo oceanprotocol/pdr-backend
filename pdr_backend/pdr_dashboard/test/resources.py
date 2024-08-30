@@ -85,7 +85,7 @@ def start_server_and_wait(dash_duo, app):
     """
     Start the server and wait for the elements to be rendered.
     """
-
+    dash_duo.driver.set_window_size(1920, 1080)
     dash_duo.start_server(app)
     dash_duo.wait_for_element("#feeds_table")
     dash_duo.wait_for_element("#predictoors_table")
