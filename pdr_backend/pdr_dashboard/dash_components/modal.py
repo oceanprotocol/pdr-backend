@@ -42,7 +42,7 @@ class ModalContent:
             elif self.modal_id == "feeds_modal":
                 sr = self.selected_row
                 modal_header_title = f"""{sr["base_token"]}-{sr["quote_token"]}
-                {sr["time"]} {sr["exchange"]}
+                {sr["timeframe"]} {sr["source"]}
                 """
 
         header = html.Div(
@@ -85,10 +85,10 @@ class ModalContent:
 
         if self.modal_id == "feeds_modal":
             feed = ArgFeed(
-                exchange=selected_row["exchange"].lower(),
+                exchange=selected_row["source"].lower(),
                 signal=None,
                 pair=f'{selected_row["base_token"]}-{selected_row["quote_token"]}',
-                timeframe=selected_row["time"],
+                timeframe=selected_row["timeframe"],
                 contract=selected_row["full_addr"],
             )
 
