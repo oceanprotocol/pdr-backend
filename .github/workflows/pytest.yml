@@ -31,6 +31,9 @@ jobs:
           repository: "oceanprotocol/barge"
           path: "barge"
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+
       - name: Run Barge
         working-directory: ${{ github.workspace }}/barge
         env:
@@ -56,10 +59,4 @@ jobs:
       - name: Test with pytest
         id: pytest
         run: |
-          coverage run --source=pdr_backend --omit=*/test/*,*/test_ganache/*,*/test_noganache/* -m pytest
-          coverage report
-          coverage xml
-      - name: Publish code coverage
-        uses: paambaati/codeclimate-action@v5.0.0
-        env:
-          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+          python -m pytest pdr_backend/pdr_dashboard/test/
