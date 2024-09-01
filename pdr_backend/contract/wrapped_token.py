@@ -28,8 +28,10 @@ class WrappedToken(Token):
         """
         Converts Wrapped Token to Token, amount is in wei.
         """
-        tx = self.transact("withdraw", [amount.amt_wei], use_wrapped_instance=True)
-
+        call_params = self.web3_pp.tx_call_params()
+        tx = self.contract_instance_wrapped.functions.withdraw(amount.amt_wei).transact(
+            call_params
+        )
         if not wait_for_receipt:
             return tx
         return self.config.w3.eth.wait_for_transaction_receipt(tx)

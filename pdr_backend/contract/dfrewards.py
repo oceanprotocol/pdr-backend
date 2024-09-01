@@ -14,7 +14,10 @@ class DFRewards(BaseContract):
         super().__init__(web3_pp, address, "DFRewards")
 
     def claim_rewards(self, user_addr: str, token_addr: str, wait_for_receipt=True):
-        tx = self.transact("claimFor", [user_addr, token_addr])
+        call_params = self.web3_pp.tx_call_params()
+        tx = self.contract_instance.functions.claimFor(user_addr, token_addr).transact(
+            call_params
+        )
 
         if not wait_for_receipt:
             return tx
