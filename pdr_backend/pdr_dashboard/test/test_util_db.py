@@ -1,7 +1,6 @@
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 from enforce_typing import enforce_types
-from pdr_backend.pdr_dashboard.util.db import DBGetter
 from pdr_backend.lake.subscription import Subscription
 
 

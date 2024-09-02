@@ -25,12 +25,11 @@ from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 logger = logging.getLogger("predictoor_dashboard_utils")
 
 
+# pylint: disable=too-many-instance-attributes
 class DBGetter:
     def __init__(self, ppss):
         self.lake_dir = ppss.lake_ss.lake_dir
         self.network_name = ppss.web3_pp.network
-
-        # TODO: not all need to stay?
 
         # fetch token prices
         self.fee_cost = calculate_tx_gas_fee_cost_in_OCEAN(
@@ -229,6 +228,8 @@ class DBGetter:
 
         if not predictoor_addrs:
             predictoor_addrs = self.favourite_addresses
+
+        assert isinstance(predictoor_addrs, list)
 
         # Constructing the SQL query
         query = f"""
