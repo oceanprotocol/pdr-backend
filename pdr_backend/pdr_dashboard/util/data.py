@@ -6,7 +6,6 @@ import dash
 from enforce_typing import enforce_types
 from pdr_backend.pdr_dashboard.util.format import (
     format_table,
-    pick_from_dict,
     format_dict,
 )
 
@@ -78,9 +77,8 @@ def get_predictoors_home_page_table_data(
     payout_stats = deepcopy(user_payout_stats)
     for data in payout_stats:
         formatted_data = format_dict(
-            pick_from_dict(
-                data=data, keys=["user", "total_profit", "avg_accuracy", "avg_stake"]
-            )
+            data=data,
+            only_include_keys=["user", "total_profit", "avg_accuracy", "avg_stake"],
         )
 
         new_data = {
@@ -157,34 +155,34 @@ def get_feeds_subscription_stat_with_contract(
 ) -> Dict[str, Union[float, int, str]]:
     result = find_with_key_value(feed_subcription_stats, "contract", contract)
 
-    if result:
-        sales_str = f"{result['sales']}"
-
-        df_buy_count_str = (
-            f"{result['df_buy_count']}-DF" if result["df_buy_count"] > 0 else ""
-        )
-        ws_buy_count_str = (
-            f"{result['ws_buy_count']}-WS" if result["ws_buy_count"] > 0 else ""
-        )
-
-        if df_buy_count_str or ws_buy_count_str:
-            counts_str = "_".join(filter(None, [df_buy_count_str, ws_buy_count_str]))
-
-            if counts_str:
-                sales_str += f"_{counts_str}"
-
+    if not result:
         return {
-            "price_(OCEAN)": result["price"],
-            "sales": sales_str,
-            "sales_raw": result["sales"],
-            "sales_revenue_(OCEAN)": result["sales_revenue"],
+            "price_(OCEAN)": 0,
+            "sales": 0,
+            "sales_raw": 0,
+            "sales_revenue_(OCEAN)": 0,
         }
 
+    sales_str = f"{result['sales']}"
+
+    df_buy_count_str = (
+        f"{result['df_buy_count']}-DF" if result["df_buy_count"] > 0 else ""
+    )
+    ws_buy_count_str = (
+        f"{result['ws_buy_count']}-WS" if result["ws_buy_count"] > 0 else ""
+    )
+
+    if df_buy_count_str or ws_buy_count_str:
+        counts_str = "_".join(filter(None, [df_buy_count_str, ws_buy_count_str]))
+
+        if counts_str:
+            sales_str += f"_{counts_str}"
+
     return {
-        "price_(OCEAN)": 0,
-        "sales": 0,
-        "sales_raw": 0,
-        "sales_revenue_(OCEAN)": 0,
+        "price_(OCEAN)": result["price"],
+        "sales": sales_str,
+        "sales_raw": result["sales"],
+        "sales_revenue_(OCEAN)": result["sales_revenue"],
     }
 
 

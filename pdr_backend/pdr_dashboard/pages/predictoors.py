@@ -88,7 +88,7 @@ class PredictoorsPage(TabularPage):
 
     def get_main_container(self):
         predictoor_cols, predictoor_data, raw_predictoor_data = (
-            self.get_data_for_predictoors_table(self.app.predictoors_data)
+            self.get_data_for_predictoors_table()
         )
 
         self.app.predictoor_table_data = raw_predictoor_data
@@ -123,10 +123,9 @@ class PredictoorsPage(TabularPage):
 
     def get_data_for_predictoors_table(
         self,
-        predictoor_stats: List[Dict[str, Any]],
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
-        temp_data = predictoor_stats
+        temp_data = self.app.predictoors_data
 
         new_predictoor_data = []
 
