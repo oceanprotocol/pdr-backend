@@ -3,7 +3,6 @@ from typing import Union, Dict, List, Any
 from enforce_typing import enforce_types
 from numerize import numerize
 
-
 FORMAT_CONFIG = {
     "feeds_page_Accuracy_metric": "percentage",
     "accuracy_metric": "percentage",
@@ -11,7 +10,7 @@ FORMAT_CONFIG = {
     "feeds_page_Revenue_metric": "currency",
     "feeds_page_Sales_metric": "currency_without_decimal",
     "profit_metric": "currency_without_decimal_with_suffix",
-    "stake_metric": "currency_with_decimal_and_suffix",
+    "stake_metric": "currency_without_decimal_with_suffix",
     "costs_metric": "approximate_currency_with_decimal",
     "addr": "eth_address",
     "user": "eth_address",
@@ -49,7 +48,9 @@ def pick_from_dict(data: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
 
 
 @enforce_types
-def format_dict(data: Dict[str, Union[int, float, str]]) -> dict[str, str]:
+def format_dict(
+    data: Dict[str, Union[int, float, str]], only_include_keys: List[str]
+) -> dict[str, str]:
     """
     Format dictionary.
     Args:
@@ -61,7 +62,7 @@ def format_dict(data: Dict[str, Union[int, float, str]]) -> dict[str, str]:
         key: format_value(
             data[key] if isinstance(data[key], str) else float(data[key]), key
         )
-        for key in data.keys()
+        for key in only_include_keys
     }
 
 

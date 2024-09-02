@@ -2,12 +2,6 @@ from unittest.mock import patch
 
 from enforce_typing import enforce_types
 from pdr_backend.pdr_dashboard.util.db import DBGetter
-from pdr_backend.pdr_dashboard.test.resources import (
-    _prepare_test_db,
-    _clear_test_db,
-)
-from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.subscription import Subscription
 
 
@@ -25,118 +19,74 @@ def test_query_db(
 
 
 @enforce_types
-def test_get_feeds_data(
-    tmpdir,
-    _sample_first_predictions,
-):
-    ppss, sample_data_df = _prepare_test_db(
-        tmpdir, _sample_first_predictions, Prediction.get_lake_table_name()
-    )
+def test_get_feeds_data(_sample_app):
 
-    db_getter = DBGetter(ppss.lake_ss.lake_dir)
+    db_getter = _sample_app.db_getter
     result = db_getter.feeds_data()
 
     assert isinstance(result, list)
-    assert len(result) == len(sample_data_df)
-
-    _clear_test_db(ppss.lake_ss.lake_dir)
+    assert len(result) == 20
 
 
-@enforce_types
-def test_get_predictoors_data(
-    tmpdir,
-    _sample_first_predictions,
-):
-    ppss, sample_data_df = _prepare_test_db(
-        tmpdir, _sample_first_predictions, Prediction.get_lake_table_name()
-    )
-
-    db_getter = DBGetter(ppss.lake_ss.lake_dir)
-    result = db_getter.predictoors_data()
-
-    grouped_sample = sample_data_df.unique("user")
-
-    assert isinstance(result, list)
-    assert len(result) == len(grouped_sample)
-
-    _clear_test_db(ppss.lake_ss.lake_dir)
-
-
-@enforce_types
 def test_get_payouts(
-    tmpdir,
-    _sample_payouts,
+    _sample_app,
 ):
-    ppss, _ = _prepare_test_db(
-        tmpdir, _sample_payouts, table_name=Payout.get_lake_table_name()
-    )
+    db_getter = _sample_app.db_getter
 
-    db_getter = DBGetter(ppss.lake_ss.lake_dir)
     result = db_getter.payouts([], [], 1704153000)
-    assert len(result) == 4
+    assert len(result) == 2349
 
     result = db_getter.payouts(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
-        ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"],
+        ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
         1704152700,
     )
     assert isinstance(result, list)
-    assert len(result) == 2
+    assert len(result) == 24
 
     # start date after all payouts should return an empty list
     result = db_getter.payouts(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
-        ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"],
-        1704154000,
+        ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
+        1759154000,
     )
     assert len(result) == 0
 
     # start date 0 should not filter on start date
     result = db_getter.payouts(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
-        ["0xeb18bad7365a40e36a41fb8734eb0b855d13b74f"],
+        ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
         0,
     )
-    assert len(result) == 2
-
-    _clear_test_db(ppss.lake_ss.lake_dir)
+    assert len(result) == 24
 
 
 def test_get_user_payouts_stats(
-    tmpdir,
-    _sample_payouts,
+    _sample_app,
 ):
-    ppss, _ = _prepare_test_db(
-        tmpdir, _sample_payouts, table_name=Payout.get_lake_table_name()
-    )
-
-    db_getter = DBGetter(ppss.lake_ss.lake_dir)
-    result = db_getter.payouts_stats()
+    db_getter = _sample_app.db_getter
+    result = db_getter.predictoor_payouts_stats()
 
     assert isinstance(result, list)
-    assert len(result) == 5
+    assert len(result) == 57
 
     test_row = [
         row
         for row in result
-        if row["user"] == "0x02e9d2eede4c5347e55346860c8a8988117bde9e"
+        if row["user"] == "0x768c5195ea841c544cd09c61650417132615c0b9"
     ][0]
 
-    assert test_row["user"] == "0x02e9d2eede4c5347e55346860c8a8988117bde9e"
-    assert test_row["avg_accuracy"] == 100.0
-    assert test_row["avg_stake"] == 1.9908170679122585
+    assert test_row["user"] == "0x768c5195ea841c544cd09c61650417132615c0b9"
+    assert test_row["avg_accuracy"] == 39.130434782608695
+    assert test_row["avg_stake"] == 2.6666666666666665
+    assert test_row["total_profit"] == -36.06628060203039
 
-    _clear_test_db(ppss.lake_ss.lake_dir)
 
-
-def test_get_feed_daily_subscriptions_by_feed_id(tmpdir, _sample_subscriptions):
-    ppss, _ = _prepare_test_db(
-        tmpdir, _sample_subscriptions, table_name=Subscription.get_lake_table_name()
-    )
+def test_get_feed_daily_subscriptions_by_feed_id(_sample_app):
+    db_getter = _sample_app.db_getter
 
     feed_id = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
 
-    db_getter = DBGetter(ppss.lake_ss.lake_dir)
     result = db_getter.feed_daily_subscriptions_by_feed_id(feed_id)
     all_subscriptions = db_getter._query_db(
         f"SELECT * FROM {Subscription.get_lake_table_name()}"

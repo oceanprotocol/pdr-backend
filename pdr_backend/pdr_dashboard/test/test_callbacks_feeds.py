@@ -74,8 +74,8 @@ def test_feeds_table(_sample_app, dash_duo):
         "Addr",
         "Base Token",
         "Quote Token",
-        "Exchange",
-        "Time",
+        "Source",
+        "Timeframe",
         "Avg Accuracy",
         "Avg Stake Per Epoch (Ocean)",
         "Volume (Ocean)",
@@ -129,8 +129,8 @@ def test_feeds_table_filters(_sample_app, dash_duo):
     _set_dropdown_and_verify_row_count(dash_duo, "#base_token", "ETH", 3)
     _verify_table_data(table, "filtered_base_token_eth.json")
 
-    # Test filtering with time
-    _set_dropdown_and_verify_row_count(dash_duo, "#time", "5m", 2)
+    # Test filtering with timeframe
+    _set_dropdown_and_verify_row_count(dash_duo, "#timeframe", "5m", 2)
     _verify_table_data(table, "filtered_base_token_eth_5m.json")
 
     _clear_feeds_filters(dash_duo)
@@ -183,7 +183,7 @@ def test_feeds_table_modal(_sample_app, dash_duo):
     base_token = table.find_element(By.XPATH, "//tr[2]//td[3]//div").text
     quote_token = table.find_element(By.XPATH, "//tr[2]//td[4]//div").text
     timeframe = table.find_element(By.XPATH, "//tr[2]//td[6]//div").text
-    exchange = table.find_element(By.XPATH, "//tr[2]//td[5]//div").text
+    source = table.find_element(By.XPATH, "//tr[2]//td[5]//div").text
 
     dash_duo.wait_for_element("#feeds_modal", timeout=4)
 
@@ -192,7 +192,7 @@ def test_feeds_table_modal(_sample_app, dash_duo):
     header_text = modal.find_element(
         By.XPATH, "//div[@id='feeds_modal-header']//span"
     ).text
-    assert header_text == f"{base_token}-{quote_token} {timeframe} {exchange}"
+    assert header_text == f"{base_token}-{quote_token} {timeframe} {source}"
 
     number_of_plots = len(
         modal.find_element(By.ID, "feeds_modal-body").find_elements(

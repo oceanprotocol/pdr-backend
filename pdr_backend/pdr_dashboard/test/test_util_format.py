@@ -70,7 +70,7 @@ def test_format_value():
     assert format_value(12, "feeds_page_Volume_metric") == "12 OCEAN"
     assert format_value(12, "feeds_page_Revenue_metric") == "12 OCEAN"
     assert format_value(9876.12, "profit_metric") == "9.88K OCEAN"
-    assert format_value(9876.12, "stake_metric") == "9876.12 OCEAN"
+    assert format_value(9876.12, "stake_metric") == "9.88K OCEAN"
     assert format_value(9876, "costs_metric") == "~9876"
     assert (
         format_value("0x1234567890123456789012345678901234567890", "addr")
