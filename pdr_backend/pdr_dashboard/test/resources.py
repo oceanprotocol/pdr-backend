@@ -135,6 +135,7 @@ def _set_dropdown_and_verify_row_count(
     dash_duo, dropdown_id, option_text, expected_row_count
 ):
     _select_dropdown_option(dash_duo, dropdown_id, option_text)
+    time.sleep(1)
     _assert_table_row_count(dash_duo, "#feeds_page_table", expected_row_count)
 
 
