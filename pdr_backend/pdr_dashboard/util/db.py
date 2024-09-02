@@ -1,20 +1,62 @@
 import logging
+from copy import deepcopy
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from typing import Union, List
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.subscription import Subscription
+from pdr_backend.pdr_dashboard.util.data import (
+    col_to_human,
+    filter_objects_by_field,
+    get_feed_column_ids,
+    get_feeds_stat_with_contract,
+    get_feeds_subscription_stat_with_contract,
+)
+from pdr_backend.pdr_dashboard.util.format import format_dict, format_table
+from pdr_backend.pdr_dashboard.util.prices import (
+    calculate_tx_gas_fee_cost_in_OCEAN,
+    fetch_token_prices,
+)
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 
 logger = logging.getLogger("predictoor_dashboard_utils")
 
 
 class DBGetter:
-    def __init__(self, lake_dir: str):
-        self.lake_dir = lake_dir
+    def __init__(self, ppss):
+        self.lake_dir = ppss.lake_ss.lake_dir
+        self.network_name = ppss.web3_pp.network
+
+        # TODO: not all need to stay?
+
+        # fetch token prices
+        self.fee_cost = calculate_tx_gas_fee_cost_in_OCEAN(
+            ppss.web3_pp,
+            "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+            fetch_token_prices(),
+        )
+
+        # initial data loaded from database
+        self.feeds_payout_stats = self._init_feed_payouts_stats()
+        self.feeds_subscriptions = self._init_feed_subscription_stats()
+        self.predictoors_data = self._init_predictoor_payouts_stats()
+        self.feeds_data = self._init_feeds_data()
+
+        # initial data formatting for tables, columns and raw data
+        self.feed_cols, self.feed_table_data, self.feed_data_raw = (
+            self._format_for_feeds_table()
+        )
+        self.predictoor_cols, self.predictoor_table_data, self.raw_predictoor_data = (
+            self._format_for_predictoors_table()
+        )
+
+        valid_addresses = [p["user"].lower() for p in self.predictoors_data]
+        self.favourite_addresses = [
+            addr for addr in ppss.predictoor_ss.my_addresses if addr in valid_addresses
+        ]
 
     @enforce_types
     def _query_db(self, query: str, scalar=False) -> Union[List[dict], Exception]:
@@ -41,7 +83,7 @@ class DBGetter:
             return []
 
     @enforce_types
-    def feeds_data(self):
+    def _init_feeds_data(self):
         return self._query_db(
             f"""
                 SELECT contract, pair, timeframe, source FROM {Prediction.get_lake_table_name()}
@@ -50,7 +92,7 @@ class DBGetter:
         )
 
     @enforce_types
-    def feed_payouts_stats(self):
+    def _init_feed_payouts_stats(self):
         return self._query_db(
             f"""
                 SELECT
@@ -67,7 +109,7 @@ class DBGetter:
         )
 
     @enforce_types
-    def predictoor_payouts_stats(self):
+    def _init_predictoor_payouts_stats(self):
         # Insert the generated CASE clause into the SQL query
         query = f"""
             SELECT
@@ -104,8 +146,8 @@ class DBGetter:
         return self._query_db(query)
 
     @enforce_types
-    def feed_subscription_stats(self, network_name: str):
-        opf_addresses = get_opf_addresses(network_name)
+    def _init_feed_subscription_stats(self):
+        opf_addresses = get_opf_addresses(self.network_name)
 
         query = f"""
             WITH ws_buy_counts AS (
@@ -179,7 +221,15 @@ class DBGetter:
 
         return self._query_db(query)
 
-    def feed_ids_based_on_predictoors(self, predictoor_addrs: List[str]):
+    def feed_ids_based_on_predictoors(
+        self, predictoor_addrs: Optional[List[str]] = None
+    ):
+        if not predictoor_addrs and not self.favourite_addresses:
+            return []
+
+        if not predictoor_addrs:
+            predictoor_addrs = self.favourite_addresses
+
         # Constructing the SQL query
         query = f"""
             SELECT LIST(LEFT(ID, POSITION('-' IN ID) - 1)) as feed_addrs
@@ -317,3 +367,153 @@ class DBGetter:
             "Staked": tot_stake,
             "Gross Income": tot_gross_income,
         }
+
+    def _format_for_feeds_table(
+        self,
+    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
+
+        new_feed_data = []
+
+        # split the pair column into two columns
+        for feed in self.feeds_data:
+            split_pair = feed["pair"].split("/")
+            feed_item = {}
+            feed_item["addr"] = feed["contract"]
+            feed_item["base_token"] = split_pair[0]
+            feed_item["quote_token"] = split_pair[1]
+            feed_item["source"] = feed["source"].capitalize()
+            feed_item["timeframe"] = feed["timeframe"]
+            feed_item["full_addr"] = feed["contract"]
+
+            result = get_feeds_stat_with_contract(
+                feed["contract"], self.feeds_payout_stats
+            )
+
+            feed_item.update(result)
+
+            subscription_result = get_feeds_subscription_stat_with_contract(
+                feed["contract"], self.feeds_subscriptions
+            )
+
+            feed_item.update(subscription_result)
+
+            new_feed_data.append(feed_item)
+
+        columns = get_feed_column_ids(new_feed_data[0])
+
+        formatted_data = format_table(new_feed_data, columns)
+
+        return columns, formatted_data, new_feed_data
+
+    def _format_for_predictoors_table(
+        self,
+    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
+
+        temp_data = self.predictoors_data
+
+        new_predictoor_data = []
+
+        # split the pair column into two columns
+        for data_item in temp_data:
+            tx_costs = self.fee_cost * float(data_item["stake_count"])
+
+            temp_pred_item = {}
+            temp_pred_item["addr"] = str(data_item["user"])
+            temp_pred_item["full_addr"] = str(data_item["user"])
+            temp_pred_item["apr"] = data_item["apr"]
+            temp_pred_item["accuracy"] = data_item["avg_accuracy"]
+            temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
+            temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
+            temp_pred_item["gross_income_(OCEAN)"] = data_item["gross_income"]
+            temp_pred_item["stake_loss_(OCEAN)"] = data_item["stake_loss"]
+            temp_pred_item["tx_costs_(OCEAN)"] = tx_costs
+            temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
+
+            new_predictoor_data.append(temp_pred_item)
+
+        columns = get_feed_column_ids(new_predictoor_data[0])
+
+        formatted_data = format_table(new_predictoor_data, columns)
+
+        return columns, formatted_data, new_predictoor_data
+
+    def filter_for_feeds_table(
+        self, predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
+    ):
+        filtered_data = self.feeds_data
+
+        # filter feeds by payouts from selected predictoors
+        if predictoor_feeds_only and (len(predictoors_addrs) > 0):
+            feed_ids = self.feed_ids_based_on_predictoors(
+                predictoors_addrs,
+            )
+            filtered_data = [
+                obj
+                for obj in filtered_data
+                if obj["contract"] in feed_ids
+                if obj not in selected_feeds
+            ]
+
+        # filter feeds by pair address
+        filtered_data = (
+            filter_objects_by_field(
+                self.feeds_data, "pair", search_value, selected_feeds
+            )
+            if search_value
+            else filtered_data
+        )
+
+        return selected_feeds + filtered_data
+
+    @enforce_types
+    def format_predictoors_home_page_table_data(self) -> List[Dict[str, Any]]:
+        """
+        Process the user payouts stats data.
+        Args:
+            user_payout_stats (list): List of user payouts stats data.
+        Returns:
+            list: List of processed user payouts stats data.
+        """
+
+        payout_stats = deepcopy(self.predictoors_data)
+        for data in payout_stats:
+            formatted_data = format_dict(
+                data=data,
+                only_include_keys=["user", "total_profit", "avg_accuracy", "avg_stake"],
+            )
+
+            new_data = {
+                "user_address": formatted_data["user"],
+                "total_profit": formatted_data["total_profit"],
+                "avg_accuracy": formatted_data["avg_accuracy"],
+                "avg_stake": formatted_data["avg_stake"],
+                "user": data["user"],
+            }
+
+            data.clear()
+            data.update(new_data)
+
+        return payout_stats
+
+    def get_homepage_feeds_cols(self):
+        data = self.feeds_data
+
+        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
+        hidden_columns = ["contract"]
+
+        return (columns, hidden_columns), data
+
+    def get_homepage_predictoors_cols(self):
+        data = self.format_predictoors_home_page_table_data()
+
+        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
+        hidden_columns = ["user"]
+
+        if not self.favourite_addresses:
+            return (columns, hidden_columns), data
+
+        data = [p for p in data if p["user"] in self.favourite_addresses] + [
+            p for p in data if p["user"] not in self.favourite_addresses
+        ]
+
+        return (columns, hidden_columns), data

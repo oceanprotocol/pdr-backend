@@ -1,10 +1,6 @@
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 
-from pdr_backend.pdr_dashboard.util.data import (
-    col_to_human,
-    get_predictoors_home_page_table_data,
-)
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_date_period_selection_component,
     get_metric,
@@ -15,7 +11,6 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
 class HomePage:
     def __init__(self, app):
         self.app = app
-        self.favourite_addresses = app.favourite_addresses
 
         self.selected_predictoors = []
         self.selected_feeds = []
@@ -55,51 +50,28 @@ class HomePage:
         )
 
     def get_feeds_for_favourite_predictoors(self, feed_data):
-        if not self.favourite_addresses:
-            return [], feed_data
-
-        feed_ids = self.app.db_getter.feed_ids_based_on_predictoors(
-            self.app.favourite_addresses,
-        )
+        feed_ids = self.app.db_getter.feed_ids_based_on_predictoors()
 
         if not feed_ids:
             return [], feed_data
 
         feed_data = [
-            feed for feed in self.app.feeds_data if feed["contract"] in feed_ids
+            feed
+            for feed in self.app.db_getter.feeds_data
+            if feed["contract"] in feed_ids
         ]
 
         return list(range(len(feed_ids))), feed_data
 
-    def get_feeds_cols_data(self):
-        data = self.app.feeds_data
-
-        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
-        hidden_columns = ["contract"]
-
-        return (columns, hidden_columns), data
-
-    def get_predictoors_cols_data(self):
-        predictoor_data = self.app.predictoors_data
-        data = get_predictoors_home_page_table_data(predictoor_data)
-
-        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
-        hidden_columns = ["user"]
-
-        if not self.favourite_addresses:
-            return (columns, hidden_columns), data
-
-        data = [p for p in data if p["user"] in self.favourite_addresses] + [
-            p for p in data if p["user"] not in self.favourite_addresses
-        ]
-
-        return (columns, hidden_columns), data
-
     def get_input_column(self):
-        feed_cols, feed_data = self.get_feeds_cols_data()
-        predictoor_cols, predictoor_data = self.get_predictoors_cols_data()
+        feed_cols, feed_data = self.app.db_getter.get_homepage_feeds_cols()
+        predictoor_cols, predictoor_data = (
+            self.app.db_getter.get_homepage_predictoors_cols()
+        )
 
-        self.selected_predictoors = list(range(len(self.favourite_addresses)))
+        self.selected_predictoors = list(
+            range(len(self.app.db_getter.favourite_addresses))
+        )
         self.selected_feeds, feed_data = self.get_feeds_for_favourite_predictoors(
             feed_data
         )
@@ -211,14 +183,14 @@ class HomePage:
         if table_id == "predictoors_table":
             table_name = "Predictoors"
             searchable_field = "user"
-            length = len(self.app.predictoors_data)
+            length = len(self.app.db_getter.predictoors_data)
 
             toggle_switch = self.get_predictoors_switch()
             selected_rows = self.selected_predictoors
         else:
             table_name = "Feeds"
             searchable_field = "pair"
-            length = len(self.app.feeds_data)
+            length = len(self.app.db_getter.feeds_data)
 
             toggle_switch = self.get_feeds_switch()
             selected_rows = self.selected_feeds

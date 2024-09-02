@@ -9,7 +9,6 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_date_period_text,
     get_start_date_from_period,
     select_or_clear_all_by_table,
-    get_predictoors_home_page_table_data,
 )
 from pdr_backend.pdr_dashboard.util.format import format_value
 
@@ -71,7 +70,7 @@ def get_callbacks_home(app):
             payouts,
             feeds,
             predictoors_addrs,
-            app.fee_cost,
+            app.db_getter.fee_cost,
         )
 
         # get available period date text
@@ -113,8 +112,8 @@ def get_callbacks_home(app):
         predictoors_table,
         show_favourite_addresses,
     ):
-        formatted_predictoors_data = get_predictoors_home_page_table_data(
-            app.predictoors_data
+        formatted_predictoors_data = (
+            app.db_getter.format_predictoors_home_page_table_data()
         )
         selected_predictoors = [predictoors_table[i] for i in selected_rows]
         filtered_data = formatted_predictoors_data
@@ -123,7 +122,7 @@ def get_callbacks_home(app):
             custom_predictoors = [
                 predictoor
                 for predictoor in formatted_predictoors_data
-                if predictoor["user"] in app.favourite_addresses
+                if predictoor["user"] in app.db_getter.favourite_addresses
             ]
 
             if show_favourite_addresses:
@@ -176,30 +175,9 @@ def get_callbacks_home(app):
             predictoors_table[i]["user"] for i in predictoors_table_selected_rows
         ]
 
-        filtered_data = app.feeds_data
-
-        # filter feeds by payouts from selected predictoors
-        if predictoor_feeds_only and (len(predictoors_addrs) > 0):
-            feed_ids = app.db_getter.feed_ids_based_on_predictoors(
-                predictoors_addrs,
-            )
-            filtered_data = [
-                obj
-                for obj in filtered_data
-                if obj["contract"] in feed_ids
-                if obj not in selected_feeds
-            ]
-
-        # filter feeds by pair address
-        filtered_data = (
-            filter_objects_by_field(
-                app.feeds_data, "pair", search_value, selected_feeds
-            )
-            if search_value
-            else filtered_data
+        filtered_data = app.db_getter.filter_for_feeds_table(
+            predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
         )
-
-        filtered_data = selected_feeds + filtered_data
 
         selected_feed_indices = list(range(len(selected_feeds)))
 

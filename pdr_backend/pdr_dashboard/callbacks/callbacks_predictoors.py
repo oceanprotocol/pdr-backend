@@ -90,7 +90,7 @@ def get_callbacks_predictoors(app):
 
         new_table_data = [
             item
-            for item in app.predictoor_table_data
+            for item in app.db_getter.raw_predictoor_data
             if all(check_condition(item, *condition) for condition in conditions)
         ]
 

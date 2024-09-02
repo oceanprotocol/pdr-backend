@@ -1,11 +1,11 @@
-from dash import html, dcc, dash_table
+from dash import dash_table, dcc, html
+
+from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_search_bar,
 )
-from pdr_backend.pdr_dashboard.util.data import get_feeds_data_for_feeds_table
-from pdr_backend.pdr_dashboard.pages.common import TabularPage, Filter, add_to_filter
-from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
+from pdr_backend.pdr_dashboard.pages.common import Filter, TabularPage, add_to_filter
 
 filters = [
     {"name": "base_token", "placeholder": "Base Token", "options": []},
@@ -21,7 +21,7 @@ class FeedsPage(TabularPage):
     def __init__(self, app):
         self.app = app
 
-        for feed in app.feeds_data:
+        for feed in app.db_getter.feeds_data:
             pair_base, pair_quote = feed["pair"].split("/")
 
             # Update base currency filter
@@ -109,38 +109,25 @@ class FeedsPage(TabularPage):
         )
 
     def get_main_container(self):
-        feed_stats = self.app.db_getter.feed_payouts_stats()
-        feed_subscriptions = self.app.db_getter.feed_subscription_stats(
-            self.app.network_name
-        )
-
-        feed_cols, feed_data, raw_feed_data = get_feeds_data_for_feeds_table(
-            self.app.feeds_data, feed_stats, feed_subscriptions
-        )
-
-        self.app.feeds_table_data = raw_feed_data
-
         return html.Div(
             [
                 self.get_filters_section(),
-                self.get_feeds_table_area(feed_cols, feed_data),
+                self.get_feeds_table_area(),
             ],
             className="tabular-main-container",
         )
 
     def get_feeds_table_area(
         self,
-        columns,
-        feeds_data,
     ):
         return html.Div(
             [
                 dash_table.DataTable(
                     id="feeds_page_table",
-                    columns=columns,
+                    columns=self.app.db_getter.feed_cols,
                     hidden_columns=["full_addr", "sales_raw"],
                     row_selectable="single",
-                    data=feeds_data,
+                    data=self.app.db_getter.feed_table_data,
                     sort_action="custom",
                     sort_mode="single",
                 ),
