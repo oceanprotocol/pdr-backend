@@ -48,7 +48,7 @@ install_requirements = [
     "web3==6.20.2",
     "sapphire.py==0.2.3",
     "stopit==1.1.2",
-    "ocean-contracts==2.0.4",  # install this last
+    "ocean-contracts==2.1.0",  # install this last
 ]
 
 # Required to run setup.py:
