@@ -51,6 +51,9 @@ def setup_app(app, ppss: PPSS):
     app.feeds_data = app.db_getter.feeds_data()
 
     app.predictoors_data = app.db_getter.predictoor_payouts_stats()
+    app.min_timestamp, app.max_timestamp = (
+        app.db_getter.get_first_and_last_slot_timestamp()
+    )
 
     valid_addresses = [p["user"].lower() for p in app.predictoors_data]
     app.favourite_addresses = [

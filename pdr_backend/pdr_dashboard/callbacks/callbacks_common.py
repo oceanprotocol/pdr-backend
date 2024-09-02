@@ -6,6 +6,10 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
 from pdr_backend.pdr_dashboard.pages.home import HomePage
 from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
 from pdr_backend.pdr_dashboard.pages.predictoors import PredictoorsPage
+from pdr_backend.pdr_dashboard.util.data import (
+    get_date_period_text_header,
+    get_start_date_from_period,
+)
 
 
 def get_callbacks_common(app):
@@ -21,6 +25,13 @@ def get_callbacks_common(app):
         result = get_page(pathname), get_navbar(NAV_ITEMS)
         return result
 
+    @app.callback(
+        Output("available-data-text", "children"),
+        [Input("page-content", "children")],
+    )
+    def display_available_data(_):
+        return get_date_period_text_header(app.min_timestamp, app.max_timestamp)
+
     def get_page(pathname):
         if pathname not in ["/", "/feeds", "/predictoors"]:
             return "404 - Page not found"
@@ -33,3 +44,18 @@ def get_callbacks_common(app):
             page = PredictoorsPage(app)
 
         return page.layout()
+
+    @app.callback(
+        Output("start-date", "value"),
+        [Input("general-lake-date-period-radio-items", "value")],
+    )
+    def set_period_start_date(selected_period_start):
+        print(selected_period_start)
+        start_date = (
+            get_start_date_from_period(int(selected_period_start))
+            if int(selected_period_start) > 0
+            else 0
+        )
+        print(start_date)
+        #app.predictoors_data = app.db_getter.predictoor_payouts_stats()
+        return start_date

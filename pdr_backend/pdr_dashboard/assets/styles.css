@@ -50,7 +50,7 @@ body {
 }
 
 /* Hide the default radio circle */
-#date-period-radio-items input[type="radio"] {
+.date-period-radio-items input[type="radio"] {
   display: none;
 }
 
@@ -113,7 +113,7 @@ button {
 }
 
 /* Style the label as buttons */
-#date-period-radio-items label {
+.date-period-radio-items label {
   display: inline-block;
   padding: 5px 14px;
   margin-right: 10px;
@@ -125,7 +125,7 @@ button {
 }
 
 /* Style for selected label */
-#date-period-radio-items label:has(input:checked) {
+.date-period-radio-items label:has(input:checked) {
   background-color: #00254d;
   border-color: #0056b3;
 }
@@ -366,4 +366,10 @@ button {
 
 #predictoors_modal-body .modal-graph-item, #feeds_modal-body .modal-graph-item{
     margin-bottom: 30px;
+}
+
+#available-data-text{
+  font-weight: bold;
+  font-size: 24px;
+  margin-right: 20px;
 }

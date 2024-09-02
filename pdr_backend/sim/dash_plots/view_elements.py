@@ -229,6 +229,7 @@ def get_layout():
                 disabled=False,
             ),
             dcc.Store(id="selected-tab"),
+            dcc.Store(id="start-date"),
         ],
         style={"height": "100vh"},
     )

@@ -7,6 +7,7 @@ from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.subscription import Subscription
+from pdr_backend.lake.slot import Slot
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 
 logger = logging.getLogger("predictoor_dashboard_utils")
@@ -317,3 +318,16 @@ class DBGetter:
             "Staked": tot_stake,
             "Gross Income": tot_gross_income,
         }
+
+    def get_first_and_last_slot_timestamp(self):
+        first_timestamp, last_timestamp = self._query_db(
+            f"""
+                SELECT 
+                    MIN(timestamp) as min,
+                    MAX(timestamp) as max
+                FROM 
+                    {Slot.get_lake_table_name()}
+            """,
+            scalar=True,
+        )
+        return first_timestamp / 1000, last_timestamp / 1000

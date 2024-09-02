@@ -31,7 +31,7 @@ def get_callbacks_home(app):
             Input("predictoors_table", "selected_rows"),
             Input("feeds_table", "data"),
             Input("predictoors_table", "data"),
-            Input("date-period-radio-items", "value"),
+            Input("home-page-date-period-radio-items", "value"),
         ],
     )
     def get_display_data_from_db(

@@ -27,21 +27,27 @@ def get_information_text(tooltip_id: str):
 
 
 def get_date_period_selection_component():
+    component_id = "available_data_period_text"
     return html.Div(
         [
-            dcc.RadioItems(
-                id="date-period-radio-items",
-                options=[
-                    {"label": "1D", "value": "1"},
-                    {"label": "1W", "value": "7"},
-                    {"label": "1M", "value": "30"},
-                    {"label": "ALL", "value": "0"},
-                ],
-                value="0",  # default selected value
-                labelStyle={"display": "inline-block", "margin-right": "10px"},
-            ),
-            html.Span("there is no data available", id="available_data_period_text"),
+            get_period_selection_radio_items("home-page"),
+            html.Span("there is no data available", id=component_id),
         ]
+    )
+
+
+def get_period_selection_radio_items(component_id: str):
+    return dcc.RadioItems(
+        className="date-period-radio-items",
+        id=f"{component_id}-date-period-radio-items",
+        options=[
+            {"label": "1D", "value": "1"},
+            {"label": "1W", "value": "7"},
+            {"label": "1M", "value": "30"},
+            {"label": "ALL", "value": "0"},
+        ],
+        value="0",  # default selected value
+        labelStyle={"display": "inline-block", "margin-right": "10px"},
     )
 
 
@@ -93,7 +99,7 @@ def get_layout():
     return html.Div(
         [
             dcc.Location(id="url", refresh=False),
-            html.Div(id="navbar-container"),
+            get_header(),
             html.Div(id="page-content"),
         ]
     )
@@ -101,6 +107,17 @@ def get_layout():
 
 def get_graph(figure):
     return dcc.Graph(figure=figure, style={"width": "100%", "height": "25vh"})
+
+
+def get_header():
+    return html.Div(
+        [html.Div(id="navbar-container"), get_available_data_area_components()],
+        style={
+            "display": "flex",
+            "justifyContent": "space-between",
+            "alignItems": "center",
+        },
+    )
 
 
 def get_navbar(nav_items):
@@ -127,7 +144,7 @@ def get_nav_item(text: str, location: str, active: bool):
             id=text.lower(),
             href=location,
             active=active,
-            style={"fontSize": "26px", "margin": "0 10px"},
+            style={"fontSize": "26px", "marginRight": "10px"},
         )
     )
 
@@ -140,4 +157,18 @@ def get_search_bar(component_id, placeholder):
             type="text",
             placeholder=placeholder,
         ),
+    )
+
+
+def get_available_period_text_display():
+    return html.Div(id="available-data-text")
+
+
+def get_available_data_area_components():
+    return html.Div(
+        [
+            get_available_period_text_display(),
+            get_period_selection_radio_items("general-lake"),
+        ],
+        style={"display": "flex", "justifyContent": "center", "alignItems": "center"},
     )

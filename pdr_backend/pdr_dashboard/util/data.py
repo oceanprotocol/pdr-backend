@@ -111,6 +111,16 @@ def get_date_period_text(payouts: List):
     return date_period_text
 
 
+def get_date_period_text_header(start_date: str, end_date: str):
+    if not start_date or not end_date:
+        return "there is no data available"
+    date_period_text = f"""
+        available {datetime.fromtimestamp(float(start_date)).strftime('%d-%m-%Y')}
+        - {datetime.fromtimestamp(float(end_date)).strftime('%d-%m-%Y')}
+    """
+    return date_period_text
+
+
 @enforce_types
 def col_to_human(col: str, replace_rules: List[str] = ["avg_", "total_"]) -> str:
     temp_col = col
