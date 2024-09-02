@@ -19,9 +19,10 @@ class Erc721Factory(BaseContract):
         super().__init__(web3_pp, address, "ERC721Factory")
 
     def createNftWithErc20WithFixedRate(self, NftCreateData, ErcCreateData, FixedData):
-        tx = self.transact(
-            "createNftWithErc20WithFixedRate", [NftCreateData, ErcCreateData, FixedData]
-        )
+        call_params = self.web3_pp.tx_call_params()
+        tx = self.contract_instance.functions.createNftWithErc20WithFixedRate(
+            NftCreateData, ErcCreateData, FixedData
+        ).transact(call_params)
         receipt = self.config.w3.eth.wait_for_transaction_receipt(tx)
 
         if receipt["status"] != 1:

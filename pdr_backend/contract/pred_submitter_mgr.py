@@ -51,7 +51,10 @@ class PredSubmitterMgr(BaseContract):
         @return
           tx -- tx hash if wait_for_receipt is False, else the tx receipt
         """
-        tx = self.transact("claimDFRewards", [token_addr, dfrewards_addr])
+        call_params = self.web3_pp.tx_call_params()
+        tx = self.contract_instance.functions.claimDFRewards(
+            token_addr, dfrewards_addr
+        ).transact(call_params)
 
         if not wait_for_receipt:
             return tx
@@ -87,9 +90,10 @@ class PredSubmitterMgr(BaseContract):
                 "submit", [stakes_up_wei, stakes_down_wei, feed_addrs, epoch]
             )
         else:
-            tx = self.transact(
-                "submit", [stakes_up_wei, stakes_down_wei, feed_addrs, epoch]
-            )
+            call_params = self.web3_pp.tx_call_params()
+            tx = self.contract_instance.functions.submit(
+                stakes_up_wei, stakes_down_wei, feed_addrs, epoch
+            ).transact(call_params)
         if not wait_for_receipt:
             return tx
 
@@ -114,7 +118,10 @@ class PredSubmitterMgr(BaseContract):
         @return
           tx -- tx hash if wait_for_receipt is False, else the tx receipt.
         """
-        tx = self.transact("getPayout", [epochs, feed_addrs])
+        call_params = self.web3_pp.tx_call_params()
+        tx = self.contract_instance.functions.getPayout(epochs, feed_addrs).transact(
+            call_params
+        )
 
         if not wait_for_receipt:
             return tx
@@ -141,7 +148,10 @@ class PredSubmitterMgr(BaseContract):
         @return
           tx -- tx hash if wait_for_receipt is False, else the tx receipt
         """
-        tx = self.transact("transferERC20", [token_addr, to_addr, amount.amt_wei])
+        call_params = self.web3_pp.tx_call_params()
+        tx = self.contract_instance.functions.transferERC20(
+            token_addr, to_addr, amount.amt_wei
+        ).transact(call_params)
 
         if not wait_for_receipt:
             return tx
@@ -171,7 +181,10 @@ class PredSubmitterMgr(BaseContract):
         @return
           tx -- tx hash if wait_for_receipt is False, else the tx receipt
         """
-        tx = self.transact("approveOcean", [feed_addrs])
+        call_params = self.web3_pp.tx_call_params()
+        tx = self.contract_instance.functions.approveOcean(feed_addrs).transact(
+            call_params
+        )
 
         if not wait_for_receipt:
             return tx
@@ -189,7 +202,8 @@ class PredSubmitterMgr(BaseContract):
         @return
           tx -- tx hash if wait_for_receipt is False, else the tx receipt
         """
-        tx = self.transact("transfer", [])
+        call_params = self.web3_pp.tx_call_params()
+        tx = self.contract_instance.functions.transfer().transact(call_params)
 
         if not wait_for_receipt:
             return tx
