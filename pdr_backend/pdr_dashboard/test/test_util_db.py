@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from enforce_typing import enforce_types
 from pdr_backend.pdr_dashboard.util.db import DBGetter
@@ -9,11 +9,13 @@ from pdr_backend.lake.subscription import Subscription
 @patch("pdr_backend.pdr_dashboard.util.db.DuckDBDataStore")
 def test_query_db(
     mock_duckdb_data_store,
+    _sample_app,
 ):
-    lake_dir = "lake_dir"
     query = "query"
-    db_getter = DBGetter(lake_dir)
+    db_getter = _sample_app.db_getter
     db_getter._query_db(query)
+
+    lake_dir = db_getter.lake_dir
     mock_duckdb_data_store.assert_called_once_with(lake_dir, read_only=True)
     mock_duckdb_data_store.return_value.query_data.assert_called_once_with(query)
 
@@ -22,7 +24,7 @@ def test_query_db(
 def test_get_feeds_data(_sample_app):
 
     db_getter = _sample_app.db_getter
-    result = db_getter.feeds_data()
+    result = db_getter._init_feeds_data()
 
     assert isinstance(result, list)
     assert len(result) == 20
@@ -65,7 +67,7 @@ def test_get_user_payouts_stats(
     _sample_app,
 ):
     db_getter = _sample_app.db_getter
-    result = db_getter.predictoor_payouts_stats()
+    result = db_getter._init_predictoor_payouts_stats()
 
     assert isinstance(result, list)
     assert len(result) == 57
