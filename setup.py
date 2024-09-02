@@ -44,7 +44,7 @@ install_requirements = [
     "time_machine==2.15.0",
     "typeguard==4.3.0",
     "xgboost==2.1.1",
-    "web3==6.20.2",
+    "web3==7.2.0",
     "sapphire.py==0.2.3",
     "stopit==1.1.2",
     "ocean-contracts==2.1.0",  # install this last
