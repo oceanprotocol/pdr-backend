@@ -233,10 +233,10 @@ def _prepare_sample_app(tmpdir, include_my_addresses=False):
         )
 
     with patch(
-        "pdr_backend.pdr_dashboard.predictoor_dash.calculate_tx_gas_fee_cost_in_OCEAN",
+        "pdr_backend.pdr_dashboard.util.db.calculate_tx_gas_fee_cost_in_OCEAN",
         return_value=0.2,
     ), patch(
-        "pdr_backend.pdr_dashboard.predictoor_dash.fetch_token_prices",
+        "pdr_backend.pdr_dashboard.util.db.fetch_token_prices",
         return_value={"ROSE": 0.05612, "OCEAN": 0.48521312000000005},
     ):
         setup_app_main(app, etl.ppss)
