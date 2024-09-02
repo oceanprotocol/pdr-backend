@@ -28,17 +28,6 @@ def test_get_feeds_data(_sample_app):
     assert len(result) == 20
 
 
-@enforce_types
-def test_get_predictoors_data(_sample_app):
-    db_getter = _sample_app.db_getter
-
-    result = db_getter.predictoors_data()
-
-    assert isinstance(result, list)
-    assert len(result) == 57
-
-
-@enforce_types
 def test_get_payouts(
     _sample_app,
 ):
@@ -76,7 +65,7 @@ def test_get_user_payouts_stats(
     _sample_app,
 ):
     db_getter = _sample_app.db_getter
-    result = db_getter.payouts_stats()
+    result = db_getter.predictoor_payouts_stats()
 
     assert isinstance(result, list)
     assert len(result) == 57

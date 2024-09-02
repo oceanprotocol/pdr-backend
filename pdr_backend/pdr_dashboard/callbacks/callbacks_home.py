@@ -9,6 +9,7 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_date_period_text,
     get_start_date_from_period,
     select_or_clear_all_by_table,
+    get_predictoors_home_page_table_data,
 )
 from pdr_backend.pdr_dashboard.util.format import format_value
 
@@ -112,13 +113,16 @@ def get_callbacks_home(app):
         predictoors_table,
         show_favourite_addresses,
     ):
+        formatted_predictoors_data = get_predictoors_home_page_table_data(
+            app.predictoors_data
+        )
         selected_predictoors = [predictoors_table[i] for i in selected_rows]
-        filtered_data = app.predictoors_data
+        filtered_data = formatted_predictoors_data
 
         if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
             custom_predictoors = [
                 predictoor
-                for predictoor in app.predictoors_data
+                for predictoor in formatted_predictoors_data
                 if predictoor["user"] in app.favourite_addresses
             ]
 
