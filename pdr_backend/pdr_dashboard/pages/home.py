@@ -4,6 +4,9 @@ from dash import dash_table, dcc, html
 from pdr_backend.pdr_dashboard.util.data import (
     col_to_human,
     get_predictoors_home_page_table_data,
+    get_feeds_subscription_stat_with_contract,
+    format_table,
+    get_feed_column_ids,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_date_period_selection_component,
@@ -74,7 +77,32 @@ class HomePage:
     def get_feeds_cols_data(self):
         data = self.app.feeds_data
 
-        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
+        feed_payouts_stats = self.app.db_getter.feed_payouts_stats()
+        feed_subscriptions = self.app.db_getter.feed_subscription_stats(
+            self.app.network_name
+        )
+
+        for feed in data:
+            # feed_payouts_stats is a list
+            # find with contract
+            feed["avg_accuracy"] = next(
+                (
+                    float(stat["avg_accuracy"])
+                    for stat in feed_payouts_stats
+                    if stat["contract"] == feed["contract"]
+                ),
+                0,
+            )
+
+            feed["sales"] = get_feeds_subscription_stat_with_contract(
+                feed["contract"], feed_subscriptions
+            )["sales_raw"]
+
+        self.app.home_feeds_table_data = data
+
+        columns = get_feed_column_ids(data[0])
+        data = format_table(data, columns)
+
         hidden_columns = ["contract"]
 
         return (columns, hidden_columns), data
@@ -290,7 +318,8 @@ class HomePage:
                     data=data,
                     row_selectable="multi",  # Can be 'multi' for multiple rows
                     selected_rows=selected_rows,
-                    sort_action="native",  # Enables data to be sorted
+                    sort_action="custom",
+                    sort_mode="single",
                     style_cell={"textAlign": "left"},
                     style_table={
                         "height": "30vh",

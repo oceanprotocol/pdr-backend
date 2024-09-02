@@ -221,3 +221,24 @@ def get_feeds_data_for_feeds_table(
     formatted_data = format_table(new_feed_data, columns)
 
     return columns, formatted_data, new_feed_data
+
+@enforce_types
+def sort_by_action(
+    data: List, sort_by: Union[List | None]
+) -> List:
+    """
+    Sort the data based on the sort_by action.
+    Args:
+        data (list): List of data.
+        sort_by (list): List of sort_by actions.
+    Returns:
+        list: List of sorted data.
+    """
+    if sort_by is None or not sort_by:
+        return data
+
+    sort_key = sort_by[0]["column_id"]
+    sort_direction = sort_by[0]["direction"]
+    reverse = sort_direction == "desc"
+
+    return sorted(data, key=lambda x: x.get(sort_key, ""), reverse=reverse)
