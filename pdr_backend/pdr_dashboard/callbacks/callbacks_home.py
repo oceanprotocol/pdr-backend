@@ -9,8 +9,6 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_date_period_text,
     get_start_date_from_period,
     select_or_clear_all_by_table,
-    get_predictoors_home_page_table_data,
-    get_feed_column_ids,
     sort_by_action,
 )
 from pdr_backend.pdr_dashboard.util.format import (
@@ -65,7 +63,7 @@ def get_callbacks_home(app):
                 if int(date_period) > 0
                 else 0
             )
-            payouts = app.db_getter.payouts(
+            payouts = app.data.payouts(
                 [row["contract"] for row in selected_feeds],
                 predictoors_addrs,
                 start_date,
@@ -76,7 +74,7 @@ def get_callbacks_home(app):
             payouts,
             feeds,
             predictoors_addrs,
-            app.fee_cost,
+            app.data.fee_cost,
         )
 
         # get available period date text
@@ -120,9 +118,7 @@ def get_callbacks_home(app):
         show_favourite_addresses,
         sort_by,
     ):
-        formatted_predictoors_data = get_predictoors_home_page_table_data(
-            app.predictoors_data
-        )
+        formatted_predictoors_data = app.data.formatted_predictoors_home_page_table_data
         selected_predictoors = [predictoors_table[i] for i in selected_rows]
         filtered_data = formatted_predictoors_data
 
@@ -130,7 +126,7 @@ def get_callbacks_home(app):
             custom_predictoors = [
                 predictoor
                 for predictoor in formatted_predictoors_data
-                if predictoor["user"] in app.favourite_addresses
+                if predictoor["user"] in app.data.favourite_addresses
             ]
 
             if show_favourite_addresses:
@@ -151,12 +147,10 @@ def get_callbacks_home(app):
             filtered_data = [p for p in filtered_data if p not in selected_predictoors]
 
         filtered_data = sort_by_action(filtered_data, sort_by)
-
         filtered_data = selected_predictoors + filtered_data
         selected_predictoor_indices = list(range(len(selected_predictoors)))
 
         return (filtered_data, selected_predictoor_indices)
-
 
     @app.callback(
         Output("feeds_table", "data", allow_duplicate=True),
@@ -170,7 +164,6 @@ def get_callbacks_home(app):
             Input("feeds_table", "sort_by"),
         ],
         State("predictoors_table", "data"),
-
         prevent_initial_call=True,
     )
     # pylint: disable=unused-argument
@@ -183,54 +176,27 @@ def get_callbacks_home(app):
         sort_by,
         predictoors_table,
     ):
-        selected_feeds_contracts = [feeds_table[i]["contract"] for i in selected_rows]
-
-        # find selected feeds from the home feeds table
-        selected_feeds = [
-            feed
-            for feed in app.home_feeds_table_data
-            if feed["contract"] in selected_feeds_contracts
-        ]
-
-        filtered_data = [feed for feed in app.home_feeds_table_data if feed not in selected_feeds]
-
+        selected_feeds = [feeds_table[i] for i in selected_rows]
         # Extract selected predictoor addresses
         predictoors_addrs = [
             predictoors_table[i]["user"] for i in predictoors_table_selected_rows
         ]
 
-
-        # filter feeds by payouts from selected predictoors
-        if predictoor_feeds_only and (len(predictoors_addrs) > 0):
-            feed_ids = app.db_getter.feed_ids_based_on_predictoors(
-                predictoors_addrs,
-            )
-            filtered_data = [
-                obj
-                for obj in filtered_data
-                if obj["contract"] in feed_ids
-                if obj not in selected_feeds
-            ]
-
-        # filter feeds by pair address
-        filtered_data = (
-            filter_objects_by_field(
-                app.feeds_data, "pair", search_value, selected_feeds
-            )
-            if search_value
-            else filtered_data
+        filtered_data = app.data.filter_for_feeds_table(
+            predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
         )
 
-        filtered_data = sort_by_action(filtered_data, sort_by)
+        feeds_col, _ = app.data.homepage_feeds_cols
 
-        filtered_data = selected_feeds + filtered_data
+        filtered_data = sort_by_action(filtered_data, sort_by)
+        filtered_data = format_table(
+            filtered_data,
+            feeds_col[0]
+        )
 
         selected_feed_indices = list(range(len(selected_feeds)))
 
-        filtered_data = format_table(filtered_data, get_feed_column_ids(filtered_data[0]))
-
         return filtered_data, selected_feed_indices
-
 
     @app.callback(
         Output("feeds_table", "selected_rows", allow_duplicate=True),
@@ -242,7 +208,6 @@ def get_callbacks_home(app):
         prevent_initial_call=True,
     )
     def select_or_clear_all_feeds(_, __, rows):
-        print("select_or_clear_all_feeds")
         """
         Select or clear all rows in the feeds table.
         """

@@ -1,24 +1,17 @@
 import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 
-from pdr_backend.pdr_dashboard.util.data import (
-    col_to_human,
-    get_predictoors_home_page_table_data,
-    get_feeds_subscription_stat_with_contract,
-    format_table,
-    get_feed_column_ids,
-)
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_date_period_selection_component,
     get_metric,
     get_tooltip_and_button,
 )
 
+from pdr_backend.pdr_dashboard.util.format import format_table
 
 class HomePage:
     def __init__(self, app):
         self.app = app
-        self.favourite_addresses = app.favourite_addresses
 
         self.selected_predictoors = []
         self.selected_feeds = []
@@ -58,79 +51,27 @@ class HomePage:
         )
 
     def get_feeds_for_favourite_predictoors(self, feed_data):
-        if not self.favourite_addresses:
-            return [], feed_data
-
-        feed_ids = self.app.db_getter.feed_ids_based_on_predictoors(
-            self.app.favourite_addresses,
-        )
+        feed_ids = self.app.data.feed_ids_based_on_predictoors()
 
         if not feed_ids:
             return [], feed_data
 
         feed_data = [
-            feed for feed in self.app.feeds_data if feed["contract"] in feed_ids
+            feed for feed in self.app.data.feeds_data if feed["contract"] in feed_ids
         ]
 
         return list(range(len(feed_ids))), feed_data
 
-    def get_feeds_cols_data(self):
-        data = self.app.feeds_data
-
-        feed_payouts_stats = self.app.db_getter.feed_payouts_stats()
-        feed_subscriptions = self.app.db_getter.feed_subscription_stats(
-            self.app.network_name
-        )
-
-        for feed in data:
-            # feed_payouts_stats is a list
-            # find with contract
-            feed["avg_accuracy"] = next(
-                (
-                    float(stat["avg_accuracy"])
-                    for stat in feed_payouts_stats
-                    if stat["contract"] == feed["contract"]
-                ),
-                0,
-            )
-
-            feed["sales"] = get_feeds_subscription_stat_with_contract(
-                feed["contract"], feed_subscriptions
-            )["sales_raw"]
-
-        self.app.home_feeds_table_data = data
-
-        columns = get_feed_column_ids(data[0])
-        data = format_table(data, columns)
-
-        hidden_columns = ["contract"]
-
-        return (columns, hidden_columns), data
-
-    def get_predictoors_cols_data(self):
-        predictoor_data = self.app.predictoors_data
-        data = get_predictoors_home_page_table_data(predictoor_data)
-
-        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
-        hidden_columns = ["user"]
-
-        if not self.favourite_addresses:
-            return (columns, hidden_columns), data
-
-        data = [p for p in data if p["user"] in self.favourite_addresses] + [
-            p for p in data if p["user"] not in self.favourite_addresses
-        ]
-
-        return (columns, hidden_columns), data
-
     def get_input_column(self):
-        feed_cols, feed_data = self.get_feeds_cols_data()
-        predictoor_cols, predictoor_data = self.get_predictoors_cols_data()
+        feed_cols, feed_data = self.app.data.homepage_feeds_cols
+        predictoor_cols, predictoor_data = self.app.data.homepage_predictoors_cols
 
-        self.selected_predictoors = list(range(len(self.favourite_addresses)))
+        self.selected_predictoors = list(range(len(self.app.data.favourite_addresses)))
         self.selected_feeds, feed_data = self.get_feeds_for_favourite_predictoors(
             feed_data
         )
+
+        feed_data = format_table(feed_data, feed_cols[0])
 
         return html.Div(
             [
@@ -239,14 +180,14 @@ class HomePage:
         if table_id == "predictoors_table":
             table_name = "Predictoors"
             searchable_field = "user"
-            length = len(self.app.predictoors_data)
+            length = len(self.app.data.predictoors_data)
 
             toggle_switch = self.get_predictoors_switch()
             selected_rows = self.selected_predictoors
         else:
             table_name = "Feeds"
             searchable_field = "pair"
-            length = len(self.app.feeds_data)
+            length = len(self.app.data.feeds_data)
 
             toggle_switch = self.get_feeds_switch()
             selected_rows = self.selected_feeds

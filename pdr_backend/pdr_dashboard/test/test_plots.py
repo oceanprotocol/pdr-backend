@@ -19,7 +19,7 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 def test_process_payouts(_sample_app):
 
     ## convert List[Payout] to List[dict]
-    payouts = _sample_app.db_getter.payouts(None, None, 0)
+    payouts = _sample_app.data.payouts(None, None, 0)
 
     feed = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
     user = "0x43584049fe6127ea6745d8ba42274e911f2a2d5c"
@@ -137,9 +137,9 @@ def test_create_figure():
 @enforce_types
 @patch("plotly.graph_objects.Figure", new=MockFigure)
 def test_get_figures_and_metrics(_sample_app):
-    db_getter = _sample_app.db_getter
+    db_mgr = _sample_app.data
     ## convert List[Payout] to List[dict]
-    payouts = db_getter.payouts(None, None, 0)
+    payouts = db_mgr.payouts(None, None, 0)
 
     sample_feeds = ArgFeeds(
         [
@@ -211,10 +211,10 @@ def test_get_feed_figures(
     _sample_app,
 ):
     feed_id = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
-    db_getter = _sample_app.db_getter
-    payouts = db_getter.payouts([feed_id], None, 0)
+    db_mgr = _sample_app.data
+    payouts = db_mgr.payouts([feed_id], None, 0)
 
-    subscriptions = db_getter.feed_daily_subscriptions_by_feed_id(feed_id)
+    subscriptions = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id)
 
     # Execute the function
     figures = get_feed_figures(payouts, subscriptions)

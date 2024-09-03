@@ -1,14 +1,11 @@
-from typing import Any, Dict, List, Tuple
+from dash import dash_table, html
 
-from dash import html, dash_table
+from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_search_bar,
 )
 from pdr_backend.pdr_dashboard.pages.common import TabularPage
-from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
-from pdr_backend.pdr_dashboard.util.format import format_table
-from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 
 
 class PredictoorsPage(TabularPage):
@@ -63,7 +60,7 @@ class PredictoorsPage(TabularPage):
         )
 
     def get_metrics_row(self):
-        stats = self.app.db_getter.predictoors_stats()
+        stats = self.app.data.predictoors_metrics
 
         return html.Div(
             children=[
@@ -87,71 +84,29 @@ class PredictoorsPage(TabularPage):
         )
 
     def get_main_container(self):
-        predictoor_cols, predictoor_data, raw_predictoor_data = (
-            self.get_data_for_predictoors_table()
-        )
-
-        self.app.predictoor_table_data = raw_predictoor_data
-
         return html.Div(
             [
                 self.get_filters_section(),
-                self.get_predictoor_table_area(predictoor_cols, predictoor_data),
+                self.get_predictoor_table_area(),
             ],
             className="tabular-main-container",
         )
 
-    def get_predictoor_table_area(
-        self,
-        columns,
-        predictoor_data,
-    ):
+    def get_predictoor_table_area(self):
         return html.Div(
             [
                 dash_table.DataTable(
                     id="predictoors_page_table",
-                    columns=columns,
+                    columns=self.app.data.predictoors_cols,
                     hidden_columns=["full_addr"],
                     row_selectable="single",
-                    data=predictoor_data,
+                    data=self.app.data.predictoors_table_data,
                     sort_action="custom",
                     sort_mode="single",
                 ),
             ],
             style={"width": "100%", "overflow": "scroll"},
         )
-
-    def get_data_for_predictoors_table(
-        self,
-    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
-
-        temp_data = self.app.predictoors_data
-
-        new_predictoor_data = []
-
-        ## split the pair column into two columns
-        for data_item in temp_data:
-            tx_costs = self.app.fee_cost * float(data_item["stake_count"])
-
-            temp_pred_item = {}
-            temp_pred_item["addr"] = str(data_item["user"])
-            temp_pred_item["full_addr"] = str(data_item["user"])
-            temp_pred_item["apr"] = data_item["apr"]
-            temp_pred_item["accuracy"] = data_item["avg_accuracy"]
-            temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
-            temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
-            temp_pred_item["gross_income_(OCEAN)"] = data_item["gross_income"]
-            temp_pred_item["stake_loss_(OCEAN)"] = data_item["stake_loss"]
-            temp_pred_item["tx_costs_(OCEAN)"] = tx_costs
-            temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
-
-            new_predictoor_data.append(temp_pred_item)
-
-        columns = get_feed_column_ids(new_predictoor_data[0])
-
-        formatted_data = format_table(new_predictoor_data, columns)
-
-        return columns, formatted_data, new_predictoor_data
 
 
 def key_id_name(key: str) -> str:

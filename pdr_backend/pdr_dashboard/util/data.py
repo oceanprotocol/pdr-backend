@@ -1,13 +1,9 @@
 import logging
-from copy import deepcopy
 from datetime import datetime, timedelta
-from typing import Union, List, Dict, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Union
+
 import dash
 from enforce_typing import enforce_types
-from pdr_backend.pdr_dashboard.util.format import (
-    format_table,
-    format_dict,
-)
 
 logger = logging.getLogger("predictoor_dashboard_utils")
 
@@ -60,39 +56,6 @@ def select_or_clear_all_by_table(
         selected_rows = list(range(len(rows)))
 
     return selected_rows
-
-
-@enforce_types
-def get_predictoors_home_page_table_data(
-    user_payout_stats: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
-    """
-    Process the user payouts stats data.
-    Args:
-        user_payout_stats (list): List of user payouts stats data.
-    Returns:
-        list: List of processed user payouts stats data.
-    """
-
-    payout_stats = deepcopy(user_payout_stats)
-    for data in payout_stats:
-        formatted_data = format_dict(
-            data=data,
-            only_include_keys=["user", "total_profit", "avg_accuracy", "avg_stake"],
-        )
-
-        new_data = {
-            "user_address": formatted_data["user"],
-            "total_profit": formatted_data["total_profit"],
-            "avg_accuracy": formatted_data["avg_accuracy"],
-            "avg_stake": formatted_data["avg_stake"],
-            "user": data["user"],
-        }
-
-        data.clear()
-        data.update(new_data)
-
-    return payout_stats
 
 
 def get_start_date_from_period(number_days: int):
@@ -185,42 +148,6 @@ def get_feeds_subscription_stat_with_contract(
         "sales_revenue_(OCEAN)": result["sales_revenue"],
     }
 
-
-def get_feeds_data_for_feeds_table(
-    feeds_data: List[Dict[str, Any]],
-    feed_stats: List[Dict[str, Any]],
-    feed_subcription_stats: List[Dict[str, Any]],
-) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
-
-    new_feed_data = []
-    ## split the pair column into two columns
-    for feed in feeds_data:
-        split_pair = feed["pair"].split("/")
-        feed_item = {}
-        feed_item["addr"] = feed["contract"]
-        feed_item["base_token"] = split_pair[0]
-        feed_item["quote_token"] = split_pair[1]
-        feed_item["source"] = feed["source"].capitalize()
-        feed_item["timeframe"] = feed["timeframe"]
-        feed_item["full_addr"] = feed["contract"]
-
-        result = get_feeds_stat_with_contract(feed["contract"], feed_stats)
-
-        feed_item.update(result)
-
-        subscription_result = get_feeds_subscription_stat_with_contract(
-            feed["contract"], feed_subcription_stats
-        )
-
-        feed_item.update(subscription_result)
-
-        new_feed_data.append(feed_item)
-
-    columns = get_feed_column_ids(new_feed_data[0])
-
-    formatted_data = format_table(new_feed_data, columns)
-
-    return columns, formatted_data, new_feed_data
 
 @enforce_types
 def sort_by_action(
