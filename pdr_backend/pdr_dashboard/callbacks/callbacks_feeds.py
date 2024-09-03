@@ -74,7 +74,7 @@ def get_callbacks_feeds(app):
 
         new_table_data = [
             item
-            for item in app.feeds_table_data
+            for item in app.data.raw_feeds_data
             if all(check_condition(item, *condition) for condition in conditions)
         ]
 
@@ -185,7 +185,7 @@ def get_callbacks_feeds(app):
     )
     # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, feeds_table_data):
-        content = ModalContent("feeds_modal", app.db_getter)
+        content = ModalContent("feeds_modal", app.data)
         content.selected_row = (
             feeds_table_data[selected_rows[0]] if selected_rows else None
         )
