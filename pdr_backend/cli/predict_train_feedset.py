@@ -21,7 +21,9 @@ class PredictTrainFeedset:
     """
 
     @enforce_types
-    def __init__(self, predict: ArgFeed, train_on: ArgFeeds, ta_features: List[str] = None):
+    def __init__(
+        self, predict: ArgFeed, train_on: ArgFeeds, ta_features: List[str] = None
+    ):
         self.predict: ArgFeed = predict
         self.train_on: ArgFeeds = train_on
         self.ta_features: List[str] = ta_features if ta_features else []
@@ -32,13 +34,19 @@ class PredictTrainFeedset:
 
     @enforce_types
     def __eq__(self, other):
-        return (self.predict == other.predict and
-                self.train_on == other.train_on and
-                self.ta_features == other.ta_features)
+        return (
+            self.predict == other.predict
+            and self.train_on == other.train_on
+            and self.ta_features == other.ta_features
+        )
 
     @enforce_types
     def to_dict(self) -> Dict[str, str]:
-        return {"predict": str(self.predict), "train_on": str(self.train_on), "ta_features": str(self.ta_features)}
+        return {
+            "predict": str(self.predict),
+            "train_on": str(self.train_on),
+            "ta_features": str(self.ta_features),
+        }
 
     @classmethod
     def from_dict(cls, feedset_dict: dict) -> "PredictTrainFeedset":
