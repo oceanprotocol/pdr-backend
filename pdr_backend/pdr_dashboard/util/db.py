@@ -3,6 +3,7 @@ import logging
 from typing import Union, List
 from enforce_typing import enforce_types
 
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
@@ -51,9 +52,8 @@ class DBGetter:
         )
 
     @enforce_types
-    def feed_payouts_stats(self):
-        return self._query_db(
-            f"""
+    def feed_payouts_stats(self, start_date: Union[UnixTimeMs, None] = None):
+        query = f"""
                 SELECT
                     SPLIT_PART(ID, '-', 1) AS contract,
                     SUM(stake) AS volume,
@@ -61,14 +61,18 @@ class DBGetter:
                     AVG(stake) AS avg_stake
                 FROM
                     {Payout.get_lake_table_name()}
-                GROUP BY
-                    contract
-                ORDER BY volume DESC;
-            """,
-        )
+            """
+        if start_date:
+            query += f"    WHERE timestamp > {start_date}"
+        query += """
+            GROUP BY
+                contract
+            ORDER BY volume DESC;
+        """
+        return self._query_db(query)
 
     @enforce_types
-    def predictoor_payouts_stats(self, start_date=None):
+    def predictoor_payouts_stats(self, start_date: Union[UnixTimeMs, None] = None):
         # Insert the generated CASE clause into the SQL query
         query = f"""
             SELECT
@@ -107,11 +111,12 @@ class DBGetter:
                 p."user"
             ORDER BY apr DESC;
         """
-
         return self._query_db(query)
 
     @enforce_types
-    def feed_subscription_stats(self, network_name: str):
+    def feed_subscription_stats(
+        self, network_name: str, start_date: Union[UnixTimeMs, None] = None
+    ):
         opf_addresses = get_opf_addresses(network_name)
 
         query = f"""
@@ -123,6 +128,11 @@ class DBGetter:
                     {Subscription.get_lake_table_name()}
                 WHERE
                     "user" = '{opf_addresses["websocket"].lower()}'
+                """
+        if start_date:
+            query += f"AND timestamp > {start_date}"
+
+        query += f"""
                 GROUP BY
                     SPLIT_PART(ID, '-', 1)
             ),
@@ -134,6 +144,11 @@ class DBGetter:
                     {Subscription.get_lake_table_name()}
                 WHERE
                     "user" = '{opf_addresses["dfbuyer"].lower()}'
+                """
+        if start_date:
+            query += f"AND timestamp > {start_date}"
+
+        query += f"""
                 GROUP BY
                     SPLIT_PART(ID, '-', 1)
             )
@@ -151,6 +166,12 @@ class DBGetter:
                         last_price_value
                     FROM
                         {Subscription.get_lake_table_name()}
+            """
+
+        if start_date:
+            query += f"WHERE timestamp > {start_date}"
+
+        query += """
                 ) AS main
             LEFT JOIN
                 user_buy_counts ubc
@@ -161,7 +182,8 @@ class DBGetter:
             ON
                 main.main_contract = wbc.contract
             GROUP BY
-                main_contract, ubc.df_buy_count, wbc.ws_buy_count"""
+                main_contract, ubc.df_buy_count, wbc.ws_buy_count
+        """
 
         return self._query_db(query)
 
@@ -263,28 +285,41 @@ class DBGetter:
         return self._query_db(query)
 
     @enforce_types
-    def feeds_stats(self):
+    def feeds_stats(self, start_date: Union[UnixTimeMs, None] = None):
+        query_feeds = f"""
+            SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
+            FROM {Prediction.get_lake_table_name()}
+        """
+        if start_date:
+            query_feeds += f"WHERE timestamp > {start_date}"
         feeds = self._query_db(
-            f"""
-                SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
-                FROM {Prediction.get_lake_table_name()}
-            """,
+            query_feeds,
             scalar=True,
         )
 
+        query_payouts = f"""
+            SELECT
+                SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+                SUM(stake) AS total_stake
+            FROM
+                {Payout.get_lake_table_name()}
+        """
+        if start_date:
+            query_payouts += f"WHERE timestamp > {start_date}"
         accuracy, volume = self._query_db(
-            f"""
-                SELECT
-                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
-                    SUM(stake) AS total_stake
-                FROM
-                    {Payout.get_lake_table_name()}
-            """,
+            query_payouts,
             scalar=True,
         )
 
+        query_subscriptions = f"""
+            SELECT COUNT(ID),
+            SUM(last_price_value)
+            FROM {Subscription.get_lake_table_name()}
+        """
+        if start_date:
+            query_subscriptions += f" WHERE timestamp > {start_date}"
         sales, revenue = self._query_db(
-            f"SELECT COUNT(ID), SUM(last_price_value) from {Subscription.get_lake_table_name()}",
+            query_subscriptions,
             scalar=True,
         )
 
@@ -297,24 +332,30 @@ class DBGetter:
         }
 
     @enforce_types
-    def predictoors_stats(self):
+    def predictoors_stats(self, start_date: Union[UnixTimeMs, None] = None):
+        query_predictions = f"""
+            SELECT COUNT(DISTINCT(user))
+            FROM {Prediction.get_lake_table_name()}
+        """
+        if start_date:
+            query_predictions += f" WHERE timestamp > {start_date}"
         predictoors = self._query_db(
-            f"""
-                SELECT COUNT(DISTINCT(user))
-                FROM {Prediction.get_lake_table_name()}
-            """,
+            query_predictions,
             scalar=True,
         )
 
-        avg_accuracy, tot_stake, tot_gross_income = self._query_db(
-            f"""
+        query_payouts = f"""
                 SELECT
                     SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100 / COUNT(*) AS avg_accuracy,
                     SUM(stake) as tot_stake,
                     SUM(CASE WHEN payout > stake THEN payout - stake ELSE 0 END) AS tot_gross_income
                 FROM
                     {Payout.get_lake_table_name()}
-            """,
+            """
+        if start_date:
+            query_payouts += f" WHERE timestamp > {start_date}"
+        avg_accuracy, tot_stake, tot_gross_income = self._query_db(
+            query_payouts,
             scalar=True,
         )
 

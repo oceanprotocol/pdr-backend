@@ -3,6 +3,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_search_bar,
 )
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.pdr_dashboard.util.data import get_feeds_data_for_feeds_table
 from pdr_backend.pdr_dashboard.pages.common import TabularPage, Filter, add_to_filter
 from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
@@ -85,7 +86,9 @@ class FeedsPage(TabularPage):
         )
 
     def get_metrics_row(self):
-        stats = self.app.db_getter.feeds_stats()
+        stats = self.app.db_getter.feeds_stats(
+            UnixTimeMs(self.app.start_date * 1000) if self.app.start_date else None
+        )
 
         return html.Div(
             children=[
@@ -109,9 +112,12 @@ class FeedsPage(TabularPage):
         )
 
     def get_main_container(self):
-        feed_stats = self.app.db_getter.feed_payouts_stats()
+        feed_stats = self.app.db_getter.feed_payouts_stats(
+            UnixTimeMs(self.app.start_date * 1000) if self.app.start_date else None
+        )
         feed_subscriptions = self.app.db_getter.feed_subscription_stats(
-            self.app.network_name
+            self.app.network_name,
+            UnixTimeMs(self.app.start_date * 1000) if self.app.start_date else None,
         )
 
         feed_cols, feed_data, raw_feed_data = get_feeds_data_for_feeds_table(
@@ -123,27 +129,27 @@ class FeedsPage(TabularPage):
         return html.Div(
             [
                 self.get_filters_section(),
-                self.get_feeds_table_area(feed_cols, feed_data),
+                get_feeds_table_area(feed_cols, feed_data),
             ],
             className="tabular-main-container",
         )
 
-    def get_feeds_table_area(
-        self,
-        columns,
-        feeds_data,
-    ):
-        return html.Div(
-            [
-                dash_table.DataTable(
-                    id="feeds_page_table",
-                    columns=columns,
-                    hidden_columns=["full_addr", "sales_raw"],
-                    row_selectable="single",
-                    data=feeds_data,
-                    sort_action="custom",
-                    sort_mode="single",
-                ),
-            ],
-            style={"width": "100%", "overflow": "scroll"},
-        )
+
+def get_feeds_table_area(
+    columns,
+    feeds_data,
+):
+    return html.Div(
+        [
+            dash_table.DataTable(
+                id="feeds_page_table",
+                columns=columns,
+                hidden_columns=["full_addr", "sales_raw"],
+                row_selectable="single",
+                data=feeds_data,
+                sort_action="custom",
+                sort_mode="single",
+            ),
+        ],
+        style={"width": "100%", "overflow": "scroll"},
+    )

@@ -1,8 +1,13 @@
 import dash
 from dash import Input, Output, State
 
+from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.pdr_dashboard.pages.feeds import get_metric
+from pdr_backend.pdr_dashboard.util.data import (
+    get_feeds_data_for_feeds_table,
+    get_feed_column_ids,
+)
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
-from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
 from pdr_backend.pdr_dashboard.util.filters import (
     check_condition,
     filter_table_by_range,
@@ -12,6 +17,40 @@ from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
 
 
 def get_callbacks_feeds(app):
+    @app.callback(
+        Output("feeds_page_table", "data", allow_duplicate=True),
+        Output("feeds_page_metrics_row", "children"),
+        [Input("start-date", "data")],
+        prevent_initial_call=True,
+    )
+    def update_page_data(start_date):
+        feed_stats = app.db_getter.feed_payouts_stats(
+            UnixTimeMs(start_date * 1000) if start_date else None
+        )
+        feed_subscriptions = app.db_getter.feed_subscription_stats(
+            app.network_name, UnixTimeMs(start_date * 1000) if start_date else None
+        )
+        stats = app.db_getter.feeds_stats(
+            UnixTimeMs(start_date * 1000) if start_date else None
+        )
+
+        _feed_cols, feed_data, raw_feed_data = get_feeds_data_for_feeds_table(
+            app.feeds_data, feed_stats, feed_subscriptions
+        )
+
+        app.feeds_table_data = raw_feed_data
+
+        metrics_children_data = [
+            get_metric(
+                label=key,
+                value=value,
+                value_id=f"feeds_page_{key}_metric",
+            )
+            for key, value in stats.items()
+        ]
+
+        return feed_data, metrics_children_data
+
     @app.callback(
         Output("feeds_page_table", "data"),
         [

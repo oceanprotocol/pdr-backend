@@ -26,20 +26,16 @@ def get_callbacks_common(app):
         return result
 
     @app.callback(
-        Output("start-date", "value"),
+        Output("start-date", "data"),
         [Input("general-lake-date-period-radio-items", "value")],
     )
     def set_period_start_date(selected_period_start):
-        print(selected_period_start)
         start_date = (
             get_start_date_from_period(int(selected_period_start))
             if int(selected_period_start) > 0
             else None
         )
-        print(start_date)
-        res = app.db_getter.predictoor_payouts_stats(start_date * 1000)
-        app.predictoor_table_data = res
-        print(app.predictoor_table_data[0])
+        app.start_date = start_date
         return start_date
 
     @app.callback(

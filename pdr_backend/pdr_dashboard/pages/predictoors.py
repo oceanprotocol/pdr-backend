@@ -5,6 +5,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_search_bar,
 )
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.pdr_dashboard.pages.common import TabularPage
 from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
 from pdr_backend.pdr_dashboard.util.format import format_table
@@ -63,7 +64,9 @@ class PredictoorsPage(TabularPage):
         )
 
     def get_metrics_row(self):
-        stats = self.app.db_getter.predictoors_stats()
+        stats = self.app.db_getter.predictoors_stats(
+            UnixTimeMs(self.app.start_date * 1000) if self.app.start_date else None
+        )
 
         return html.Div(
             children=[
@@ -87,8 +90,12 @@ class PredictoorsPage(TabularPage):
         )
 
     def get_main_container(self):
+        res = self.app.db_getter.predictoor_payouts_stats(
+            UnixTimeMs(self.app.start_date * 1000) if self.app.start_date else None
+        )
+        self.app.predictoors_data = res
         predictoor_cols, predictoor_data, raw_predictoor_data = (
-            self.get_data_for_predictoors_table()
+            get_data_for_predictoors_table(self.app.predictoors_data, self.app.fee_cost)
         )
 
         self.app.predictoor_table_data = raw_predictoor_data
@@ -121,37 +128,53 @@ class PredictoorsPage(TabularPage):
             style={"width": "100%", "overflow": "scroll"},
         )
 
-    def get_data_for_predictoors_table(
-        self,
-    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
-        temp_data = self.app.predictoors_data
+def get_data_for_predictoors_table(
+    predictoors_data, fee_cost
+) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
+    new_predictoor_data = []
 
-        new_predictoor_data = []
+    if len(predictoors_data) == 0:
+        return (
+            [
+                {"name": "Addr", "id": "addr"},
+                {"name": "Full Addr", "id": "full_addr"},
+                {"name": "Apr", "id": "apr"},
+                {"name": "Accuracy", "id": "accuracy"},
+                {"name": "Number Of Feeds", "id": "number_of_feeds"},
+                {"name": "Staked (Ocean)", "id": "staked_(OCEAN)"},
+                {"name": "Gross Income (Ocean)", "id": "gross_income_(OCEAN)"},
+                {"name": "Stake Loss (Ocean)", "id": "stake_loss_(OCEAN)"},
+                {"name": "Tx Costs (Ocean)", "id": "tx_costs_(OCEAN)"},
+                {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
+            ],
+            [],
+            [],
+        )
 
-        ## split the pair column into two columns
-        for data_item in temp_data:
-            tx_costs = self.app.fee_cost * float(data_item["stake_count"])
+    ## split the pair column into two columns
+    for data_item in predictoors_data:
+        tx_costs = fee_cost * float(data_item["stake_count"])
 
-            temp_pred_item = {}
-            temp_pred_item["addr"] = str(data_item["user"])
-            temp_pred_item["full_addr"] = str(data_item["user"])
-            temp_pred_item["apr"] = data_item["apr"]
-            temp_pred_item["accuracy"] = data_item["avg_accuracy"]
-            temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
-            temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
-            temp_pred_item["gross_income_(OCEAN)"] = data_item["gross_income"]
-            temp_pred_item["stake_loss_(OCEAN)"] = data_item["stake_loss"]
-            temp_pred_item["tx_costs_(OCEAN)"] = tx_costs
-            temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
+        temp_pred_item = {}
+        temp_pred_item["addr"] = str(data_item["user"])
+        temp_pred_item["full_addr"] = str(data_item["user"])
+        temp_pred_item["apr"] = data_item["apr"]
+        temp_pred_item["accuracy"] = data_item["avg_accuracy"]
+        temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
+        temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
+        temp_pred_item["gross_income_(OCEAN)"] = data_item["gross_income"]
+        temp_pred_item["stake_loss_(OCEAN)"] = data_item["stake_loss"]
+        temp_pred_item["tx_costs_(OCEAN)"] = tx_costs
+        temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
 
-            new_predictoor_data.append(temp_pred_item)
+        new_predictoor_data.append(temp_pred_item)
 
-        columns = get_feed_column_ids(new_predictoor_data[0])
+    columns = get_feed_column_ids(new_predictoor_data[0])
 
-        formatted_data = format_table(new_predictoor_data, columns)
+    formatted_data = format_table(new_predictoor_data, columns)
 
-        return columns, formatted_data, new_predictoor_data
+    return columns, formatted_data, new_predictoor_data
 
 
 def key_id_name(key: str) -> str:

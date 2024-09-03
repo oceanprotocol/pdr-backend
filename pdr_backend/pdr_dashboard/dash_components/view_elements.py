@@ -84,7 +84,7 @@ def get_metric(label, value, value_id):
                 id="loading",
                 type="default",
                 children=html.Span(
-                    format_value(value, value_id),
+                    format_value(value if value else 0, value_id),
                     id=value_id,
                     style={"fontWeight": "bold"},
                 ),

@@ -1,6 +1,7 @@
 import dash
 from dash import Input, Output, State
 
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
 from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
 from pdr_backend.pdr_dashboard.util.filters import (
@@ -9,9 +10,46 @@ from pdr_backend.pdr_dashboard.util.filters import (
 )
 from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
+from pdr_backend.pdr_dashboard.pages.predictoors import (
+    get_data_for_predictoors_table,
+    get_metric,
+    key_id_name,
+)
 
 
 def get_callbacks_predictoors(app):
+    @app.callback(
+        Output("predictoors_page_table", "data", allow_duplicate=True),
+        Output("predictoors_page_metrics_row", "children"),
+        [Input("start-date", "data")],
+        prevent_initial_call=True,
+    )
+    def update_page_data(start_date):
+        res = app.db_getter.predictoor_payouts_stats(
+            UnixTimeMs(start_date * 1000) if start_date else None
+        )
+        app.predictoors_data = res
+        stats = app.db_getter.predictoors_stats(
+            UnixTimeMs(start_date * 1000) if start_date else None
+        )
+
+        _predictoor_cols, predictoor_data, raw_predictoor_data = (
+            get_data_for_predictoors_table(res, app.fee_cost)
+        )
+
+        app.predictoor_table_data = raw_predictoor_data
+
+        metrics_children_data = [
+            get_metric(
+                label=key,
+                value=value,
+                value_id=key_id_name(key),
+            )
+            for key, value in stats.items()
+        ]
+
+        return predictoor_data, metrics_children_data
+
     @app.callback(
         Output("predictoors_page_table", "data"),
         [
@@ -25,7 +63,6 @@ def get_callbacks_predictoors(app):
             Input("net_income_button", "n_clicks"),
             Input("search-input-predictoors-table", "value"),
             Input("predictoors_page_table", "sort_by"),
-            Input("start-date", "value"),
         ],
         State("apr_min", "value"),
         State("apr_max", "value"),
@@ -56,7 +93,6 @@ def get_callbacks_predictoors(app):
         _n_clicks_net_income,
         search_input_value,
         sort_by,
-        _start_date,
         apr_min,
         apr_max,
         p_accuracy_min,
@@ -89,8 +125,6 @@ def get_callbacks_predictoors(app):
             ("range", "net_income_(OCEAN)", net_income_min, net_income_max),
             ("search", None, search_input_value),
         ]
-
-        print(app.predictoor_table_data[0])
 
         new_table_data = [
             item
