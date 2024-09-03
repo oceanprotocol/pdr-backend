@@ -47,13 +47,13 @@ class AppDataManager:
 
         # initial data formatting for tables, columns and raw data
         self.feeds_cols, self.feeds_table_data, self.raw_feeds_data = (
-            self._formatted_for_feeds_table
+            self._formatted_data_for_feeds_table
         )
         (
             self.predictoors_cols,
             self.predictoors_table_data,
             self.raw_predictoors_data,
-        ) = self._formatted_for_predictoors_table
+        ) = self._formatted_data_for_predictoors_table
 
         valid_addresses = [p["user"].lower() for p in self.predictoors_data]
         self.favourite_addresses = [
@@ -375,7 +375,7 @@ class AppDataManager:
         }
 
     @property
-    def _formatted_for_feeds_table(
+    def _formatted_data_for_feeds_table(
         self,
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
@@ -413,7 +413,7 @@ class AppDataManager:
         return columns, formatted_data, new_feed_data
 
     @property
-    def _formatted_for_predictoors_table(
+    def _formatted_data_for_predictoors_table(
         self,
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
