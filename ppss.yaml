@@ -19,6 +19,7 @@ predictoor_ss:
     - predict: binance BTC/USDT c 5m
       train_on:
       - binance BTC/USDT c 5m
+      ta_features: [] # list of TA features to use.
   approach: 2 # 1->50/50; 2->two-sided model-based; 3-> one-sided model-based
   stake_amount: 100 # How much your bot stakes. In OCEAN per epoch, per feed
   sim_only:
