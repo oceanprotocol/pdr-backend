@@ -41,16 +41,19 @@ class DBGetter:
         # initial data loaded from database
         self.feeds_payout_stats = self._init_feed_payouts_stats()
         self.feeds_subscriptions = self._init_feed_subscription_stats()
+
         self.predictoors_data = self._init_predictoor_payouts_stats()
         self.feeds_data = self._init_feeds_data()
 
         # initial data formatting for tables, columns and raw data
-        self.feed_cols, self.feed_table_data, self.feed_data_raw = (
-            self._format_for_feeds_table()
+        self.feeds_cols, self.feeds_table_data, self.raw_feeds_data = (
+            self._formatted_for_feeds_table
         )
-        self.predictoor_cols, self.predictoor_table_data, self.raw_predictoor_data = (
-            self._format_for_predictoors_table()
-        )
+        (
+            self.predictoors_cols,
+            self.predictoors_table_data,
+            self.raw_predictoors_data,
+        ) = self._formatted_for_predictoors_table
 
         valid_addresses = [p["user"].lower() for p in self.predictoors_data]
         self.favourite_addresses = [
@@ -306,8 +309,9 @@ class DBGetter:
         # Execute the query
         return self._query_db(query)
 
+    @property
     @enforce_types
-    def feeds_stats(self):
+    def feeds_metrics(self):
         feeds = self._query_db(
             f"""
                 SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
@@ -340,8 +344,9 @@ class DBGetter:
             "Revenue": revenue if revenue else 0,
         }
 
+    @property
     @enforce_types
-    def predictoors_stats(self):
+    def predictoors_metrics(self):
         predictoors = self._query_db(
             f"""
                 SELECT COUNT(DISTINCT(user))
@@ -369,7 +374,8 @@ class DBGetter:
             "Gross Income": tot_gross_income,
         }
 
-    def _format_for_feeds_table(
+    @property
+    def _formatted_for_feeds_table(
         self,
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
@@ -406,7 +412,8 @@ class DBGetter:
 
         return columns, formatted_data, new_feed_data
 
-    def _format_for_predictoors_table(
+    @property
+    def _formatted_for_predictoors_table(
         self,
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
@@ -466,8 +473,9 @@ class DBGetter:
 
         return selected_feeds + filtered_data
 
+    @property
     @enforce_types
-    def format_predictoors_home_page_table_data(self) -> List[Dict[str, Any]]:
+    def formatted_predictoors_home_page_table_data(self) -> List[Dict[str, Any]]:
         """
         Process the user payouts stats data.
         Args:
@@ -496,7 +504,8 @@ class DBGetter:
 
         return payout_stats
 
-    def get_homepage_feeds_cols(self):
+    @property
+    def homepage_feeds_cols(self):
         data = self.feeds_data
 
         columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
@@ -504,8 +513,9 @@ class DBGetter:
 
         return (columns, hidden_columns), data
 
-    def get_homepage_predictoors_cols(self):
-        data = self.format_predictoors_home_page_table_data()
+    @property
+    def homepage_predictoors_cols(self):
+        data = self.formatted_predictoors_home_page_table_data
 
         columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
         hidden_columns = ["user"]

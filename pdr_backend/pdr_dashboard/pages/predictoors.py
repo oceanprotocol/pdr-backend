@@ -60,7 +60,7 @@ class PredictoorsPage(TabularPage):
         )
 
     def get_metrics_row(self):
-        stats = self.app.db_getter.predictoors_stats()
+        stats = self.app.db_getter.predictoors_metrics
 
         return html.Div(
             children=[
@@ -97,10 +97,10 @@ class PredictoorsPage(TabularPage):
             [
                 dash_table.DataTable(
                     id="predictoors_page_table",
-                    columns=self.app.db_getter.predictoor_cols,
+                    columns=self.app.db_getter.predictoors_cols,
                     hidden_columns=["full_addr"],
                     row_selectable="single",
-                    data=self.app.db_getter.predictoor_table_data,
+                    data=self.app.db_getter.predictoors_table_data,
                     sort_action="custom",
                     sort_mode="single",
                 ),

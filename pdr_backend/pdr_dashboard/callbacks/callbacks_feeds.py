@@ -74,7 +74,7 @@ def get_callbacks_feeds(app):
 
         new_table_data = [
             item
-            for item in app.db_getter.feed_data_raw
+            for item in app.db_getter.raw_feeds_data
             if all(check_condition(item, *condition) for condition in conditions)
         ]
 

@@ -58,7 +58,7 @@ def test_get_predictoors_data_from_payouts(_sample_app):
         },
     ]
 
-    result = db_getter.format_predictoors_home_page_table_data()
+    result = db_getter.formatted_predictoors_home_page_table_data
 
     assert isinstance(result, list)
     assert len(result) == 2

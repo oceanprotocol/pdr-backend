@@ -113,7 +113,7 @@ def get_callbacks_home(app):
         show_favourite_addresses,
     ):
         formatted_predictoors_data = (
-            app.db_getter.format_predictoors_home_page_table_data()
+            app.db_getter.formatted_predictoors_home_page_table_data
         )
         selected_predictoors = [predictoors_table[i] for i in selected_rows]
         filtered_data = formatted_predictoors_data

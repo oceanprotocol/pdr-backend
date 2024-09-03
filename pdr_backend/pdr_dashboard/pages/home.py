@@ -64,10 +64,8 @@ class HomePage:
         return list(range(len(feed_ids))), feed_data
 
     def get_input_column(self):
-        feed_cols, feed_data = self.app.db_getter.get_homepage_feeds_cols()
-        predictoor_cols, predictoor_data = (
-            self.app.db_getter.get_homepage_predictoors_cols()
-        )
+        feed_cols, feed_data = self.app.db_getter.homepage_feeds_cols
+        predictoor_cols, predictoor_data = self.app.db_getter.homepage_predictoors_cols
 
         self.selected_predictoors = list(
             range(len(self.app.db_getter.favourite_addresses))
