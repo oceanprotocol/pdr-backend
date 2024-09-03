@@ -8,8 +8,9 @@ indicators = {
     "macd": MACD,
 }
 
+
 def get_ta_indicator(indicator: str) -> Optional[Type[TechnicalIndicator]]:
     """
     Returns the technical indicator class based on the input indicator name.
     """
-    return indicators.get(indicator)    
+    return indicators.get(indicator)
