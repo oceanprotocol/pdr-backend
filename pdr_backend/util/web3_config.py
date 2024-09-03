@@ -4,46 +4,58 @@
 #
 import logging
 import time
-
 from typing import Optional
 
+import requests
 from enforce_typing import enforce_types
 from eth_account.signers.local import LocalAccount
 from eth_keys import KeyAPI
 from eth_keys.backends import NativeECCBackend
 from eth_typing import BlockIdentifier
 from web3 import Web3
-from web3.middleware import (
-    construct_sign_and_send_raw_middleware,
-    http_retry_request_middleware,
+from web3.middleware import SignAndSendRawMiddlewareBuilder
+from web3.providers.rpc.utils import (
+    REQUEST_RETRY_ALLOWLIST,
+    ExceptionRetryConfiguration,
 )
 from web3.types import BlockData
 
-from pdr_backend.util.constants import WEB3_MAX_TRIES
 from pdr_backend.util.constants import (
     SAPPHIRE_MAINNET_CHAINID,
     SAPPHIRE_TESTNET_CHAINID,
+    WEB3_MAX_TRIES,
 )
 from pdr_backend.util.time_types import UnixTimeS
 
 _KEYS = KeyAPI(NativeECCBackend)
 logger = logging.getLogger("web3_config")
+DEFAULT_EXCEPTIONS = (ConnectionError, requests.HTTPError, requests.Timeout)
 
 
 @enforce_types
 class Web3Config:
     def __init__(self, rpc_url: str, private_key: Optional[str] = None):
         self.rpc_url: str = rpc_url
-        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
+        self.w3 = Web3(
+            Web3.HTTPProvider(
+                rpc_url,
+                exception_retry_configuration=ExceptionRetryConfiguration(
+                    errors=DEFAULT_EXCEPTIONS,
+                    retries=5,
+                    backoff_factor=0.125,
+                    method_allowlist=REQUEST_RETRY_ALLOWLIST,
+                ),
+            )
+        )
 
         if private_key is not None:
             self.account: LocalAccount = self.w3.eth.account.from_key(private_key)
             self.owner = self.account.address
             self.private_key = private_key
+
             self.w3.middleware_onion.add(
-                construct_sign_and_send_raw_middleware(self.account)
+                SignAndSendRawMiddlewareBuilder.build(self.account)
             )
-            self.w3.middleware_onion.add(http_retry_request_middleware)
 
     def copy_with_pk(self, pk: str):
         return Web3Config(self.rpc_url, pk)
