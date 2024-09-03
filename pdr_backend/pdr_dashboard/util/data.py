@@ -150,9 +150,7 @@ def get_feeds_subscription_stat_with_contract(
 
 
 @enforce_types
-def sort_by_action(
-    data: List, sort_by: Union[List | None]
-) -> List:
+def sort_by_action(data: List, sort_by: Union[List | None]) -> List:
     """
     Sort the data based on the sort_by action.
     Args:

@@ -9,6 +9,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
 
 from pdr_backend.pdr_dashboard.util.format import format_table
 
+
 class HomePage:
     def __init__(self, app):
         self.app = app

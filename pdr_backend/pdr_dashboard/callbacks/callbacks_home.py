@@ -11,10 +11,7 @@ from pdr_backend.pdr_dashboard.util.data import (
     select_or_clear_all_by_table,
     sort_by_action,
 )
-from pdr_backend.pdr_dashboard.util.format import (
-    format_value,
-    format_table,
-)
+from pdr_backend.pdr_dashboard.util.format import format_value
 
 
 # pylint: disable=too-many-statements
@@ -183,15 +180,11 @@ def get_callbacks_home(app):
         ]
 
         filtered_data = app.data.filter_for_feeds_table(
-            predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
-        )
-
-        feeds_col, _ = app.data.homepage_feeds_cols
-
-        filtered_data = sort_by_action(filtered_data, sort_by)
-        filtered_data = format_table(
-            filtered_data,
-            feeds_col[0]
+            predictoor_feeds_only,
+            predictoors_addrs,
+            search_value,
+            selected_feeds,
+            sort_by,
         )
 
         selected_feed_indices = list(range(len(selected_feeds)))

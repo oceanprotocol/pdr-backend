@@ -14,6 +14,7 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_feed_column_ids,
     get_feeds_stat_with_contract,
     get_feeds_subscription_stat_with_contract,
+    sort_by_action,
 )
 from pdr_backend.pdr_dashboard.util.format import format_dict, format_table
 from pdr_backend.pdr_dashboard.util.prices import (
@@ -446,7 +447,12 @@ class AppDataManager:
         return columns, formatted_data, new_predictoor_data
 
     def filter_for_feeds_table(
-        self, predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
+        self,
+        predictoor_feeds_only,
+        predictoors_addrs,
+        search_value,
+        selected_feeds,
+        sort_by,
     ):
         filtered_data = self.feeds_data
 
@@ -471,7 +477,11 @@ class AppDataManager:
             else filtered_data
         )
 
-        return selected_feeds + filtered_data
+        filtered_data = sort_by_action(filtered_data, sort_by)
+
+        return format_table(
+            selected_feeds + filtered_data, self.homepage_feeds_cols[0][0]
+        )
 
     @property
     @enforce_types
