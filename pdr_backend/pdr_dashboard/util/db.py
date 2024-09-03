@@ -68,7 +68,7 @@ class DBGetter:
         )
 
     @enforce_types
-    def predictoor_payouts_stats(self):
+    def predictoor_payouts_stats(self, start_date=None):
         # Insert the generated CASE clause into the SQL query
         query = f"""
             SELECT
@@ -97,6 +97,12 @@ class DBGetter:
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy
             FROM
                 {Payout.get_lake_table_name()} p
+        """
+
+        if start_date:
+            query += f"    WHERE p.timestamp > {start_date}"
+
+        query += """
             GROUP BY
                 p."user"
             ORDER BY apr DESC;

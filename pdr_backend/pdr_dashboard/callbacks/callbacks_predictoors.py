@@ -25,6 +25,7 @@ def get_callbacks_predictoors(app):
             Input("net_income_button", "n_clicks"),
             Input("search-input-predictoors-table", "value"),
             Input("predictoors_page_table", "sort_by"),
+            Input("start-date", "value"),
         ],
         State("apr_min", "value"),
         State("apr_max", "value"),
@@ -55,6 +56,7 @@ def get_callbacks_predictoors(app):
         _n_clicks_net_income,
         search_input_value,
         sort_by,
+        _start_date,
         apr_min,
         apr_max,
         p_accuracy_min,
@@ -87,6 +89,8 @@ def get_callbacks_predictoors(app):
             ("range", "net_income_(OCEAN)", net_income_min, net_income_max),
             ("search", None, search_input_value),
         ]
+
+        print(app.predictoor_table_data[0])
 
         new_table_data = [
             item

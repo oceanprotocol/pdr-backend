@@ -99,6 +99,7 @@ def get_layout():
     return html.Div(
         [
             dcc.Location(id="url", refresh=False),
+            dcc.Store(id="start-date"),
             get_header(),
             html.Div(id="page-content"),
         ]
