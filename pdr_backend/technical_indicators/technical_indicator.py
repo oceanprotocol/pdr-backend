@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from enforce_typing import enforce_types
 import pandas as pd
 
+
 @enforce_types
 class TechnicalIndicator(ABC):
     """
@@ -26,7 +27,9 @@ class TechnicalIndicator(ABC):
             Calculates the indicator value based on the input data.
     """
 
-    def __init__(self, df: pd.DataFrame, open: str, high: str, low: str, close: str, volume: str):
+    def __init__(
+        self, df: pd.DataFrame, open: str, high: str, low: str, close: str, volume: str
+    ):
         """
         Initializes a TechnicalIndicator object.
             @param:
@@ -48,16 +51,16 @@ class TechnicalIndicator(ABC):
 
     def _high(self):
         return self.df[self.high]
-    
+
     def _low(self):
         return self.df[self.low]
-    
+
     def _close(self):
         return self.df[self.close]
-    
+
     def _volume(self):
         return self.df[self.volume]
-    
+
     @abstractmethod
     def calculate(self, *args, **kwargs) -> pd.Series:
         """
