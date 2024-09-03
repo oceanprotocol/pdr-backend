@@ -59,7 +59,7 @@ def get_callbacks_home(app):
                 if int(date_period) > 0
                 else 0
             )
-            payouts = app.db_getter.payouts(
+            payouts = app.data.payouts(
                 [row["contract"] for row in selected_feeds],
                 predictoors_addrs,
                 start_date,
@@ -70,7 +70,7 @@ def get_callbacks_home(app):
             payouts,
             feeds,
             predictoors_addrs,
-            app.db_getter.fee_cost,
+            app.data.fee_cost,
         )
 
         # get available period date text
@@ -112,9 +112,7 @@ def get_callbacks_home(app):
         predictoors_table,
         show_favourite_addresses,
     ):
-        formatted_predictoors_data = (
-            app.db_getter.formatted_predictoors_home_page_table_data
-        )
+        formatted_predictoors_data = app.data.formatted_predictoors_home_page_table_data
         selected_predictoors = [predictoors_table[i] for i in selected_rows]
         filtered_data = formatted_predictoors_data
 
@@ -122,7 +120,7 @@ def get_callbacks_home(app):
             custom_predictoors = [
                 predictoor
                 for predictoor in formatted_predictoors_data
-                if predictoor["user"] in app.db_getter.favourite_addresses
+                if predictoor["user"] in app.data.favourite_addresses
             ]
 
             if show_favourite_addresses:
@@ -175,7 +173,7 @@ def get_callbacks_home(app):
             predictoors_table[i]["user"] for i in predictoors_table_selected_rows
         ]
 
-        filtered_data = app.db_getter.filter_for_feeds_table(
+        filtered_data = app.data.filter_for_feeds_table(
             predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
         )
 

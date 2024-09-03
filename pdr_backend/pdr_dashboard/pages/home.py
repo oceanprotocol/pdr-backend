@@ -50,26 +50,22 @@ class HomePage:
         )
 
     def get_feeds_for_favourite_predictoors(self, feed_data):
-        feed_ids = self.app.db_getter.feed_ids_based_on_predictoors()
+        feed_ids = self.app.data.feed_ids_based_on_predictoors()
 
         if not feed_ids:
             return [], feed_data
 
         feed_data = [
-            feed
-            for feed in self.app.db_getter.feeds_data
-            if feed["contract"] in feed_ids
+            feed for feed in self.app.data.feeds_data if feed["contract"] in feed_ids
         ]
 
         return list(range(len(feed_ids))), feed_data
 
     def get_input_column(self):
-        feed_cols, feed_data = self.app.db_getter.homepage_feeds_cols
-        predictoor_cols, predictoor_data = self.app.db_getter.homepage_predictoors_cols
+        feed_cols, feed_data = self.app.data.homepage_feeds_cols
+        predictoor_cols, predictoor_data = self.app.data.homepage_predictoors_cols
 
-        self.selected_predictoors = list(
-            range(len(self.app.db_getter.favourite_addresses))
-        )
+        self.selected_predictoors = list(range(len(self.app.data.favourite_addresses)))
         self.selected_feeds, feed_data = self.get_feeds_for_favourite_predictoors(
             feed_data
         )
@@ -181,14 +177,14 @@ class HomePage:
         if table_id == "predictoors_table":
             table_name = "Predictoors"
             searchable_field = "user"
-            length = len(self.app.db_getter.predictoors_data)
+            length = len(self.app.data.predictoors_data)
 
             toggle_switch = self.get_predictoors_switch()
             selected_rows = self.selected_predictoors
         else:
             table_name = "Feeds"
             searchable_field = "pair"
-            length = len(self.app.db_getter.feeds_data)
+            length = len(self.app.data.feeds_data)
 
             toggle_switch = self.get_feeds_switch()
             selected_rows = self.selected_feeds

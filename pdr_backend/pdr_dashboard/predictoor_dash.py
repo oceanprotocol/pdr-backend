@@ -11,7 +11,7 @@ from pdr_backend.pdr_dashboard.callbacks.callbacks_predictoors import (
     get_callbacks_predictoors,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_layout
-from pdr_backend.pdr_dashboard.util.db import DBGetter
+from pdr_backend.pdr_dashboard.util.db import AppDataManager
 from pdr_backend.ppss.ppss import PPSS
 
 
@@ -39,7 +39,7 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
 @enforce_types
 def setup_app(app, ppss: PPSS):
     app.web3_pp = ppss.web3_pp
-    app.db_getter = DBGetter(ppss)
+    app.data = AppDataManager(ppss)
     app.layout = get_layout()
 
     get_callbacks_home(app)

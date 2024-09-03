@@ -21,7 +21,7 @@ class FeedsPage(TabularPage):
     def __init__(self, app):
         self.app = app
 
-        for feed in app.db_getter.feeds_data:
+        for feed in app.data.feeds_data:
             pair_base, pair_quote = feed["pair"].split("/")
 
             # Update base currency filter
@@ -85,7 +85,7 @@ class FeedsPage(TabularPage):
         )
 
     def get_metrics_row(self):
-        stats = self.app.db_getter.feeds_metrics
+        stats = self.app.data.feeds_metrics
 
         return html.Div(
             children=[
@@ -124,10 +124,10 @@ class FeedsPage(TabularPage):
             [
                 dash_table.DataTable(
                     id="feeds_page_table",
-                    columns=self.app.db_getter.feeds_cols,
+                    columns=self.app.data.feeds_cols,
                     hidden_columns=["full_addr", "sales_raw"],
                     row_selectable="single",
-                    data=self.app.db_getter.feeds_table_data,
+                    data=self.app.data.feeds_table_data,
                     sort_action="custom",
                     sort_mode="single",
                 ),

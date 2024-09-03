@@ -42,8 +42,8 @@ def test_unrelated_trigger(sample_table_rows):
 
 
 def test_get_predictoors_data_from_payouts(_sample_app):
-    db_getter = _sample_app.db_getter
-    db_getter.predictoors_data = [
+    db_mgr = _sample_app.data
+    db_mgr.predictoors_data = [
         {
             "user": "0x02e9d2eede4c5347e55346860c8a8988117bde9e",
             "total_profit": 0.0,
@@ -58,7 +58,7 @@ def test_get_predictoors_data_from_payouts(_sample_app):
         },
     ]
 
-    result = db_getter.formatted_predictoors_home_page_table_data
+    result = db_mgr.formatted_predictoors_home_page_table_data
 
     assert isinstance(result, list)
     assert len(result) == 2

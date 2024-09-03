@@ -26,7 +26,7 @@ logger = logging.getLogger("predictoor_dashboard_utils")
 
 
 # pylint: disable=too-many-instance-attributes
-class DBGetter:
+class AppDataManager:
     def __init__(self, ppss):
         self.lake_dir = ppss.lake_ss.lake_dir
         self.network_name = ppss.web3_pp.network

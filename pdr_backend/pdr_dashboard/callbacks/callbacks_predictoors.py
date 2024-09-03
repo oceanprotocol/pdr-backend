@@ -90,7 +90,7 @@ def get_callbacks_predictoors(app):
 
         new_table_data = [
             item
-            for item in app.db_getter.raw_predictoors_data
+            for item in app.data.raw_predictoors_data
             if all(check_condition(item, *condition) for condition in conditions)
         ]
 
@@ -275,7 +275,7 @@ def get_callbacks_predictoors(app):
     )
     # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, predictoors_table_data):
-        content = ModalContent("predictoors_modal", app.db_getter)
+        content = ModalContent("predictoors_modal", app.data)
         content.selected_row = (
             predictoors_table_data[selected_rows[0]] if selected_rows else None
         )
