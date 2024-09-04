@@ -119,7 +119,7 @@ class AimodelDataFactory:
         diff = 0 if ss.transform == "None" else 1
 
         features = []
-        if ta_features is not None:
+        if ta_features is not None and len(ta_features) > 0:
             for feed in train_feeds_list:
                 close_feed = f"{feed.exchange}:{feed.pair}:close"
                 open_feed = f"{feed.exchange}:{feed.pair}:open"
@@ -138,8 +138,8 @@ class AimodelDataFactory:
                         volume_feed,
                     )
                     features.append(ta.calculate())
-        assert len(features) == len(ta_features) * len(train_feeds_list)
-        assert len(features[0]) == len(mergedohlcv_df)
+            assert len(features) == len(ta_features) * len(train_feeds_list)
+            assert len(features[0]) == len(mergedohlcv_df)
         # main work
         xcol_list = []  # [col_i] : name_str
         x_list = []  # [col_i] : Series. Build this up. Not df here (slow)
