@@ -1,6 +1,5 @@
 import pytest
 import pandas as pd
-import pandas as pd
 
 from pdr_backend.technical_indicators.technical_indicator import (
     MockTechnicalIndicator,
@@ -30,6 +29,7 @@ def test_mock_technical_indicator(sample_df):
 
 def test_abstract_method_implementation():
     with pytest.raises(TypeError):
+        # pylint: disable=abstract-class-instantiated
         TechnicalIndicator(
             df=pd.DataFrame(),
             open_col="open",
