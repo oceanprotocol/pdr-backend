@@ -226,7 +226,9 @@ class AppDataManager:
 
         return self._query_db(query)
 
-    def feed_ids_based_on_predictoors(self, predictoor_addrs: Optional[List[str]] = None):
+    def feed_ids_based_on_predictoors(
+        self, predictoor_addrs: Optional[List[str]] = None
+    ):
         if not predictoor_addrs and not self.favourite_addresses:
             return []
 
@@ -251,7 +253,6 @@ class AppDataManager:
 
         # Execute the query
         return self._query_db(query, scalar=True)
-
 
     def payouts(
         self,
