@@ -1,21 +1,36 @@
 import dash
 from dash import Input, Output, State
 
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
     filter_objects_by_field,
-    get_date_period_text,
+    get_date_period_text_for_selected_predictoors,
     get_start_date_from_period,
     select_or_clear_all_by_table,
     get_predictoors_home_page_table_data,
 )
 from pdr_backend.pdr_dashboard.util.format import format_value
+from pdr_backend.pdr_dashboard.pages.home import get_predictoors_cols_data
 
 
 # pylint: disable=too-many-statements
 def get_callbacks_home(app):
+    """
+    @app.callback(
+        Output("predictoors_table", "data", allow_duplicate=True),
+        [Input("start-date", "data")],
+        prevent_initial_call=True,
+    )
+    def update_page_data(start_date):
+        print("herrre")
+        app.predictoors_data = app.db_getter.predictoor_payouts_stats(UnixTimeMs(start_date * 1000) if start_date else None)
+        _predictoor_cols, predictoor_data = get_predictoors_cols_data(app.predictoors_data, app.favourite_addresses)
+        return predictoor_data
+    """
+
     @app.callback(
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),
@@ -31,7 +46,7 @@ def get_callbacks_home(app):
             Input("predictoors_table", "selected_rows"),
             Input("feeds_table", "data"),
             Input("predictoors_table", "data"),
-            Input("home-page-date-period-radio-items", "value"),
+            Input("general-lake-date-period-radio-items", "value"),
         ],
     )
     def get_display_data_from_db(
@@ -76,7 +91,7 @@ def get_callbacks_home(app):
 
         # get available period date text
         date_period_text = (
-            get_date_period_text(payouts)
+            get_date_period_text_for_selected_predictoors(payouts)
             if (
                 int(date_period) == 0
                 and (len(selected_feeds) > 0 or len(selected_predictoors) > 0)
@@ -149,7 +164,7 @@ def get_callbacks_home(app):
         return (filtered_data, selected_predictoor_indices)
 
     @app.callback(
-        Output("feeds_table", "data", allow_duplicate=True),
+        Output("feeds_table", "data"),
         Output("feeds_table", "selected_rows"),
         [
             Input("search-input-Feeds", "value"),
@@ -180,16 +195,13 @@ def get_callbacks_home(app):
 
         # filter feeds by payouts from selected predictoors
         if predictoor_feeds_only and (len(predictoors_addrs) > 0):
-            feed_ids = app.db_getter.feed_ids_based_on_predictoors(
-                predictoors_addrs,
-            )
+            feed_ids = app.db_getter.feed_ids_based_on_predictoors(predictoors_addrs)
             filtered_data = [
                 obj
                 for obj in filtered_data
                 if obj["contract"] in feed_ids
                 if obj not in selected_feeds
             ]
-
         # filter feeds by pair address
         filtered_data = (
             filter_objects_by_field(

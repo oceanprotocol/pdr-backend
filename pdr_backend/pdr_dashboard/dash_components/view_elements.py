@@ -113,6 +113,7 @@ def get_graph(figure):
 def get_header():
     return html.Div(
         [html.Div(id="navbar-container"), get_available_data_area_components()],
+        className="header-container",
         style={
             "display": "flex",
             "justifyContent": "space-between",
@@ -131,7 +132,7 @@ def get_navbar(nav_items):
         color="transparent",
         style={
             "display": "flex",
-            "justifyContent": "center",
+            "justifyContent": "flexStart",
             "alignItems": "center",
             "backgroundColor": "transparent",
         },
@@ -145,7 +146,6 @@ def get_nav_item(text: str, location: str, active: bool):
             id=text.lower(),
             href=location,
             active=active,
-            style={"fontSize": "26px", "marginRight": "10px"},
         )
     )
 
@@ -162,7 +162,20 @@ def get_search_bar(component_id, placeholder):
 
 
 def get_available_period_text_display():
-    return html.Div(id="available-data-text")
+    return html.Div(
+        [
+            html.Span(
+                "available lake data",
+                style={"lineHeight": "1", "fontSize": "16px", "marginBottom": "4px"},
+            ),
+            html.Span(id="available-data-text", style={"lineHeight": "1"}),
+        ],
+        style={
+            "display": "flex",
+            "flexDirection": "column",
+            "justifyContent": "center",
+        },
+    )
 
 
 def get_available_data_area_components():

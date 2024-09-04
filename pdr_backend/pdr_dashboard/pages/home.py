@@ -6,7 +6,6 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_predictoors_home_page_table_data,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
-    get_date_period_selection_component,
     get_metric,
     get_tooltip_and_button,
 )
@@ -79,25 +78,11 @@ class HomePage:
 
         return (columns, hidden_columns), data
 
-    def get_predictoors_cols_data(self):
-        predictoor_data = self.app.predictoors_data
-        data = get_predictoors_home_page_table_data(predictoor_data)
-
-        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
-        hidden_columns = ["user"]
-
-        if not self.favourite_addresses:
-            return (columns, hidden_columns), data
-
-        data = [p for p in data if p["user"] in self.favourite_addresses] + [
-            p for p in data if p["user"] not in self.favourite_addresses
-        ]
-
-        return (columns, hidden_columns), data
-
     def get_input_column(self):
         feed_cols, feed_data = self.get_feeds_cols_data()
-        predictoor_cols, predictoor_data = self.get_predictoors_cols_data()
+        predictoor_cols, predictoor_data = get_predictoors_cols_data(
+            self.app.predictoors_data, self.favourite_addresses
+        )
 
         self.selected_predictoors = list(range(len(self.favourite_addresses)))
         self.selected_feeds, feed_data = self.get_feeds_for_favourite_predictoors(
@@ -171,7 +156,7 @@ class HomePage:
                 get_metric(label="Pred Profit", value=0, value_id="profit_metric"),
                 get_metric(label="Tx Costs", value=0.0, value_id="costs_metric"),
                 get_metric(label="Avg Stake", value=0, value_id="stake_metric"),
-                get_date_period_selection_component(),
+                self.get_available_data_component(),
             ],
             id="metrics_container",
             style={
@@ -179,6 +164,22 @@ class HomePage:
                 "display": "flex",
                 "justifyContent": "space-between",
             },
+        )
+
+    def get_available_data_component(self):
+        return html.Div(
+            [
+                html.Span(
+                    "available data for selected predictoors",
+                    style={"lineHeight": "1", "margin": "5px 0"},
+                ),
+                html.Span(
+                    "there is no data available",
+                    id="available_data_period_text",
+                    style={"fontWeight": "bold", "fontSize": "34px", "lineHeight": "1"},
+                ),
+            ],
+            style={"display": "flex", "flexDirection": "column"},
         )
 
     def get_feeds_switch(self):
@@ -302,3 +303,20 @@ class HomePage:
                 ),
             ],
         )
+
+
+def get_predictoors_cols_data(predictoors_data, favourite_addresses):
+    predictoor_data = predictoors_data
+    data = get_predictoors_home_page_table_data(predictoor_data)
+
+    columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
+    hidden_columns = ["user"]
+
+    if not favourite_addresses:
+        return (columns, hidden_columns), data
+
+    data = [p for p in data if p["user"] in favourite_addresses] + [
+        p for p in data if p["user"] not in favourite_addresses
+    ]
+
+    return (columns, hidden_columns), data

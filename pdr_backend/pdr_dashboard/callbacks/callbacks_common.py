@@ -3,6 +3,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_navbar,
     NAV_ITEMS,
 )
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.pdr_dashboard.pages.home import HomePage
 from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
 from pdr_backend.pdr_dashboard.pages.predictoors import PredictoorsPage
@@ -13,6 +14,16 @@ from pdr_backend.pdr_dashboard.util.data import (
 
 
 def get_callbacks_common(app):
+    """
+    @app.callback(
+        [Input("start-date", "data")],
+    )
+    def refetch_data_on_new_period_selection(start_date):
+        app.predictoors_data = app.db_getter.predictoor_payouts_stats(
+            UnixTimeMs(start_date * 1000) if start_date else None
+        )
+    """
+
     @app.callback(
         Output("page-content", "children"),
         Output("navbar-container", "children"),
