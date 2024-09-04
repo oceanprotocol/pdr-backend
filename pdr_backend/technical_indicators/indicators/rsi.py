@@ -15,6 +15,6 @@ class RSI(TechnicalIndicator):
         @param:
             window - The window size for the RSI calculation (default=14).
         """
-        window = kwargs.get('window', 14)
+        window = kwargs.get("window", 14)
         rsi = ta.momentum.RSIIndicator(close=self._close(), window=window).rsi()
         return rsi
