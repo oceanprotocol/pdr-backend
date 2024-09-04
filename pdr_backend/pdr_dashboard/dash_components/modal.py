@@ -21,9 +21,9 @@ def get_modal(
 
 
 class ModalContent:
-    def __init__(self, modal_id: str, db_getter=None):
+    def __init__(self, modal_id: str, data_manager=None):
         self.modal_id = modal_id
-        self.db_getter = db_getter
+        self.data_manager = data_manager
 
         self.selected_row: Optional[dict] = None
         self.figures: List = []
@@ -92,13 +92,13 @@ class ModalContent:
                 contract=selected_row["full_addr"],
             )
 
-            payouts = self.db_getter.payouts([feed.contract], None, 0)
-            subscriptions = self.db_getter.feed_daily_subscriptions_by_feed_id(
+            payouts = self.data_manager.payouts([feed.contract], None, 0)
+            subscriptions = self.data_manager.feed_daily_subscriptions_by_feed_id(
                 feed.contract
             )
             figures_args = [payouts, subscriptions]
         elif self.modal_id == "predictoors_modal":
-            payouts = self.db_getter.payouts(
+            payouts = self.data_manager.payouts(
                 feed_addrs=[],
                 predictoor_addrs=[selected_row["full_addr"]],
                 start_date=0,
