@@ -1,3 +1,4 @@
+import pandas as pd
 import ta
 from pdr_backend.technical_indicators.technical_indicator import TechnicalIndicator
 
@@ -7,7 +8,7 @@ class RSI(TechnicalIndicator):
     Relative Strength Index (RSI) technical indicator.
     """
 
-    def calculate(self, window: int = 14):
+    def calculate(self, window: int = 14) -> pd.Series:
         """
         Calculates the RSI value based on the input data.
 

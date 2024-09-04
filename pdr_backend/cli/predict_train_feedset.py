@@ -2,7 +2,7 @@
 # Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from enforce_typing import enforce_types
 from typeguard import check_type
@@ -22,11 +22,14 @@ class PredictTrainFeedset:
 
     @enforce_types
     def __init__(
-        self, predict: ArgFeed, train_on: ArgFeeds, ta_features: List[str] = None
+        self,
+        predict: ArgFeed,
+        train_on: ArgFeeds,
+        ta_features: Optional[List[str]] = None,
     ):
         self.predict: ArgFeed = predict
         self.train_on: ArgFeeds = train_on
-        self.ta_features: List[str] = ta_features if ta_features else []
+        self.ta_features: Optional[List[str]] = ta_features if ta_features else []
 
     @enforce_types
     def __str__(self) -> str:

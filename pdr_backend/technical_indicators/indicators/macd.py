@@ -1,3 +1,4 @@
+import pandas as pd
 import ta
 from pdr_backend.technical_indicators.technical_indicator import TechnicalIndicator
 
@@ -7,7 +8,7 @@ class MACD(TechnicalIndicator):
     Moving Average Convergence Divergence (MACD) technical indicator.
     """
 
-    def calculate(self, window_fast: int = 12, window_slow: int = 26):
+    def calculate(self, window_fast: int = 12, window_slow: int = 26) -> pd.Series:
         """
         Calculates the MACD value based on the input data.
 

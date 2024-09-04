@@ -118,7 +118,7 @@ class AimodelDataFactory:
         x_dim_len = len(train_feeds_list) * ss.autoregressive_n
         diff = 0 if ss.transform == "None" else 1
 
-        features = []
+        features: List[pd.Series] = []
         if ta_features is not None and len(ta_features) > 0:
             for feed in train_feeds_list:
                 close_feed = f"{feed.exchange}:{feed.pair}:close"
@@ -129,6 +129,8 @@ class AimodelDataFactory:
 
                 for feature in ta_features:
                     ta_class = get_indicator.get_ta_indicator(feature)
+                    if ta_class is None:
+                        raise ValueError(f"Unknown TA feature: {feature}")
                     ta = ta_class(
                         mergedohlcv_df.to_pandas(),
                         close_feed,
@@ -177,6 +179,7 @@ class AimodelDataFactory:
                 xcol_list += [x_col]
 
                 for i, feature in enumerate(features):
+                    assert type(feature) == pd.Series  # type check for mypy
                     feature_np = list(feature.values)
                     features_shifted = pd.Series(
                         _slice(feature_np, -shift - N_train - 1, -shift)
@@ -214,7 +217,7 @@ class AimodelDataFactory:
         # postconditions
         assert X.shape[0] == yraw.shape[0] == ytran.shape[0]
         assert X.shape[0] <= (N_train + 1)
-        feature_dims = len(ta_features) * len(train_feeds_list) * ss.autoregressive_n
+        feature_dims = len(features) * len(train_feeds_list) * ss.autoregressive_n
         assert X.shape[1] == x_dim_len + feature_dims
         assert isinstance(x_df, pd.DataFrame)
 

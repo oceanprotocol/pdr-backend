@@ -28,7 +28,13 @@ class TechnicalIndicator(ABC):
     """
 
     def __init__(
-        self, df: pd.DataFrame, open_col: str, high_col: str, low_col: str, close_col: str, volume_col: str
+        self,
+        df: pd.DataFrame,
+        open_col: str,
+        high_col: str,
+        low_col: str,
+        close_col: str,
+        volume_col: str,
     ):
         """
         Initializes a TechnicalIndicator object.
