@@ -2,7 +2,7 @@
 # Copyright 2024 Ocean Protocol Foundation
 # SPDX-License-Identifier: Apache-2.0
 #
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from enforce_typing import enforce_types
 from typeguard import check_type
