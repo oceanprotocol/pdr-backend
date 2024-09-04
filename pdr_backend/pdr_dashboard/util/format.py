@@ -31,6 +31,7 @@ FORMAT_CONFIG = {
     "predictoors_page_accuracy_metric": "percentage",
     "predictoors_page_staked_metric": "currency",
     "predictoors_page_gross_income_metric": "currency",
+    "user_address": "eth_address",
 }
 
 

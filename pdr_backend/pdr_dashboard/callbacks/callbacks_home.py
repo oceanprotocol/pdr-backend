@@ -101,19 +101,19 @@ def get_callbacks_home(app):
         Output("predictoors_table", "selected_rows"),
         [
             Input("search-input-Predictoors", "value"),
-            Input("predictoors_table", "selected_rows"),
             Input("predictoors_table", "data"),
             Input("show-favourite-addresses", "value"),
             Input("predictoors_table", "sort_by"),
         ],
+        State("predictoors_table", "selected_rows"),
         prevent_initial_call=True,
     )
     def update_predictoors_table_on_search(
         search_value,
-        selected_rows,
         predictoors_table,
         show_favourite_addresses,
         sort_by,
+        selected_rows,
     ):
         predictoors_data = app.data.predictoors_data
         selected_predictoors_rows_addresses = [
@@ -153,17 +153,22 @@ def get_callbacks_home(app):
 
             filtered_data = sort_by_action(filtered_data, sort_by)
 
-        filtered_data = selected_predictoors + filtered_data
         selected_predictoor_indices = list(range(len(selected_predictoors)))
 
         from pdr_backend.pdr_dashboard.util.format import format_table
         cols = app.data.homepage_predictoors_cols[0][0]
-        cols = [c for c in cols if c["id"] != "user_address"]
+        cols = [c for c in cols if c["id"] not in ["user"]]
+        cols.append({"name": "User tmp", "id": "user_long"})
+
+        filtered_data = selected_predictoors + filtered_data
+        for r in filtered_data:
+            r["user_long"] = r["user"]
+            r["user_address"] = r["user"]
 
         res = format_table(filtered_data, cols)
-
-        for i, r in enumerate(res):
-            res[i]["user_address"] = format_value(r["user"], "user_address")
+        for r in res:
+            r["user"] = r["user_long"]
+            del r["user_long"]
 
         return res, selected_predictoor_indices
 
