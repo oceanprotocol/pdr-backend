@@ -146,11 +146,26 @@ def get_callbacks_home(app):
         else:
             filtered_data = [p for p in filtered_data if p["user"] not in selected_predictoors_rows_addresses]
 
-        filtered_data = sort_by_action(filtered_data, sort_by)
+        if sort_by:
+            for i in range(len(sort_by)):
+                if sort_by[i]["column_id"] == "user_address":
+                    sort_by[i]["column_id"] = "user"
+
+            filtered_data = sort_by_action(filtered_data, sort_by)
+
         filtered_data = selected_predictoors + filtered_data
         selected_predictoor_indices = list(range(len(selected_predictoors)))
 
-        return app.data.format_predictoors_home_page_table_data(filtered_data), selected_predictoor_indices
+        from pdr_backend.pdr_dashboard.util.format import format_table
+        cols = app.data.homepage_predictoors_cols[0][0]
+        cols = [c for c in cols if c["id"] != "user_address"]
+
+        res = format_table(filtered_data, cols)
+
+        for i, r in enumerate(res):
+            res[i]["user_address"] = format_value(r["user"], "user_address")
+
+        return res, selected_predictoor_indices
 
     @app.callback(
         Output("feeds_table", "data", allow_duplicate=True),
