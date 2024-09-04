@@ -28,7 +28,7 @@ class TechnicalIndicator(ABC):
     """
 
     def __init__(
-        self, df: pd.DataFrame, open: str, high: str, low: str, close: str, volume: str
+        self, df: pd.DataFrame, open_col: str, high_col: str, low_col: str, close_col: str, volume_col: str
     ):
         """
         Initializes a TechnicalIndicator object.
@@ -40,26 +40,26 @@ class TechnicalIndicator(ABC):
                 volume - name of column containing volume data,
         """
         self.df = df
-        self.open = open
-        self.high = high
-        self.low = low
-        self.close = close
-        self.volume = volume
+        self.open_col = open_col
+        self.high_col = high_col
+        self.low_col = low_col
+        self.close_col = close_col
+        self.volume_col = volume_col
 
     def _open(self):
-        return self.df[self.open]
+        return self.df[self.open_col]
 
     def _high(self):
-        return self.df[self.high]
+        return self.df[self.high_col]
 
     def _low(self):
-        return self.df[self.low]
+        return self.df[self.low_col]
 
     def _close(self):
-        return self.df[self.close]
+        return self.df[self.close_col]
 
     def _volume(self):
-        return self.df[self.volume]
+        return self.df[self.volume_col]
 
     @abstractmethod
     def calculate(self, *args, **kwargs) -> pd.Series:
@@ -69,4 +69,3 @@ class TechnicalIndicator(ABC):
         @return
             pd.Series - the indicator.
         """
-        pass
