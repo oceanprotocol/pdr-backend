@@ -101,7 +101,10 @@ class AppDataManager:
                 SELECT
                     p.contract,
                     SUM(p.stake) AS volume,
-                    SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+                    SUM(
+                        CASE WHEN p.payout > 0 
+                        THEN 1 ELSE 0 END
+                    ) * 100.0 / COUNT(*) AS avg_accuracy,
                     AVG(p.stake) AS avg_stake
                 FROM
                     {BronzePrediction.get_lake_table_name()} p
@@ -326,7 +329,10 @@ class AppDataManager:
         accuracy, volume = self._query_db(
             f"""
                 SELECT
-                    SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+                    SUM(
+                        CASE WHEN p.payout > 0 
+                        THEN 1 ELSE 0 END
+                    ) * 100.0 / COUNT(*) AS avg_accuracy,
                     SUM(p.stake) AS total_stake
                 FROM
                     {BronzePrediction.get_lake_table_name()} p
@@ -361,9 +367,15 @@ class AppDataManager:
         avg_accuracy, tot_stake, tot_gross_income = self._query_db(
             f"""
                 SELECT
-                    SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100 / COUNT(*) AS avg_accuracy,
+                    SUM(
+                        CASE WHEN p.payout > 0
+                        THEN 1 ELSE 0 END
+                    ) * 100 / COUNT(*) AS avg_accuracy,
                     SUM(p.stake) AS tot_stake,
-                    SUM(CASE WHEN p.payout > p.stake THEN p.payout - p.stake ELSE 0 END) AS tot_gross_income
+                    SUM(
+                        CASE WHEN p.payout > p.stake
+                        THEN p.payout - p.stake ELSE 0 END
+                    ) AS tot_gross_income
                 FROM
                     {BronzePrediction.get_lake_table_name()} p
             """,
