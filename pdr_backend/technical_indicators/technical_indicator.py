@@ -75,3 +75,9 @@ class TechnicalIndicator(ABC):
         @return
             pd.Series - the indicator.
         """
+
+
+class MockTechnicalIndicator(TechnicalIndicator):
+    def calculate(self, *args, **kwargs) -> pd.Series:
+        # Example implementation for testing purposes
+        return self._close() * 0.5
