@@ -46,7 +46,7 @@ install_requirements = [
     "web3==7.2.0",
     "sapphire.py==0.2.3",
     "stopit==1.1.2",
-    "ta==0.11.0"
+    "ta==0.11.0",
     "ocean-contracts==2.1.0",  # install this last
 ]
 
