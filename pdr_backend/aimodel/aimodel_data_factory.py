@@ -119,28 +119,28 @@ class AimodelDataFactory:
         diff = 0 if ss.transform == "None" else 1
 
         features: List[pd.Series] = []
-        if ta_features is not None and len(ta_features) > 0:
+        if ta_features:
             for feed in train_feeds_list:
-                close_feed = f"{feed.exchange}:{feed.pair}:close"
-                open_feed = f"{feed.exchange}:{feed.pair}:open"
-                high_feed = f"{feed.exchange}:{feed.pair}:high"
-                low_feed = f"{feed.exchange}:{feed.pair}:low"
-                volume_feed = f"{feed.exchange}:{feed.pair}:volume"
-
+                # Generate feed keys
+                feed_keys = {
+                    key: f"{feed.exchange}:{feed.pair}:{key}"
+                    for key in ["close", "open", "high", "low", "volume"]
+                }
+                
                 for feature in ta_features:
                     ta_class = get_indicator.get_ta_indicator(feature)
                     if ta_class is None:
                         raise ValueError(f"Unknown TA feature: {feature}")
+                        
                     ta = ta_class(
                         mergedohlcv_df.to_pandas(),
-                        close_feed,
-                        open_feed,
-                        high_feed,
-                        low_feed,
-                        volume_feed,
+                        **feed_keys
                     )
                     features.append(ta.calculate())
-            assert len(features) == len(ta_features) * len(train_feeds_list)
+
+            # Verify the results
+            num_features = len(ta_features) * len(train_feeds_list)
+            assert len(features) == num_features
             assert len(features[0]) == len(mergedohlcv_df)
         # main work
         xcol_list = []  # [col_i] : name_str
