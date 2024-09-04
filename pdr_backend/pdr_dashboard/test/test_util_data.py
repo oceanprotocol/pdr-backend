@@ -1,10 +1,8 @@
 from unittest.mock import Mock
+
 import dash
 
-from pdr_backend.pdr_dashboard.util.data import (
-    get_predictoors_home_page_table_data,
-    select_or_clear_all_by_table,
-)
+from pdr_backend.pdr_dashboard.util.data import select_or_clear_all_by_table
 
 
 def test_select_all(sample_table_rows):
@@ -43,8 +41,9 @@ def test_unrelated_trigger(sample_table_rows):
     ), "The function should return an empty list for unrelated triggers."
 
 
-def test_get_predictoors_data_from_payouts():
-    user_payout_stats = [
+def test_get_predictoors_data_from_payouts(_sample_app):
+    db_mgr = _sample_app.data
+    db_mgr.predictoors_data = [
         {
             "user": "0x02e9d2eede4c5347e55346860c8a8988117bde9e",
             "total_profit": 0.0,
@@ -59,7 +58,7 @@ def test_get_predictoors_data_from_payouts():
         },
     ]
 
-    result = get_predictoors_home_page_table_data(user_payout_stats)
+    result = db_mgr.formatted_predictoors_home_page_table_data
 
     assert isinstance(result, list)
     assert len(result) == 2

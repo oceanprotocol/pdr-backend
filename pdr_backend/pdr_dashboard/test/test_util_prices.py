@@ -3,12 +3,7 @@ from unittest.mock import MagicMock
 from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
 
 
-def test_calculate_tx_gas_fee_cost_in_OCEAN(_sample_app):
-    app = _sample_app
-    assert app.prices is not None
-    assert app.prices["ROSE"] > 0
-    assert app.prices["OCEAN"] > 0
-
+def test_calculate_tx_gas_fee_cost_in_OCEAN():
     # Example feed_contract_addr
     feed_contract_addr = "0x1234567890abcdef1234567890abcdef12345678"
 
@@ -37,7 +32,9 @@ def test_calculate_tx_gas_fee_cost_in_OCEAN(_sample_app):
     assert result == 0.0
 
     # If prices, should return a value > 0
-    result = calculate_tx_gas_fee_cost_in_OCEAN(web3_pp, feed_contract_addr, app.prices)
+    result = calculate_tx_gas_fee_cost_in_OCEAN(
+        web3_pp, feed_contract_addr, {"OCEAN": 0.1, "ROSE": 0.01}
+    )
     assert isinstance(result, float)
     assert result > 0
     assert result < 0.001
