@@ -8,6 +8,7 @@ from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.subscription import Subscription
+from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.pdr_dashboard.util.data import (
     col_to_human,
     filter_objects_by_field,
@@ -98,15 +99,16 @@ class AppDataManager:
         return self._query_db(
             f"""
                 SELECT
-                    SPLIT_PART(ID, '-', 1) AS contract,
-                    SUM(stake) AS volume,
-                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
-                    AVG(stake) AS avg_stake
+                    p.contract,
+                    SUM(p.stake) AS volume,
+                    SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+                    AVG(p.stake) AS avg_stake
                 FROM
-                    {Payout.get_lake_table_name()}
+                    {BronzePrediction.get_lake_table_name()} p
                 GROUP BY
-                    contract
-                ORDER BY volume DESC;
+                    p.contract
+                ORDER BY
+                    volume DESC;
             """,
         )
 
@@ -122,12 +124,12 @@ class AppDataManager:
                 -- Calculate total loss: sum up the negative income, capping positives at 0
                 SUM(CASE WHEN p.payout = 0 THEN p.stake ELSE 0 END) AS stake_loss,
                 SUM(p.payout) AS total_payout,
-                --- Calculate total profit
+                -- Calculate total profit
                 SUM(p.payout - p.stake) AS total_profit,
-                --- Calculate total stake
+                -- Calculate total stake
                 SUM(p.stake) AS total_stake,
                 COUNT(p.ID) AS stake_count,
-                COUNT(DISTINCT SPLIT_PART(p.ID, '-', 1)) AS feed_count,
+                COUNT(DISTINCT p.contract) AS feed_count,
                 -- Count correct predictions where payout > 0
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) AS correct_predictions,
                 COUNT(*) AS predictions,
@@ -135,14 +137,15 @@ class AppDataManager:
                 MIN(p.slot) AS first_payout_time,
                 MAX(p.slot) AS last_payout_time,
                 -- Calculate the APR
-                total_profit / total_stake * 100 AS apr,
+                (SUM(p.payout - p.stake) / NULLIF(SUM(p.stake), 0)) * 100 AS apr,
                 -- Calculate average accuracy
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy
             FROM
-                {Payout.get_lake_table_name()} p
+                {BronzePrediction.get_lake_table_name()} p
             GROUP BY
                 p."user"
-            ORDER BY apr DESC;
+            ORDER BY
+                apr DESC;
         """
 
         return self._query_db(query)
@@ -223,9 +226,7 @@ class AppDataManager:
 
         return self._query_db(query)
 
-    def feed_ids_based_on_predictoors(
-        self, predictoor_addrs: Optional[List[str]] = None
-    ):
+    def feed_ids_based_on_predictoors(self, predictoor_addrs: Optional[List[str]] = None):
         if not predictoor_addrs and not self.favourite_addresses:
             return []
 
@@ -236,20 +237,21 @@ class AppDataManager:
 
         # Constructing the SQL query
         query = f"""
-            SELECT LIST(LEFT(ID, POSITION('-' IN ID) - 1)) as feed_addrs
-            FROM {Payout.get_lake_table_name()}
-            WHERE ID IN (
-                SELECT MIN(ID)
-                FROM {Payout.get_lake_table_name()}
+            SELECT LIST(p.contract) as feed_addrs
+            FROM bronze_pdr_predictions p
+            WHERE p.contract IN (
+                SELECT MIN(p.contract)
+                FROM {BronzePrediction.get_lake_table_name()} p
                 WHERE (
-                    {" OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])}
+                    {" OR ".join([f"p.user LIKE '%{item}%'" for item in predictoor_addrs])}
                 )
-                GROUP BY LEFT(ID, POSITION('-' IN ID) - 1)
+                GROUP BY p.contract
             );
         """
 
         # Execute the query
         return self._query_db(query, scalar=True)
+
 
     def payouts(
         self,
@@ -323,10 +325,10 @@ class AppDataManager:
         accuracy, volume = self._query_db(
             f"""
                 SELECT
-                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
-                    SUM(stake) AS total_stake
+                    SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+                    SUM(p.stake) AS total_stake
                 FROM
-                    {Payout.get_lake_table_name()}
+                    {BronzePrediction.get_lake_table_name()} p
             """,
             scalar=True,
         )
@@ -358,11 +360,11 @@ class AppDataManager:
         avg_accuracy, tot_stake, tot_gross_income = self._query_db(
             f"""
                 SELECT
-                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100 / COUNT(*) AS avg_accuracy,
-                    SUM(stake) as tot_stake,
-                    SUM(CASE WHEN payout > stake THEN payout - stake ELSE 0 END) AS tot_gross_income
+                    SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100 / COUNT(*) AS avg_accuracy,
+                    SUM(p.stake) AS tot_stake,
+                    SUM(CASE WHEN p.payout > p.stake THEN p.payout - p.stake ELSE 0 END) AS tot_gross_income
                 FROM
-                    {Payout.get_lake_table_name()}
+                    {BronzePrediction.get_lake_table_name()} p
             """,
             scalar=True,
         )
