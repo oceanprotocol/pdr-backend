@@ -115,14 +115,17 @@ def get_callbacks_home(app):
         show_favourite_addresses,
         sort_by,
     ):
-        formatted_predictoors_data = app.data.formatted_predictoors_home_page_table_data
-        selected_predictoors = [predictoors_table[i] for i in selected_rows]
-        filtered_data = formatted_predictoors_data
+        predictoors_data = app.data.predictoors_data
+        selected_predictoors_rows_addresses = [
+            predictoors_table[i]["user"] for i in selected_rows
+        ]
+        selected_predictoors = [p for p in predictoors_data if p["user"] in selected_predictoors_rows_addresses]
+        filtered_data = predictoors_data
 
         if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
             custom_predictoors = [
                 predictoor
-                for predictoor in formatted_predictoors_data
+                for predictoor in predictoors_data
                 if predictoor["user"] in app.data.favourite_addresses
             ]
 
@@ -141,13 +144,13 @@ def get_callbacks_home(app):
                 filtered_data, "user", search_value, selected_predictoors
             )
         else:
-            filtered_data = [p for p in filtered_data if p not in selected_predictoors]
+            filtered_data = [p for p in filtered_data if p["user"] not in selected_predictoors_rows_addresses]
 
         filtered_data = sort_by_action(filtered_data, sort_by)
         filtered_data = selected_predictoors + filtered_data
         selected_predictoor_indices = list(range(len(selected_predictoors)))
 
-        return (filtered_data, selected_predictoor_indices)
+        return app.data.format_predictoors_home_page_table_data(filtered_data), selected_predictoor_indices
 
     @app.callback(
         Output("feeds_table", "data", allow_duplicate=True),

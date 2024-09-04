@@ -514,6 +514,36 @@ class AppDataManager:
 
         return payout_stats
 
+    @enforce_types
+    def format_predictoors_home_page_table_data(self, predictoors_data) -> List[Dict[str, Any]]:
+        """
+        Process the user payouts stats data.
+        Args:
+            user_payout_stats (list): List of user payouts stats data.
+        Returns:
+            list: List of processed user payouts stats data.
+        """
+
+        payout_stats = deepcopy(predictoors_data)
+        for data in payout_stats:
+            formatted_data = format_dict(
+                data=data,
+                only_include_keys=["user", "total_profit", "avg_accuracy", "avg_stake"],
+            )
+
+            new_data = {
+                "user_address": formatted_data["user"],
+                "total_profit": formatted_data["total_profit"],
+                "avg_accuracy": formatted_data["avg_accuracy"],
+                "avg_stake": formatted_data["avg_stake"],
+                "user": data["user"],
+            }
+
+            data.clear()
+            data.update(new_data)
+
+        return payout_stats
+
     @property
     def homepage_feeds_cols(self):
         data = self.feeds_data
