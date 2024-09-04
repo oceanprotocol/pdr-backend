@@ -126,16 +126,13 @@ class AimodelDataFactory:
                     key: f"{feed.exchange}:{feed.pair}:{key}"
                     for key in ["close", "open", "high", "low", "volume"]
                 }
-                
+
                 for feature in ta_features:
                     ta_class = get_indicator.get_ta_indicator(feature)
                     if ta_class is None:
                         raise ValueError(f"Unknown TA feature: {feature}")
-                        
-                    ta = ta_class(
-                        mergedohlcv_df.to_pandas(),
-                        **feed_keys
-                    )
+
+                    ta = ta_class(mergedohlcv_df.to_pandas(), **feed_keys)
                     features.append(ta.calculate())
 
             # Verify the results
