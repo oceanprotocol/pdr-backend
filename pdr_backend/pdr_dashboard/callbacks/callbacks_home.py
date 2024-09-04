@@ -173,7 +173,8 @@ def get_callbacks_home(app):
         sort_by,
         predictoors_table,
     ):
-        selected_feeds = [feeds_table[i] for i in selected_rows]
+        selected_feeds_addrs = [feeds_table[i]["contract"] for i in selected_rows]
+        selected_feeds = [f for f in app.data.feeds_data if f["contract"] in selected_feeds_addrs]
         # Extract selected predictoor addresses
         predictoors_addrs = [
             predictoors_table[i]["user"] for i in predictoors_table_selected_rows
