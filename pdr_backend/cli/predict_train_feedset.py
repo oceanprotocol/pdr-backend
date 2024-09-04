@@ -25,11 +25,11 @@ class PredictTrainFeedset:
         self,
         predict: ArgFeed,
         train_on: ArgFeeds,
-        ta_features: Optional[List[str]] = None,
+        ta_features: List[str] = [],
     ):
         self.predict: ArgFeed = predict
         self.train_on: ArgFeeds = train_on
-        self.ta_features: Optional[List[str]] = ta_features if ta_features else []
+        self.ta_features: List[str] = ta_features if ta_features else []
 
     @enforce_types
     def __str__(self) -> str:
