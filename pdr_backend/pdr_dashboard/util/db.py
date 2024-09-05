@@ -590,9 +590,9 @@ class AppDataManager:
         return [
             {"name": "User", "id": "user"},
             {"name": "User Address", "id": "user_address"},
-            {"name": "Total Profit", "id": "total_profit"},
-            {"name": "Average Accuracy", "id": "avg_accuracy"},
-            {"name": "Average Stake", "id": "avg_stake"},
+            {"name": "Profit", "id": "total_profit"},
+            {"name": "Accuracy", "id": "avg_accuracy"},
+            {"name": "Stake", "id": "avg_stake"},
         ]
 
     @property
