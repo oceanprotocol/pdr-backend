@@ -1,5 +1,4 @@
 import logging
-from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from enforce_typing import enforce_types
@@ -16,7 +15,7 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_feeds_subscription_stat_with_contract,
     sort_by_action,
 )
-from pdr_backend.pdr_dashboard.util.format import format_dict, format_table
+from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
@@ -486,35 +485,67 @@ class AppDataManager:
             selected_feeds + filtered_data, self.homepage_feeds_cols[0][0]
         )
 
-    @property
-    @enforce_types
-    def formatted_predictoors_home_page_table_data(self) -> List[Dict[str, Any]]:
-        """
-        Process the user payouts stats data.
-        Args:
-            user_payout_stats (list): List of user payouts stats data.
-        Returns:
-            list: List of processed user payouts stats data.
-        """
-        payout_stats = deepcopy(self.predictoors_data)
-        for data in payout_stats:
-            formatted_data = format_dict(
-                data=data,
-                only_include_keys=["user", "total_profit", "avg_accuracy", "avg_stake"],
+    def filter_for_predictoors_table(
+        self,
+        selected_predictoors_addresses,
+        show_favourite_addresses,
+        search_value,
+        sort_by,
+    ):
+        filtered_data = self.predictoors_data
+
+        selected_predictoors = [
+            p
+            for p in self.predictoors_data
+            if p["user"] in selected_predictoors_addresses
+        ]
+
+        if show_favourite_addresses:
+            custom_predictoors = [
+                predictoor
+                for predictoor in self.predictoors_data
+                if predictoor["user"] in self.favourite_addresses
+            ]
+
+            if show_favourite_addresses:
+                selected_predictoors += custom_predictoors
+            else:
+                selected_predictoors = [
+                    predictoor
+                    for predictoor in selected_predictoors
+                    if predictoor not in custom_predictoors
+                ]
+
+        if search_value:
+            # filter predictoors by user address
+            filtered_data = filter_objects_by_field(
+                filtered_data, "user", search_value, selected_predictoors
             )
+        else:
+            filtered_data = [
+                p
+                for p in filtered_data
+                if p["user"] not in selected_predictoors_addresses
+            ]
 
-            new_data = {
-                "user_address": formatted_data["user"],
-                "total_profit": formatted_data["total_profit"],
-                "avg_accuracy": formatted_data["avg_accuracy"],
-                "avg_stake": formatted_data["avg_stake"],
-                "user": data["user"],
-            }
+        if sort_by:
+            for i, _ in enumerate(sort_by):
+                if sort_by[i]["column_id"] == "user_address":
+                    sort_by[i]["column_id"] = "user"
 
-            data.clear()
-            data.update(new_data)
+            filtered_data = sort_by_action(filtered_data, sort_by)
 
-        return payout_stats
+        selected_predictoor_indices = list(range(len(selected_predictoors)))
+
+        filtered_data = selected_predictoors + filtered_data
+        res = format_table(
+            filtered_data,
+            self.homepage_predictoor_format_cols,
+            skip=["user"],
+            map_source={"user_address": "user"},
+        )
+
+        return res, selected_predictoor_indices
 
     @property
     def homepage_feeds_cols(self):
@@ -545,10 +576,27 @@ class AppDataManager:
         return (columns, hidden_columns), data
 
     @property
-    def homepage_predictoors_cols(self):
-        data = self.formatted_predictoors_home_page_table_data
+    def homepage_predictoor_format_cols(self):
+        return [
+            {"name": "User", "id": "user"},
+            {"name": "User Address", "id": "user_address"},
+            {"name": "Total Profit", "id": "total_profit"},
+            {"name": "Average Accuracy", "id": "avg_accuracy"},
+            {"name": "Average Stake", "id": "avg_stake"},
+        ]
 
-        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
+    @property
+    def homepage_predictoors_cols(self):
+        data = format_table(
+            self.predictoors_data,
+            self.homepage_predictoor_format_cols,
+            skip=["user"],
+            map_source={"user_address": "user"},
+        )
+
+        columns = [
+            col for col in self.homepage_predictoor_format_cols if col["id"] != "user"
+        ]
         hidden_columns = ["user"]
 
         if not self.favourite_addresses:

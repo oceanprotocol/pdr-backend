@@ -84,7 +84,10 @@ def format_value(value: Union[int, float, str], value_id: str) -> str:
 
 @enforce_types
 def format_table(
-    rows: list[dict[str, Union[int, float]]], columns: list[dict[str, str]]
+    rows: list[dict[str, Union[int, float]]],
+    columns: list[dict[str, str]],
+    skip: list[str] = [],
+    map_source: dict[str, str] = {},
 ) -> list[dict[str, str]]:
     """
     Format table rows.
@@ -94,9 +97,20 @@ def format_table(
     Returns:
         list[dict[str, str]]: Formatted table rows.
     """
+    map_cols = {column["id"]: column["id"] for column in columns}
+    if map_source:
+        map_cols.update(map_source)
+
     return [
         {
-            column["id"]: format_value(row[column["id"]], column["id"])
+            column["id"]: (
+                format_value(
+                    row[map_cols[column["id"]]],
+                    column["id"],
+                )
+                if column["id"] not in skip
+                else row[column["id"]]
+            )
             for column in columns
         }
         for row in rows

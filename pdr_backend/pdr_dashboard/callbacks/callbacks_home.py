@@ -5,11 +5,9 @@ from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
-    filter_objects_by_field,
     get_date_period_text,
     get_start_date_from_period,
     select_or_clear_all_by_table,
-    sort_by_action,
 )
 from pdr_backend.pdr_dashboard.util.format import format_value
 
@@ -137,71 +135,20 @@ def get_callbacks_home(app):
         sort_by,
         selected_rows,
     ):
-        predictoors_data = app.data.predictoors_data
         selected_predictoors_rows_addresses = [
             predictoors_table[i]["user"] for i in selected_rows
         ]
-        selected_predictoors = [
-            p
-            for p in predictoors_data
-            if p["user"] in selected_predictoors_rows_addresses
-        ]
-        filtered_data = predictoors_data
 
-        if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
-            custom_predictoors = [
-                predictoor
-                for predictoor in predictoors_data
-                if predictoor["user"] in app.data.favourite_addresses
-            ]
+        show_favourite_addresses = (
+            "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids
+        )
 
-            if show_favourite_addresses:
-                selected_predictoors += custom_predictoors
-            else:
-                selected_predictoors = [
-                    predictoor
-                    for predictoor in selected_predictoors
-                    if predictoor not in custom_predictoors
-                ]
-
-        if search_value:
-            # filter predictoors by user address
-            filtered_data = filter_objects_by_field(
-                filtered_data, "user", search_value, selected_predictoors
-            )
-        else:
-            filtered_data = [
-                p
-                for p in filtered_data
-                if p["user"] not in selected_predictoors_rows_addresses
-            ]
-
-        if sort_by:
-            for i in range(len(sort_by)):
-                if sort_by[i]["column_id"] == "user_address":
-                    sort_by[i]["column_id"] = "user"
-
-            filtered_data = sort_by_action(filtered_data, sort_by)
-
-        selected_predictoor_indices = list(range(len(selected_predictoors)))
-
-        from pdr_backend.pdr_dashboard.util.format import format_table
-
-        cols = app.data.homepage_predictoors_cols[0][0]
-        cols = [c for c in cols if c["id"] not in ["user"]]
-        cols.append({"name": "User tmp", "id": "user_long"})
-
-        filtered_data = selected_predictoors + filtered_data
-        for r in filtered_data:
-            r["user_long"] = r["user"]
-            r["user_address"] = r["user"]
-
-        res = format_table(filtered_data, cols)
-        for r in res:
-            r["user"] = r["user_long"]
-            del r["user_long"]
-
-        return res, selected_predictoor_indices
+        return app.data.filter_for_predictoors_table(
+            selected_predictoors_rows_addresses,
+            show_favourite_addresses,
+            search_value,
+            sort_by,
+        )
 
     @app.callback(
         Output("feeds_table", "data", allow_duplicate=True),

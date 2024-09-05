@@ -58,7 +58,7 @@ def test_get_predictoors_data_from_payouts(_sample_app):
         },
     ]
 
-    result = db_mgr.formatted_predictoors_home_page_table_data
+    _, result = db_mgr.homepage_predictoors_cols
 
     assert isinstance(result, list)
     assert len(result) == 2

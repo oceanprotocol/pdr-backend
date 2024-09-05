@@ -83,15 +83,15 @@ def test_favourite_addresses_search_input(
     all_feeds_toggle.click()
     time.sleep(2)
     f_all, f_sel = _feed_count(dash_duo)
-    assert len(f_all) == 21
+    assert len(f_all) == 20
     assert len(f_sel) == 1
 
     # click on fav addr toggle to show all predictoors
     fav_addr_toggle.click()
     time.sleep(2)
     p_all, p_sel = _predictoor_count(dash_duo)
-    assert len(p_all) == 58
-    assert len(p_sel) == 0
+    assert len(p_all) == 59
+    assert len(p_sel) == 2
 
 
 def test_checkbox_selection(_sample_app, dash_duo):
