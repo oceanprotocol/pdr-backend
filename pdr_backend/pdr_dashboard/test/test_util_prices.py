@@ -4,6 +4,7 @@ import pytest
 
 from pdr_backend.pdr_dashboard.util.prices import calculate_tx_gas_fee_cost_in_OCEAN
 
+
 @pytest.mark.skip(reason="test is failing")
 def test_calculate_tx_gas_fee_cost_in_OCEAN():
     # Example feed_contract_addr
