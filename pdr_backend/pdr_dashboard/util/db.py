@@ -8,7 +8,6 @@ from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.subscription import Subscription
 from pdr_backend.pdr_dashboard.util.data import (
-    col_to_human,
     filter_objects_by_field,
     get_feed_column_ids,
     get_feeds_stat_with_contract,
@@ -482,7 +481,7 @@ class AppDataManager:
         filtered_data = sort_by_action(filtered_data, sort_by)
 
         return format_table(
-            selected_feeds + filtered_data, self.homepage_feeds_cols[0][0]
+            selected_feeds + filtered_data, self.homepage_feeds_format_cols
         )
 
     def filter_for_predictoors_table(
@@ -548,6 +547,17 @@ class AppDataManager:
         return res, selected_predictoor_indices
 
     @property
+    def homepage_feeds_format_cols(self):
+        return [
+            {"name": "Contract", "id": "contract"},
+            {"name": "Pair", "id": "pair"},
+            {"name": "Timeframe", "id": "timeframe"},
+            {"name": "Source", "id": "source"},
+            {"name": "Accuracy", "id": "avg_accuracy"},
+            {"name": "Sales", "id": "sales"},
+        ]
+
+    @property
     def homepage_feeds_cols(self):
         data = self.feeds_data
 
@@ -570,7 +580,7 @@ class AppDataManager:
                 feed["contract"], feeds_subscriptions
             )["sales_raw"]
 
-        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
+        columns = self.homepage_feeds_format_cols
         hidden_columns = ["contract"]
 
         return (columns, hidden_columns), data
