@@ -98,6 +98,28 @@ def get_callbacks_home(app):
 
     @app.callback(
         Output("predictoors_table", "data", allow_duplicate=True),
+        Output("predictoors_table", "selected_rows", allow_duplicate=True),
+        [
+            Input("predictoors_table", "data"),
+            Input("predictoors_table", "selected_rows"),
+        ],
+        prevent_initial_call=True,
+    )
+    def update_predictoors_table_selection(
+        predictoors_table,
+        selected_rows,
+    ):
+        selected_table_rows = [predictoors_table[i] for i in selected_rows]
+        non_selected_table_rows = [
+            row for row in predictoors_table if row not in selected_table_rows
+        ]
+
+        return selected_table_rows + non_selected_table_rows, list(
+            range(len(selected_table_rows))
+        )
+
+    @app.callback(
+        Output("predictoors_table", "data", allow_duplicate=True),
         Output("predictoors_table", "selected_rows"),
         [
             Input("search-input-Predictoors", "value"),
@@ -119,7 +141,11 @@ def get_callbacks_home(app):
         selected_predictoors_rows_addresses = [
             predictoors_table[i]["user"] for i in selected_rows
         ]
-        selected_predictoors = [p for p in predictoors_data if p["user"] in selected_predictoors_rows_addresses]
+        selected_predictoors = [
+            p
+            for p in predictoors_data
+            if p["user"] in selected_predictoors_rows_addresses
+        ]
         filtered_data = predictoors_data
 
         if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
@@ -144,7 +170,11 @@ def get_callbacks_home(app):
                 filtered_data, "user", search_value, selected_predictoors
             )
         else:
-            filtered_data = [p for p in filtered_data if p["user"] not in selected_predictoors_rows_addresses]
+            filtered_data = [
+                p
+                for p in filtered_data
+                if p["user"] not in selected_predictoors_rows_addresses
+            ]
 
         if sort_by:
             for i in range(len(sort_by)):
@@ -156,6 +186,7 @@ def get_callbacks_home(app):
         selected_predictoor_indices = list(range(len(selected_predictoors)))
 
         from pdr_backend.pdr_dashboard.util.format import format_table
+
         cols = app.data.homepage_predictoors_cols[0][0]
         cols = [c for c in cols if c["id"] not in ["user"]]
         cols.append({"name": "User tmp", "id": "user_long"})
@@ -174,30 +205,54 @@ def get_callbacks_home(app):
 
     @app.callback(
         Output("feeds_table", "data", allow_duplicate=True),
+        Output("feeds_table", "selected_rows", allow_duplicate=True),
+        [
+            Input("feeds_table", "data"),
+            Input("feeds_table", "selected_rows"),
+        ],
+        prevent_initial_call=True,
+    )
+    def update_feeds_table_selection(
+        feeds_table,
+        selected_rows,
+    ):
+        selected_table_rows = [feeds_table[i] for i in selected_rows]
+        non_selected_table_rows = [
+            row for row in feeds_table if row not in selected_table_rows
+        ]
+
+        return selected_table_rows + non_selected_table_rows, list(
+            range(len(selected_table_rows))
+        )
+
+    @app.callback(
+        Output("feeds_table", "data", allow_duplicate=True),
         Output("feeds_table", "selected_rows"),
         [
             Input("search-input-Feeds", "value"),
-            Input("feeds_table", "selected_rows"),
             Input("feeds_table", "data"),
             Input("toggle-switch-predictoor-feeds", "value"),
             Input("predictoors_table", "selected_rows"),
             Input("feeds_table", "sort_by"),
         ],
         State("predictoors_table", "data"),
+        State("feeds_table", "selected_rows"),
         prevent_initial_call=True,
     )
     # pylint: disable=unused-argument
     def update_feeds_table_on_search(
         search_value,
-        selected_rows,
         feeds_table,
         predictoor_feeds_only,
         predictoors_table_selected_rows,
         sort_by,
         predictoors_table,
+        selected_rows,
     ):
         selected_feeds_addrs = [feeds_table[i]["contract"] for i in selected_rows]
-        selected_feeds = [f for f in app.data.feeds_data if f["contract"] in selected_feeds_addrs]
+        selected_feeds = [
+            f for f in app.data.feeds_data if f["contract"] in selected_feeds_addrs
+        ]
         # Extract selected predictoor addresses
         predictoors_addrs = [
             predictoors_table[i]["user"] for i in predictoors_table_selected_rows

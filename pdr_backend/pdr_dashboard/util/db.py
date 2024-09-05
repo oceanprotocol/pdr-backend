@@ -458,9 +458,12 @@ class AppDataManager:
 
         # filter feeds by payouts from selected predictoors
         if predictoor_feeds_only and (len(predictoors_addrs) > 0):
-            feed_ids = self.feed_ids_based_on_predictoors(
-                predictoors_addrs,
-            ) or []
+            feed_ids = (
+                self.feed_ids_based_on_predictoors(
+                    predictoors_addrs,
+                )
+                or []
+            )
             filtered_data = [
                 obj
                 for obj in filtered_data
@@ -493,7 +496,6 @@ class AppDataManager:
         Returns:
             list: List of processed user payouts stats data.
         """
-
         payout_stats = deepcopy(self.predictoors_data)
         for data in payout_stats:
             formatted_data = format_dict(
