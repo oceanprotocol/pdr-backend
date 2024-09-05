@@ -111,6 +111,7 @@ class HomePage:
     def get_graphs_column_plots_row(self):
         return html.Div(
             [
+                dcc.Store(id="fig-cache-store", data=None),
                 html.Div(id="accuracy_chart"),
                 html.Div(id="profit_chart"),
                 html.Div(

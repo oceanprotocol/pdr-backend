@@ -15,74 +15,79 @@ from pdr_backend.pdr_dashboard.util.format import format_value
 # pylint: disable=too-many-statements
 def get_callbacks_home(app):
     @app.callback(
-        Output("accuracy_chart", "children"),
-        Output("profit_chart", "children"),
-        Output("cost_chart", "children"),
-        Output("stake_chart", "children"),
-        Output("accuracy_metric", "children"),
-        Output("profit_metric", "children"),
-        Output("costs_metric", "children"),
-        Output("stake_metric", "children"),
-        Output("available_data_period_text", "children"),
+        [
+            Output("fig-cache-store", "data"),
+            Output("accuracy_chart", "children"),
+            Output("profit_chart", "children"),
+            Output("cost_chart", "children"),
+            Output("stake_chart", "children"),
+            Output("accuracy_metric", "children"),
+            Output("profit_metric", "children"),
+            Output("costs_metric", "children"),
+            Output("stake_metric", "children"),
+            Output("available_data_period_text", "children"),
+        ],
         [
             Input("feeds_table", "selected_rows"),
-            Input("feeds_table", "data"),
             Input("date-period-radio-items", "value"),
         ],
-        State("predictoors_table", "data"),
-        State("predictoors_table", "selected_rows"),
+        [
+            State("feeds_table", "data"),
+            State("predictoors_table", "data"),
+            State("predictoors_table", "selected_rows"),
+            State("fig-cache-store", "data"),
+        ],
     )
     def get_display_data_from_db(
         feeds_table_selected_rows,
-        feeds_table,
         date_period,
+        feeds_table,
         predictoors_table,
         predictoors_table_selected_rows,
+        cache_store_data,
     ):
-        # feeds_table_selected_rows is a list of ints
-        # feeds_data is a list of dicts
-        # get the feeds data for the selected rows
+        # Create cache key
         selected_feeds = [feeds_table[i] for i in feeds_table_selected_rows]
-        feeds = ArgFeeds.from_table_data(selected_feeds)
-
         selected_predictoors = [
             predictoors_table[i] for i in predictoors_table_selected_rows
         ]
-        predictoors_addrs = [row["user"] for row in selected_predictoors]
-
-        if len(selected_feeds) == 0 or len(selected_predictoors) == 0:
-            payouts = []
-        else:
-            start_date = (
-                get_start_date_from_period(int(date_period))
-                if int(date_period) > 0
-                else 0
+        selected_feeds_contracts = [row["contract"] for row in selected_feeds]
+        selected_predictoors_addresses = [row["user"] for row in selected_predictoors]
+        cache_key = hash(
+            (
+                tuple(selected_feeds_contracts),
+                tuple(selected_predictoors_addresses),
+                date_period,
             )
-            payouts = app.data.payouts(
-                [row["contract"] for row in selected_feeds],
-                predictoors_addrs,
-                start_date,
-            )
-
-        # get figures
-        figs_metrics = get_figures_and_metrics(
-            payouts,
-            feeds,
-            predictoors_addrs,
-            app.data.fee_cost,
         )
 
-        # get available period date text
+        # If cache_key is the same as previous cache,
+        # return no_update
+        # we use str because we had issues
+        # with the dcc.Store and int values
+        str_cache_key = str(cache_key)
+        if cache_store_data == str_cache_key:
+            return (dash.no_update,) * 10
+
+        # Update cache store with new cache_key
+        feeds = ArgFeeds.from_table_data(selected_feeds)
+        predictoors_addrs = [row["user"] for row in selected_predictoors]
+        start_date = (
+            get_start_date_from_period(int(date_period)) if int(date_period) > 0 else 0
+        )
+        payouts = app.data.payouts(
+            [row["contract"] for row in selected_feeds], predictoors_addrs, start_date
+        )
+
+        figs_metrics = get_figures_and_metrics(
+            payouts, feeds, predictoors_addrs, app.data.fee_cost
+        )
         date_period_text = (
-            get_date_period_text(payouts)
-            if (
-                int(date_period) == 0
-                and (len(selected_feeds) > 0 or len(selected_predictoors) > 0)
-            )
-            else dash.no_update
+            get_date_period_text(payouts) if int(date_period) == 0 else dash.no_update
         )
 
         return (
+            str_cache_key,
             get_graph(figs_metrics.fig_accuracy),
             get_graph(figs_metrics.fig_profit),
             get_graph(figs_metrics.fig_costs),
