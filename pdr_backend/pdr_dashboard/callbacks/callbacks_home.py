@@ -26,18 +26,18 @@ def get_callbacks_home(app):
         Output("available_data_period_text", "children"),
         [
             Input("feeds_table", "selected_rows"),
-            Input("predictoors_table", "selected_rows"),
             Input("feeds_table", "data"),
-            Input("predictoors_table", "data"),
             Input("date-period-radio-items", "value"),
         ],
+        State("predictoors_table", "data"),
+        State("predictoors_table", "selected_rows"),
     )
     def get_display_data_from_db(
         feeds_table_selected_rows,
-        predictoors_table_selected_rows,
         feeds_table,
-        predictoors_table,
         date_period,
+        predictoors_table,
+        predictoors_table_selected_rows,
     ):
         # feeds_table_selected_rows is a list of ints
         # feeds_data is a list of dicts
