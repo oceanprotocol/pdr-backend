@@ -44,7 +44,7 @@ class PredictTrainFeedset:
         )
 
     @enforce_types
-    def to_dict(self) -> Dict[str, str]:
+    def to_dict(self) -> Dict:
         return {
             "predict": str(self.predict),
             "train_on": str(self.train_on),

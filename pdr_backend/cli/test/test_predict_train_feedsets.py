@@ -38,6 +38,7 @@ def test_feedsets_1_feedset():
     assert feedsets == PredictTrainFeedsets([FEEDSET])
     assert (
         str(feedsets)
+        # pylint: disable=line-too-long
         == "[{'predict': 'binance BTC/USDT o 1h', 'train_on': 'binance BTC/USDT ETH/USDT o 1h', 'ta_features': []}]"
     )
 
