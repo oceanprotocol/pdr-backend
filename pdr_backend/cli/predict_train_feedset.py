@@ -48,7 +48,7 @@ class PredictTrainFeedset:
         return {
             "predict": str(self.predict),
             "train_on": str(self.train_on),
-            "ta_features": str(self.ta_features),
+            "ta_features": self.ta_features,
         }
 
     @classmethod
