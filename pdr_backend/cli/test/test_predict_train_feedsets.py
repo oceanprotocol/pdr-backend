@@ -21,7 +21,7 @@ ARG_FEEDS_STR = "binance BTC/USDT ETH/USDT o 1h"
 ARG_FEEDS: ArgFeeds = ArgFeeds.from_str(ARG_FEEDS_STR)
 
 # ("predict", "train_on") set
-FEEDSET_DICT = {"predict": ARG_FEED_STR, "train_on": ARG_FEEDS_STR}
+FEEDSET_DICT = {"predict": ARG_FEED_STR, "train_on": ARG_FEEDS_STR, "ta_features": []}
 FEEDSET = PredictTrainFeedset(predict=ARG_FEED, train_on=ARG_FEEDS)
 
 
@@ -38,7 +38,8 @@ def test_feedsets_1_feedset():
     assert feedsets == PredictTrainFeedsets([FEEDSET])
     assert (
         str(feedsets)
-        == "[{'predict': 'binance BTC/USDT o 1h', 'train_on': 'binance BTC/USDT ETH/USDT o 1h'}]"
+        # pylint: disable=line-too-long
+        == "[{'predict': 'binance BTC/USDT o 1h', 'train_on': 'binance BTC/USDT ETH/USDT o 1h', 'ta_features': []}]"
     )
 
     feedsets2 = PredictTrainFeedsets.from_list_of_dict([FEEDSET_DICT])
@@ -102,18 +103,22 @@ def test_feedsets_from_list_of_dict__thorough():
         {
             "predict": "binance BTC/USDT c 5m",
             "train_on": "binance BTC/USDT DOT/USDT ETH/USDT c 5m, kraken BTC/USDT c 5m",
+            "ta_features": [],
         },
         {
             "predict": "kraken BTC/USDT c 5m",
             "train_on": "binance BTC/USDT DOT/USDT ETH/USDT c 5m, kraken BTC/USDT c 5m",
+            "ta_features": [],
         },
         {
             "predict": "binance ETH/USDT c 5m",
             "train_on": "binance BTC/USDT DOT/USDT c 5m, kraken BTC/USDT c 5m",
+            "ta_features": [],
         },
         {
             "predict": "binance ADA/USDT c 5m",
             "train_on": "binance BTC/USDT DOT/USDT c 5m, kraken BTC/USDT c 5m",
+            "ta_features": [],
         },
     ]
     assert feedset_list2 == target_feedset_list2
