@@ -7,7 +7,6 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
     filter_objects_by_field,
     get_date_period_text_for_selected_predictoors,
-    get_start_date_from_period,
     select_or_clear_all_by_table,
 )
 from pdr_backend.pdr_dashboard.util.format import format_value
@@ -38,7 +37,7 @@ def get_callbacks_home(app):
         predictoors_table_selected_rows,
         feeds_table,
         predictoors_table,
-        date_period,
+        _date_period,
     ):
         # feeds_table_selected_rows is a list of ints
         # feeds_data is a list of dicts
@@ -69,14 +68,7 @@ def get_callbacks_home(app):
         )
 
         # get available period date text
-        date_period_text = (
-            get_date_period_text_for_selected_predictoors(payouts)
-            if (
-                int(date_period) == 0
-                and (len(selected_feeds) > 0 or len(selected_predictoors) > 0)
-            )
-            else dash.no_update
-        )
+        date_period_text = get_date_period_text_for_selected_predictoors(payouts)
 
         return (
             get_graph(figs_metrics.fig_accuracy),

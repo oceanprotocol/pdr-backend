@@ -1,7 +1,6 @@
 import dash
 from dash import Input, Output, State
 
-from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.pdr_dashboard.pages.feeds import get_metric
 from pdr_backend.pdr_dashboard.util.data import (
     get_feed_column_ids,
