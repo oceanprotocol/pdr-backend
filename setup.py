@@ -18,7 +18,6 @@ install_requirements = [
     "dateparser==1.2.0",
     "duckdb==1.0.0",
     "enforce_typing",
-    "eth-account==0.11.0",
     "eth-keys==0.5.1",
     "flask==3.0.3",
     "imblearn",
@@ -44,7 +43,7 @@ install_requirements = [
     "time_machine==2.15.0",
     "typeguard==4.3.0",
     "xgboost==2.1.1",
-    "web3==6.20.2",
+    "web3==7.2.0",
     "sapphire.py==0.2.3",
     "stopit==1.1.2",
     "ocean-contracts==2.1.0",  # install this last

@@ -1,7 +1,6 @@
 import dash
 from dash import Input, Output, State
 
-from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
@@ -10,27 +9,12 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_date_period_text_for_selected_predictoors,
     get_start_date_from_period,
     select_or_clear_all_by_table,
-    get_predictoors_home_page_table_data,
 )
 from pdr_backend.pdr_dashboard.util.format import format_value
-from pdr_backend.pdr_dashboard.pages.home import get_predictoors_cols_data
 
 
 # pylint: disable=too-many-statements
 def get_callbacks_home(app):
-    """
-    @app.callback(
-        Output("predictoors_table", "data", allow_duplicate=True),
-        [Input("start-date", "data")],
-        prevent_initial_call=True,
-    )
-    def update_page_data(start_date):
-        print("herrre")
-        app.predictoors_data = app.db_getter.predictoor_payouts_stats(UnixTimeMs(start_date * 1000) if start_date else None)
-        _predictoor_cols, predictoor_data = get_predictoors_cols_data(app.predictoors_data, app.favourite_addresses)
-        return predictoor_data
-    """
-
     @app.callback(
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),
@@ -70,15 +54,10 @@ def get_callbacks_home(app):
         if len(selected_feeds) == 0 or len(selected_predictoors) == 0:
             payouts = []
         else:
-            start_date = (
-                get_start_date_from_period(int(date_period))
-                if int(date_period) > 0
-                else 0
-            )
-            payouts = app.db_getter.payouts(
+            payouts = app.data.payouts(
                 [row["contract"] for row in selected_feeds],
                 predictoors_addrs,
-                start_date,
+                0,
             )
 
         # get figures
@@ -86,7 +65,7 @@ def get_callbacks_home(app):
             payouts,
             feeds,
             predictoors_addrs,
-            app.fee_cost,
+            app.data.fee_cost,
         )
 
         # get available period date text
@@ -128,9 +107,7 @@ def get_callbacks_home(app):
         predictoors_table,
         show_favourite_addresses,
     ):
-        formatted_predictoors_data = get_predictoors_home_page_table_data(
-            app.predictoors_data
-        )
+        formatted_predictoors_data = app.data.formatted_predictoors_home_page_table_data
         selected_predictoors = [predictoors_table[i] for i in selected_rows]
         filtered_data = formatted_predictoors_data
 
@@ -138,7 +115,7 @@ def get_callbacks_home(app):
             custom_predictoors = [
                 predictoor
                 for predictoor in formatted_predictoors_data
-                if predictoor["user"] in app.favourite_addresses
+                if predictoor["user"] in app.data.favourite_addresses
             ]
 
             if show_favourite_addresses:
@@ -191,27 +168,9 @@ def get_callbacks_home(app):
             predictoors_table[i]["user"] for i in predictoors_table_selected_rows
         ]
 
-        filtered_data = app.feeds_data
-
-        # filter feeds by payouts from selected predictoors
-        if predictoor_feeds_only and (len(predictoors_addrs) > 0):
-            feed_ids = app.db_getter.feed_ids_based_on_predictoors(predictoors_addrs)
-            filtered_data = [
-                obj
-                for obj in filtered_data
-                if obj["contract"] in feed_ids
-                if obj not in selected_feeds
-            ]
-        # filter feeds by pair address
-        filtered_data = (
-            filter_objects_by_field(
-                app.feeds_data, "pair", search_value, selected_feeds
-            )
-            if search_value
-            else filtered_data
+        filtered_data = app.data.filter_for_feeds_table(
+            predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
         )
-
-        filtered_data = selected_feeds + filtered_data
 
         selected_feed_indices = list(range(len(selected_feeds)))
 

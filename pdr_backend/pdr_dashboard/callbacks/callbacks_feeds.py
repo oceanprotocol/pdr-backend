@@ -4,7 +4,6 @@ from dash import Input, Output, State
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.pdr_dashboard.pages.feeds import get_metric
 from pdr_backend.pdr_dashboard.util.data import (
-    get_feeds_data_for_feeds_table,
     get_feed_column_ids,
 )
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
@@ -24,21 +23,7 @@ def get_callbacks_feeds(app):
         prevent_initial_call=True,
     )
     def update_page_data(start_date):
-        feed_stats = app.db_getter.feed_payouts_stats(
-            UnixTimeMs(start_date * 1000) if start_date else None
-        )
-        feed_subscriptions = app.db_getter.feed_subscription_stats(
-            app.network_name, UnixTimeMs(start_date * 1000) if start_date else None
-        )
-        stats = app.db_getter.feeds_stats(
-            UnixTimeMs(start_date * 1000) if start_date else None
-        )
-
-        _feed_cols, feed_data, raw_feed_data = get_feeds_data_for_feeds_table(
-            app.feeds_data, feed_stats, feed_subscriptions
-        )
-
-        app.feeds_table_data = raw_feed_data
+        app.data.get_feeds_data(start_date)
 
         metrics_children_data = [
             get_metric(
@@ -46,10 +31,10 @@ def get_callbacks_feeds(app):
                 value=value,
                 value_id=f"feeds_page_{key}_metric",
             )
-            for key, value in stats.items()
+            for key, value in app.data.feeds_metrics_data.items()
         ]
 
-        return feed_data, metrics_children_data
+        return app.data.feeds_table_data, metrics_children_data
 
     @app.callback(
         Output("feeds_page_table", "data"),
@@ -113,7 +98,7 @@ def get_callbacks_feeds(app):
 
         new_table_data = [
             item
-            for item in app.feeds_table_data
+            for item in app.data.raw_feeds_data
             if all(check_condition(item, *condition) for condition in conditions)
         ]
 
@@ -224,7 +209,7 @@ def get_callbacks_feeds(app):
     )
     # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, feeds_table_data):
-        content = ModalContent("feeds_modal", app.db_getter)
+        content = ModalContent("feeds_modal", app.data)
         content.selected_row = (
             feeds_table_data[selected_rows[0]] if selected_rows else None
         )

@@ -11,7 +11,6 @@ from pdr_backend.pdr_dashboard.util.filters import (
 from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
 from pdr_backend.pdr_dashboard.pages.predictoors import (
-    get_data_for_predictoors_table,
     get_metric,
     key_id_name,
 )
@@ -25,19 +24,10 @@ def get_callbacks_predictoors(app):
         prevent_initial_call=True,
     )
     def update_page_data(start_date):
-        res = app.db_getter.predictoor_payouts_stats(
+        app.data.get_predictoors_data(start_date)
+        stats = app.data.predictoors_metrics(
             UnixTimeMs(start_date * 1000) if start_date else None
         )
-        app.predictoors_data = res
-        stats = app.db_getter.predictoors_stats(
-            UnixTimeMs(start_date * 1000) if start_date else None
-        )
-
-        _predictoor_cols, predictoor_data, raw_predictoor_data = (
-            get_data_for_predictoors_table(res, app.fee_cost)
-        )
-
-        app.predictoor_table_data = raw_predictoor_data
 
         metrics_children_data = [
             get_metric(
@@ -48,7 +38,7 @@ def get_callbacks_predictoors(app):
             for key, value in stats.items()
         ]
 
-        return predictoor_data, metrics_children_data
+        return app.data.predictoors_table_data, metrics_children_data
 
     @app.callback(
         Output("predictoors_page_table", "data"),
@@ -128,7 +118,7 @@ def get_callbacks_predictoors(app):
 
         new_table_data = [
             item
-            for item in app.predictoor_table_data
+            for item in app.data.raw_predictoors_data
             if all(check_condition(item, *condition) for condition in conditions)
         ]
 
@@ -313,7 +303,7 @@ def get_callbacks_predictoors(app):
     )
     # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, predictoors_table_data):
-        content = ModalContent("predictoors_modal", app.db_getter)
+        content = ModalContent("predictoors_modal", app.data)
         content.selected_row = (
             predictoors_table_data[selected_rows[0]] if selected_rows else None
         )
