@@ -50,11 +50,19 @@ def _verify_table_data(table, filename):
         assert row in expected_data
 
 
+def _save_table_data(table, filename):
+    table_data = _prepare_table_data_to_be_saved_as_json(table)
+
+    with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename, "w") as f:
+        json.dump(table_data, f)
+
+
 def test_feeds_table(_sample_app, dash_duo):
     app = _sample_app
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
+
     dash_duo.wait_for_element("#feeds_page_table table")
 
     table = dash_duo.find_element("#feeds_page_table table")
@@ -251,14 +259,13 @@ def test_sort_table(_sample_app, dash_duo):
     # Select the table element
     table = dash_duo.find_element("#feeds_page_table")
 
-    # Click the 'Staked' column header to sort
     actionables = table.find_elements(
         By.XPATH, "//div//div[@class='column-actions']//span"
-    )[7]
-    actionables.click()
+    )[1]
 
+    actionables.click()
     # Wait for the sort to apply
-    time.sleep(1)  # Sometimes sorting might take a moment
+    time.sleep(2)  # Sometimes sorting might take a moment
 
     # Check if the data is sorted ascending
     _verify_table_data_order(table, "sorted_feeds_table_asc_by_volume.json")

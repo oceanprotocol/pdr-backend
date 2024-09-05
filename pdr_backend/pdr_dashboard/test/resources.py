@@ -221,6 +221,8 @@ def _prepare_sample_app(tmpdir, include_my_addresses=False):
         False,
     )
 
+    etl.do_etl()
+
     db.duckdb_conn.close()
 
     app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])

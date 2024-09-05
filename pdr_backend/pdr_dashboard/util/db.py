@@ -16,7 +16,11 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_feeds_stat_with_contract,
     get_feeds_subscription_stat_with_contract,
 )
-from pdr_backend.pdr_dashboard.util.format import format_dict, format_table
+from pdr_backend.pdr_dashboard.util.format import (
+    format_dict,
+    format_table,
+    fill_none_with_zero,
+)
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
@@ -44,7 +48,7 @@ class AppDataManager:
         self.feeds_subscriptions = self._init_feed_subscription_stats()
 
         self.predictoors_data = self._init_predictoor_payouts_stats()
-        self.feeds_data = self._init_feeds_data()
+        self.feeds_data = self._init_feeds_data_from_bronze_predictions()
 
         # initial data formatting for tables, columns and raw data
         self.feeds_cols, self.feeds_table_data, self.raw_feeds_data = (
@@ -95,6 +99,15 @@ class AppDataManager:
         )
 
     @enforce_types
+    def _init_feeds_data_from_bronze_predictions(self):
+        return self._query_db(
+            f"""
+                SELECT contract, pair, timeframe, source FROM {BronzePrediction.get_lake_table_name()}
+                GROUP BY contract, pair, timeframe, source
+            """,
+        )
+
+    @enforce_types
     def _init_feed_payouts_stats(self):
         return self._query_db(
             f"""
@@ -136,7 +149,8 @@ class AppDataManager:
                 -- Count correct predictions where payout > 0
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) AS correct_predictions,
                 COUNT(*) AS predictions,
-                AVG(p.stake) AS avg_stake,
+                SUM(p.stake) AS total_stake,
+                total_stake / COUNT(*) AS avg_stake,
                 MIN(p.slot) AS first_payout_time,
                 MAX(p.slot) AS last_payout_time,
                 -- Calculate the APR
@@ -256,6 +270,58 @@ class AppDataManager:
 
         # Execute the query
         return self._query_db(query, scalar=True)
+
+    def payouts_from_bronze_predictions(
+        self,
+        feed_addrs: Union[List[str], None],
+        predictoor_addrs: Union[List[str], None],
+        start_date: int,
+    ) -> List[dict]:
+        """
+        Get predictions data for the given feed and predictoor addresses from the bronze_pdr_predictions table.
+        Args:
+            feed_addrs (list): List of feed addresses.
+            predictoor_addrs (list): List of predictoor addresses.
+            start_date (int): The starting slot (timestamp) for filtering the results.
+        Returns:
+            list: List of predictions data.
+        """
+
+        # Start constructing the SQL query
+        query = f"SELECT * FROM {BronzePrediction.get_lake_table_name()}"
+
+        # List to hold the WHERE clause conditions
+        conditions = []
+
+        # Adding conditions for feed addresses if provided
+        if feed_addrs:
+            feed_conditions = " OR ".join(
+                [f"contract = '{addr}'" for addr in feed_addrs]
+            )
+            conditions.append(f"({feed_conditions})")
+
+        # Adding conditions for predictoor addresses if provided
+        if predictoor_addrs:
+            predictoor_conditions = " OR ".join(
+                [f"user = '{addr}'" for addr in predictoor_addrs]
+            )
+            conditions.append(f"({predictoor_conditions})")
+
+        # Adding condition for the start date if provided
+        if start_date:
+            conditions.append(f"slot >= {start_date}")
+
+        # If there are any conditions, append them to the query
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        query += ";"
+
+        # Log the query for debugging
+        print(f"Generated SQL Query: {query}")
+
+        # Execute the query without passing parameters
+        return self._query_db(query)
 
     def payouts(
         self,
@@ -440,17 +506,20 @@ class AppDataManager:
         for data_item in temp_data:
             tx_costs = self.fee_cost * float(data_item["stake_count"])
 
-            temp_pred_item = {}
-            temp_pred_item["addr"] = str(data_item["user"])
-            temp_pred_item["full_addr"] = str(data_item["user"])
-            temp_pred_item["apr"] = data_item["apr"]
-            temp_pred_item["accuracy"] = data_item["avg_accuracy"]
-            temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
-            temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
-            temp_pred_item["gross_income_(OCEAN)"] = data_item["gross_income"]
-            temp_pred_item["stake_loss_(OCEAN)"] = data_item["stake_loss"]
+            temp_data_item = fill_none_with_zero(data_item)
+            temp_pred_item: Dict[str, Any] = {}
+            temp_pred_item["addr"] = str(temp_data_item["user"])
+            temp_pred_item["full_addr"] = str(temp_data_item["user"])
+            temp_pred_item["apr"] = temp_data_item["apr"]
+            temp_pred_item["accuracy"] = temp_data_item["avg_accuracy"]
+            temp_pred_item["number_of_feeds"] = temp_data_item["feed_count"]
+            temp_pred_item["staked_(OCEAN)"] = temp_data_item["total_stake"]
+            temp_pred_item["gross_income_(OCEAN)"] = temp_data_item["gross_income"]
+            temp_pred_item["stake_loss_(OCEAN)"] = temp_data_item["stake_loss"]
             temp_pred_item["tx_costs_(OCEAN)"] = tx_costs
-            temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
+            temp_pred_item["net_income_(OCEAN)"] = (
+                temp_data_item["total_profit"] - tx_costs
+            )
 
             new_predictoor_data.append(temp_pred_item)
 
@@ -501,8 +570,10 @@ class AppDataManager:
 
         payout_stats = deepcopy(self.predictoors_data)
         for data in payout_stats:
+            temp_data = fill_none_with_zero(data)
+
             formatted_data = format_dict(
-                data=data,
+                data=temp_data,
                 only_include_keys=["user", "total_profit", "avg_accuracy", "avg_stake"],
             )
 
