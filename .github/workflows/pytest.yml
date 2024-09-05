@@ -30,6 +30,7 @@ jobs:
         with:
           repository: "oceanprotocol/barge"
           path: "barge"
+          ref: "5bd4a318c732d84a6b7fbeb193cee7fb16891a67"
 
       - name: Run Barge
         working-directory: ${{ github.workspace }}/barge
