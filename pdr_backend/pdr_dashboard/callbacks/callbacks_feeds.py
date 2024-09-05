@@ -10,6 +10,7 @@ from pdr_backend.pdr_dashboard.util.filters import (
     check_condition,
     filter_table_by_range,
 )
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
 
@@ -208,7 +209,11 @@ def get_callbacks_feeds(app):
     )
     # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, feeds_table_data):
-        content = ModalContent("feeds_modal", app.data)
+        content = ModalContent(
+            "feeds_modal",
+            app.data,
+            UnixTimeMs(app.start_date * 1000) if app.start_date else None,
+        )
         content.selected_row = (
             feeds_table_data[selected_rows[0]] if selected_rows else None
         )

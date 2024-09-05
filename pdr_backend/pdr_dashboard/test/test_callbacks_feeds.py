@@ -251,6 +251,8 @@ def test_sort_table(_sample_app, dash_duo):
     # Select the table element
     table = dash_duo.find_element("#feeds_page_table")
 
+    time.sleep(30)
+
     # Click the 'Staked' column header to sort
     actionables = table.find_elements(
         By.XPATH, "//div//div[@class='column-actions']//span"

@@ -224,22 +224,29 @@ class AppDataManager:
         return self._query_db(query)
 
     @enforce_types
-    def feed_daily_subscriptions_by_feed_id(self, feed_id: str):
+    def feed_daily_subscriptions_by_feed_id(
+        self, feed_id: str, start_date: Union[UnixTimeMs, None] = None
+    ):
         query = f"""
-        WITH date_counts AS (
-            SELECT
-                CAST(TO_TIMESTAMP(timestamp / 1000) AS DATE) AS day,
-                COUNT(*) AS count,
-                SUM(last_price_value) AS revenue
-            FROM
-                {Subscription.get_lake_table_name()}
-            WHERE
-                ID LIKE '%{feed_id}%'
+            WITH date_counts AS (
+                SELECT
+                    CAST(TO_TIMESTAMP(timestamp / 1000) AS DATE) AS day,
+                    COUNT(*) AS count,
+                    SUM(last_price_value) AS revenue
+                FROM
+                    {Subscription.get_lake_table_name()}
+                WHERE
+                    ID LIKE '%{feed_id}%'
+        """
+        if start_date:
+            query += f" AND timestamp > {start_date}"
+
+        query += """
             GROUP BY
-                day
-        )
-        SELECT * FROM date_counts
-        ORDER BY day;
+                    day
+            )
+            SELECT * FROM date_counts
+            ORDER BY day;
         """
 
         return self._query_db(query)
@@ -308,7 +315,7 @@ class AppDataManager:
 
         # Adding condition for the start date if provided
         if start_date:
-            conditions.append("slot >= %s")
+            conditions.append("timestamp >= %s")
 
         # If there are any conditions, append them to the query
         if conditions:

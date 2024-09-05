@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from enforce_typing import enforce_types
 from pdr_backend.lake.subscription import Subscription
+from pdr_backend.util.time_types import UnixTimeMs
 
 
 @enforce_types
@@ -82,6 +83,13 @@ def test_get_user_payouts_stats(
     assert test_row["avg_stake"] == 2.6666666666666665
     assert test_row["total_profit"] == -36.06628060203039
 
+    # test filtering by start date
+    start_date = UnixTimeMs(1721957490000)
+    result = db_mgr._init_predictoor_payouts_stats(start_date)
+
+    assert isinstance(result, list)
+    assert len(result) == 37
+
 
 def test_get_feed_daily_subscriptions_by_feed_id(_sample_app):
     db_mgr = _sample_app.data
@@ -110,3 +118,8 @@ def test_get_feed_daily_subscriptions_by_feed_id(_sample_app):
     assert result[0]["revenue"] == sum(
         obj["last_price_value"] for obj in subscriptions_from_given_contract
     ), "Revenue should be the sum of last_price_value of the subscriptions"
+
+    # test filtering by start date
+    start_date = UnixTimeMs(1721957490000)
+    result = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id, start_date)
+    assert len(result) == 0

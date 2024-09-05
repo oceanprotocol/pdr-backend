@@ -303,7 +303,11 @@ def get_callbacks_predictoors(app):
     )
     # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, predictoors_table_data):
-        content = ModalContent("predictoors_modal", app.data)
+        content = ModalContent(
+            "predictoors_modal",
+            app.data,
+            UnixTimeMs(app.start_date * 1000) if app.start_date else None,
+        )
         content.selected_row = (
             predictoors_table_data[selected_rows[0]] if selected_rows else None
         )
