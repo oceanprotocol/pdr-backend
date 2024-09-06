@@ -59,8 +59,8 @@ class AppDataManager:
 
         # initial data loaded from database
         self.feeds_data = self._init_feeds_data()
-        self.get_feeds_data()
-        self.get_predictoors_data()
+        self.refresh_feeds_data()
+        self.refresh_predictoors_data()
 
         valid_addresses = [p["user"].lower() for p in self.predictoors_data]
         self.favourite_addresses = [
@@ -441,7 +441,7 @@ class AppDataManager:
         )
         return first_timestamp / 1000, last_timestamp / 1000
 
-    def get_feeds_data(self):
+    def refresh_feeds_data(self):
         self.feeds_metrics_data = self.feeds_metrics()
         self.feeds_payout_stats = self._init_feed_payouts_stats()
         self.feeds_subscriptions = self._init_feed_subscription_stats()
@@ -451,7 +451,7 @@ class AppDataManager:
             self._formatted_data_for_feeds_table
         )
 
-    def get_predictoors_data(self):
+    def refresh_predictoors_data(self):
         self.predictoors_metrics_data = self.predictoors_metrics()
         self.predictoors_data = self._init_predictoor_payouts_stats()
 

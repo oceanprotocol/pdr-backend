@@ -20,7 +20,7 @@ filters_objects = [Filter(**item) for item in filters]
 class FeedsPage(TabularPage):
     def __init__(self, app):
         self.app = app
-        self.app.data.get_feeds_data()
+        self.app.data.refresh_feeds_data()
 
         for feed in app.data.feeds_data:
             pair_base, pair_quote = feed["pair"].split("/")

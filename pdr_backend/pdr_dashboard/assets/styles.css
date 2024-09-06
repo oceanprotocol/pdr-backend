@@ -49,6 +49,10 @@ body {
   display: none;
 }
 
+.date-period-radio-items{
+  margin-right: 2px;
+}
+
 /* Hide the default radio circle */
 .date-period-radio-items input[type="radio"] {
   display: none;
@@ -116,7 +120,8 @@ button {
 .date-period-radio-items label {
   display: inline-block;
   padding: 8px 16px;
-  margin-right: 10px;
+  margin-right: 0 !important;
+  margin-left: 10px;
   background-color: #007bff;
   color: white;
   border: 1px solid #007bff;
@@ -379,5 +384,5 @@ button {
 #available-data-text{
   font-weight: bold;
   font-size: 20px;
-  margin-right: 20px;
+  margin-right: 10px;
 }

@@ -23,7 +23,7 @@ def get_callbacks_predictoors(app):
         prevent_initial_call=True,
     )
     def update_page_data(_start_date):
-        app.data.get_predictoors_data()
+        app.data.refresh_predictoors_data()
         stats = app.data.predictoors_metrics()
 
         metrics_children_data = [

@@ -22,7 +22,7 @@ def get_callbacks_feeds(app):
         prevent_initial_call=True,
     )
     def update_page_data(_start_date):
-        app.data.get_feeds_data()
+        app.data.refresh_feeds_data()
 
         metrics_children_data = [
             get_metric(
