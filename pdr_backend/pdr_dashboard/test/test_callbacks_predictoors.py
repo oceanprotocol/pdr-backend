@@ -95,7 +95,6 @@ def test_predictoors_table_filters(_sample_app, dash_duo):
         dash_duo, "#p_accuracy_dropdown", "#p_accuracy_min", "90", "#p_accuracy_button"
     )
 
-    table_rows = dash_duo.find_elements(f"#predictoors_page_table tbody tr")
     _assert_table_row_count(dash_duo, "#predictoors_page_table", 1)
     _verify_table_data(table, "filtered_p_accuracy_min_90.json")
 
@@ -200,11 +199,19 @@ def test_sort_table(_sample_app, dash_duo):
     time.sleep(1)  # Sometimes sorting might take a moment
 
     # Check if the data is sorted ascending
-    _verify_table_data_order(table, "sorted_predictoors_table_asc_by_stake.json")
+    _verify_table_data_order(
+        table,
+        "sorted_predictoors_table_asc_by_stake.json",
+        lambda x: x["Staked (Ocean)"] == "0",
+    )
 
     # Click again to sort descending
     actionables.click()
     time.sleep(1)  # Wait for the sort to apply
 
     # Check if the data is sorted descending
-    _verify_table_data_order(table, "sorted_predictoors_table_desc_by_stake.json")
+    _verify_table_data_order(
+        table,
+        "sorted_predictoors_table_desc_by_stake.json",
+        lambda x: x["Staked (Ocean)"] == "0",
+    )

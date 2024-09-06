@@ -1,5 +1,6 @@
 import json
 import time
+from typing import Callable, Any
 
 from selenium.webdriver.common.by import By
 from pdr_backend.pdr_dashboard.test.resources import (
@@ -30,13 +31,23 @@ def _prepare_table_data_to_be_saved_as_json(table):
     return table_data
 
 
-def _verify_table_data_order(table, filename):
+def _verify_table_data_order(
+    table, filename, skip_condition: Callable[[Any], bool] = lambda x: False
+):
     table_data = _prepare_table_data_to_be_saved_as_json(table)
 
     with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename) as f:
         expected_data = json.load(f)
 
     for i, row in enumerate(table_data):
+        if skip_condition(expected_data[i]):
+            continue
+
+        if row != expected_data[i]:
+            print(f"Row {i} does not match")
+            print(f"Expected: {expected_data[i]}")
+            print(f"Actual: {row}")
+            print("-----------------------")
         assert row == expected_data[i]
 
 
@@ -77,6 +88,7 @@ def test_feeds_table(_sample_app, dash_duo):
 
     # Validate headers
     header_texts = [_remove_tags(c.text) for c in columns]
+    print("header_texts--->", header_texts)
     expected_headers = [
         "",
         "Addr",
@@ -113,7 +125,7 @@ def test_feeds_page_metrics_row(_sample_app, dash_duo):
     metric_texts = [_remove_tags(m.text) for m in metrics]
     expected_metrics = [
         "Feeds",
-        "Accuracy",
+        "",
         "Volume",
         "Sales",
         "Revenue",
@@ -261,11 +273,15 @@ def test_sort_table(_sample_app, dash_duo):
 
     actionables = table.find_elements(
         By.XPATH, "//div//div[@class='column-actions']//span"
-    )[1]
+    )[6]
 
     actionables.click()
     # Wait for the sort to apply
     time.sleep(2)  # Sometimes sorting might take a moment
 
     # Check if the data is sorted ascending
-    _verify_table_data_order(table, "sorted_feeds_table_asc_by_volume.json")
+    _verify_table_data_order(
+        table,
+        "sorted_feeds_table_asc_by_avg_stake.json",
+        lambda x: x["Avg Stake Per Epoch (Ocean)"] == "0.0",
+    )

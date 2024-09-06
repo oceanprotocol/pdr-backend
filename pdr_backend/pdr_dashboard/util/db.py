@@ -48,12 +48,14 @@ class AppDataManager:
         self.feeds_subscriptions = self._init_feed_subscription_stats()
 
         self.predictoors_data = self._init_predictoor_payouts_stats()
-        self.feeds_data = self._init_feeds_data_from_bronze_predictions()
+
+        self.feeds_data = self._init_feeds_data()
 
         # initial data formatting for tables, columns and raw data
         self.feeds_cols, self.feeds_table_data, self.raw_feeds_data = (
             self._formatted_data_for_feeds_table
         )
+
         (
             self.predictoors_cols,
             self.predictoors_table_data,
@@ -93,16 +95,8 @@ class AppDataManager:
     def _init_feeds_data(self):
         return self._query_db(
             f"""
-                SELECT contract, pair, timeframe, source FROM {Prediction.get_lake_table_name()}
-                GROUP BY contract, pair, timeframe, source
-            """,
-        )
-
-    @enforce_types
-    def _init_feeds_data_from_bronze_predictions(self):
-        return self._query_db(
-            f"""
-                SELECT contract, pair, timeframe, source FROM {BronzePrediction.get_lake_table_name()}
+                SELECT contract, pair, timeframe, source
+                FROM {BronzePrediction.get_lake_table_name()}
                 GROUP BY contract, pair, timeframe, source
             """,
         )
@@ -130,7 +124,7 @@ class AppDataManager:
 
     @enforce_types
     def _init_predictoor_payouts_stats(self):
-        # Insert the generated CASE clause into the SQL query
+
         query = f"""
             SELECT
                 p."user",
@@ -143,14 +137,11 @@ class AppDataManager:
                 -- Calculate total profit
                 SUM(p.payout - p.stake) AS total_profit,
                 -- Calculate total stake
-                SUM(p.stake) AS total_stake,
                 COUNT(p.ID) AS stake_count,
                 COUNT(DISTINCT p.contract) AS feed_count,
                 -- Count correct predictions where payout > 0
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) AS correct_predictions,
-                COUNT(*) AS predictions,
-                SUM(p.stake) AS total_stake,
-                total_stake / COUNT(*) AS avg_stake,
+                total_stake / stake_count AS avg_stake,
                 MIN(p.slot) AS first_payout_time,
                 MAX(p.slot) AS last_payout_time,
                 -- Calculate the APR
@@ -278,11 +269,13 @@ class AppDataManager:
         start_date: int,
     ) -> List[dict]:
         """
-        Get predictions data for the given feed and predictoor addresses from the bronze_pdr_predictions table.
+        Get predictions data for the given feed and
+        predictoor addresses from the bronze_pdr_predictions table.
         Args:
             feed_addrs (list): List of feed addresses.
             predictoor_addrs (list): List of predictoor addresses.
-            start_date (int): The starting slot (timestamp) for filtering the results.
+            start_date (int): The starting slot (timestamp)
+                for filtering the results.
         Returns:
             list: List of predictions data.
         """

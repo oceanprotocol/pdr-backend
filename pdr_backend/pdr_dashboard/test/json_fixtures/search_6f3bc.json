@@ -1,1 +1,16 @@
-[{"": "", "Addr": "0x3fb...6f3bc", "Base Token": "SOL", "Quote Token": "USDT", "Source": "Binance", "Timeframe": "5m", "Avg Accuracy": "45.33%", "Avg Stake Per Epoch (Ocean)": "183.6", "Volume (Ocean)": "35.99K", "Price (Ocean)": "0.0", "Sales": "107 (107 DF)", "Sales Revenue (Ocean)": "0.0"}]
+[
+  {
+    "": "",
+    "Addr": "0x3fb...6f3bc",
+    "Base Token": "SOL",
+    "Quote Token": "USDT",
+    "Source": "Binance",
+    "Timeframe": "5m",
+    "Avg Accuracy": "45.33%",
+    "Avg Stake Per Epoch (Ocean)": "183.6",
+    "Volume (Ocean)": "35.99K",
+    "Price (Ocean)": "0.0",
+    "Sales": "107 (107 DF)",
+    "Sales Revenue (Ocean)": "0.0"
+  }
+]
