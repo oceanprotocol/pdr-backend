@@ -231,3 +231,41 @@ def check_condition(item, condition_type, field, *values):
         return table_search_condition(item, values[0])
 
     return True
+
+
+def check_conditions(df, conditions):
+    df = df.copy()
+
+    for condition in conditions:
+        df = check_conditions2(df, *condition)
+
+    return df
+
+
+def check_conditions2(df, condition_type, field, *values):
+    df = df.copy()
+
+    if field and field.startswith("p_"):
+        field = field[2:]
+
+    if condition_type == "filter" and values[0]:
+        df = df[df[field].isin(values[0])]
+
+    if condition_type == "range":
+        # TODO: range still buggy
+        if values[0]:
+            df = df[df[field] >= _float_repr(values[0])]
+
+        if values[1]:
+            df = df[df[field] <= _float_repr(values[1])]
+
+    if condition_type == "search" and values[0]:
+        df = df[
+            df["addr"].str.contains(values[0], case=False, na=False) | df[
+                "base_token"
+            ].str.contains(values[0], case=False, na=False) | df[
+                "quote_token"
+            ].str.contains(values[0], case=False, na=False)
+        ]
+
+    return df

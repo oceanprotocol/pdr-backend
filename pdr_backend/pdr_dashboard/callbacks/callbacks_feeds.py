@@ -7,10 +7,10 @@ from pdr_backend.pdr_dashboard.util.data import (
 )
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
 from pdr_backend.pdr_dashboard.util.filters import (
-    check_condition,
+    check_conditions,
     filter_table_by_range,
 )
-from pdr_backend.pdr_dashboard.util.format import format_table
+from pdr_backend.pdr_dashboard.util.format import format_table, format_df
 from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
 
 
@@ -95,27 +95,14 @@ def get_callbacks_feeds(app):
             ("search", None, search_input_value),
         ]
 
-        new_table_data = [
-            item
-            for item in app.data.raw_feeds_data
-            if all(check_condition(item, *condition) for condition in conditions)
-        ]
-
-        columns = []
-        if new_table_data:
-            columns = get_feed_column_ids(new_table_data[0])
+        new_table_data = check_conditions(app.data.raw_feeds_data, conditions)
 
         if sort_by:
-            # Extract sort criteria
             sort_col = sort_by[0]["column_id"]
             ascending = sort_by[0]["direction"] == "asc"
+            new_table_data = new_table_data.sort_values(by=sort_col, ascending=ascending)
 
-            # Sort by raw "Price" even if the "Formatted Price" is displayed
-            new_table_data = sorted(
-                new_table_data, key=lambda x: x[sort_col], reverse=not ascending
-            )
-
-        return format_table(new_table_data, columns)
+        return format_df(new_table_data).to_dict("records")
 
     @app.callback(
         Output("sales_dropdown", "label"),

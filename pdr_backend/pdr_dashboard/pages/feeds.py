@@ -22,20 +22,14 @@ class FeedsPage(TabularPage):
         self.app = app
         self.app.data.refresh_feeds_data()
 
-        for feed in app.data.feeds_data:
-            pair_base, pair_quote = feed["pair"].split("/")
+        df = app.data.feeds_data.copy()
+        df[["base_token", "quote_token"]] = df["pair"].str.split("/", expand=True)
+        df["source"] = df["source"].str.capitalize()
 
-            # Update base currency filter
-            add_to_filter(filters[0]["options"], pair_base)
-
-            # Update quote currency filter
-            add_to_filter(filters[1]["options"], pair_quote)
-
-            # Update source filter
-            add_to_filter(filters[2]["options"], feed["source"].capitalize())
-
-            # Update timeframe filter
-            add_to_filter(filters[3]["options"], feed["timeframe"])
+        filters_objects[0].options = df["base_token"].unique().tolist()
+        filters_objects[1].options = df["quote_token"].unique().tolist()
+        filters_objects[2].options = df["source"].unique().tolist()
+        filters_objects[3].options = df["timeframe"].unique().tolist()
 
     def layout(self):
         return html.Div(
@@ -121,10 +115,10 @@ class FeedsPage(TabularPage):
             [
                 dash_table.DataTable(
                     id="feeds_page_table",
-                    columns=self.app.data.feeds_cols,
+                    #columns=self.app.data.feeds_cols,
                     hidden_columns=["full_addr", "sales_raw"],
                     row_selectable="single",
-                    data=self.app.data.feeds_table_data,
+                    data=self.app.data.feeds_table_data.to_dict('records'),
                     sort_action="custom",
                     sort_mode="single",
                 ),

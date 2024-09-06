@@ -51,6 +51,7 @@ class TabularPage:
         )
 
 
+# TODO: remove
 def add_to_filter(filter_options, value):
     if value not in filter_options:
         filter_options.append(value)
