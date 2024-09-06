@@ -2,12 +2,14 @@ import dash
 from dash import Input, Output, State
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
     filter_objects_by_field,
     get_date_period_text_for_selected_predictoors,
     select_or_clear_all_by_table,
+    get_start_date_from_period,
 )
 from pdr_backend.pdr_dashboard.util.format import format_value
 
@@ -37,7 +39,7 @@ def get_callbacks_home(app):
         predictoors_table_selected_rows,
         feeds_table,
         predictoors_table,
-        _date_period,
+        date_period,
     ):
         # feeds_table_selected_rows is a list of ints
         # feeds_data is a list of dicts
@@ -53,10 +55,15 @@ def get_callbacks_home(app):
         if len(selected_feeds) == 0 or len(selected_predictoors) == 0:
             payouts = []
         else:
+            start_date = (
+                get_start_date_from_period(int(date_period))
+                if int(date_period) > 0
+                else 0
+            )
             payouts = app.data.payouts(
                 [row["contract"] for row in selected_feeds],
                 predictoors_addrs,
-                0,
+                UnixTimeMs(start_date * 1000) if start_date else None,
             )
 
         # get figures
