@@ -34,8 +34,11 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
         @arguments
           feedset_list -- list of feedset_dict,
             where feedset_dict has the following format:
-            {"predict":predict_feeds_str,
-             "train_on":train_on_feeds_str}
+            {
+                "predict": predict_feeds_str,
+                "train_on": train_on_feeds_str,
+                "ta_features": ["feature1", "feature2"]
+            }
             Note that >=1 predict feeds are allowed for a given feedset_dict.
 
           Example feedset_list = [
@@ -45,10 +48,12 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
                     "binance BTC/USDT ETH/USDT DOT/USDT c 5m",
                     "kraken BTC/USDT c 5m",
                 ],
+                "ta_features": ["macd", "rsi"]
             },
             {
                 "predict": "binance ETH/USDT ADA/USDT c 5m",
                 "train_on": "binance BTC/USDT DOT/USDT c 5m, kraken BTC/USDT c 5m",
+                "ta_features": ["ema", "rvi"]
             },
         """
         final_list = []
@@ -57,9 +62,10 @@ class PredictTrainFeedsets(List[PredictTrainFeedset]):
                 raise ValueError(feedset_dict)
 
             predict_feeds: ArgFeeds = parse_feed_obj(feedset_dict["predict"])
+            ta_features = feedset_dict.get("ta_features", [])
             for predict in predict_feeds:
                 train_on = parse_feed_obj(feedset_dict["train_on"])
-                feedset = PredictTrainFeedset(predict, train_on)
+                feedset = PredictTrainFeedset(predict, train_on, ta_features)
                 final_list.append(feedset)
 
         return cls(final_list)
