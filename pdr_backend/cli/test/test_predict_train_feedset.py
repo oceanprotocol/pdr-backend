@@ -28,11 +28,16 @@ def test_feedset_main():
     assert feedset.train_on == ARG_FEEDS
     assert feedset.timeframe_ms == ARG_FEED.timeframe.ms
 
-    assert feedset.to_dict() == {"predict": ARG_FEED_STR, "train_on": ARG_FEEDS_STR}
+    assert feedset.to_dict() == {
+        "predict": ARG_FEED_STR,
+        "train_on": ARG_FEEDS_STR,
+        "ta_features": [],
+    }
 
     assert (
         str(feedset)
-        == "{'predict': 'binance BTC/USDT o 1h', 'train_on': 'binance BTC/USDT ETH/USDT o 1h'}"
+        # pylint: disable=line-too-long
+        == "{'predict': 'binance BTC/USDT o 1h', 'train_on': 'binance BTC/USDT ETH/USDT o 1h', 'ta_features': []}"
     )
 
 
@@ -62,24 +67,24 @@ def test_feedset_eq_diff():
 @enforce_types
 def test_feedset_from_dict():
     # "train_on" as str
-    d = {"predict": ARG_FEED_STR, "train_on": ARG_FEEDS_STR}
+    d = {"predict": ARG_FEED_STR, "train_on": ARG_FEEDS_STR, "ta_features": []}
     feedset = PredictTrainFeedset.from_dict(d)
     assert feedset.predict == ARG_FEED
     assert feedset.train_on == ARG_FEEDS
     assert feedset.to_dict() == d
 
     # "train_on" as list
-    d = {"predict": ARG_FEED_STR, "train_on": [ARG_FEEDS_STR]}
+    d = {"predict": ARG_FEED_STR, "train_on": [ARG_FEEDS_STR], "ta_features": []}
     feedset = PredictTrainFeedset.from_dict(d)
     assert feedset.predict == ARG_FEED
     assert feedset.train_on == ARG_FEEDS
 
     # "predict" value must be a str
-    d = {"predict": ARG_FEED, "train_on": ARG_FEEDS_STR}
+    d = {"predict": ARG_FEED, "train_on": ARG_FEEDS_STR, "ta_features": []}
     with pytest.raises(TypeError):
         feedset = PredictTrainFeedset.from_dict(d)
 
     # "train_on" value must be a str
-    d = {"predict": ARG_FEED_STR, "train_on": ARG_FEEDS}
+    d = {"predict": ARG_FEED_STR, "train_on": ARG_FEEDS, "ta_features": []}
     with pytest.raises(TypeCheckError):
         feedset = PredictTrainFeedset.from_dict(d)

@@ -14,6 +14,7 @@ import polars as pl
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
+from pdr_backend.technical_indicators import get_indicator
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
 logger = logging.getLogger("aimodel_data_factory")
@@ -64,6 +65,7 @@ class AimodelDataFactory:
         predict_feed: ArgFeed,
         train_feeds: Optional[ArgFeeds] = None,
         do_fill_nans: bool = True,
+        ta_features: Optional[List[str]] = None,
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
         @description
@@ -116,6 +118,27 @@ class AimodelDataFactory:
         x_dim_len = len(train_feeds_list) * ss.autoregressive_n
         diff = 0 if ss.transform == "None" else 1
 
+        features: List[pd.Series] = []
+        if ta_features:
+            for feed in train_feeds_list:
+                # Generate feed keys
+                feed_keys = {
+                    key: f"{feed.exchange}:{feed.pair}:{key}"
+                    for key in ["close", "open", "high", "low", "volume"]
+                }
+
+                for feature in ta_features:
+                    ta_class = get_indicator.get_ta_indicator(feature)
+                    if ta_class is None:
+                        raise ValueError(f"Unknown TA feature: {feature}")
+
+                    ta = ta_class(mergedohlcv_df.to_pandas(), **feed_keys)
+                    features.append(ta.calculate())
+
+            # Verify the results
+            num_features = len(ta_features) * len(train_feeds_list)
+            assert len(features) == num_features
+            assert len(features[0]) == len(mergedohlcv_df)
         # main work
         xcol_list = []  # [col_i] : name_str
         x_list = []  # [col_i] : Series. Build this up. Not df here (slow)
@@ -152,6 +175,16 @@ class AimodelDataFactory:
                     x_col = hist_col + f":(z(t-{ds1})-z(t-{ds11}))/z(t-{ds11})"
                 xcol_list += [x_col]
 
+                for i, feature in enumerate(features):
+                    assert type(feature) == pd.Series  # type check for mypy
+                    feature_np = list(feature.values)
+                    features_shifted = pd.Series(
+                        _slice(feature_np, -shift - N_train - 1, -shift)
+                    )
+                    x_list += [features_shifted]
+                    xrecent_list += [pd.Series(_slice(feature_np, -shift, -shift + 1))]
+                    xcol_list.append(f"{feature.name}_t-{ds1}-{i}")
+
         # convert x lists to dfs, all at once. Faster than building up df.
         assert len(x_list) == len(xrecent_list) == len(xcol_list)
         x_df = pd.concat(x_list, keys=xcol_list, axis=1)
@@ -181,7 +214,8 @@ class AimodelDataFactory:
         # postconditions
         assert X.shape[0] == yraw.shape[0] == ytran.shape[0]
         assert X.shape[0] <= (N_train + 1)
-        assert X.shape[1] == x_dim_len
+        feature_dims = len(features) * len(train_feeds_list) * ss.autoregressive_n
+        assert X.shape[1] == x_dim_len + feature_dims
         assert isinstance(x_df, pd.DataFrame)
 
         assert "timestamp" not in x_df.columns
