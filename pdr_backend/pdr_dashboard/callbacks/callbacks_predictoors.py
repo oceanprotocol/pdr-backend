@@ -23,11 +23,9 @@ def get_callbacks_predictoors(app):
         [Input("start-date", "data")],
         prevent_initial_call=True,
     )
-    def update_page_data(start_date):
-        app.data.get_predictoors_data(start_date)
-        stats = app.data.predictoors_metrics(
-            UnixTimeMs(start_date * 1000) if start_date else None
-        )
+    def update_page_data(_start_date):
+        app.data.get_predictoors_data(app.start_date)
+        stats = app.data.predictoors_metrics(app.start_date)
 
         metrics_children_data = [
             get_metric(
@@ -306,7 +304,7 @@ def get_callbacks_predictoors(app):
         content = ModalContent(
             "predictoors_modal",
             app.data,
-            UnixTimeMs(app.start_date * 1000) if app.start_date else None,
+            app.start_date,
         )
         content.selected_row = (
             predictoors_table_data[selected_rows[0]] if selected_rows else None

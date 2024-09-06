@@ -41,7 +41,7 @@ def test_get_payouts(
     result = db_mgr.payouts(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
-        1704152700,
+        1704152700000,
     )
     assert isinstance(result, list)
     assert len(result) == 24
@@ -50,7 +50,7 @@ def test_get_payouts(
     result = db_mgr.payouts(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
-        1759154000,
+        1759154000000,
     )
     assert len(result) == 0
 

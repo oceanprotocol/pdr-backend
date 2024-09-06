@@ -437,15 +437,9 @@ class AppDataManager:
         return first_timestamp / 1000, last_timestamp / 1000
 
     def get_feeds_data(self, start_date: Union[UnixTimeMs, None] = None):
-        self.feeds_metrics_data = self.feeds_metrics(
-            UnixTimeMs(start_date * 1000) if start_date else None
-        )
-        self.feeds_payout_stats = self._init_feed_payouts_stats(
-            UnixTimeMs(start_date * 1000) if start_date else None
-        )
-        self.feeds_subscriptions = self._init_feed_subscription_stats(
-            UnixTimeMs(start_date * 1000) if start_date else None
-        )
+        self.feeds_metrics_data = self.feeds_metrics(start_date)
+        self.feeds_payout_stats = self._init_feed_payouts_stats(start_date)
+        self.feeds_subscriptions = self._init_feed_subscription_stats(start_date)
 
         # data formatting for tables, columns and raw data
         self.feeds_cols, self.feeds_table_data, self.raw_feeds_data = (
@@ -453,12 +447,8 @@ class AppDataManager:
         )
 
     def get_predictoors_data(self, start_date: Union[UnixTimeMs, None] = None):
-        self.predictoors_metrics_data = self.predictoors_metrics(
-            UnixTimeMs(start_date * 1000) if start_date else None
-        )
-        self.predictoors_data = self._init_predictoor_payouts_stats(
-            UnixTimeMs(start_date * 1000) if start_date else None
-        )
+        self.predictoors_metrics_data = self.predictoors_metrics(start_date)
+        self.predictoors_data = self._init_predictoor_payouts_stats(start_date)
 
         # data formatting for tables, columns and raw data
         (
