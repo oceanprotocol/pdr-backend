@@ -21,6 +21,7 @@ class FeedsPage(TabularPage):
     def __init__(self, app):
         self.app = app
 
+        """
         for feed in app.data.feeds_data:
             pair_base, pair_quote = feed["pair"].split("/")
 
@@ -35,6 +36,7 @@ class FeedsPage(TabularPage):
 
             # Update timeframe filter
             add_to_filter(filters[3]["options"], feed["timeframe"])
+        """
 
     def layout(self):
         return html.Div(
@@ -111,7 +113,7 @@ class FeedsPage(TabularPage):
     def get_main_container(self):
         return html.Div(
             [
-                self.get_filters_section(),
+                #self.get_filters_section(),
                 self.get_feeds_table_area(),
             ],
             className="tabular-main-container",
@@ -124,10 +126,10 @@ class FeedsPage(TabularPage):
             [
                 dash_table.DataTable(
                     id="feeds_page_table",
-                    columns=self.app.data.feeds_cols,
+                    #columns=self.app.data.feeds_cols,
                     hidden_columns=["full_addr", "sales_raw"],
                     row_selectable="single",
-                    data=self.app.data.feeds_table_data,
+                    data=self.app.data.feeds_table_data.to_dict('records'),
                     sort_action="custom",
                     sort_mode="single",
                 ),

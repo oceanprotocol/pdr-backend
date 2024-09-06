@@ -14,7 +14,7 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_feeds_subscription_stat_with_contract,
     sort_by_action,
 )
-from pdr_backend.pdr_dashboard.util.format import format_table
+from pdr_backend.pdr_dashboard.util.format import format_table, format_df
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
@@ -54,7 +54,7 @@ class AppDataManager:
             self.raw_predictoors_data,
         ) = self._formatted_data_for_predictoors_table
 
-        valid_addresses = [p["user"].lower() for p in self.predictoors_data]
+        valid_addresses = list(self.predictoors_data["user"].str.lower())
         self.favourite_addresses = [
             addr for addr in ppss.predictoor_ss.my_addresses if addr in valid_addresses
         ]
@@ -75,7 +75,7 @@ class AppDataManager:
                 result = db.query_scalar(query)
             else:
                 df = db.query_data(query)
-                result = df.to_dicts() if len(df) else []
+                result = df.to_pandas()
 
             db.duckdb_conn.close()
             return result
@@ -378,71 +378,74 @@ class AppDataManager:
         self,
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
-        new_feed_data = []
+        df = self.feeds_data.copy()
+        df["addr"] = df["contract"]
+        df[["base_token", "quote_token"]] = df["pair"].str.split("/", expand=True)
+        df["source"] = df["source"].str.capitalize()
+        df["full_addr"] = df["contract"]
+        df = df.merge(self.feeds_payout_stats, on="contract")
+        df["volume_(OCEAN)"] = df["volume"].astype(float)
+        df["avg_accuracy"] = df["avg_accuracy"].astype(float)
+        df["avg_stake_per_epoch_(OCEAN)"] = df["avg_stake"].astype(float)
+        df = df.merge(self.feeds_subscriptions, on="contract")
+        df["price_(OCEAN)"] = df["price"].astype(float)
+        df["sales_str"] = "TODO"
+        df["sales_raw"] = df["sales"]
+        df["sales_revenue_(OCEAN)"] = df["sales_revenue"].astype(float)
 
-        # split the pair column into two columns
-        for feed in self.feeds_data:
-            split_pair = feed["pair"].split("/")
-            feed_item = {}
-            feed_item["addr"] = feed["contract"]
-            feed_item["base_token"] = split_pair[0]
-            feed_item["quote_token"] = split_pair[1]
-            feed_item["source"] = feed["source"].capitalize()
-            feed_item["timeframe"] = feed["timeframe"]
-            feed_item["full_addr"] = feed["contract"]
+        columns = [
+            "addr",
+            "base_token",
+            "quote_token",
+            "source",
+            "timeframe",
+            "full_addr",
+            "avg_accuracy",
+            "avg_stake_per_epoch_(OCEAN)",
+            "volume_(OCEAN)",
+            "price_(OCEAN)",
+            "sales",
+            "sales_raw",
+            "sales_revenue_(OCEAN)",
+        ]
 
-            result = get_feeds_stat_with_contract(
-                feed["contract"], self.feeds_payout_stats
-            )
+        df = df[columns]
 
-            feed_item.update(result)
+        formatted_data = format_df(df)
 
-            subscription_result = get_feeds_subscription_stat_with_contract(
-                feed["contract"], self.feeds_subscriptions
-            )
-
-            feed_item.update(subscription_result)
-
-            new_feed_data.append(feed_item)
-
-        columns = get_feed_column_ids(new_feed_data[0])
-
-        formatted_data = format_table(new_feed_data, columns)
-
-        return columns, formatted_data, new_feed_data
+        return columns, formatted_data, []
 
     @property
     def _formatted_data_for_predictoors_table(
         self,
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
-        temp_data = self.predictoors_data
+        df = self.predictoors_data.copy()
+        df["addr"] = df["user"]
+        df["full_addr"] = df["user"]
+        df["accuracy"] = df["avg_accuracy"].astype(float)
+        df["number_of_feeds"] = df["feed_count"]
+        df["staked_(OCEAN)"] = df["total_stake"].astype(float)
+        df["gross_income_(OCEAN)"] = df["gross_income"].astype(float)
+        df["stake_loss_(OCEAN)"] = df["stake_loss"].astype(float)
+        df["tx_costs_(OCEAN)"] = df["stake_count"] * self.fee_cost
+        df["net_income_(OCEAN)"] = df["total_profit"] - df["tx_costs_(OCEAN)"]
 
-        new_predictoor_data = []
+        columns = [
+            "addr",
+            "accuracy",
+            "number_of_feeds",
+            "staked_(OCEAN)",
+            "gross_income_(OCEAN)",
+            "stake_loss_(OCEAN)",
+            "tx_costs_(OCEAN)",
+            "net_income_(OCEAN)",
+        ]
+        df = df[columns]
 
-        # split the pair column into two columns
-        for data_item in temp_data:
-            tx_costs = self.fee_cost * float(data_item["stake_count"])
+        formatted_data = format_df(df)
 
-            temp_pred_item = {}
-            temp_pred_item["addr"] = str(data_item["user"])
-            temp_pred_item["full_addr"] = str(data_item["user"])
-            temp_pred_item["apr"] = data_item["apr"]
-            temp_pred_item["accuracy"] = data_item["avg_accuracy"]
-            temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
-            temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
-            temp_pred_item["gross_income_(OCEAN)"] = data_item["gross_income"]
-            temp_pred_item["stake_loss_(OCEAN)"] = data_item["stake_loss"]
-            temp_pred_item["tx_costs_(OCEAN)"] = tx_costs
-            temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
-
-            new_predictoor_data.append(temp_pred_item)
-
-        columns = get_feed_column_ids(new_predictoor_data[0])
-
-        formatted_data = format_table(new_predictoor_data, columns)
-
-        return columns, formatted_data, new_predictoor_data
+        return columns, formatted_data, []
 
     def filter_for_feeds_table(
         self,

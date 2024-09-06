@@ -118,6 +118,32 @@ def format_table(
 
 
 @enforce_types
+def format_df(
+    df,
+    skip: list[str] = [],
+    map_source: dict[str, str] = {},
+) -> list[dict[str, str]]:
+    """
+    Format table rows.
+    Args:
+        rows (list[dict[str, Union[int, float]]]): Table rows.
+        columns (list[dict[str, str]]): Table columns.
+    Returns:
+        list[dict[str, str]]: Formatted table rows.
+    """
+    columns = df.columns
+
+    for column in columns:
+        df[column] = df[column].apply(
+            lambda x: format_value(x, column)
+            if column not in skip
+            else x
+        )
+
+    return df
+
+
+@enforce_types
 def format_sales_info_data(data: Union[str, int]) -> str:
     """
     Format sales multiple data.
