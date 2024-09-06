@@ -3,7 +3,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_navbar,
     NAV_ITEMS,
 )
-from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 from pdr_backend.pdr_dashboard.pages.home import HomePage
 from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
 from pdr_backend.pdr_dashboard.pages.predictoors import PredictoorsPage
@@ -36,8 +36,10 @@ def get_callbacks_common(app):
             if int(selected_period_start) > 0
             else None
         )
-        app.start_date = UnixTimeMs(start_date * 1000) if start_date else None
-        return app.start_date
+        app.data.start_date = (
+            UnixTimeMs(UnixTimeS(start_date).to_milliseconds()) if start_date else None
+        )
+        return app.data.start_date
 
     @app.callback(
         Output("available-data-text", "children"),

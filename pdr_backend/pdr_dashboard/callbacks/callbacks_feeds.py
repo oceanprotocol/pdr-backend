@@ -22,7 +22,7 @@ def get_callbacks_feeds(app):
         prevent_initial_call=True,
     )
     def update_page_data(_start_date):
-        app.data.get_feeds_data(app.start_date)
+        app.data.get_feeds_data()
 
         metrics_children_data = [
             get_metric(
@@ -208,7 +208,7 @@ def get_callbacks_feeds(app):
     )
     # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, feeds_table_data):
-        content = ModalContent("feeds_modal", app.data, app.start_date)
+        content = ModalContent("feeds_modal", app.data)
         content.selected_row = (
             feeds_table_data[selected_rows[0]] if selected_rows else None
         )

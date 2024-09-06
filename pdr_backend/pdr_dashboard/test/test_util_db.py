@@ -84,8 +84,8 @@ def test_get_user_payouts_stats(
     assert test_row["total_profit"] == -36.06628060203039
 
     # test filtering by start date
-    start_date = UnixTimeMs(1721957490000)
-    result = db_mgr._init_predictoor_payouts_stats(start_date)
+    db_mgr.start_date = UnixTimeMs(1721957490000)
+    result = db_mgr._init_predictoor_payouts_stats()
 
     assert isinstance(result, list)
     assert len(result) == 37
@@ -120,6 +120,6 @@ def test_get_feed_daily_subscriptions_by_feed_id(_sample_app):
     ), "Revenue should be the sum of last_price_value of the subscriptions"
 
     # test filtering by start date
-    start_date = UnixTimeMs(1721957490000)
-    result = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id, start_date)
+    db_mgr.start_date = UnixTimeMs(1721957490000)
+    result = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id)
     assert len(result) == 0

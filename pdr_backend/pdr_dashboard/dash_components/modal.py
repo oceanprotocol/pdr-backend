@@ -1,8 +1,7 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import dash_bootstrap_components as dbc
 from dash import html
-from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.cli.arg_feeds import ArgFeed
 from pdr_backend.pdr_dashboard.dash_components.plots import (
     get_feed_figures,
@@ -25,17 +24,15 @@ class ModalContent:
         self,
         modal_id: str,
         data_manager=None,
-        start_date: Union[UnixTimeMs, None] = None,
     ):
         self.modal_id = modal_id
         self.data_manager = data_manager
-        self.start_date = start_date
 
         self.selected_row: Optional[dict] = None
         self.figures: List = []
 
     def get_content(self) -> List:
-        self.create_figures(self.start_date)
+        self.create_figures()
 
         return [self.get_header(), self.get_body()]
 
@@ -76,7 +73,7 @@ class ModalContent:
 
         return body
 
-    def create_figures(self, start_date: Union[UnixTimeMs, None] = None):
+    def create_figures(self):
         selected_row = self.selected_row
         figures_func = (
             get_predictoor_figures
@@ -100,16 +97,18 @@ class ModalContent:
                 contract=selected_row["full_addr"],
             )
 
-            payouts = self.data_manager.payouts([feed.contract], None, start_date)
+            payouts = self.data_manager.payouts(
+                [feed.contract], None, self.data_manager.start_date
+            )
             subscriptions = self.data_manager.feed_daily_subscriptions_by_feed_id(
-                feed.contract, start_date
+                feed.contract
             )
             figures_args = [payouts, subscriptions]
         elif self.modal_id == "predictoors_modal":
             payouts = self.data_manager.payouts(
                 feed_addrs=[],
                 predictoor_addrs=[selected_row["full_addr"]],
-                start_date=start_date,
+                start_date=self.data_manager.start_date,
             )
             figures_args = [payouts]
 

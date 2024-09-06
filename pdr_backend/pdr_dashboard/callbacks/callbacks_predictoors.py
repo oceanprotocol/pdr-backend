@@ -23,8 +23,8 @@ def get_callbacks_predictoors(app):
         prevent_initial_call=True,
     )
     def update_page_data(_start_date):
-        app.data.get_predictoors_data(app.start_date)
-        stats = app.data.predictoors_metrics(app.start_date)
+        app.data.get_predictoors_data()
+        stats = app.data.predictoors_metrics()
 
         metrics_children_data = [
             get_metric(
@@ -300,11 +300,7 @@ def get_callbacks_predictoors(app):
     )
     # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, predictoors_table_data):
-        content = ModalContent(
-            "predictoors_modal",
-            app.data,
-            app.start_date,
-        )
+        content = ModalContent("predictoors_modal", app.data)
         content.selected_row = (
             predictoors_table_data[selected_rows[0]] if selected_rows else None
         )

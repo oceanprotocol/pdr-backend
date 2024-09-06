@@ -11,7 +11,7 @@ from pdr_backend.pdr_dashboard.pages.common import TabularPage
 class PredictoorsPage(TabularPage):
     def __init__(self, app):
         self.app = app
-        self.app.data.get_predictoors_data(self.app.start_date)
+        self.app.data.get_predictoors_data()
 
     def layout(self):
         return html.Div(

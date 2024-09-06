@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from enforce_typing import enforce_types
 
-from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
@@ -26,12 +25,26 @@ from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 
 logger = logging.getLogger("predictoor_dashboard_utils")
 
+PREDICTOORS_HOME_PAGE_TABLE_COLS = [
+    {"name": "Addr", "id": "addr"},
+    {"name": "Full Addr", "id": "full_addr"},
+    {"name": "Apr", "id": "apr"},
+    {"name": "Accuracy", "id": "accuracy"},
+    {"name": "Number Of Feeds", "id": "number_of_feeds"},
+    {"name": "Staked (Ocean)", "id": "staked_(OCEAN)"},
+    {"name": "Gross Income (Ocean)", "id": "gross_income_(OCEAN)"},
+    {"name": "Stake Loss (Ocean)", "id": "stake_loss_(OCEAN)"},
+    {"name": "Tx Costs (Ocean)", "id": "tx_costs_(OCEAN)"},
+    {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
+]
+
 
 # pylint: disable=too-many-instance-attributes
 class AppDataManager:
     def __init__(self, ppss):
         self.lake_dir = ppss.lake_ss.lake_dir
         self.network_name = ppss.web3_pp.network
+        self.start_date = None
 
         self.min_timestamp, self.max_timestamp = (
             self.get_first_and_last_slot_timestamp()
@@ -88,7 +101,7 @@ class AppDataManager:
         )
 
     @enforce_types
-    def _init_feed_payouts_stats(self, start_date: Union[UnixTimeMs, None] = None):
+    def _init_feed_payouts_stats(self):
         query = f"""
                 SELECT
                     SPLIT_PART(ID, '-', 1) AS contract,
@@ -98,8 +111,8 @@ class AppDataManager:
                 FROM
                     {Payout.get_lake_table_name()}
             """
-        if start_date:
-            query += f"    WHERE timestamp > {start_date}"
+        if self.start_date:
+            query += f"    WHERE timestamp > {self.start_date}"
         query += """
             GROUP BY
                 contract
@@ -108,9 +121,7 @@ class AppDataManager:
         return self._query_db(query)
 
     @enforce_types
-    def _init_predictoor_payouts_stats(
-        self, start_date: Union[UnixTimeMs, None] = None
-    ):
+    def _init_predictoor_payouts_stats(self):
         # Insert the generated CASE clause into the SQL query
         query = f"""
             SELECT
@@ -141,8 +152,8 @@ class AppDataManager:
                 {Payout.get_lake_table_name()} p
         """
 
-        if start_date:
-            query += f"    WHERE p.timestamp > {start_date}"
+        if self.start_date:
+            query += f"    WHERE p.timestamp > {self.start_date}"
 
         query += """
             GROUP BY
@@ -152,7 +163,7 @@ class AppDataManager:
         return self._query_db(query)
 
     @enforce_types
-    def _init_feed_subscription_stats(self, start_date: Union[UnixTimeMs, None] = None):
+    def _init_feed_subscription_stats(self):
         opf_addresses = get_opf_addresses(self.network_name)
 
         query = f"""
@@ -165,8 +176,8 @@ class AppDataManager:
                 WHERE
                     "user" = '{opf_addresses["websocket"].lower()}'
                 """
-        if start_date:
-            query += f"AND timestamp > {start_date}"
+        if self.start_date:
+            query += f"AND timestamp > {self.start_date}"
 
         query += f"""
                 GROUP BY
@@ -181,8 +192,8 @@ class AppDataManager:
                 WHERE
                     "user" = '{opf_addresses["dfbuyer"].lower()}'
                 """
-        if start_date:
-            query += f"AND timestamp > {start_date}"
+        if self.start_date:
+            query += f"AND timestamp > {self.start_date}"
 
         query += f"""
                 GROUP BY
@@ -204,8 +215,8 @@ class AppDataManager:
                         {Subscription.get_lake_table_name()}
             """
 
-        if start_date:
-            query += f"WHERE timestamp > {start_date}"
+        if self.start_date:
+            query += f"WHERE timestamp > {self.start_date}"
 
         query += """
                 ) AS main
@@ -224,9 +235,7 @@ class AppDataManager:
         return self._query_db(query)
 
     @enforce_types
-    def feed_daily_subscriptions_by_feed_id(
-        self, feed_id: str, start_date: Union[UnixTimeMs, None] = None
-    ):
+    def feed_daily_subscriptions_by_feed_id(self, feed_id: str):
         query = f"""
             WITH date_counts AS (
                 SELECT
@@ -238,8 +247,8 @@ class AppDataManager:
                 WHERE
                     ID LIKE '%{feed_id}%'
         """
-        if start_date:
-            query += f" AND timestamp > {start_date}"
+        if self.start_date:
+            query += f" AND timestamp > {self.start_date}"
 
         query += """
             GROUP BY
@@ -338,15 +347,13 @@ class AppDataManager:
         return self._query_db(query)
 
     @enforce_types
-    def feeds_metrics(
-        self, start_date: Union[UnixTimeMs, None] = None
-    ) -> dict[str, Any]:
+    def feeds_metrics(self) -> dict[str, Any]:
         query_feeds = f"""
             SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
             FROM {Prediction.get_lake_table_name()}
         """
-        if start_date:
-            query_feeds += f"WHERE timestamp > {start_date}"
+        if self.start_date:
+            query_feeds += f"WHERE timestamp > {self.start_date}"
         feeds = self._query_db(
             query_feeds,
             scalar=True,
@@ -359,8 +366,8 @@ class AppDataManager:
             FROM
                 {Payout.get_lake_table_name()}
         """
-        if start_date:
-            query_payouts += f"WHERE timestamp > {start_date}"
+        if self.start_date:
+            query_payouts += f"WHERE timestamp > {self.start_date}"
         accuracy, volume = self._query_db(
             query_payouts,
             scalar=True,
@@ -371,8 +378,8 @@ class AppDataManager:
             SUM(last_price_value)
             FROM {Subscription.get_lake_table_name()}
         """
-        if start_date:
-            query_subscriptions += f" WHERE timestamp > {start_date}"
+        if self.start_date:
+            query_subscriptions += f" WHERE timestamp > {self.start_date}"
         sales, revenue = self._query_db(
             query_subscriptions,
             scalar=True,
@@ -387,15 +394,13 @@ class AppDataManager:
         }
 
     @enforce_types
-    def predictoors_metrics(
-        self, start_date: Union[UnixTimeMs, None] = None
-    ) -> dict[str, Any]:
+    def predictoors_metrics(self) -> dict[str, Any]:
         query_predictions = f"""
             SELECT COUNT(DISTINCT(user))
             FROM {Prediction.get_lake_table_name()}
         """
-        if start_date:
-            query_predictions += f" WHERE timestamp > {start_date}"
+        if self.start_date:
+            query_predictions += f" WHERE timestamp > {self.start_date}"
         predictoors = self._query_db(
             query_predictions,
             scalar=True,
@@ -409,8 +414,8 @@ class AppDataManager:
                 FROM
                     {Payout.get_lake_table_name()}
             """
-        if start_date:
-            query_payouts += f" WHERE timestamp > {start_date}"
+        if self.start_date:
+            query_payouts += f" WHERE timestamp > {self.start_date}"
         avg_accuracy, tot_stake, tot_gross_income = self._query_db(
             query_payouts,
             scalar=True,
@@ -436,19 +441,19 @@ class AppDataManager:
         )
         return first_timestamp / 1000, last_timestamp / 1000
 
-    def get_feeds_data(self, start_date: Union[UnixTimeMs, None] = None):
-        self.feeds_metrics_data = self.feeds_metrics(start_date)
-        self.feeds_payout_stats = self._init_feed_payouts_stats(start_date)
-        self.feeds_subscriptions = self._init_feed_subscription_stats(start_date)
+    def get_feeds_data(self):
+        self.feeds_metrics_data = self.feeds_metrics()
+        self.feeds_payout_stats = self._init_feed_payouts_stats()
+        self.feeds_subscriptions = self._init_feed_subscription_stats()
 
         # data formatting for tables, columns and raw data
         self.feeds_cols, self.feeds_table_data, self.raw_feeds_data = (
             self._formatted_data_for_feeds_table
         )
 
-    def get_predictoors_data(self, start_date: Union[UnixTimeMs, None] = None):
-        self.predictoors_metrics_data = self.predictoors_metrics(start_date)
-        self.predictoors_data = self._init_predictoor_payouts_stats(start_date)
+    def get_predictoors_data(self):
+        self.predictoors_metrics_data = self.predictoors_metrics()
+        self.predictoors_data = self._init_predictoor_payouts_stats()
 
         # data formatting for tables, columns and raw data
         (
@@ -504,18 +509,7 @@ class AppDataManager:
 
         if len(self.predictoors_data) == 0:
             return (
-                [
-                    {"name": "Addr", "id": "addr"},
-                    {"name": "Full Addr", "id": "full_addr"},
-                    {"name": "Apr", "id": "apr"},
-                    {"name": "Accuracy", "id": "accuracy"},
-                    {"name": "Number Of Feeds", "id": "number_of_feeds"},
-                    {"name": "Staked (Ocean)", "id": "staked_(OCEAN)"},
-                    {"name": "Gross Income (Ocean)", "id": "gross_income_(OCEAN)"},
-                    {"name": "Stake Loss (Ocean)", "id": "stake_loss_(OCEAN)"},
-                    {"name": "Tx Costs (Ocean)", "id": "tx_costs_(OCEAN)"},
-                    {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
-                ],
+                PREDICTOORS_HOME_PAGE_TABLE_COLS,
                 [],
                 [],
             )
