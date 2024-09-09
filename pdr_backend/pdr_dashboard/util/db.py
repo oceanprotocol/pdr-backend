@@ -450,7 +450,6 @@ class AppDataManager:
         predictoors_addrs,
         search_value,
         selected_feeds,
-        sort_by,
     ):
         filtered_data = self.feeds_data
 
@@ -478,8 +477,6 @@ class AppDataManager:
             else filtered_data
         )
 
-        filtered_data = sort_by_action(filtered_data, sort_by)
-
         return format_table(
             selected_feeds + filtered_data, self.homepage_feeds_format_cols
         )
@@ -489,7 +486,6 @@ class AppDataManager:
         selected_predictoors_addresses,
         show_favourite_addresses,
         search_value,
-        sort_by,
     ):
         filtered_data = self.predictoors_data
 
@@ -526,13 +522,6 @@ class AppDataManager:
                 for p in filtered_data
                 if p["user"] not in selected_predictoors_addresses
             ]
-
-        if sort_by:
-            for i, _ in enumerate(sort_by):
-                if sort_by[i]["column_id"] == "user_address":
-                    sort_by[i]["column_id"] = "user"
-
-            filtered_data = sort_by_action(filtered_data, sort_by)
 
         selected_predictoor_indices = list(range(len(selected_predictoors)))
 

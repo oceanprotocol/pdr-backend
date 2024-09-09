@@ -128,7 +128,6 @@ def get_callbacks_home(app):
             Input("search-input-Predictoors", "value"),
             Input("predictoors_table", "data"),
             Input("show-favourite-addresses", "value"),
-            Input("predictoors_table", "sort_by"),
         ],
         State("predictoors_table", "selected_rows"),
         prevent_initial_call=True,
@@ -137,7 +136,6 @@ def get_callbacks_home(app):
         search_value,
         predictoors_table,
         show_favourite_addresses,
-        sort_by,
         selected_rows,
     ):
         selected_predictoors_rows_addresses = [
@@ -152,7 +150,6 @@ def get_callbacks_home(app):
             selected_predictoors_rows_addresses,
             show_favourite_addresses,
             search_value,
-            sort_by,
         )
 
     @app.callback(
@@ -185,7 +182,6 @@ def get_callbacks_home(app):
             Input("feeds_table", "data"),
             Input("toggle-switch-predictoor-feeds", "value"),
             Input("predictoors_table", "selected_rows"),
-            Input("feeds_table", "sort_by"),
         ],
         State("predictoors_table", "data"),
         State("feeds_table", "selected_rows"),
@@ -197,7 +193,6 @@ def get_callbacks_home(app):
         feeds_table,
         predictoor_feeds_only,
         predictoors_table_selected_rows,
-        sort_by,
         predictoors_table,
         selected_rows,
     ):
@@ -215,7 +210,6 @@ def get_callbacks_home(app):
             predictoors_addrs,
             search_value,
             selected_feeds,
-            sort_by,
         )
 
         selected_feed_indices = list(range(len(selected_feeds)))

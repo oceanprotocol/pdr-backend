@@ -261,8 +261,7 @@ class HomePage:
                     data=data,
                     row_selectable="multi",  # Can be 'multi' for multiple rows
                     selected_rows=selected_rows,
-                    sort_action="custom",
-                    sort_mode="single",
+                    sort_action="none",
                     style_cell={"textAlign": "left"},
                     style_table={
                         "height": "30vh",
