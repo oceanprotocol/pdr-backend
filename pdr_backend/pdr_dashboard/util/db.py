@@ -282,7 +282,7 @@ class AppDataManager:
 
         # Constructing the SQL query
         query = f"""
-            SELECT LIST(p.contract) as feed_addrs
+            SELECT LIST(DISTINCT p.contract) as feed_addrs
             FROM bronze_pdr_predictions p
             WHERE p.contract IN (
                 SELECT MIN(p.contract)
