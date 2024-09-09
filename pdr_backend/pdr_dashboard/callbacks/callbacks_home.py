@@ -2,7 +2,7 @@ import dash
 from dash import Input, Output, State
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
@@ -63,7 +63,11 @@ def get_callbacks_home(app):
             payouts = app.data.payouts(
                 [row["contract"] for row in selected_feeds],
                 predictoors_addrs,
-                UnixTimeMs(start_date * 1000) if start_date else None,
+                (
+                    UnixTimeMs(UnixTimeS(start_date).to_milliseconds())
+                    if start_date
+                    else None
+                ),
             )
 
         # get figures
