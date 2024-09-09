@@ -62,14 +62,24 @@ def get_start_date_from_period(number_days: int):
     return int((datetime.now() - timedelta(days=number_days)).timestamp())
 
 
-def get_date_period_text(payouts: List):
+def get_date_period_text_for_selected_predictoors(payouts: List):
     if not payouts:
         return "there is no data available"
     start_date = payouts[0]["slot"] if len(payouts) > 0 else 0
     end_date = payouts[-1]["slot"] if len(payouts) > 0 else 0
     date_period_text = f"""
-        available {datetime.fromtimestamp(start_date).strftime('%d-%m-%Y')}
-        - {datetime.fromtimestamp(end_date).strftime('%d-%m-%Y')}
+        {datetime.fromtimestamp(start_date).strftime('%d-%m-%y')}
+        -> {datetime.fromtimestamp(end_date).strftime('%d-%m-%y')}
+    """
+    return date_period_text
+
+
+def get_date_period_text_header(start_date: str, end_date: str):
+    if not start_date or not end_date:
+        return "there is no data available"
+    date_period_text = f"""
+        {datetime.fromtimestamp(float(start_date)).strftime('%d-%m-%y')}
+        -> {datetime.fromtimestamp(float(end_date)).strftime('%d-%m-%y')}
     """
     return date_period_text
 

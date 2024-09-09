@@ -129,6 +129,7 @@ class SimEngine:
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
         predict_feed = self.predict_train_feedset.predict
         train_feeds = self.predict_train_feedset.train_on
+        features = self.predict_train_feedset.ta_features
 
         # X, ycont, and x_df are all expressed in % change wrt prev candle
         X, ytran, yraw, x_df, _ = data_f.create_xy(
@@ -136,6 +137,7 @@ class SimEngine:
             testshift,
             predict_feed,
             train_feeds,
+            ta_features=features,
         )
         colnames = list(x_df.columns)
 

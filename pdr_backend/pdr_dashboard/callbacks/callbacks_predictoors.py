@@ -9,9 +9,34 @@ from pdr_backend.pdr_dashboard.util.filters import (
 )
 from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
+from pdr_backend.pdr_dashboard.pages.predictoors import (
+    get_metric,
+    key_id_name,
+)
 
 
 def get_callbacks_predictoors(app):
+    @app.callback(
+        Output("predictoors_page_table", "data", allow_duplicate=True),
+        Output("predictoors_page_metrics_row", "children"),
+        [Input("start-date", "data")],
+        prevent_initial_call=True,
+    )
+    def update_page_data(_start_date):
+        app.data.refresh_predictoors_data()
+        stats = app.data.predictoors_metrics()
+
+        metrics_children_data = [
+            get_metric(
+                label=key,
+                value=value,
+                value_id=key_id_name(key),
+            )
+            for key, value in stats.items()
+        ]
+
+        return app.data.predictoors_table_data, metrics_children_data
+
     @app.callback(
         Output("predictoors_page_table", "data"),
         [

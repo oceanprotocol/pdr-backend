@@ -11,13 +11,14 @@ from setuptools import find_packages, setup
 install_requirements = [
     "black==24.8.0",
     "bumpversion",
-    "ccxt==4.3.93",
+    "ccxt==4.3.98",
     "coverage",
     "dash[testing]==2.17.1",
     "dash_bootstrap_components==1.6.0",
     "dateparser==1.2.0",
     "duckdb==1.0.0",
     "enforce_typing",
+    "eth-account==0.11.0",
     "eth-keys==0.5.1",
     "flask==3.0.3",
     "imblearn",
@@ -28,7 +29,7 @@ install_requirements = [
     "pandas==2.2.2",
     "pathlib",
     "plotly==5.24.0",
-    "polars==1.5.0",
+    "polars==1.6.0",
     "polars[timezone]",
     "pyarrow==17.0.0",
     "pylint==3.2.7",
@@ -43,10 +44,11 @@ install_requirements = [
     "time_machine==2.15.0",
     "typeguard==4.3.0",
     "xgboost==2.1.1",
-    "web3==7.2.0",
+    "web3==6.20.2",
     "sapphire.py==0.2.3",
     "stopit==1.1.2",
-    "ocean-contracts==2.1.0",  # install this last
+    "ta==0.11.0",
+    "ocean-contracts==2.2.0",  # install this last
 ]
 
 # Required to run setup.py:

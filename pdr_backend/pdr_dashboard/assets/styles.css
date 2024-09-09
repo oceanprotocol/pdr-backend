@@ -6,7 +6,7 @@ body,
 }
 
 body {
-  padding: 10px;
+  padding: 0;
 }
 
 .main-container {
@@ -26,7 +26,7 @@ body {
 #page-content {
   display: flex;
   flex: 1;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 125px);
   margin: 0px;
   padding: 0px;
   width: 100%;
@@ -49,8 +49,12 @@ body {
   display: none;
 }
 
+.date-period-radio-items{
+  margin-right: 2px;
+}
+
 /* Hide the default radio circle */
-#date-period-radio-items input[type="radio"] {
+.date-period-radio-items input[type="radio"] {
   display: none;
 }
 
@@ -113,19 +117,20 @@ button {
 }
 
 /* Style the label as buttons */
-#date-period-radio-items label {
+.date-period-radio-items label {
   display: inline-block;
-  padding: 5px 14px;
-  margin-right: 10px;
+  padding: 8px 16px;
+  margin-right: 0 !important;
+  margin-left: 10px;
   background-color: #007bff;
   color: white;
   border: 1px solid #007bff;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
 }
 
 /* Style for selected label */
-#date-period-radio-items label:has(input:checked) {
+.date-period-radio-items label:has(input:checked) {
   background-color: #00254d;
   border-color: #0056b3;
 }
@@ -205,11 +210,10 @@ button {
 
 .metrics_row {
   display: flex;
-  border: 1px solid grey;
   border-radius: 10px;
   justify-content: space-between;
-  padding: 10px 40px;
-  margin-bottom: 10px;
+  padding: 0 40px;
+  margin-bottom: 20px;
 }
 
 .filters-container {
@@ -304,9 +308,26 @@ button {
   border-radius: 5px;
 }
 
+.header-container{
+  height: 100px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #adadad;
+}
+
 #navbar-container {
   display: flex;
   justify-content: center;
+}
+
+#navbar-container .container{
+  padding: 0;
+}
+
+.nav-link{
+  padding: 0 !important;
+  font-size: 28px;
+  font-weight: bold; 
+  margin-right: 20px;
 }
 
 .page-layout {
@@ -314,14 +335,6 @@ button {
   display: flex;
   width: 100%;
   flex-direction: column;
-}
-
-.metrics_row {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  text-align: center;
-  margin-bottom: 40px;
 }
 
 .search-bar-row {
@@ -366,4 +379,10 @@ button {
 
 #predictoors_modal-body .modal-graph-item, #feeds_modal-body .modal-graph-item{
     margin-bottom: 30px;
+}
+
+#available-data-text{
+  font-weight: bold;
+  font-size: 20px;
+  margin-right: 10px;
 }

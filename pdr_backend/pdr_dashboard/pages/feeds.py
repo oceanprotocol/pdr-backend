@@ -20,6 +20,7 @@ filters_objects = [Filter(**item) for item in filters]
 class FeedsPage(TabularPage):
     def __init__(self, app):
         self.app = app
+        self.app.data.refresh_feeds_data()
 
         for feed in app.data.feeds_data:
             pair_base, pair_quote = feed["pair"].split("/")
@@ -85,8 +86,6 @@ class FeedsPage(TabularPage):
         )
 
     def get_metrics_row(self):
-        stats = self.app.data.feeds_metrics
-
         return html.Div(
             children=[
                 get_metric(
@@ -94,7 +93,7 @@ class FeedsPage(TabularPage):
                     value=value,
                     value_id=f"feeds_page_{key}_metric",
                 )
-                for key, value in stats.items()
+                for key, value in self.app.data.feeds_metrics_data.items()
             ],
             className="metrics_row",
             id="feeds_page_metrics_row",
@@ -117,9 +116,7 @@ class FeedsPage(TabularPage):
             className="tabular-main-container",
         )
 
-    def get_feeds_table_area(
-        self,
-    ):
+    def get_feeds_table_area(self):
         return html.Div(
             [
                 dash_table.DataTable(

@@ -2,13 +2,14 @@ import dash
 from dash import Input, Output, State
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
     filter_objects_by_field,
-    get_date_period_text,
-    get_start_date_from_period,
+    get_date_period_text_for_selected_predictoors,
     select_or_clear_all_by_table,
+    get_start_date_from_period,
 )
 from pdr_backend.pdr_dashboard.util.format import (
     format_value,
@@ -33,7 +34,7 @@ def get_callbacks_home(app):
             Input("feeds_table", "selected_rows"),
             Input("predictoors_table", "selected_rows"),
             Input("predictoors_table", "data"),
-            Input("date-period-radio-items", "value"),
+            Input("general-lake-date-period-radio-items", "value"),
         ],
     )
     def get_display_data_from_db(
@@ -65,7 +66,11 @@ def get_callbacks_home(app):
             payouts = app.data.payouts_from_bronze_predictions(
                 [row["contract"] for row in selected_feeds],
                 predictoors_addrs,
-                start_date,
+                (
+                    UnixTimeMs(UnixTimeS(start_date).to_milliseconds())
+                    if start_date
+                    else None
+                ),
             )
 
             for payout in payouts:
@@ -82,14 +87,7 @@ def get_callbacks_home(app):
         )
 
         # get available period date text
-        date_period_text = (
-            get_date_period_text(payouts)
-            if (
-                int(date_period) == 0
-                and (len(selected_feeds) > 0 or len(selected_predictoors) > 0)
-            )
-            else dash.no_update
-        )
+        date_period_text = get_date_period_text_for_selected_predictoors(payouts)
 
         return (
             get_graph(figs_metrics.fig_accuracy),
@@ -154,7 +152,7 @@ def get_callbacks_home(app):
         return (filtered_data, selected_predictoor_indices)
 
     @app.callback(
-        Output("feeds_table", "data", allow_duplicate=True),
+        Output("feeds_table", "data"),
         Output("feeds_table", "selected_rows"),
         [
             Input("search-input-Feeds", "value"),

@@ -2,7 +2,6 @@ import dash_bootstrap_components as dbc
 from dash import dash_table, dcc, html
 
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
-    get_date_period_selection_component,
     get_metric,
     get_tooltip_and_button,
 )
@@ -137,7 +136,7 @@ class HomePage:
                 get_metric(label="Pred Profit", value=0, value_id="profit_metric"),
                 get_metric(label="Tx Costs", value=0.0, value_id="costs_metric"),
                 get_metric(label="Avg Stake", value=0, value_id="stake_metric"),
-                get_date_period_selection_component(),
+                self.get_available_data_component(),
             ],
             id="metrics_container",
             style={
@@ -145,6 +144,22 @@ class HomePage:
                 "display": "flex",
                 "justifyContent": "space-between",
             },
+        )
+
+    def get_available_data_component(self):
+        return html.Div(
+            [
+                html.Span(
+                    "available data for selected predictoors",
+                    style={"lineHeight": "1", "margin": "5px 0"},
+                ),
+                html.Span(
+                    "there is no data available",
+                    id="available_data_period_text",
+                    style={"fontWeight": "bold", "fontSize": "34px", "lineHeight": "1"},
+                ),
+            ],
+            style={"display": "flex", "flexDirection": "column"},
         )
 
     def get_feeds_switch(self):
