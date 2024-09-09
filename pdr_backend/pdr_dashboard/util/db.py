@@ -10,13 +10,11 @@ from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.subscription import Subscription
 from pdr_backend.lake.slot import Slot
 from pdr_backend.pdr_dashboard.util.data import (
+    get_sales_str,
     col_to_human,
     filter_objects_by_field,
-    get_feed_column_ids,
-    get_feeds_stat_with_contract,
-    get_feeds_subscription_stat_with_contract,
 )
-from pdr_backend.pdr_dashboard.util.format import format_table, format_df, format_table
+from pdr_backend.pdr_dashboard.util.format import format_df
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
@@ -37,6 +35,7 @@ PREDICTOORS_HOME_PAGE_TABLE_COLS = [
     {"name": "Tx Costs (Ocean)", "id": "tx_costs_(OCEAN)"},
     {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
 ]
+
 
 # pylint: disable=too-many-instance-attributes
 class AppDataManager:
@@ -461,7 +460,7 @@ class AppDataManager:
         self.feeds_subscriptions = self._init_feed_subscription_stats()
 
         # data formatting for tables, columns and raw data
-        self.feeds_cols, self.feeds_table_data, self.raw_feeds_data = (
+        self.feeds_table_data, self.raw_feeds_data = (
             self._formatted_data_for_feeds_table
         )
 
@@ -492,7 +491,8 @@ class AppDataManager:
         df["avg_stake_per_epoch_(OCEAN)"] = df["avg_stake"]
         df = df.merge(self.feeds_subscriptions, on="contract")
         df["price_(OCEAN)"] = df["price"]
-        df["sales_str"] = "TODO"
+        # TODO: where do we actually use this
+        df["sales_str"] = df.apply(get_sales_str, axis=1)
         df["sales_raw"] = df["sales"]
         df["sales_revenue_(OCEAN)"] = df["sales_revenue"]
 
@@ -517,7 +517,7 @@ class AppDataManager:
         formatted_data = df.copy()
         formatted_data = format_df(formatted_data)
 
-        return columns, formatted_data, df
+        return formatted_data, df
 
     @property
     def _formatted_data_for_predictoors_table(

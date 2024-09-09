@@ -2,7 +2,6 @@ import dash
 from dash import Input, Output, State
 
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
-from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
 from pdr_backend.pdr_dashboard.util.filters import (
     check_condition,
     filter_table_by_range,
@@ -120,8 +119,8 @@ def get_callbacks_predictoors(app):
         ]
 
         columns = []
-        if new_table_data:
-            columns = get_feed_column_ids(new_table_data[0])
+        #if new_table_data:
+        #    columns = get_feed_column_ids(new_table_data[0])
 
         if sort_by:
             # Extract sort criteria

@@ -9,14 +9,6 @@ logger = logging.getLogger("predictoor_dashboard_utils")
 
 
 @enforce_types
-def get_feed_column_ids(data: Dict[str, Any]):
-    return [
-        {"name": col_to_human(col=col, replace_rules=["total_"]), "id": col}
-        for col in data.keys()
-    ]
-
-
-@enforce_types
 def filter_objects_by_field(
     objects: List[Dict[str, Any]],
     field: str,
@@ -104,38 +96,7 @@ def find_with_key_value(
     return None
 
 
-def get_feeds_stat_with_contract(
-    contract: str, feed_stats: List[Dict[str, Any]]
-) -> Dict[str, Union[float, int]]:
-    result = find_with_key_value(feed_stats, "contract", contract)
-
-    if result:
-        return {
-            "avg_accuracy": float(result["avg_accuracy"]),
-            "avg_stake_per_epoch_(OCEAN)": float(result["avg_stake"]),
-            "volume_(OCEAN)": float(result["volume"]),
-        }
-
-    return {
-        "avg_accuracy": 0,
-        "avg_stake_per_epoch_(OCEAN)": 0,
-        "volume_(OCEAN)": 0,
-    }
-
-
-def get_feeds_subscription_stat_with_contract(
-    contract: str, feed_subcription_stats: List[Dict[str, Any]]
-) -> Dict[str, Union[float, int, str]]:
-    result = find_with_key_value(feed_subcription_stats, "contract", contract)
-
-    if not result:
-        return {
-            "price_(OCEAN)": 0,
-            "sales": 0,
-            "sales_raw": 0,
-            "sales_revenue_(OCEAN)": 0,
-        }
-
+def get_sales_str(result):
     sales_str = f"{result['sales']}"
 
     df_buy_count_str = (
@@ -151,9 +112,4 @@ def get_feeds_subscription_stat_with_contract(
         if counts_str:
             sales_str += f"_{counts_str}"
 
-    return {
-        "price_(OCEAN)": result["price"],
-        "sales": sales_str,
-        "sales_raw": result["sales"],
-        "sales_revenue_(OCEAN)": result["sales_revenue"],
-    }
+    return sales_str
