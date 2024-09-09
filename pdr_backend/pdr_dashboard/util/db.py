@@ -47,7 +47,7 @@ class AppDataManager:
         self.feeds_payout_stats = self._init_feed_payouts_stats()
         self.feeds_subscriptions = self._init_feed_subscription_stats()
 
-        self.predictoors_data = self._init_predictoor_payouts_stats()
+        self.predictoors_data = self._init_predictoor_payouts_stats();
 
         self.feeds_data = self._init_feeds_data()
 
@@ -497,9 +497,11 @@ class AppDataManager:
 
         # split the pair column into two columns
         for data_item in temp_data:
+
             tx_costs = self.fee_cost * float(data_item["stake_count"])
 
             temp_data_item = fill_none_with_zero(data_item)
+
             temp_pred_item: Dict[str, Any] = {}
             temp_pred_item["addr"] = str(temp_data_item["user"])
             temp_pred_item["full_addr"] = str(temp_data_item["user"])

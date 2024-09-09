@@ -43,11 +43,6 @@ def _verify_table_data_order(
         if skip_condition(expected_data[i]):
             continue
 
-        if row != expected_data[i]:
-            print(f"Row {i} does not match")
-            print(f"Expected: {expected_data[i]}")
-            print(f"Actual: {row}")
-            print("-----------------------")
         assert row == expected_data[i]
 
 
@@ -88,7 +83,7 @@ def test_feeds_table(_sample_app, dash_duo):
 
     # Validate headers
     header_texts = [_remove_tags(c.text) for c in columns]
-    print("header_texts--->", header_texts)
+
     expected_headers = [
         "",
         "Addr",

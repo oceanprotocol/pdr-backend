@@ -69,7 +69,7 @@ def format_dict(
 @enforce_types
 def fill_none_with_zero(
     data: Dict[str, Union[int, float, str]]
-) -> Dict[str, Union[int, float]]:
+) -> Dict[str, Union[int, float, str]]:
     """
     Fill none with zero.
     Args:
@@ -77,10 +77,10 @@ def fill_none_with_zero(
     Returns:
         Dict[str, Union[int, float]]: Data with none values replaced with zero.
     """
+
     return {
         key: (value if value is not None else 0)
         for key, value in data.items()
-        if isinstance(value, (int, float))
     }
 
 
