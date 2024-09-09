@@ -200,7 +200,6 @@ def check_condition(df, condition_type, field, *values):
         df = df[df[field].isin(values[0])]
 
     if condition_type == "range":
-        # TODO: range still buggy
         if values[0]:
             df = df[df[field] >= _float_repr(values[0])]
 
@@ -208,12 +207,17 @@ def check_condition(df, condition_type, field, *values):
             df = df[df[field] <= _float_repr(values[1])]
 
     if condition_type == "search" and values[0]:
-        df = df[
-            df["addr"].str.contains(values[0], case=False, na=False) | df[
-                "base_token"
-            ].str.contains(values[0], case=False, na=False) | df[
-                "quote_token"
-            ].str.contains(values[0], case=False, na=False)
-        ]
+        df = df[searchable_df(df, values[0])]
 
     return df
+
+
+def searchable_df(df, value):
+    if "base_token" not in df.columns:
+        return df["addr"].str.contains(value, case=False, na=False)
+
+    return df["addr"].str.contains(value, case=False, na=False) | df[
+        "base_token"
+    ].str.contains(value, case=False, na=False) | df[
+        "quote_token"
+    ].str.contains(value, case=False, na=False)

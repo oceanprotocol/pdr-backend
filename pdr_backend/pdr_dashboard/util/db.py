@@ -105,7 +105,7 @@ class AppDataManager:
         """
         df = self._query_db(query)
 
-        df["avg_accuracy"] = df["avg_accuracy"].astype(float)
+        df["avg_accuracy"] = df["avg_accuracy"].astype(float) / 100
         df["avg_stake"] = df["avg_stake"].astype(float)
         df["volume"] = df["volume"].astype(float)
 
@@ -153,7 +153,10 @@ class AppDataManager:
         """
         df = self._query_db(query)
 
-        df["avg_accuracy"] = df["avg_accuracy"].astype(float)
+        df["avg_accuracy"] = df["avg_accuracy"].astype(float) / 100
+        df["total_stake"] = df["total_stake"].astype(float)
+        df["gross_income"] = df["gross_income"].astype(float)
+        df["stake_loss"] = df["stake_loss"].astype(float)
 
         return df
 
@@ -456,7 +459,6 @@ class AppDataManager:
 
         # data formatting for tables, columns and raw data
         (
-            self.predictoors_cols,
             self.predictoors_table_data,
             self.raw_predictoors_data,
         ) = self._formatted_data_for_predictoors_table
@@ -473,7 +475,7 @@ class AppDataManager:
         df["full_addr"] = df["contract"]
         df = df.merge(self.feeds_payout_stats, on="contract")
         df["volume_(OCEAN)"] = df["volume"]
-        df["avg_accuracy"] = df["avg_accuracy"] / 100
+        df["avg_accuracy"] = df["avg_accuracy"]
         df["avg_stake_per_epoch_(OCEAN)"] = df["avg_stake"]
         df = df.merge(self.feeds_subscriptions, on="contract")
         df["price_(OCEAN)"] = df["price"]
@@ -505,29 +507,22 @@ class AppDataManager:
         df = self.predictoors_data.copy()
         df["addr"] = df["user"]
         df["full_addr"] = df["user"]
-        df["accuracy"] = df["avg_accuracy"].astype(float)
+        df["accuracy"] = df["avg_accuracy"]
         df["number_of_feeds"] = df["feed_count"]
-        df["staked_(OCEAN)"] = df["total_stake"].astype(float)
-        df["gross_income_(OCEAN)"] = df["gross_income"].astype(float)
-        df["stake_loss_(OCEAN)"] = df["stake_loss"].astype(float)
+        df["staked_(OCEAN)"] = df["total_stake"]
+        df["gross_income_(OCEAN)"] = df["gross_income"]
+        df["stake_loss_(OCEAN)"] = df["stake_loss"]
         df["tx_costs_(OCEAN)"] = df["stake_count"] * self.fee_cost
         df["net_income_(OCEAN)"] = df["total_profit"] - df["tx_costs_(OCEAN)"]
 
-        columns = [
-            "addr",
-            "accuracy",
-            "number_of_feeds",
-            "staked_(OCEAN)",
-            "gross_income_(OCEAN)",
-            "stake_loss_(OCEAN)",
-            "tx_costs_(OCEAN)",
-            "net_income_(OCEAN)",
-        ]
+        columns = [col["id"] for col in PREDICTOORS_HOME_PAGE_TABLE_COLS]
+
         df = df[columns]
 
-        formatted_data = format_df(df)
+        formatted_data = df.copy()
+        formatted_data = format_df(formatted_data)
 
-        return columns, formatted_data, []
+        return formatted_data, df
 
     def filter_for_feeds_table(
         self, predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds

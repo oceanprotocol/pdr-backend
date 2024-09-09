@@ -33,6 +33,18 @@ FEEDS_TABLE_COLS = [
     {"name": "Sales Revenue (OCEAN)", "id": "sales_revenue_(OCEAN)"},
 ]
 
+PREDICTOORS_TABLE_COLS = [
+    {"name": "APR", "id": "apr"},
+    {"name": "Addr", "id": "addr"},
+    {"name": "Full Addr", "id": "full_addr"},
+    {"name": "Accuracy", "id": "accuracy"},
+    {"name": "Number Of Feeds", "id": "number_of_feeds"},
+    {"name": "Staked (OCEAN)", "id": "staked_(OCEAN)"},
+    {"name": "Gross Income (OCEAN)", "id": "gross_income_(OCEAN)"},
+    {"name": "Stake Loss (OCEAN)", "id": "stake_loss_(OCEAN)"},
+    {"name": "Tx Costs (OCEAN)", "id": "tx_costs_(OCEAN)"},
+    {"name": "Net Income (OCEAN)", "id": "net_income_(OCEAN)"},
+]
 
 FORMAT_CONFIG = {
     "feeds_page_Accuracy_metric": "percentage",
