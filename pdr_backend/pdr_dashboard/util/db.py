@@ -47,7 +47,7 @@ class AppDataManager:
         self.feeds_payout_stats = self._init_feed_payouts_stats()
         self.feeds_subscriptions = self._init_feed_subscription_stats()
 
-        self.predictoors_data = self._init_predictoor_payouts_stats();
+        self.predictoors_data = self._init_predictoor_payouts_stats()
 
         self.feeds_data = self._init_feeds_data()
 

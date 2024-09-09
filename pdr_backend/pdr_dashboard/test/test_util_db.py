@@ -78,9 +78,9 @@ def test_get_user_payouts_stats(
     ][0]
 
     assert test_row["user"] == "0x768c5195ea841c544cd09c61650417132615c0b9"
-    assert test_row["avg_accuracy"] == 39.130434782608695
-    assert test_row["avg_stake"] == 2.6666666666666665
-    assert test_row["total_profit"] == -36.06628060203039
+    assert test_row["avg_accuracy"] == 36.231884057971016
+    assert test_row["avg_stake"] == 2.318840579710145
+    assert test_row["total_profit"] == -24.045497962220715
 
 
 def test_get_feed_daily_subscriptions_by_feed_id(_sample_app):

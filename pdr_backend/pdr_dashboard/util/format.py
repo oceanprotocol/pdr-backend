@@ -78,10 +78,7 @@ def fill_none_with_zero(
         Dict[str, Union[int, float]]: Data with none values replaced with zero.
     """
 
-    return {
-        key: (value if value is not None else 0)
-        for key, value in data.items()
-    }
+    return {key: (value if value is not None else 0) for key, value in data.items()}
 
 
 @enforce_types
