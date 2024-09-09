@@ -2,7 +2,6 @@ from typing import List, Optional
 
 import dash_bootstrap_components as dbc
 from dash import html
-
 from pdr_backend.cli.arg_feeds import ArgFeed
 from pdr_backend.pdr_dashboard.dash_components.plots import (
     get_feed_figures,
@@ -21,7 +20,11 @@ def get_modal(
 
 
 class ModalContent:
-    def __init__(self, modal_id: str, data_manager=None):
+    def __init__(
+        self,
+        modal_id: str,
+        data_manager=None,
+    ):
         self.modal_id = modal_id
         self.data_manager = data_manager
 
@@ -79,7 +82,9 @@ class ModalContent:
         )
 
         if not selected_row:
-            figures_args = [[], []] if self.modal_id == "feeds_modal" else [[]]
+            figures_args: List[List] = (
+                [[], []] if self.modal_id == "feeds_modal" else [[]]
+            )
             self.figures = figures_func(*figures_args).get_figures()
             return
 
@@ -92,7 +97,9 @@ class ModalContent:
                 contract=selected_row["full_addr"],
             )
 
-            payouts = self.data_manager.payouts([feed.contract], None, 0)
+            payouts = self.data_manager.payouts(
+                [feed.contract], None, self.data_manager.start_date
+            )
             subscriptions = self.data_manager.feed_daily_subscriptions_by_feed_id(
                 feed.contract
             )
@@ -101,7 +108,7 @@ class ModalContent:
             payouts = self.data_manager.payouts(
                 feed_addrs=[],
                 predictoor_addrs=[selected_row["full_addr"]],
-                start_date=0,
+                start_date=self.data_manager.start_date,
             )
             figures_args = [payouts]
 

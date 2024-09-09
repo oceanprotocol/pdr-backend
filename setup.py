@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 install_requirements = [
     "black==24.8.0",
     "bumpversion",
-    "ccxt==4.3.93",
+    "ccxt==4.3.98",
     "coverage",
     "dash[testing]==2.17.1",
     "dash_bootstrap_components==1.6.0",
@@ -29,7 +29,7 @@ install_requirements = [
     "pandas==2.2.2",
     "pathlib",
     "plotly==5.24.0",
-    "polars==1.5.0",
+    "polars==1.6.0",
     "polars[timezone]",
     "pyarrow==17.0.0",
     "pylint==3.2.7",
@@ -48,7 +48,7 @@ install_requirements = [
     "sapphire.py==0.2.3",
     "stopit==1.1.2",
     "ta==0.11.0",
-    "ocean-contracts==2.1.0",  # install this last
+    "ocean-contracts==2.2.0",  # install this last
 ]
 
 # Required to run setup.py:

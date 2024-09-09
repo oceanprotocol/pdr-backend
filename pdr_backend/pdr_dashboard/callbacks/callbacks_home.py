@@ -2,12 +2,13 @@ import dash
 from dash import Input, Output, State
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
-    get_date_period_text,
-    get_start_date_from_period,
+    get_date_period_text_for_selected_predictoors,
     select_or_clear_all_by_table,
+    get_start_date_from_period,
 )
 from pdr_backend.pdr_dashboard.util.format import format_value
 
@@ -29,7 +30,7 @@ def get_callbacks_home(app):
         ],
         [
             Input("feeds_table", "selected_rows"),
-            Input("date-period-radio-items", "value"),
+            Input("general-lake-date-period-radio-items", "value"),
         ],
         [
             State("feeds_table", "data"),
@@ -61,6 +62,24 @@ def get_callbacks_home(app):
             )
         )
 
+        if len(selected_feeds) == 0 or len(selected_predictoors) == 0:
+            payouts = []
+        else:
+            start_date = (
+                get_start_date_from_period(int(date_period))
+                if int(date_period) > 0
+                else 0
+            )
+            payouts = app.data.payouts(
+                [row["contract"] for row in selected_feeds],
+                selected_predictoors_addresses,
+                (
+                    UnixTimeMs(UnixTimeS(start_date).to_milliseconds())
+                    if start_date
+                    else None
+                ),
+            )
+
         # If cache_key is the same as previous cache,
         # return no_update
         # we use str because we had issues
@@ -71,20 +90,21 @@ def get_callbacks_home(app):
 
         # Update cache store with new cache_key
         feeds = ArgFeeds.from_table_data(selected_feeds)
-        predictoors_addrs = [row["user"] for row in selected_predictoors]
+
         start_date = (
             get_start_date_from_period(int(date_period)) if int(date_period) > 0 else 0
         )
         payouts = app.data.payouts(
-            [row["contract"] for row in selected_feeds], predictoors_addrs, start_date
+            [row["contract"] for row in selected_feeds],
+            selected_feeds_contracts,
+            start_date,
         )
 
         figs_metrics = get_figures_and_metrics(
-            payouts, feeds, predictoors_addrs, app.data.fee_cost
+            payouts, feeds, selected_feeds_contracts, app.data.fee_cost
         )
-        date_period_text = (
-            get_date_period_text(payouts) if int(date_period) == 0 else dash.no_update
-        )
+        # get available period date text
+        date_period_text = get_date_period_text_for_selected_predictoors(payouts)
 
         return (
             str_cache_key,
@@ -175,7 +195,7 @@ def get_callbacks_home(app):
         )
 
     @app.callback(
-        Output("feeds_table", "data", allow_duplicate=True),
+        Output("feeds_table", "data"),
         Output("feeds_table", "selected_rows"),
         [
             Input("search-input-Feeds", "value"),

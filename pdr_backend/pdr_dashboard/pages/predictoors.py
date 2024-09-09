@@ -11,6 +11,7 @@ from pdr_backend.pdr_dashboard.pages.common import TabularPage
 class PredictoorsPage(TabularPage):
     def __init__(self, app):
         self.app = app
+        self.app.data.refresh_predictoors_data()
 
     def layout(self):
         return html.Div(
@@ -60,8 +61,6 @@ class PredictoorsPage(TabularPage):
         )
 
     def get_metrics_row(self):
-        stats = self.app.data.predictoors_metrics
-
         return html.Div(
             children=[
                 get_metric(
@@ -69,7 +68,7 @@ class PredictoorsPage(TabularPage):
                     value=value,
                     value_id=key_id_name(key),
                 )
-                for key, value in stats.items()
+                for key, value in self.app.data.predictoors_metrics_data.items()
             ],
             className="metrics_row",
             id="predictoors_page_metrics_row",
