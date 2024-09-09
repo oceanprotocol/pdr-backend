@@ -6,7 +6,7 @@ from numerize import numerize
 
 PREDICTOORS_HOME_PAGE_TABLE_COLS = [
     {"name": "Addr", "id": "addr"},
-    {"name": "Full Addr", "id": "full_addr"},
+    {"name": "User", "id": "full_addr"},
     {"name": "Apr", "id": "apr"},
     {"name": "Accuracy", "id": "accuracy"},
     {"name": "Number Of Feeds", "id": "number_of_feeds"},
@@ -15,6 +15,20 @@ PREDICTOORS_HOME_PAGE_TABLE_COLS = [
     {"name": "Stake Loss (Ocean)", "id": "stake_loss_(OCEAN)"},
     {"name": "Tx Costs (Ocean)", "id": "tx_costs_(OCEAN)"},
     {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
+]
+
+FEEDS_HOME_PAGE_TABLE_COLS = [
+    {"name": "Pair", "id": "pair"},
+    {"name": "Source", "id": "source"},
+    {"name": "Timeframe", "id": "timeframe"},
+    {"name": "Full Addr", "id": "full_addr"},
+    {"name": "Avg Accuracy", "id": "avg_accuracy"},
+    {"name": "Avg Stake Per Epoch (Ocean)", "id": "avg_stake_per_epoch_(OCEAN)"},
+    {"name": "Volume (OCEAN)", "id": "volume_(OCEAN)"},
+    {"name": "Price (OCEAN)", "id": "price_(OCEAN)"},
+    {"name": "Sales", "id": "sales"},
+    {"name": "Sales Raw", "id": "sales_raw"},
+    {"name": "Sales Revenue (OCEAN)", "id": "sales_revenue_(OCEAN)"},
 ]
 
 FEEDS_TABLE_COLS = [

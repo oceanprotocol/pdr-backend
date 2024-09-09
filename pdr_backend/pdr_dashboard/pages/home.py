@@ -54,11 +54,11 @@ class HomePage:
         if not feed_ids:
             return [], feed_data
 
-        feed_data = [
-            feed for feed in self.app.data.feeds_data if feed["contract"] in feed_ids
-        ]
+        feed_data = self.app.data.feeds_data.copy()
+        feed_data = feed_data[feed_data["contract"].isin(feed_ids)]
 
         return list(range(len(feed_ids))), feed_data
+
 
     def get_input_column(self):
         feed_cols, feed_data = self.app.data.homepage_feeds_cols
@@ -75,7 +75,7 @@ class HomePage:
                     self.get_table(
                         table_id="predictoors_table",
                         columns=predictoor_cols,
-                        data=predictoor_data,
+                        data=predictoor_data.to_dict("records"),
                     ),
                     id="predictoors_container",
                 ),
@@ -83,7 +83,7 @@ class HomePage:
                     self.get_table(
                         table_id="feeds_table",
                         columns=feed_cols,
-                        data=feed_data,
+                        data=feed_data.to_dict("records"),
                     ),
                     id="feeds_container",
                     style={

@@ -14,7 +14,7 @@ from pdr_backend.pdr_dashboard.util.data import (
     col_to_human,
     filter_objects_by_field,
 )
-from pdr_backend.pdr_dashboard.util.format import format_df, PREDICTOORS_HOME_PAGE_TABLE_COLS, FEEDS_TABLE_COLS
+from pdr_backend.pdr_dashboard.util.format import format_df, PREDICTOORS_HOME_PAGE_TABLE_COLS, FEEDS_TABLE_COLS, PREDICTOORS_TABLE_COLS, FEEDS_HOME_PAGE_TABLE_COLS
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
@@ -499,7 +499,7 @@ class AppDataManager:
 
         if len(self.predictoors_data) == 0:
             return (
-                PREDICTOORS_HOME_PAGE_TABLE_COLS,
+                PREDICTOORS_TABLE_COLS,
                 [],
                 [],
             )
@@ -515,7 +515,7 @@ class AppDataManager:
         df["tx_costs_(OCEAN)"] = df["stake_count"] * self.fee_cost
         df["net_income_(OCEAN)"] = df["total_profit"] - df["tx_costs_(OCEAN)"]
 
-        columns = [col["id"] for col in PREDICTOORS_HOME_PAGE_TABLE_COLS]
+        columns = [col["id"] for col in PREDICTOORS_TABLE_COLS]
 
         df = df[columns]
 
@@ -525,32 +525,27 @@ class AppDataManager:
         return formatted_data, df
 
     def filter_for_feeds_table(
-        self, predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
+        self, predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds_addrs
     ):
-        filtered_data = self.feeds_data
+        filtered_data = self.feeds_data.copy()
 
         # filter feeds by payouts from selected predictoors
         if predictoor_feeds_only and (len(predictoors_addrs) > 0):
             feed_ids = self.feed_ids_based_on_predictoors(
                 predictoors_addrs,
             )
-            filtered_data = [
-                obj
-                for obj in filtered_data
-                if obj["contract"] in feed_ids
-                if obj not in selected_feeds
+            filtered_data = filtered_data[filtered_data["contract"].isin(feed_ids)]
+
+        if search_value:
+            filtered_data = filtered_data[
+                filtered_data["pair"].str.contains(search_value)
             ]
 
-        # filter feeds by pair address
-        filtered_data = (
-            filter_objects_by_field(
-                self.feeds_data, "pair", search_value, selected_feeds
-            )
-            if search_value
-            else filtered_data
-        )
+        filtered_data = filtered_data[~filtered_data["contract"].isin(selected_feeds_addrs)]
+        selected_feeds = self.feeds_data[self.feeds_data["contract"].isin(selected_feeds_addrs)]
 
-        return selected_feeds + filtered_data
+        import pandas
+        return pandas.concat([selected_feeds, filtered_data]).to_dict("records")
 
     @property
     @enforce_types
@@ -563,31 +558,28 @@ class AppDataManager:
             list: List of processed user payouts stats data.
         """
 
-        payout_stats = deepcopy(self.predictoors_data)
-        for data in payout_stats:
-            formatted_data = format_dict(
-                data=data,
-                only_include_keys=["user", "total_profit", "avg_accuracy", "avg_stake"],
-            )
+        df = self.predictoors_data.copy()
+        df["addr"] = df["user"]
+        df["full_addr"] = df["user"]
+        df["accuracy"] = df["avg_accuracy"]
+        df["number_of_feeds"] = df["feed_count"]
+        df["staked_(OCEAN)"] = df["total_stake"]
+        df["gross_income_(OCEAN)"] = df["gross_income"]
+        df["stake_loss_(OCEAN)"] = df["stake_loss"]
+        df["tx_costs_(OCEAN)"] = df["stake_count"] * self.fee_cost
+        df["net_income_(OCEAN)"] = df["total_profit"] - df["tx_costs_(OCEAN)"]
 
-            new_data = {
-                "user_address": formatted_data["user"],
-                "total_profit": formatted_data["total_profit"],
-                "avg_accuracy": formatted_data["avg_accuracy"],
-                "avg_stake": formatted_data["avg_stake"],
-                "user": data["user"],
-            }
+        cols = [col["id"] for col in PREDICTOORS_HOME_PAGE_TABLE_COLS]
 
-            data.clear()
-            data.update(new_data)
-
-        return payout_stats
+        formatted_data = df.copy()
+        formatted_data = formatted_data[cols]
+        return format_df(formatted_data)
 
     @property
     def homepage_feeds_cols(self):
         data = self.feeds_data
 
-        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
+        columns = FEEDS_HOME_PAGE_TABLE_COLS
         hidden_columns = ["contract"]
 
         return (columns, hidden_columns), data
@@ -596,14 +588,7 @@ class AppDataManager:
     def homepage_predictoors_cols(self):
         data = self.formatted_predictoors_home_page_table_data
 
-        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
-        hidden_columns = ["user"]
-
-        if not self.favourite_addresses:
-            return (columns, hidden_columns), data
-
-        data = [p for p in data if p["user"] in self.favourite_addresses] + [
-            p for p in data if p["user"] not in self.favourite_addresses
-        ]
+        columns = PREDICTOORS_HOME_PAGE_TABLE_COLS
+        hidden_columns = ["full_addr"]
 
         return (columns, hidden_columns), data

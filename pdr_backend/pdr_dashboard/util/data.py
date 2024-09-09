@@ -8,7 +8,7 @@ from enforce_typing import enforce_types
 logger = logging.getLogger("predictoor_dashboard_utils")
 
 
-# TODO: probably remove more functions from here
+# TODO: probably remove more functions from here, including this one
 @enforce_types
 def filter_objects_by_field(
     objects: List[Dict[str, Any]],
@@ -55,8 +55,9 @@ def get_start_date_from_period(number_days: int):
     return int((datetime.now() - timedelta(days=number_days)).timestamp())
 
 
+# TODO: use payouts as dataframe instead
 def get_date_period_text_for_selected_predictoors(payouts: List):
-    if not payouts:
+    if payouts:
         return "there is no data available"
     start_date = payouts[0]["slot"] if len(payouts) > 0 else 0
     end_date = payouts[-1]["slot"] if len(payouts) > 0 else 0
