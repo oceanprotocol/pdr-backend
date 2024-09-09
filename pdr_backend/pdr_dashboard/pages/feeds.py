@@ -6,6 +6,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_search_bar,
 )
 from pdr_backend.pdr_dashboard.pages.common import Filter, TabularPage, add_to_filter
+from pdr_backend.pdr_dashboard.util.data import col_to_human
 
 filters = [
     {"name": "base_token", "placeholder": "Base Token", "options": []},
@@ -111,11 +112,15 @@ class FeedsPage(TabularPage):
         )
 
     def get_feeds_table_area(self):
+        columns = [
+            {"name": col_to_human(col), "id": col}
+        for col in self.app.data.feeds_table_data.columns]
+
         return html.Div(
             [
                 dash_table.DataTable(
                     id="feeds_page_table",
-                    #columns=self.app.data.feeds_cols,
+                    columns=columns,
                     hidden_columns=["full_addr", "sales_raw"],
                     row_selectable="single",
                     data=self.app.data.feeds_table_data.to_dict('records'),

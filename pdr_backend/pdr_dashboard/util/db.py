@@ -38,7 +38,6 @@ PREDICTOORS_HOME_PAGE_TABLE_COLS = [
     {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
 ]
 
-
 # pylint: disable=too-many-instance-attributes
 class AppDataManager:
     def __init__(self, ppss):
@@ -489,6 +488,7 @@ class AppDataManager:
         df["full_addr"] = df["contract"]
         df = df.merge(self.feeds_payout_stats, on="contract")
         df["volume_(OCEAN)"] = df["volume"]
+        df["avg_accuracy"] = df["avg_accuracy"] / 100
         df["avg_stake_per_epoch_(OCEAN)"] = df["avg_stake"]
         df = df.merge(self.feeds_subscriptions, on="contract")
         df["price_(OCEAN)"] = df["price"]
