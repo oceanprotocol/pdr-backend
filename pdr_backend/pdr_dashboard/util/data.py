@@ -76,6 +76,7 @@ def get_date_period_text_header(start_date: str, end_date: str):
     return date_period_text
 
 
+# TODO: remove
 @enforce_types
 def col_to_human(col: str, replace_rules: List[str] = ["avg_", "total_"]) -> str:
     temp_col = col

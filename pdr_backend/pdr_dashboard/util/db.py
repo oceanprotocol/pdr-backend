@@ -14,7 +14,7 @@ from pdr_backend.pdr_dashboard.util.data import (
     col_to_human,
     filter_objects_by_field,
 )
-from pdr_backend.pdr_dashboard.util.format import format_df
+from pdr_backend.pdr_dashboard.util.format import format_df, PREDICTOORS_HOME_PAGE_TABLE_COLS, FEEDS_TABLE_COLS
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
@@ -22,20 +22,6 @@ from pdr_backend.pdr_dashboard.util.prices import (
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 
 logger = logging.getLogger("predictoor_dashboard_utils")
-
-PREDICTOORS_HOME_PAGE_TABLE_COLS = [
-    {"name": "Addr", "id": "addr"},
-    {"name": "Full Addr", "id": "full_addr"},
-    {"name": "Apr", "id": "apr"},
-    {"name": "Accuracy", "id": "accuracy"},
-    {"name": "Number Of Feeds", "id": "number_of_feeds"},
-    {"name": "Staked (Ocean)", "id": "staked_(OCEAN)"},
-    {"name": "Gross Income (Ocean)", "id": "gross_income_(OCEAN)"},
-    {"name": "Stake Loss (Ocean)", "id": "stake_loss_(OCEAN)"},
-    {"name": "Tx Costs (Ocean)", "id": "tx_costs_(OCEAN)"},
-    {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
-]
-
 
 # pylint: disable=too-many-instance-attributes
 class AppDataManager:
@@ -496,22 +482,7 @@ class AppDataManager:
         df["sales_raw"] = df["sales"]
         df["sales_revenue_(OCEAN)"] = df["sales_revenue"]
 
-        columns = [
-            "addr",
-            "base_token",
-            "quote_token",
-            "source",
-            "timeframe",
-            "full_addr",
-            "avg_accuracy",
-            "avg_stake_per_epoch_(OCEAN)",
-            "volume_(OCEAN)",
-            "price_(OCEAN)",
-            "sales",
-            "sales_raw",
-            "sales_revenue_(OCEAN)",
-        ]
-
+        columns = [col["id"] for col in FEEDS_TABLE_COLS]
         df = df[columns]
 
         formatted_data = df.copy()
