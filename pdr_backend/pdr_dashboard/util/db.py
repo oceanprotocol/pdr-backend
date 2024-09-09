@@ -13,7 +13,6 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_feed_column_ids,
     get_feeds_stat_with_contract,
     get_feeds_subscription_stat_with_contract,
-    sort_by_action,
 )
 from pdr_backend.pdr_dashboard.util.format import format_table
 from pdr_backend.pdr_dashboard.util.prices import (
