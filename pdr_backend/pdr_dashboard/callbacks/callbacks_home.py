@@ -49,6 +49,8 @@ def get_callbacks_home(app):
     ):
         # Create cache key
         selected_feeds = [feeds_table[i] for i in feeds_table_selected_rows]
+        feeds = ArgFeeds.from_table_data(selected_feeds)
+
         selected_predictoors = [
             predictoors_table[i] for i in predictoors_table_selected_rows
         ]
@@ -89,16 +91,6 @@ def get_callbacks_home(app):
             return (dash.no_update,) * 10
 
         # Update cache store with new cache_key
-        feeds = ArgFeeds.from_table_data(selected_feeds)
-
-        start_date = (
-            get_start_date_from_period(int(date_period)) if int(date_period) > 0 else 0
-        )
-        payouts = app.data.payouts(
-            [row["contract"] for row in selected_feeds],
-            selected_feeds_contracts,
-            start_date,
-        )
 
         figs_metrics = get_figures_and_metrics(
             payouts, feeds, selected_feeds_contracts, app.data.fee_cost
