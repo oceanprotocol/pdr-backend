@@ -8,6 +8,7 @@ from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.subscription import Subscription
+from pdr_backend.lake.slot import Slot
 from pdr_backend.pdr_dashboard.util.data import (
     col_to_human,
     filter_objects_by_field,
@@ -24,12 +25,30 @@ from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 
 logger = logging.getLogger("predictoor_dashboard_utils")
 
+PREDICTOORS_HOME_PAGE_TABLE_COLS = [
+    {"name": "Addr", "id": "addr"},
+    {"name": "Full Addr", "id": "full_addr"},
+    {"name": "Apr", "id": "apr"},
+    {"name": "Accuracy", "id": "accuracy"},
+    {"name": "Number Of Feeds", "id": "number_of_feeds"},
+    {"name": "Staked (Ocean)", "id": "staked_(OCEAN)"},
+    {"name": "Gross Income (Ocean)", "id": "gross_income_(OCEAN)"},
+    {"name": "Stake Loss (Ocean)", "id": "stake_loss_(OCEAN)"},
+    {"name": "Tx Costs (Ocean)", "id": "tx_costs_(OCEAN)"},
+    {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
+]
+
 
 # pylint: disable=too-many-instance-attributes
 class AppDataManager:
     def __init__(self, ppss):
         self.lake_dir = ppss.lake_ss.lake_dir
         self.network_name = ppss.web3_pp.network
+        self.start_date = None
+
+        self.min_timestamp, self.max_timestamp = (
+            self.get_first_and_last_slot_timestamp()
+        )
 
         # fetch token prices
         self.fee_cost = calculate_tx_gas_fee_cost_in_OCEAN(
@@ -39,21 +58,9 @@ class AppDataManager:
         )
 
         # initial data loaded from database
-        self.feeds_payout_stats = self._init_feed_payouts_stats()
-        self.feeds_subscriptions = self._init_feed_subscription_stats()
-
-        self.predictoors_data = self._init_predictoor_payouts_stats()
         self.feeds_data = self._init_feeds_data()
-
-        # initial data formatting for tables, columns and raw data
-        self.feeds_cols, self.feeds_table_data, self.raw_feeds_data = (
-            self._formatted_data_for_feeds_table
-        )
-        (
-            self.predictoors_cols,
-            self.predictoors_table_data,
-            self.raw_predictoors_data,
-        ) = self._formatted_data_for_predictoors_table
+        self.refresh_feeds_data()
+        self.refresh_predictoors_data()
 
         valid_addresses = [p["user"].lower() for p in self.predictoors_data]
         self.favourite_addresses = [
@@ -95,8 +102,7 @@ class AppDataManager:
 
     @enforce_types
     def _init_feed_payouts_stats(self):
-        return self._query_db(
-            f"""
+        query = f"""
                 SELECT
                     SPLIT_PART(ID, '-', 1) AS contract,
                     SUM(stake) AS volume,
@@ -104,11 +110,15 @@ class AppDataManager:
                     AVG(stake) AS avg_stake
                 FROM
                     {Payout.get_lake_table_name()}
-                GROUP BY
-                    contract
-                ORDER BY volume DESC;
-            """,
-        )
+            """
+        if self.start_date:
+            query += f"    WHERE timestamp > {self.start_date}"
+        query += """
+            GROUP BY
+                contract
+            ORDER BY volume DESC;
+        """
+        return self._query_db(query)
 
     @enforce_types
     def _init_predictoor_payouts_stats(self):
@@ -140,11 +150,16 @@ class AppDataManager:
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy
             FROM
                 {Payout.get_lake_table_name()} p
+        """
+
+        if self.start_date:
+            query += f"    WHERE p.timestamp > {self.start_date}"
+
+        query += """
             GROUP BY
                 p."user"
             ORDER BY apr DESC;
         """
-
         return self._query_db(query)
 
     @enforce_types
@@ -160,6 +175,11 @@ class AppDataManager:
                     {Subscription.get_lake_table_name()}
                 WHERE
                     "user" = '{opf_addresses["websocket"].lower()}'
+                """
+        if self.start_date:
+            query += f"AND timestamp > {self.start_date}"
+
+        query += f"""
                 GROUP BY
                     SPLIT_PART(ID, '-', 1)
             ),
@@ -171,6 +191,11 @@ class AppDataManager:
                     {Subscription.get_lake_table_name()}
                 WHERE
                     "user" = '{opf_addresses["dfbuyer"].lower()}'
+                """
+        if self.start_date:
+            query += f"AND timestamp > {self.start_date}"
+
+        query += f"""
                 GROUP BY
                     SPLIT_PART(ID, '-', 1)
             )
@@ -188,6 +213,12 @@ class AppDataManager:
                         last_price_value
                     FROM
                         {Subscription.get_lake_table_name()}
+            """
+
+        if self.start_date:
+            query += f"WHERE timestamp > {self.start_date}"
+
+        query += """
                 ) AS main
             LEFT JOIN
                 user_buy_counts ubc
@@ -198,27 +229,33 @@ class AppDataManager:
             ON
                 main.main_contract = wbc.contract
             GROUP BY
-                main_contract, ubc.df_buy_count, wbc.ws_buy_count"""
+                main_contract, ubc.df_buy_count, wbc.ws_buy_count
+        """
 
         return self._query_db(query)
 
     @enforce_types
     def feed_daily_subscriptions_by_feed_id(self, feed_id: str):
         query = f"""
-        WITH date_counts AS (
-            SELECT
-                CAST(TO_TIMESTAMP(timestamp / 1000) AS DATE) AS day,
-                COUNT(*) AS count,
-                SUM(last_price_value) AS revenue
-            FROM
-                {Subscription.get_lake_table_name()}
-            WHERE
-                ID LIKE '%{feed_id}%'
+            WITH date_counts AS (
+                SELECT
+                    CAST(TO_TIMESTAMP(timestamp / 1000) AS DATE) AS day,
+                    COUNT(*) AS count,
+                    SUM(last_price_value) AS revenue
+                FROM
+                    {Subscription.get_lake_table_name()}
+                WHERE
+                    ID LIKE '%{feed_id}%'
+        """
+        if self.start_date:
+            query += f" AND timestamp > {self.start_date}"
+
+        query += """
             GROUP BY
-                day
-        )
-        SELECT * FROM date_counts
-        ORDER BY day;
+                    day
+            )
+            SELECT * FROM date_counts
+            ORDER BY day;
         """
 
         return self._query_db(query)
@@ -287,7 +324,7 @@ class AppDataManager:
 
         # Adding condition for the start date if provided
         if start_date:
-            conditions.append("slot >= %s")
+            conditions.append("timestamp >= %s")
 
         # If there are any conditions, append them to the query
         if conditions:
@@ -309,30 +346,42 @@ class AppDataManager:
         # Execute the query
         return self._query_db(query)
 
-    @property
     @enforce_types
-    def feeds_metrics(self):
+    def feeds_metrics(self) -> dict[str, Any]:
+        query_feeds = f"""
+            SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
+            FROM {Prediction.get_lake_table_name()}
+        """
+        if self.start_date:
+            query_feeds += f"WHERE timestamp > {self.start_date}"
         feeds = self._query_db(
-            f"""
-                SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
-                FROM {Prediction.get_lake_table_name()}
-            """,
+            query_feeds,
             scalar=True,
         )
 
+        query_payouts = f"""
+            SELECT
+                SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
+                SUM(stake) AS total_stake
+            FROM
+                {Payout.get_lake_table_name()}
+        """
+        if self.start_date:
+            query_payouts += f"WHERE timestamp > {self.start_date}"
         accuracy, volume = self._query_db(
-            f"""
-                SELECT
-                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
-                    SUM(stake) AS total_stake
-                FROM
-                    {Payout.get_lake_table_name()}
-            """,
+            query_payouts,
             scalar=True,
         )
 
+        query_subscriptions = f"""
+            SELECT COUNT(ID),
+            SUM(last_price_value)
+            FROM {Subscription.get_lake_table_name()}
+        """
+        if self.start_date:
+            query_subscriptions += f" WHERE timestamp > {self.start_date}"
         sales, revenue = self._query_db(
-            f"SELECT COUNT(ID), SUM(last_price_value) from {Subscription.get_lake_table_name()}",
+            query_subscriptions,
             scalar=True,
         )
 
@@ -344,26 +393,31 @@ class AppDataManager:
             "Revenue": revenue if revenue else 0,
         }
 
-    @property
     @enforce_types
-    def predictoors_metrics(self):
+    def predictoors_metrics(self) -> dict[str, Any]:
+        query_predictions = f"""
+            SELECT COUNT(DISTINCT(user))
+            FROM {Prediction.get_lake_table_name()}
+        """
+        if self.start_date:
+            query_predictions += f" WHERE timestamp > {self.start_date}"
         predictoors = self._query_db(
-            f"""
-                SELECT COUNT(DISTINCT(user))
-                FROM {Prediction.get_lake_table_name()}
-            """,
+            query_predictions,
             scalar=True,
         )
 
-        avg_accuracy, tot_stake, tot_gross_income = self._query_db(
-            f"""
+        query_payouts = f"""
                 SELECT
                     SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100 / COUNT(*) AS avg_accuracy,
                     SUM(stake) as tot_stake,
                     SUM(CASE WHEN payout > stake THEN payout - stake ELSE 0 END) AS tot_gross_income
                 FROM
                     {Payout.get_lake_table_name()}
-            """,
+            """
+        if self.start_date:
+            query_payouts += f" WHERE timestamp > {self.start_date}"
+        avg_accuracy, tot_stake, tot_gross_income = self._query_db(
+            query_payouts,
             scalar=True,
         )
 
@@ -373,6 +427,40 @@ class AppDataManager:
             "Staked": tot_stake,
             "Gross Income": tot_gross_income,
         }
+
+    def get_first_and_last_slot_timestamp(self):
+        first_timestamp, last_timestamp = self._query_db(
+            f"""
+                SELECT 
+                    MIN(timestamp) as min,
+                    MAX(timestamp) as max
+                FROM 
+                    {Slot.get_lake_table_name()}
+            """,
+            scalar=True,
+        )
+        return first_timestamp / 1000, last_timestamp / 1000
+
+    def refresh_feeds_data(self):
+        self.feeds_metrics_data = self.feeds_metrics()
+        self.feeds_payout_stats = self._init_feed_payouts_stats()
+        self.feeds_subscriptions = self._init_feed_subscription_stats()
+
+        # data formatting for tables, columns and raw data
+        self.feeds_cols, self.feeds_table_data, self.raw_feeds_data = (
+            self._formatted_data_for_feeds_table
+        )
+
+    def refresh_predictoors_data(self):
+        self.predictoors_metrics_data = self.predictoors_metrics()
+        self.predictoors_data = self._init_predictoor_payouts_stats()
+
+        # data formatting for tables, columns and raw data
+        (
+            self.predictoors_cols,
+            self.predictoors_table_data,
+            self.raw_predictoors_data,
+        ) = self._formatted_data_for_predictoors_table
 
     @property
     def _formatted_data_for_feeds_table(
@@ -417,12 +505,17 @@ class AppDataManager:
         self,
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
-        temp_data = self.predictoors_data
-
         new_predictoor_data = []
 
+        if len(self.predictoors_data) == 0:
+            return (
+                PREDICTOORS_HOME_PAGE_TABLE_COLS,
+                [],
+                [],
+            )
+
         # split the pair column into two columns
-        for data_item in temp_data:
+        for data_item in self.predictoors_data:
             tx_costs = self.fee_cost * float(data_item["stake_count"])
 
             temp_pred_item = {}

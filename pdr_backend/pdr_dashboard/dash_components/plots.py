@@ -526,9 +526,6 @@ def get_feed_figures(payouts: Optional[List], subscriptions: List) -> FeedModalF
     # Initialize empty figures with default settings
     result = FeedModalFigures()
 
-    if not payouts or not subscriptions:
-        return result
-
     # Process subscription data
     for subscription in subscriptions:
         result.subscription_purchases.append(subscription["count"])
@@ -540,10 +537,14 @@ def get_feed_figures(payouts: Optional[List], subscriptions: List) -> FeedModalF
         result.subscription_dates.append(unix_timestamp)
 
     # Sort payouts by slots and group by slot
-    payouts.sort(key=itemgetter("slot"))
-    grouped_payouts = {
-        slot: list(group) for slot, group in groupby(payouts, key=itemgetter("slot"))
-    }
+    if payouts and len(payouts) > 0:
+        payouts.sort(key=itemgetter("slot"))
+        grouped_payouts = {
+            slot: list(group)
+            for slot, group in groupby(payouts, key=itemgetter("slot"))
+        }
+    else:
+        grouped_payouts = {}
 
     correct_predictions = 0
     total_predictions = 0

@@ -39,6 +39,7 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
 @enforce_types
 def setup_app(app, ppss: PPSS):
     app.web3_pp = ppss.web3_pp
+
     app.data = AppDataManager(ppss)
     app.layout = get_layout()
 
