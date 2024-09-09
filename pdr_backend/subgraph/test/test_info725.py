@@ -19,7 +19,7 @@ from pdr_backend.subgraph.info725 import (
 def test_key():
     key = "name"
     key725 = key_to_key725(key)
-    assert key725 == Web3.keccak(key.encode("utf-8")).to_0x_hex()
+    assert key725 == Web3.keccak(key.encode("utf-8")).hex()
 
 
 @enforce_types
