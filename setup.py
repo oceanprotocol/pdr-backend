@@ -48,7 +48,7 @@ install_requirements = [
     "sapphire.py==0.2.3",
     "stopit==1.1.2",
     "ta==0.11.0",
-    "ocean-contracts==2.1.0",  # install this last
+    "ocean-contracts==2.2.0",  # install this last
 ]
 
 # Required to run setup.py:
