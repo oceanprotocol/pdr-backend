@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Union
+from typing import Union
 
 from enforce_typing import enforce_types
 from numerize import numerize
@@ -6,8 +6,8 @@ from numerize import numerize
 PREDICTOORS_HOME_PAGE_TABLE_COLS = [
     {"name": "User Address", "id": "addr"},
     {"name": "User", "id": "full_addr"},
-    {"name": "Accuracy", "id": "avg_accuracy"},
     {"name": "Profit", "id": "total_profit"},
+    {"name": "Accuracy", "id": "avg_accuracy"},
     {"name": "Stake", "id": "avg_stake"},
 ]
 
@@ -75,19 +75,6 @@ FORMAT_CONFIG = {
     "predictoors_page_staked_metric": "currency",
     "predictoors_page_gross_income_metric": "currency",
 }
-
-
-@enforce_types
-def pick_from_dict(data: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
-    """
-    Pick keys from dictionary.
-    Args:
-        data (Dict[str, Any]): Data.
-        keys (List[str]): Keys.
-    Returns:
-        Dict[str, Any]: Picked keys.
-    """
-    return {key: data[key] for key in keys}
 
 
 @enforce_types

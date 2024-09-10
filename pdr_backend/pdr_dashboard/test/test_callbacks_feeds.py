@@ -37,17 +37,6 @@ def _verify_table_data_order(table, filename):
     with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename) as f:
         expected_data = json.load(f)
 
-    # TODO: temporary for tests
-    for i, data in enumerate(expected_data):
-        acc_key = "Accuracy" if "Accuracy" in data else "Avg Accuracy"
-
-        accuracy = data[acc_key]
-        from pdr_backend.pdr_dashboard.util.format import format_percentage
-
-        accuracy = format_percentage(float(accuracy.replace("%", "")) / 100)
-        data[acc_key] = accuracy
-        expected_data[i] = data
-
     for i, row in enumerate(table_data):
         assert row == expected_data[i]
 
@@ -57,17 +46,6 @@ def _verify_table_data(table, filename):
 
     with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename) as f:
         expected_data = json.load(f)
-
-    # TODO: temporary for tests
-    for i, data in enumerate(expected_data):
-        acc_key = "Accuracy" if "Accuracy" in data else "Avg Accuracy"
-
-        accuracy = data[acc_key]
-        from pdr_backend.pdr_dashboard.util.format import format_percentage
-
-        accuracy = format_percentage(float(accuracy.replace("%", "")) / 100)
-        data[acc_key] = accuracy
-        expected_data[i] = data
 
     for _, row in enumerate(table_data):
         assert row in expected_data
@@ -176,7 +154,7 @@ def test_feeds_table_filters(_sample_app, dash_duo):
     _set_input_value_and_submit(
         dash_duo, None, "#accuracy_min", "55", "#accuracy_button"
     )
-    _assert_table_row_count(dash_duo, "#feeds_page_table", 1)
+    _assert_table_row_count(dash_duo, "#feeds_page_table", 2)
     _verify_table_data(table, "filtered_accuracy_min_55.json")
 
     # Test filtering with volume max value

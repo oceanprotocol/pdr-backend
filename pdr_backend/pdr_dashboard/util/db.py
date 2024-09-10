@@ -108,7 +108,7 @@ class AppDataManager:
         """
         df = self._query_db(query)
 
-        df["avg_accuracy"] = df["avg_accuracy"].astype(float) / 100
+        df["avg_accuracy"] = df["avg_accuracy"].astype(float)
         df["avg_stake"] = df["avg_stake"].astype(float)
         df["volume"] = df["volume"].astype(float)
 
@@ -156,7 +156,7 @@ class AppDataManager:
         """
         df = self._query_db(query)
 
-        df["avg_accuracy"] = df["avg_accuracy"].astype(float) / 100
+        df["avg_accuracy"] = df["avg_accuracy"].astype(float)
         df["total_stake"] = df["total_stake"].astype(float)
         df["gross_income"] = df["gross_income"].astype(float)
         df["stake_loss"] = df["stake_loss"].astype(float)

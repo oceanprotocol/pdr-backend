@@ -79,7 +79,7 @@ def test_get_user_payouts_stats(
     ].to_dict(orient="records")[0]
 
     assert test_row["user"] == "0x768c5195ea841c544cd09c61650417132615c0b9"
-    assert test_row["avg_accuracy"] == 0.391304347826087
+    assert test_row["avg_accuracy"] == 39.130434782608695
     assert test_row["avg_stake"] == 2.6666666666666665
     assert test_row["total_profit"] == -36.06628060203039
 
