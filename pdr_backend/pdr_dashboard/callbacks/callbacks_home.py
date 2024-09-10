@@ -11,7 +11,10 @@ from pdr_backend.pdr_dashboard.util.data import (
     select_or_clear_all_by_table,
     get_start_date_from_period,
 )
-from pdr_backend.pdr_dashboard.util.format import format_value
+from pdr_backend.pdr_dashboard.util.format import (
+    format_value,
+    fill_none_with_zero,
+)
 
 
 # pylint: disable=too-many-statements
@@ -27,17 +30,17 @@ def get_callbacks_home(app):
         Output("stake_metric", "children"),
         Output("available_data_period_text", "children"),
         [
+            Input("feeds_table", "data"),
             Input("feeds_table", "selected_rows"),
             Input("predictoors_table", "selected_rows"),
-            Input("feeds_table", "data"),
             Input("predictoors_table", "data"),
             Input("general-lake-date-period-radio-items", "value"),
         ],
     )
     def get_display_data_from_db(
+        feeds_table,
         feeds_table_selected_rows,
         predictoors_table_selected_rows,
-        feeds_table,
         predictoors_table,
         date_period,
     ):
@@ -60,7 +63,7 @@ def get_callbacks_home(app):
                 if int(date_period) > 0
                 else 0
             )
-            payouts = app.data.payouts(
+            payouts = app.data.payouts_from_bronze_predictions(
                 [row["contract"] for row in selected_feeds],
                 predictoors_addrs,
                 (
@@ -69,6 +72,11 @@ def get_callbacks_home(app):
                     else None
                 ),
             )
+
+            for payout in payouts:
+                temp_payout = fill_none_with_zero(payout)
+                payout.clear()
+                payout.update(temp_payout)
 
         # get figures
         figs_metrics = get_figures_and_metrics(
