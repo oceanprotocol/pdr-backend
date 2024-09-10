@@ -37,7 +37,6 @@ def get_start_date_from_period(number_days: int):
     return int((datetime.now() - timedelta(days=number_days)).timestamp())
 
 
-# TODO: use payouts as dataframe instead
 def get_date_period_text_for_selected_predictoors(payouts: List):
     if payouts:
         return "there is no data available"

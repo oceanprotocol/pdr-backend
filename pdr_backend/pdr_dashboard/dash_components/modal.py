@@ -89,7 +89,6 @@ class ModalContent:
             self.figures = figures_func(*figures_args).get_figures()
             return
 
-        # TODO: use payouts and subscriptions as dataframes instead
         if self.modal_id == "feeds_modal":
             feed = ArgFeed(
                 exchange=selected_row["source"].lower(),

@@ -435,7 +435,6 @@ def create_figure(
     return fig
 
 
-# TODO: use payouts as a dataframe instead
 @enforce_types
 def get_figures_and_metrics(
     payouts: Optional[List], feeds: ArgFeeds, predictors: List[str], fee_cost: float
