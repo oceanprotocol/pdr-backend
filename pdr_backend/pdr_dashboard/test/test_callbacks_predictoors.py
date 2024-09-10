@@ -92,14 +92,14 @@ def test_predictoors_table_filters(_sample_app, dash_duo):
     _clear_predictoors_filters(dash_duo)
     # Test filtering with accuracy min value
     _set_input_value_and_submit(
-        dash_duo, "#p_accuracy_dropdown", "#p_accuracy_min", "90", "#p_accuracy_button"
+        dash_duo, "#p_accuracy_dropdown", "#p_accuracy_min", "0.9", "#p_accuracy_button"
     )
     _assert_table_row_count(dash_duo, "#predictoors_page_table", 7)
     _verify_table_data(table, "filtered_p_accuracy_min_90.json")
 
     # Test filtering with accuracy min value
     _set_input_value_and_submit(
-        dash_duo, None, "#p_accuracy_min", "55", "#p_accuracy_button"
+        dash_duo, None, "#p_accuracy_min", "0.55", "#p_accuracy_button"
     )
     _assert_table_row_count(dash_duo, "#predictoors_page_table", 17)
     _verify_table_data(table, "filtered_p_accuracy_min_55.json")

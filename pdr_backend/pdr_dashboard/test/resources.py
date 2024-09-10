@@ -78,7 +78,9 @@ def _select_dropdown_option(dash_duo, dropdown_id, option_text):
 
 def _assert_table_row_count(dash_duo, table_id, expected_count):
     table_rows = dash_duo.find_elements(f"{table_id} tbody tr")
-    assert len(table_rows) == expected_count
+    assert (
+        len(table_rows) == expected_count
+    ), f"Expected {expected_count} rows, got {len(table_rows)}"
 
 
 def start_server_and_wait(dash_duo, app):
