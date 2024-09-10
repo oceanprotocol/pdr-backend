@@ -557,15 +557,7 @@ class AppDataManager:
         """
 
         df = self.predictoors_data.copy()
-        df["addr"] = df["user"]
-        df["full_addr"] = df["user"]
-        df["accuracy"] = df["avg_accuracy"]
-        df["number_of_feeds"] = df["feed_count"]
-        df["staked_(OCEAN)"] = df["total_stake"]
-        df["gross_income_(OCEAN)"] = df["gross_income"]
-        df["stake_loss_(OCEAN)"] = df["stake_loss"]
-        df["tx_costs_(OCEAN)"] = df["stake_count"] * self.fee_cost
-        df["net_income_(OCEAN)"] = df["total_profit"] - df["tx_costs_(OCEAN)"]
+        df["addr"] = df["full_addr"] = df["user"]
 
         cols = [col["id"] for col in PREDICTOORS_HOME_PAGE_TABLE_COLS]
 

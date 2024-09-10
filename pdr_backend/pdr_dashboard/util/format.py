@@ -3,32 +3,19 @@ from typing import Any, Dict, List, Union
 from enforce_typing import enforce_types
 from numerize import numerize
 
-# TODO: cleanup columns and stop using aliases for columns in db.py
 PREDICTOORS_HOME_PAGE_TABLE_COLS = [
-    {"name": "Addr", "id": "addr"},
+    {"name": "User Address", "id": "addr"},
     {"name": "User", "id": "full_addr"},
-    {"name": "Apr", "id": "apr"},
-    {"name": "Accuracy", "id": "accuracy"},
-    {"name": "Number Of Feeds", "id": "number_of_feeds"},
-    {"name": "Staked (Ocean)", "id": "staked_(OCEAN)"},
-    {"name": "Gross Income (Ocean)", "id": "gross_income_(OCEAN)"},
-    {"name": "Stake Loss (Ocean)", "id": "stake_loss_(OCEAN)"},
-    {"name": "Tx Costs (Ocean)", "id": "tx_costs_(OCEAN)"},
-    {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
+    {"name": "Accuracy", "id": "avg_accuracy"},
+    {"name": "Profit", "id": "total_profit"},
+    {"name": "Stake", "id": "total_stake"},
 ]
 
 FEEDS_HOME_PAGE_TABLE_COLS = [
     {"name": "Pair", "id": "pair"},
     {"name": "Source", "id": "source"},
     {"name": "Timeframe", "id": "timeframe"},
-    {"name": "Full Addr", "id": "full_addr"},
-    {"name": "Avg Accuracy", "id": "avg_accuracy"},
-    {"name": "Avg Stake Per Epoch (Ocean)", "id": "avg_stake_per_epoch_(OCEAN)"},
-    {"name": "Volume (OCEAN)", "id": "volume_(OCEAN)"},
-    {"name": "Price (OCEAN)", "id": "price_(OCEAN)"},
-    {"name": "Sales", "id": "sales"},
-    {"name": "Sales Raw", "id": "sales_raw"},
-    {"name": "Sales Revenue (OCEAN)", "id": "sales_revenue_(OCEAN)"},
+    {"name": "Full Addr", "id": "contract"},
 ]
 
 FEEDS_TABLE_COLS = [
