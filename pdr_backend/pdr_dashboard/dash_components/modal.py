@@ -89,6 +89,7 @@ class ModalContent:
             self.figures = figures_func(*figures_args).get_figures()
             return
 
+        # TODO: use payouts and subscriptions as dataframes instead
         if self.modal_id == "feeds_modal":
             feed = ArgFeed(
                 exchange=selected_row["source"].lower(),
@@ -100,17 +101,17 @@ class ModalContent:
 
             payouts = self.data_manager.payouts(
                 [feed.contract], None, self.data_manager.start_date
-            )
+            ).to_dict(orient="records")
             subscriptions = self.data_manager.feed_daily_subscriptions_by_feed_id(
                 feed.contract
-            )
+            ).to_dict(orient="records")
             figures_args = [payouts, subscriptions]
         elif self.modal_id == "predictoors_modal":
             payouts = self.data_manager.payouts(
                 feed_addrs=[],
                 predictoor_addrs=[selected_row["full_addr"]],
                 start_date=self.data_manager.start_date,
-            )
+            ).to_dict(orient="records")
             figures_args = [payouts]
 
         self.figures = figures_func(*figures_args).get_figures()
