@@ -120,6 +120,7 @@ def format_df(
     columns = df.columns
 
     for column in columns:
+        # pylint: disable=cell-var-from-loop
         df[column] = df[column].apply(lambda x: format_value(x, column))
 
     return df

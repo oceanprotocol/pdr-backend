@@ -461,6 +461,7 @@ class AppDataManager:
         self.predictoors_data = self._init_predictoor_payouts_stats()
 
         # data formatting for tables, columns and raw data
+        # pylint: disable=unbalanced-tuple-unpacking
         self.predictoors_table_data, self.raw_predictoors_data = (
             self._formatted_data_for_predictoors_table
         )
@@ -468,8 +469,7 @@ class AppDataManager:
     @property
     def _formatted_data_for_feeds_table(
         self,
-    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
-
+    ) -> Tuple[pandas.DataFrame, pandas.DataFrame]:
         df = self.feeds_data.copy()
         df["addr"] = df["full_addr"] = df["contract"]
         df[["base_token", "quote_token"]] = df["pair"].str.split("/", expand=True)
@@ -490,15 +490,7 @@ class AppDataManager:
     @property
     def _formatted_data_for_predictoors_table(
         self,
-    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
-
-        if len(self.predictoors_data) == 0:
-            return (
-                PREDICTOORS_TABLE_COLS,
-                [],
-                [],
-            )
-
+    ) -> Tuple[pandas.DataFrame, pandas.DataFrame]:
         df = self.predictoors_data.copy()
         df["addr"] = df["full_addr"] = df["user"]
         df["accuracy"] = df["avg_accuracy"]

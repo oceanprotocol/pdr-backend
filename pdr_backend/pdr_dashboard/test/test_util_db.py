@@ -1,6 +1,6 @@
-import pandas
 from unittest.mock import patch
 
+import pandas
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.subscription import Subscription

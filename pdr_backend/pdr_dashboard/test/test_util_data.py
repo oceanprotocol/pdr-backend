@@ -1,7 +1,7 @@
-import pandas
 from unittest.mock import Mock
 
 import dash
+import pandas
 
 from pdr_backend.pdr_dashboard.util.data import select_or_clear_all_by_table
 
