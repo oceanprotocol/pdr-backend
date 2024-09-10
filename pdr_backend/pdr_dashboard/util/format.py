@@ -177,9 +177,7 @@ def format_df(
 
     for column in columns:
         df[column] = df[column].apply(
-            lambda x: format_value(x, column)
-            if column not in skip
-            else x
+            lambda x: format_value(x, column) if column not in skip else x
         )
 
     return df

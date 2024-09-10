@@ -119,7 +119,7 @@ class FeedsPage(TabularPage):
                     columns=FEEDS_TABLE_COLS,
                     hidden_columns=["full_addr", "sales_raw"],
                     row_selectable="single",
-                    data=self.app.data.feeds_table_data.to_dict('records'),
+                    data=self.app.data.feeds_table_data.to_dict("records"),
                     sort_action="custom",
                     sort_mode="single",
                 ),

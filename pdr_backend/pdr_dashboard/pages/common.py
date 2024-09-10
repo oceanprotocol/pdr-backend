@@ -51,12 +51,6 @@ class TabularPage:
         )
 
 
-# TODO: remove
-def add_to_filter(filter_options, value):
-    if value not in filter_options:
-        filter_options.append(value)
-
-
 def button_label(label, page):
     if label == "Accuracy" and page == "predictoors":
         return "p_accuracy"

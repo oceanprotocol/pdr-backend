@@ -1,29 +1,11 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 import dash
 from enforce_typing import enforce_types
 
 logger = logging.getLogger("predictoor_dashboard_utils")
-
-
-# TODO: probably remove more functions from here, including this one
-@enforce_types
-def filter_objects_by_field(
-    objects: List[Dict[str, Any]],
-    field: str,
-    search_string: str,
-    previous_objects: Optional[List] = None,
-) -> List[Dict[str, Any]]:
-    if previous_objects is None:
-        previous_objects = []
-
-    return [
-        obj
-        for obj in objects
-        if search_string.lower() in obj[field].lower() and obj not in previous_objects
-    ]
 
 
 @enforce_types
@@ -76,27 +58,6 @@ def get_date_period_text_header(start_date: str, end_date: str):
         -> {datetime.fromtimestamp(float(end_date)).strftime('%d-%m-%y')}
     """
     return date_period_text
-
-
-# TODO: remove
-@enforce_types
-def col_to_human(col: str, replace_rules: List[str] = ["avg_", "total_"]) -> str:
-    temp_col = col
-    for rule in replace_rules:
-        temp_col = temp_col.replace(rule, "")
-
-    return temp_col.replace("_", " ").title()
-
-
-@enforce_types
-def find_with_key_value(
-    objects: List[Dict[str, Any]], key: str, value: str
-) -> Union[Dict[str, Any], None]:
-    for obj in objects:
-        if obj[key] == value:
-            return obj
-
-    return None
 
 
 def get_sales_str(result):

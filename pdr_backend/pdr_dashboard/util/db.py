@@ -1,5 +1,4 @@
 import logging
-from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from enforce_typing import enforce_types
@@ -11,10 +10,14 @@ from pdr_backend.lake.subscription import Subscription
 from pdr_backend.lake.slot import Slot
 from pdr_backend.pdr_dashboard.util.data import (
     get_sales_str,
-    col_to_human,
-    filter_objects_by_field,
 )
-from pdr_backend.pdr_dashboard.util.format import format_df, PREDICTOORS_HOME_PAGE_TABLE_COLS, FEEDS_TABLE_COLS, PREDICTOORS_TABLE_COLS, FEEDS_HOME_PAGE_TABLE_COLS
+from pdr_backend.pdr_dashboard.util.format import (
+    format_df,
+    PREDICTOORS_HOME_PAGE_TABLE_COLS,
+    FEEDS_TABLE_COLS,
+    PREDICTOORS_TABLE_COLS,
+    FEEDS_HOME_PAGE_TABLE_COLS,
+)
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
@@ -22,6 +25,7 @@ from pdr_backend.pdr_dashboard.util.prices import (
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 
 logger = logging.getLogger("predictoor_dashboard_utils")
+
 
 # pylint: disable=too-many-instance-attributes
 class AppDataManager:
@@ -525,7 +529,11 @@ class AppDataManager:
         return formatted_data, df
 
     def filter_for_feeds_table(
-        self, predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds_addrs
+        self,
+        predictoor_feeds_only,
+        predictoors_addrs,
+        search_value,
+        selected_feeds_addrs,
     ):
         filtered_data = self.feeds_data.copy()
 
@@ -541,10 +549,15 @@ class AppDataManager:
                 filtered_data["pair"].str.contains(search_value)
             ]
 
-        filtered_data = filtered_data[~filtered_data["contract"].isin(selected_feeds_addrs)]
-        selected_feeds = self.feeds_data[self.feeds_data["contract"].isin(selected_feeds_addrs)]
+        filtered_data = filtered_data[
+            ~filtered_data["contract"].isin(selected_feeds_addrs)
+        ]
+        selected_feeds = self.feeds_data[
+            self.feeds_data["contract"].isin(selected_feeds_addrs)
+        ]
 
         import pandas
+
         return pandas.concat([selected_feeds, filtered_data]).to_dict("records")
 
     @property

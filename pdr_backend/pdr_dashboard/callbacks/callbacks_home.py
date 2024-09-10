@@ -6,7 +6,6 @@ from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
-    filter_objects_by_field,
     get_date_period_text_for_selected_predictoors,
     select_or_clear_all_by_table,
     get_start_date_from_period,
@@ -110,8 +109,12 @@ def get_callbacks_home(app):
         predictoors_table,
         show_favourite_addresses,
     ):
-        formatted_predictoors_data = app.data.formatted_predictoors_home_page_table_data.copy()
-        selected_predictoors_addrs = [predictoors_table[i]["full_addr"] for i in selected_rows]
+        formatted_predictoors_data = (
+            app.data.formatted_predictoors_home_page_table_data.copy()
+        )
+        selected_predictoors_addrs = [
+            predictoors_table[i]["full_addr"] for i in selected_rows
+        ]
 
         if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
             # TODO: this part
@@ -132,12 +135,19 @@ def get_callbacks_home(app):
 
         filtered_data = formatted_predictoors_data.copy()
         if search_value:
-            filtered_data = filtered_data[filtered_data["full_addr"].str.contains(search_value)]
+            filtered_data = filtered_data[
+                filtered_data["full_addr"].str.contains(search_value)
+            ]
 
-        filtered_data = filtered_data[~filtered_data["full_addr"].isin(selected_predictoors_addrs)]
-        selected_predictoors = formatted_predictoors_data[formatted_predictoors_data["full_addr"].isin(selected_predictoors_addrs)]
+        filtered_data = filtered_data[
+            ~filtered_data["full_addr"].isin(selected_predictoors_addrs)
+        ]
+        selected_predictoors = formatted_predictoors_data[
+            formatted_predictoors_data["full_addr"].isin(selected_predictoors_addrs)
+        ]
 
         import pandas
+
         filtered_data = pandas.concat([selected_predictoors, filtered_data])
         selected_predictoor_indices = list(range(len(selected_predictoors_addrs)))
 

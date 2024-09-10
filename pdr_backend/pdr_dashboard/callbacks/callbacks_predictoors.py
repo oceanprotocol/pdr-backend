@@ -118,7 +118,9 @@ def get_callbacks_predictoors(app):
             # Extract sort criteria
             sort_col = sort_by[0]["column_id"]
             ascending = sort_by[0]["direction"] == "asc"
-            new_table_data = new_table_data.sort_values(by=sort_col, ascending=ascending)
+            new_table_data = new_table_data.sort_values(
+                by=sort_col, ascending=ascending
+            )
 
         return format_df(new_table_data).to_dict("records")
 

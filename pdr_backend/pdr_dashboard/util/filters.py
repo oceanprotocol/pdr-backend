@@ -216,8 +216,8 @@ def searchable_df(df, value):
     if "base_token" not in df.columns:
         return df["addr"].str.contains(value, case=False, na=False)
 
-    return df["addr"].str.contains(value, case=False, na=False) | df[
-        "base_token"
-    ].str.contains(value, case=False, na=False) | df[
-        "quote_token"
-    ].str.contains(value, case=False, na=False)
+    return (
+        df["addr"].str.contains(value, case=False, na=False)
+        | df["base_token"].str.contains(value, case=False, na=False)
+        | df["quote_token"].str.contains(value, case=False, na=False)
+    )
