@@ -1,6 +1,7 @@
 from typing import Optional
-from enforce_typing import enforce_types
+
 from dash import callback_context
+from enforce_typing import enforce_types
 
 
 @enforce_types

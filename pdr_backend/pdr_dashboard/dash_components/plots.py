@@ -1,8 +1,8 @@
-from abc import ABC, abstractmethod
-from itertools import product, groupby
-from typing import List, Optional, Union, NamedTuple
-from operator import itemgetter
 import datetime
+from abc import ABC, abstractmethod
+from itertools import groupby, product
+from operator import itemgetter
+from typing import List, NamedTuple, Optional, Union
 
 import plotly.graph_objects as go
 from enforce_typing import enforce_types

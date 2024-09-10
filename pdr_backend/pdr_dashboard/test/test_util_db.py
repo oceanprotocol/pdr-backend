@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from enforce_typing import enforce_types
+
 from pdr_backend.lake.subscription import Subscription
 from pdr_backend.util.time_types import UnixTimeMs
 

@@ -1,22 +1,21 @@
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import pandas
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.subscription import Subscription
 from pdr_backend.lake.slot import Slot
-from pdr_backend.pdr_dashboard.util.data import (
-    get_sales_str,
-)
+from pdr_backend.lake.subscription import Subscription
+from pdr_backend.pdr_dashboard.util.data import get_sales_str
 from pdr_backend.pdr_dashboard.util.format import (
-    format_df,
-    PREDICTOORS_HOME_PAGE_TABLE_COLS,
-    FEEDS_TABLE_COLS,
-    PREDICTOORS_TABLE_COLS,
     FEEDS_HOME_PAGE_TABLE_COLS,
+    FEEDS_TABLE_COLS,
+    PREDICTOORS_HOME_PAGE_TABLE_COLS,
+    PREDICTOORS_TABLE_COLS,
+    format_df,
 )
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
@@ -462,10 +461,9 @@ class AppDataManager:
         self.predictoors_data = self._init_predictoor_payouts_stats()
 
         # data formatting for tables, columns and raw data
-        (
-            self.predictoors_table_data,
-            self.raw_predictoors_data,
-        ) = self._formatted_data_for_predictoors_table
+        self.predictoors_table_data, self.raw_predictoors_data = (
+            self._formatted_data_for_predictoors_table
+        )
 
     @property
     def _formatted_data_for_feeds_table(
@@ -556,8 +554,6 @@ class AppDataManager:
             self.feeds_data["contract"].isin(selected_feeds_addrs)
         ]
 
-        import pandas
-
         return pandas.concat([selected_feeds, filtered_data]).to_dict("records")
 
     @property
@@ -600,6 +596,12 @@ class AppDataManager:
     @property
     def homepage_predictoors_cols(self):
         data = self.formatted_predictoors_home_page_table_data
+
+        if self.favourite_addresses:
+            df = data.copy()
+            df1 = df[df["full_addr"].isin(self.favourite_addresses)]
+            df2 = df[~df["full_addr"].isin(self.favourite_addresses)]
+            data = pandas.concat([df1, df2])
 
         columns = PREDICTOORS_HOME_PAGE_TABLE_COLS
         hidden_columns = ["full_addr"]

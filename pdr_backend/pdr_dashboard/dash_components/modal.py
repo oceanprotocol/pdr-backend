@@ -2,6 +2,7 @@ from typing import List, Optional
 
 import dash_bootstrap_components as dbc
 from dash import html
+
 from pdr_backend.cli.arg_feeds import ArgFeed
 from pdr_backend.pdr_dashboard.dash_components.plots import (
     get_feed_figures,

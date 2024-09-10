@@ -1,16 +1,17 @@
 from dash import Input, Output
+
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
-    get_navbar,
     NAV_ITEMS,
+    get_navbar,
 )
-from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
-from pdr_backend.pdr_dashboard.pages.home import HomePage
 from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
+from pdr_backend.pdr_dashboard.pages.home import HomePage
 from pdr_backend.pdr_dashboard.pages.predictoors import PredictoorsPage
 from pdr_backend.pdr_dashboard.util.data import (
     get_date_period_text_header,
     get_start_date_from_period,
 )
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 
 
 def get_callbacks_common(app):

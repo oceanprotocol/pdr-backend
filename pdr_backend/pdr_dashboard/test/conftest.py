@@ -1,18 +1,10 @@
 import pytest
 from selenium.webdriver.chrome.options import Options
 
-from pdr_backend.lake.payout import (
-    mock_payouts,
-    mock_payouts_related_with_predictions,
-)
-from pdr_backend.lake.prediction import (
-    mock_daily_predictions,
-    mock_first_predictions,
-)
+from pdr_backend.lake.payout import mock_payouts, mock_payouts_related_with_predictions
+from pdr_backend.lake.prediction import mock_daily_predictions, mock_first_predictions
 from pdr_backend.lake.subscription import mock_subscriptions
-from pdr_backend.pdr_dashboard.test.resources import (
-    _prepare_sample_app,
-)
+from pdr_backend.pdr_dashboard.test.resources import _prepare_sample_app
 
 
 @pytest.fixture()

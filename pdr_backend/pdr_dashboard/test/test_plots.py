@@ -1,18 +1,17 @@
 import math
-
 from unittest.mock import patch
 
 from enforce_typing import enforce_types
 
-from pdr_backend.pdr_dashboard.dash_components.plots import (
-    process_payouts,
-    create_figure,
-    get_figures_and_metrics,
-    get_feed_figures,
-)
-from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
+from pdr_backend.pdr_dashboard.dash_components.plots import (
+    create_figure,
+    get_feed_figures,
+    get_figures_and_metrics,
+    process_payouts,
+)
+from pdr_backend.util.time_types import UnixTimeS
 
 
 @enforce_types

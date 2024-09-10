@@ -1,16 +1,17 @@
 import dash
+import pandas
 from dash import Input, Output, State
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
     get_date_period_text_for_selected_predictoors,
-    select_or_clear_all_by_table,
     get_start_date_from_period,
+    select_or_clear_all_by_table,
 )
 from pdr_backend.pdr_dashboard.util.format import format_value
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 
 
 # pylint: disable=too-many-statements
@@ -117,20 +118,20 @@ def get_callbacks_home(app):
         ]
 
         if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
-            # TODO: this part
-            custom_predictoors = [
-                predictoor
-                for predictoor in formatted_predictoors_data
-                if predictoor["full_addr"] in app.data.favourite_addresses
+            custom_predictoors = formatted_predictoors_data[
+                formatted_predictoors_data["full_addr"].isin(
+                    app.data.favourite_addresses
+                )
             ]
+            custom_predictoors_addrs = list(custom_predictoors["full_addr"])
 
             if show_favourite_addresses:
-                selected_predictoors += custom_predictoors
+                selected_predictoors_addrs += custom_predictoors_addrs
             else:
-                selected_predictoors = [
-                    predictoor
-                    for predictoor in selected_predictoors
-                    if predictoor not in custom_predictoors
+                selected_predictoors_addrs = [
+                    predictoor_addr
+                    for predictoor_addr in selected_predictoors_addrs
+                    if predictoor_addr not in custom_predictoors_addrs
                 ]
 
         filtered_data = formatted_predictoors_data.copy()
@@ -145,8 +146,6 @@ def get_callbacks_home(app):
         selected_predictoors = formatted_predictoors_data[
             formatted_predictoors_data["full_addr"].isin(selected_predictoors_addrs)
         ]
-
-        import pandas
 
         filtered_data = pandas.concat([selected_predictoors, filtered_data])
         selected_predictoor_indices = list(range(len(selected_predictoors_addrs)))

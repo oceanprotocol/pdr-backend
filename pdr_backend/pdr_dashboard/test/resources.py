@@ -1,21 +1,21 @@
-import time
-import re
 import os
+import re
+import time
 from unittest.mock import patch
 
-from enforce_typing import enforce_types
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
 import dash_bootstrap_components as dbc
 from dash import Dash
+from enforce_typing import enforce_types
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
-from pdr_backend.ppss.ppss import mock_ppss
+from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.plutil import _object_list_to_df
 from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.test.resources import create_sample_etl, create_sample_raw_data
 from pdr_backend.pdr_dashboard.predictoor_dash import setup_app as setup_app_main
+from pdr_backend.ppss.ppss import mock_ppss
 
 
 def _prepare_test_db(tmpdir, sample_data, table_name, my_addresses=None):

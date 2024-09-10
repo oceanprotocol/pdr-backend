@@ -1,10 +1,10 @@
 from pdr_backend.pdr_dashboard.util.format import (
-    format_eth_address,
+    format_approximate_currency_with_decimal,
     format_currency,
-    format_percentage,
     format_currency_with_decimal,
     format_currency_with_decimal_and_suffix,
-    format_approximate_currency_with_decimal,
+    format_eth_address,
+    format_percentage,
     format_value,
 )
 

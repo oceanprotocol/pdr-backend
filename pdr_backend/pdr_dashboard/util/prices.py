@@ -1,7 +1,7 @@
 import logging
-
 from datetime import datetime
 from typing import Dict, Optional
+
 from web3 import Web3
 
 from pdr_backend.exchange.fetch_ohlcv import fetch_ohlcv

@@ -1,6 +1,5 @@
 import time
 
-
 from pdr_backend.pdr_dashboard.test.resources import (
     _input_action,
     start_server_and_wait,

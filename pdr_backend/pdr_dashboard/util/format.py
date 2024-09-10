@@ -1,9 +1,9 @@
-from typing import Union, Dict, List, Any
+from typing import Any, Dict, List, Union
 
 from enforce_typing import enforce_types
 from numerize import numerize
 
-
+# TODO: cleanup columns and stop using aliases for columns in db.py
 PREDICTOORS_HOME_PAGE_TABLE_COLS = [
     {"name": "Addr", "id": "addr"},
     {"name": "User", "id": "full_addr"},
@@ -162,8 +162,6 @@ def format_table(
 @enforce_types
 def format_df(
     df,
-    skip: list[str] = [],
-    map_source: dict[str, str] = {},
 ) -> list[dict[str, str]]:
     """
     Format table rows.
@@ -176,9 +174,7 @@ def format_df(
     columns = df.columns
 
     for column in columns:
-        df[column] = df[column].apply(
-            lambda x: format_value(x, column) if column not in skip else x
-        )
+        df[column] = df[column].apply(lambda x: format_value(x, column))
 
     return df
 
