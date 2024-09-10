@@ -345,9 +345,6 @@ class AppDataManager:
 
         query += ";"
 
-        # Log the query for debugging
-        print(f"Generated SQL Query: {query}")
-
         # Execute the query without passing parameters
         return self._query_db(query)
 
