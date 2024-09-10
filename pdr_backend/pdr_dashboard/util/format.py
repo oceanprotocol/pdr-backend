@@ -29,14 +29,14 @@ FEEDS_TABLE_COLS = [
     {"name": "Avg Stake Per Epoch (Ocean)", "id": "avg_stake"},
     {"name": "Volume (Ocean)", "id": "volume"},
     {"name": "Price (Ocean)", "id": "price"},
-    {"name": "Sales", "id": "sales"},
+    {"name": "Sales", "id": "sales_str"},
     {"name": "Sales Raw", "id": "sales_raw"},
     {"name": "Sales Revenue (Ocean)", "id": "sales_revenue"},
 ]
 
 PREDICTOORS_TABLE_COLS = [
-    {"name": "APR", "id": "apr"},
     {"name": "Addr", "id": "addr"},
+    {"name": "Apr", "id": "apr"},
     {"name": "Full Addr", "id": "full_addr"},
     {"name": "Accuracy", "id": "accuracy"},
     {"name": "Number Of Feeds", "id": "feed_count"},
@@ -60,7 +60,7 @@ FORMAT_CONFIG = {
     "user": "eth_address",
     "avg_accuracy": "percentage",
     "avg_stake": "currency_conditional",
-    "sales": "sales_info_data",
+    "sales_str": "sales_info_data",
     "total_profit": "currency_without_decimal",
     "volume": "currency_without_decimal",
     "total_stake": "currency_conditional",
@@ -91,25 +91,6 @@ def pick_from_dict(data: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
 
 
 @enforce_types
-def format_dict(
-    data: Dict[str, Union[int, float, str]], only_include_keys: List[str]
-) -> dict[str, str]:
-    """
-    Format dictionary.
-    Args:
-        data (Dict[str, Union[int, float, str]]): Data.
-    Returns:
-        Dict[str, str]: Formatted dictionary.
-    """
-    return {
-        key: format_value(
-            data[key] if isinstance(data[key], str) else float(data[key]), key
-        )
-        for key in only_include_keys
-    }
-
-
-@enforce_types
 def format_value(value: Union[int, float, str], value_id: str) -> str:
     """
     Format value.
@@ -122,27 +103,6 @@ def format_value(value: Union[int, float, str], value_id: str) -> str:
     if value_id in FORMAT_CONFIG:
         return globals()["format_" + FORMAT_CONFIG[value_id]](value)
     return str(value)
-
-
-@enforce_types
-def format_table(
-    rows: list[dict[str, Union[int, float]]], columns: list[dict[str, str]]
-) -> list[dict[str, str]]:
-    """
-    Format table rows.
-    Args:
-        rows (list[dict[str, Union[int, float]]]): Table rows.
-        columns (list[dict[str, str]]): Table columns.
-    Returns:
-        list[dict[str, str]]: Formatted table rows.
-    """
-    return [
-        {
-            column["id"]: format_value(row[column["id"]], column["id"])
-            for column in columns
-        }
-        for row in rows
-    ]
 
 
 @enforce_types

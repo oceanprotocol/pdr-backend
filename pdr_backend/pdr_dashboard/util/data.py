@@ -60,6 +60,7 @@ def get_date_period_text_header(start_date: str, end_date: str):
     return date_period_text
 
 
+# TODO: investigate whether we can have this directly in format.py
 def get_sales_str(result):
     sales_str = f"{result['sales']}"
 

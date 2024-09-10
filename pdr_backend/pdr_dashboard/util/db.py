@@ -476,7 +476,6 @@ class AppDataManager:
         df["source"] = df["source"].str.capitalize()
         df = df.merge(self.feeds_payout_stats, on="contract")
         df = df.merge(self.feeds_subscriptions, on="contract")
-        # TODO: where do we actually use this
         df["sales_str"] = df.apply(get_sales_str, axis=1)
         df["sales_raw"] = df["sales"]
 

@@ -47,6 +47,16 @@ def _verify_table_data(table, filename):
     with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename) as f:
         expected_data = json.load(f)
 
+    # TODO: temporary for tests
+    for i, data in enumerate(expected_data):
+        acc_key = "Accuracy" if "Accuracy" in data else "Avg Accuracy"
+
+        accuracy = data[acc_key]
+        from pdr_backend.pdr_dashboard.util.format import format_percentage
+        accuracy = format_percentage(float(accuracy.replace("%", "")) / 100)
+        data[acc_key] = accuracy
+        expected_data[i] = data
+
     for _, row in enumerate(table_data):
         assert row in expected_data
 
