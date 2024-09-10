@@ -86,9 +86,9 @@ def get_callbacks_feeds(app):
             ("filter", "source", source),
             ("filter", "timeframe", timeframe),
             ("range", "sales_raw", sales_min, sales_max),
-            ("range", "sales_revenue_(OCEAN)", revenue_min, revenue_max),
+            ("range", "sales_revenue", revenue_min, revenue_max),
             ("range", "avg_accuracy", accuracy_min, accuracy_max),
-            ("range", "volume_(OCEAN)", volume_min, volume_max),
+            ("range", "volume", volume_min, volume_max),
             ("search", None, search_input_value),
         ]
 

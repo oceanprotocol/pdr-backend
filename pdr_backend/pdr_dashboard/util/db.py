@@ -471,20 +471,14 @@ class AppDataManager:
     ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
 
         df = self.feeds_data.copy()
-        df["addr"] = df["contract"]
+        df["addr"] = df["full_addr"] = df["contract"]
         df[["base_token", "quote_token"]] = df["pair"].str.split("/", expand=True)
         df["source"] = df["source"].str.capitalize()
-        df["full_addr"] = df["contract"]
         df = df.merge(self.feeds_payout_stats, on="contract")
-        df["volume_(OCEAN)"] = df["volume"]
-        df["avg_accuracy"] = df["avg_accuracy"]
-        df["avg_stake_per_epoch_(OCEAN)"] = df["avg_stake"]
         df = df.merge(self.feeds_subscriptions, on="contract")
-        df["price_(OCEAN)"] = df["price"]
         # TODO: where do we actually use this
         df["sales_str"] = df.apply(get_sales_str, axis=1)
         df["sales_raw"] = df["sales"]
-        df["sales_revenue_(OCEAN)"] = df["sales_revenue"]
 
         columns = [col["id"] for col in FEEDS_TABLE_COLS]
         df = df[columns]
@@ -507,13 +501,8 @@ class AppDataManager:
             )
 
         df = self.predictoors_data.copy()
-        df["addr"] = df["user"]
-        df["full_addr"] = df["user"]
+        df["addr"] = df["full_addr"] = df["user"]
         df["accuracy"] = df["avg_accuracy"]
-        df["number_of_feeds"] = df["feed_count"]
-        df["staked_(OCEAN)"] = df["total_stake"]
-        df["gross_income_(OCEAN)"] = df["gross_income"]
-        df["stake_loss_(OCEAN)"] = df["stake_loss"]
         df["tx_costs_(OCEAN)"] = df["stake_count"] * self.fee_cost
         df["net_income_(OCEAN)"] = df["total_profit"] - df["tx_costs_(OCEAN)"]
 

@@ -100,11 +100,11 @@ def get_callbacks_predictoors(app):
         conditions = [
             ("range", "apr", apr_min, apr_max),
             ("range", "p_accuracy", p_accuracy_min, p_accuracy_max),
-            ("range", "gross_income_(OCEAN)", gross_income_min, gross_income_max),
-            ("range", "number_of_feeds", nr_feeds_min, nr_feeds_max),
-            ("range", "staked_(OCEAN)", staked_min, staked_max),
+            ("range", "gross_income", gross_income_min, gross_income_max),
+            ("range", "feed_count", nr_feeds_min, nr_feeds_max),
+            ("range", "total_stake", staked_min, staked_max),
             ("range", "tx_costs_(OCEAN)", tx_costs_min, tx_costs_max),
-            ("range", "stake_loss_(OCEAN)", stake_loss_min, stake_loss_max),
+            ("range", "stake_loss", stake_loss_min, stake_loss_max),
             ("range", "net_income_(OCEAN)", net_income_min, net_income_max),
             ("search", None, search_input_value),
         ]
