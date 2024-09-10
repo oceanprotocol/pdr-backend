@@ -18,7 +18,7 @@ from pdr_backend.util.time_types import UnixTimeS
 def test_process_payouts(_sample_app):
 
     ## convert List[Payout] to List[dict]
-    payouts = _sample_app.data.payouts(None, None, 0)
+    payouts = _sample_app.data.payouts(None, None, 0).to_dict(orient="records")
 
     feed = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
     user = "0x43584049fe6127ea6745d8ba42274e911f2a2d5c"
@@ -138,7 +138,7 @@ def test_create_figure():
 def test_get_figures_and_metrics(_sample_app):
     db_mgr = _sample_app.data
     ## convert List[Payout] to List[dict]
-    payouts = db_mgr.payouts(None, None, 0)
+    payouts = db_mgr.payouts(None, None, 0).to_dict(orient="records")
 
     sample_feeds = ArgFeeds(
         [
@@ -211,9 +211,11 @@ def test_get_feed_figures(
 ):
     feed_id = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
     db_mgr = _sample_app.data
-    payouts = db_mgr.payouts([feed_id], None, 0)
+    payouts = db_mgr.payouts([feed_id], None, 0).to_dict(orient="records")
 
-    subscriptions = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id)
+    subscriptions = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id).to_dict(
+        orient="records"
+    )
 
     # Execute the function
     figures = get_feed_figures(payouts, subscriptions)

@@ -77,7 +77,7 @@ def test_format_value():
         == "0x123...67890"
     )
     assert format_value(12.0, "avg_accuracy") == "12.0%"
-    assert format_value(9876.12, "sales_revenue_(OCEAN)") == "9.88K"
-    assert format_value(9876543, "volume_(OCEAN)") == "9.88M"
-    assert format_value(12.0, "avg_stake_per_epoch_(OCEAN)") == "12.0"
+    assert format_value(9876.12, "sales_revenue") == "9.88K"
+    assert format_value(9876543, "volume") == "9.88M"
+    assert format_value(12.0, "avg_stake") == "12.0"
     assert format_value(12, "unknown") == "12"

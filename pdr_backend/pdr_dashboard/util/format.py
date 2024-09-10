@@ -8,7 +8,7 @@ PREDICTOORS_HOME_PAGE_TABLE_COLS = [
     {"name": "User", "id": "full_addr"},
     {"name": "Accuracy", "id": "avg_accuracy"},
     {"name": "Profit", "id": "total_profit"},
-    {"name": "Stake", "id": "total_stake"},
+    {"name": "Stake", "id": "avg_stake"},
 ]
 
 FEEDS_HOME_PAGE_TABLE_COLS = [
@@ -68,6 +68,7 @@ FORMAT_CONFIG = {
     "stake_loss": "currency_conditional",
     "tx_costs_(OCEAN)": "currency_conditional",
     "net_income_(OCEAN)": "currency_conditional",
+    "sales_revenue": "currency_conditional",
     "apr": "percentage",
     "accuracy": "percentage",
     "predictoors_page_accuracy_metric": "percentage",
