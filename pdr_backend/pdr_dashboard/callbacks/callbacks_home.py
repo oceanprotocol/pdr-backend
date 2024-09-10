@@ -17,7 +17,6 @@ from pdr_backend.pdr_dashboard.util.format import format_value
 def get_callbacks_home(app):
     @app.callback(
         [
-            Output("fig-cache-store", "data"),
             Output("accuracy_chart", "children"),
             Output("profit_chart", "children"),
             Output("cost_chart", "children"),
@@ -36,7 +35,6 @@ def get_callbacks_home(app):
             State("feeds_table", "data"),
             State("predictoors_table", "data"),
             State("predictoors_table", "selected_rows"),
-            State("fig-cache-store", "data"),
         ],
     )
     def get_display_data_from_db(
@@ -45,7 +43,6 @@ def get_callbacks_home(app):
         feeds_table,
         predictoors_table,
         predictoors_table_selected_rows,
-        cache_store_data,
     ):
         # Create cache key
         selected_feeds = [feeds_table[i] for i in feeds_table_selected_rows]
@@ -56,13 +53,6 @@ def get_callbacks_home(app):
         ]
         selected_feeds_contracts = [row["contract"] for row in selected_feeds]
         selected_predictoors_addresses = [row["user"] for row in selected_predictoors]
-        cache_key = hash(
-            (
-                tuple(selected_feeds_contracts),
-                tuple(selected_predictoors_addresses),
-                date_period,
-            )
-        )
 
         if len(selected_feeds) == 0 or len(selected_predictoors) == 0:
             payouts = []
@@ -82,16 +72,6 @@ def get_callbacks_home(app):
                 ),
             )
 
-        # If cache_key is the same as previous cache,
-        # return no_update
-        # we use str because we had issues
-        # with the dcc.Store and int values
-        str_cache_key = str(cache_key)
-        if cache_store_data == str_cache_key:
-            return (dash.no_update,) * 10
-
-        # Update cache store with new cache_key
-
         figs_metrics = get_figures_and_metrics(
             payouts, feeds, selected_feeds_contracts, app.data.fee_cost
         )
@@ -99,7 +79,6 @@ def get_callbacks_home(app):
         date_period_text = get_date_period_text_for_selected_predictoors(payouts)
 
         return (
-            str_cache_key,
             get_graph(figs_metrics.fig_accuracy),
             get_graph(figs_metrics.fig_profit),
             get_graph(figs_metrics.fig_costs),
