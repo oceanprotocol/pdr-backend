@@ -163,6 +163,9 @@ class ETL:
             logger.info(
                 "do_etl - Moved build tables to permanent tables. ETL Complete."
             )
+
+            # Export data to parquet files
+            self._export_table_data_to_parquet_files()
         except Exception as e:
             logger.info("Error when executing ETL: %s", e)
 
@@ -341,3 +344,8 @@ class ETL:
                 "do_bronze_queries - completed query %s",
                 etl_query,
             )
+
+    @enforce_types
+    def _export_table_data_to_parquet_files(self):
+        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
+        db.export_tables_to_parquet_files()

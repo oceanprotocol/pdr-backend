@@ -349,3 +349,26 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         return (
             f"INSERT INTO {to_table.table_name} SELECT * FROM {from_table.table_name};"
         )
+
+    @enforce_types
+    def export_tables_to_parquet_files(self):
+        # Check if the folder exists, if not, create it
+        export_folder_path = f"{self.base_path}/exports"
+        tables = self.query_data("SHOW TABLES")["name"]
+        if not os.path.exists(export_folder_path):
+            os.makedirs(export_folder_path)
+        for table in tables:
+            parquet_file = f"{table}.parquet"
+
+            # Export the table to a Parquet file
+            query = f"COPY {table} TO '{export_folder_path}/{parquet_file}' (FORMAT 'parquet');"
+            self.execute_sql(query)
+        """
+        else:
+            for table in tables:
+                parquet_file = f"{table}.parquet"
+                last_event_timestamp = duckdb.execute(f"SELECT MAX(last_event_timestamp) FROM '{export_folder_path}/{parquet_file}'")
+                print(table, last_event_timestamp)
+
+                self.execute_sql(f"CREATE TABLE temp_table AS SELECT * FROM '{export_folder_path}/{parquet_file}' (FORMAT PARQUET);")
+        """
