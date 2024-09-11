@@ -1,20 +1,15 @@
 import dash
+import pandas
 from dash import Input, Output, State
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
-from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
-    filter_objects_by_field,
     get_date_period_text_for_selected_predictoors,
     select_or_clear_all_by_table,
-    get_start_date_from_period,
 )
-from pdr_backend.pdr_dashboard.util.format import (
-    format_value,
-    fill_none_with_zero,
-)
+from pdr_backend.pdr_dashboard.util.format import format_value
 
 
 # pylint: disable=too-many-statements
@@ -50,39 +45,30 @@ def get_callbacks_home(app):
         selected_feeds = [feeds_table[i] for i in feeds_table_selected_rows]
         feeds = ArgFeeds.from_table_data(selected_feeds)
 
-        selected_predictoors = [
-            predictoors_table[i] for i in predictoors_table_selected_rows
+        selected_feeds_addrs = [
+            feeds_table[i]["contract"] for i in feeds_table_selected_rows
         ]
-        predictoors_addrs = [row["user"] for row in selected_predictoors]
+        selected_predictoors_addrs = [
+            predictoors_table[i]["full_addr"] for i in predictoors_table_selected_rows
+        ]
 
-        if len(selected_feeds) == 0 or len(selected_predictoors) == 0:
+        if len(selected_feeds) == 0 or len(selected_predictoors_addrs) == 0:
             payouts = []
         else:
-            start_date = (
-                get_start_date_from_period(int(date_period))
-                if int(date_period) > 0
-                else 0
-            )
-            payouts = app.data.payouts_from_bronze_predictions(
-                [row["contract"] for row in selected_feeds],
-                predictoors_addrs,
-                (
-                    UnixTimeMs(UnixTimeS(start_date).to_milliseconds())
-                    if start_date
-                    else None
-                ),
-            )
+            app.data.set_start_date_from_period(int(date_period))
 
-            for payout in payouts:
-                temp_payout = fill_none_with_zero(payout)
-                payout.clear()
-                payout.update(temp_payout)
+            payouts = app.data.payouts_from_bronze_predictions(
+                selected_feeds_addrs,
+                selected_predictoors_addrs,
+            )
+            payouts.fillna(0, inplace=True)
+            payouts = payouts.to_dict(orient="records")
 
         # get figures
         figs_metrics = get_figures_and_metrics(
             payouts,
             feeds,
-            predictoors_addrs,
+            selected_predictoors_addrs,
             app.data.fee_cost,
         )
 
@@ -118,38 +104,47 @@ def get_callbacks_home(app):
         predictoors_table,
         show_favourite_addresses,
     ):
-        formatted_predictoors_data = app.data.formatted_predictoors_home_page_table_data
-        selected_predictoors = [predictoors_table[i] for i in selected_rows]
-        filtered_data = formatted_predictoors_data
+        formatted_predictoors_data = (
+            app.data.formatted_predictoors_home_page_table_data.copy()
+        )
+        selected_predictoors_addrs = [
+            predictoors_table[i]["full_addr"] for i in selected_rows
+        ]
 
         if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
-            custom_predictoors = [
-                predictoor
-                for predictoor in formatted_predictoors_data
-                if predictoor["user"] in app.data.favourite_addresses
+            custom_predictoors = formatted_predictoors_data[
+                formatted_predictoors_data["full_addr"].isin(
+                    app.data.favourite_addresses
+                )
             ]
+            custom_predictoors_addrs = list(custom_predictoors["full_addr"])
 
             if show_favourite_addresses:
-                selected_predictoors += custom_predictoors
+                selected_predictoors_addrs += custom_predictoors_addrs
             else:
-                selected_predictoors = [
-                    predictoor
-                    for predictoor in selected_predictoors
-                    if predictoor not in custom_predictoors
+                selected_predictoors_addrs = [
+                    predictoor_addr
+                    for predictoor_addr in selected_predictoors_addrs
+                    if predictoor_addr not in custom_predictoors_addrs
                 ]
 
+        filtered_data = formatted_predictoors_data.copy()
         if search_value:
-            # filter predictoors by user address
-            filtered_data = filter_objects_by_field(
-                filtered_data, "user", search_value, selected_predictoors
-            )
-        else:
-            filtered_data = [p for p in filtered_data if p not in selected_predictoors]
+            filtered_data = filtered_data[
+                filtered_data["full_addr"].str.contains(search_value)
+            ]
 
-        filtered_data = selected_predictoors + filtered_data
-        selected_predictoor_indices = list(range(len(selected_predictoors)))
+        filtered_data = filtered_data[
+            ~filtered_data["full_addr"].isin(selected_predictoors_addrs)
+        ]
+        selected_predictoors = formatted_predictoors_data[
+            formatted_predictoors_data["full_addr"].isin(selected_predictoors_addrs)
+        ]
 
-        return (filtered_data, selected_predictoor_indices)
+        filtered_data = pandas.concat([selected_predictoors, filtered_data])
+        selected_predictoor_indices = list(range(len(selected_predictoors_addrs)))
+
+        return (filtered_data.to_dict("records"), selected_predictoor_indices)
 
     @app.callback(
         Output("feeds_table", "data"),
@@ -173,10 +168,10 @@ def get_callbacks_home(app):
         predictoors_table_selected_rows,
         predictoors_table,
     ):
-        selected_feeds = [feeds_table[i] for i in selected_rows]
+        selected_feeds = [feeds_table[i]["contract"] for i in selected_rows]
         # Extract selected predictoor addresses
         predictoors_addrs = [
-            predictoors_table[i]["user"] for i in predictoors_table_selected_rows
+            predictoors_table[i]["full_addr"] for i in predictoors_table_selected_rows
         ]
 
         filtered_data = app.data.filter_for_feeds_table(

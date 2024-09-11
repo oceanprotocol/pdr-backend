@@ -2,17 +2,13 @@ import dash
 from dash import Input, Output, State
 
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
-from pdr_backend.pdr_dashboard.util.data import get_feed_column_ids
+from pdr_backend.pdr_dashboard.pages.predictoors import get_metric, key_id_name
 from pdr_backend.pdr_dashboard.util.filters import (
-    check_condition,
+    check_conditions,
     filter_table_by_range,
 )
-from pdr_backend.pdr_dashboard.util.format import format_table
+from pdr_backend.pdr_dashboard.util.format import format_df
 from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
-from pdr_backend.pdr_dashboard.pages.predictoors import (
-    get_metric,
-    key_id_name,
-)
 
 
 def get_callbacks_predictoors(app):
@@ -35,7 +31,7 @@ def get_callbacks_predictoors(app):
             for key, value in stats.items()
         ]
 
-        return app.data.predictoors_table_data, metrics_children_data
+        return app.data.predictoors_table_data.to_dict("records"), metrics_children_data
 
     @app.callback(
         Output("predictoors_page_table", "data"),
@@ -104,36 +100,26 @@ def get_callbacks_predictoors(app):
         conditions = [
             ("range", "apr", apr_min, apr_max),
             ("range", "p_accuracy", p_accuracy_min, p_accuracy_max),
-            ("range", "gross_income_(OCEAN)", gross_income_min, gross_income_max),
-            ("range", "number_of_feeds", nr_feeds_min, nr_feeds_max),
-            ("range", "staked_(OCEAN)", staked_min, staked_max),
+            ("range", "gross_income", gross_income_min, gross_income_max),
+            ("range", "feed_count", nr_feeds_min, nr_feeds_max),
+            ("range", "total_stake", staked_min, staked_max),
             ("range", "tx_costs_(OCEAN)", tx_costs_min, tx_costs_max),
-            ("range", "stake_loss_(OCEAN)", stake_loss_min, stake_loss_max),
+            ("range", "stake_loss", stake_loss_min, stake_loss_max),
             ("range", "net_income_(OCEAN)", net_income_min, net_income_max),
             ("search", None, search_input_value),
         ]
 
-        new_table_data = [
-            item
-            for item in app.data.raw_predictoors_data
-            if all(check_condition(item, *condition) for condition in conditions)
-        ]
-
-        columns = []
-        if new_table_data:
-            columns = get_feed_column_ids(new_table_data[0])
+        new_table_data = check_conditions(app.data.raw_predictoors_data, conditions)
 
         if sort_by:
             # Extract sort criteria
             sort_col = sort_by[0]["column_id"]
             ascending = sort_by[0]["direction"] == "asc"
-
-            # Sort by raw "Price" even if the "Formatted Price" is displayed
-            new_table_data = sorted(
-                new_table_data, key=lambda x: x[sort_col], reverse=not ascending
+            new_table_data = new_table_data.sort_values(
+                by=[sort_col, "full_addr"], ascending=ascending
             )
 
-        return format_table(new_table_data, columns)
+        return format_df(new_table_data).to_dict("records")
 
     @app.callback(
         Output("apr_dropdown", "label"),

@@ -1,17 +1,18 @@
 import json
 import time
-from typing import Callable, Any
+from typing import Any, Callable
 
 from selenium.webdriver.common.by import By
+
 from pdr_backend.pdr_dashboard.test.resources import (
-    _navigate_to_feeds_page,
     _assert_table_row_count,
-    start_server_and_wait,
     _clear_feeds_filters,
+    _navigate_to_feeds_page,
+    _remove_tags,
     _set_dropdown_and_verify_row_count,
     _set_input_value_and_submit,
-    _remove_tags,
     _set_searchbar_value,
+    start_server_and_wait,
 )
 
 

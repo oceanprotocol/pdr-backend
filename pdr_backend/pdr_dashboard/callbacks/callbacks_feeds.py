@@ -1,16 +1,13 @@
 import dash
 from dash import Input, Output, State
 
-from pdr_backend.pdr_dashboard.pages.feeds import get_metric
-from pdr_backend.pdr_dashboard.util.data import (
-    get_feed_column_ids,
-)
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
+from pdr_backend.pdr_dashboard.pages.feeds import get_metric
 from pdr_backend.pdr_dashboard.util.filters import (
-    check_condition,
+    check_conditions,
     filter_table_by_range,
 )
-from pdr_backend.pdr_dashboard.util.format import format_table
+from pdr_backend.pdr_dashboard.util.format import format_df
 from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
 
 
@@ -33,7 +30,7 @@ def get_callbacks_feeds(app):
             for key, value in app.data.feeds_metrics_data.items()
         ]
 
-        return app.data.feeds_table_data, metrics_children_data
+        return app.data.feeds_table_data.to_dict("records"), metrics_children_data
 
     @app.callback(
         Output("feeds_page_table", "data"),
@@ -89,33 +86,22 @@ def get_callbacks_feeds(app):
             ("filter", "source", source),
             ("filter", "timeframe", timeframe),
             ("range", "sales_raw", sales_min, sales_max),
-            ("range", "sales_revenue_(OCEAN)", revenue_min, revenue_max),
+            ("range", "sales_revenue", revenue_min, revenue_max),
             ("range", "avg_accuracy", accuracy_min, accuracy_max),
-            ("range", "volume_(OCEAN)", volume_min, volume_max),
+            ("range", "volume", volume_min, volume_max),
             ("search", None, search_input_value),
         ]
 
-        new_table_data = [
-            item
-            for item in app.data.raw_feeds_data
-            if all(check_condition(item, *condition) for condition in conditions)
-        ]
-
-        columns = []
-        if new_table_data:
-            columns = get_feed_column_ids(new_table_data[0])
+        new_table_data = check_conditions(app.data.raw_feeds_data, conditions)
 
         if sort_by:
-            # Extract sort criteria
             sort_col = sort_by[0]["column_id"]
             ascending = sort_by[0]["direction"] == "asc"
-
-            # Sort by raw "Price" even if the "Formatted Price" is displayed
-            new_table_data = sorted(
-                new_table_data, key=lambda x: x[sort_col], reverse=not ascending
+            new_table_data = new_table_data.sort_values(
+                by=sort_col, ascending=ascending
             )
 
-        return format_table(new_table_data, columns)
+        return format_df(new_table_data).to_dict("records")
 
     @app.callback(
         Output("sales_dropdown", "label"),

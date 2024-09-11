@@ -1,47 +1,32 @@
 import logging
-from copy import deepcopy
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import pandas
 from enforce_typing import enforce_types
 
 import duckdb
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
+from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
-from pdr_backend.lake.slot import Slot
-from pdr_backend.pdr_dashboard.util.data import (
-    col_to_human,
-    filter_objects_by_field,
-    get_feed_column_ids,
-    get_feeds_stat_with_contract,
-    get_feeds_subscription_stat_with_contract,
-)
+from pdr_backend.pdr_dashboard.util.data import get_sales_str
 from pdr_backend.pdr_dashboard.util.format import (
-    format_dict,
-    format_table,
-    fill_none_with_zero,
+    FEEDS_HOME_PAGE_TABLE_COLS,
+    FEEDS_TABLE_COLS,
+    PREDICTOORS_HOME_PAGE_TABLE_COLS,
+    PREDICTOORS_TABLE_COLS,
+    format_df,
 )
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
 )
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("predictoor_dashboard_utils")
-
-PREDICTOORS_HOME_PAGE_TABLE_COLS = [
-    {"name": "Addr", "id": "addr"},
-    {"name": "Full Addr", "id": "full_addr"},
-    {"name": "Apr", "id": "apr"},
-    {"name": "Accuracy", "id": "accuracy"},
-    {"name": "Number Of Feeds", "id": "number_of_feeds"},
-    {"name": "Staked (Ocean)", "id": "staked_(OCEAN)"},
-    {"name": "Gross Income (Ocean)", "id": "gross_income_(OCEAN)"},
-    {"name": "Stake Loss (Ocean)", "id": "stake_loss_(OCEAN)"},
-    {"name": "Tx Costs (Ocean)", "id": "tx_costs_(OCEAN)"},
-    {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
-]
 
 
 def format_to_parquet_file_path(path, table_name):
@@ -53,7 +38,7 @@ class AppDataManager:
     def __init__(self, ppss):
         self.parquet_files_path = f"{ppss.lake_ss.lake_dir}/exports/"
         self.network_name = ppss.web3_pp.network
-        self.start_date = None
+        self.start_date: Optional[datetime] = None
 
         self.min_timestamp, self.max_timestamp = (
             self.get_first_and_last_slot_timestamp()
@@ -71,10 +56,18 @@ class AppDataManager:
         self.refresh_feeds_data()
         self.refresh_predictoors_data()
 
-        valid_addresses = [p["user"].lower() for p in self.predictoors_data]
+        valid_addresses = list(self.predictoors_data["user"].str.lower())
         self.favourite_addresses = [
             addr for addr in ppss.predictoor_ss.my_addresses if addr in valid_addresses
         ]
+
+    @property
+    def start_date_ms(self) -> int:
+        return UnixTimeMs.from_dt(self.start_date) if self.start_date else None
+
+    def set_start_date_from_period(self, period: int):
+        start_dt = datetime.now() - timedelta(days=period) if int(period) > 0 else None
+        self.start_date = start_dt
 
     @enforce_types
     def _query_db(self, query: str, scalar=False) -> Union[List[dict], Any]:
@@ -90,23 +83,23 @@ class AppDataManager:
             if scalar:
                 result = duckdb.execute(query).fetchone()
                 return result[0] if result and len(result) == 1 else result
-
             # For non-scalar, fetch as a dataframe and convert to dictionary
             df = duckdb.execute(query).pl()
-            return df.to_dicts() if not df.is_empty() else []
+            return df.to_pandas()
         except Exception as e:
             logger.error("Error querying the database: %s", e)
-            return []
+            return pandas.DataFrame()
 
     @enforce_types
     def _init_feeds_data(self):
-        return self._query_db(
+        df = self._query_db(
             f"""
                 SELECT contract, pair, timeframe, source
                 FROM {format_to_parquet_file_path(self.parquet_files_path, BronzePrediction.get_lake_table_name())}
                 GROUP BY contract, pair, timeframe, source
             """,
         )
+        return df
 
     @enforce_types
     def _init_feed_payouts_stats(self):
@@ -115,22 +108,28 @@ class AppDataManager:
                     p.contract,
                     SUM(p.stake) AS volume,
                     SUM(
-                        CASE WHEN p.payout > 0 
+                        CASE WHEN p.payout > 0
                         THEN 1 ELSE 0 END
                     ) * 100.0 / COUNT(*) AS avg_accuracy,
                     AVG(p.stake) AS avg_stake
                 FROM
                     {format_to_parquet_file_path(self.parquet_files_path, BronzePrediction.get_lake_table_name())} p
             """
-        if self.start_date:
-            query += f"    WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f"    WHERE timestamp > {self.start_date_ms}"
 
         query += """
             GROUP BY
                 contract
             ORDER BY volume DESC;
         """
-        return self._query_db(query)
+        df = self._query_db(query)
+
+        df["avg_accuracy"] = df["avg_accuracy"].astype(float)
+        df["avg_stake"] = df["avg_stake"].astype(float)
+        df["volume"] = df["volume"].astype(float)
+
+        return df
 
     @enforce_types
     def _init_predictoor_payouts_stats(self):
@@ -162,8 +161,8 @@ class AppDataManager:
                 {format_to_parquet_file_path(self.parquet_files_path, BronzePrediction.get_lake_table_name())} p
         """
 
-        if self.start_date:
-            query += f"    WHERE p.timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f"    WHERE p.timestamp > {self.start_date_ms}"
 
         query += """
             GROUP BY
@@ -171,7 +170,14 @@ class AppDataManager:
             ORDER BY
                 apr DESC;
         """
-        return self._query_db(query)
+        df = self._query_db(query)
+
+        df["avg_accuracy"] = df["avg_accuracy"].astype(float)
+        df["total_stake"] = df["total_stake"].astype(float)
+        df["gross_income"] = df["gross_income"].astype(float)
+        df["stake_loss"] = df["stake_loss"].astype(float)
+
+        return df
 
     @enforce_types
     def _init_feed_subscription_stats(self):
@@ -187,8 +193,8 @@ class AppDataManager:
                 WHERE
                     "user" = '{opf_addresses["websocket"].lower()}'
                 """
-        if self.start_date:
-            query += f"AND timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f"AND timestamp > {self.start_date_ms}"
 
         query += f"""
                 GROUP BY
@@ -203,8 +209,8 @@ class AppDataManager:
                 WHERE
                     "user" = '{opf_addresses["dfbuyer"].lower()}'
                 """
-        if self.start_date:
-            query += f"AND timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f"AND timestamp > {self.start_date_ms}"
 
         query += f"""
                 GROUP BY
@@ -226,8 +232,8 @@ class AppDataManager:
                         {format_to_parquet_file_path(self.parquet_files_path, Subscription.get_lake_table_name())}
             """
 
-        if self.start_date:
-            query += f"WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f"WHERE timestamp > {self.start_date_ms}"
 
         query += """
                 ) AS main
@@ -243,7 +249,11 @@ class AppDataManager:
                 main_contract, ubc.df_buy_count, wbc.ws_buy_count
         """
 
-        return self._query_db(query)
+        df = self._query_db(query)
+        df["sales_revenue"] = df["sales_revenue"].astype(float)
+        df["price"] = df["price"].astype(float)
+
+        return df
 
     @enforce_types
     def feed_daily_subscriptions_by_feed_id(self, feed_id: str):
@@ -258,8 +268,8 @@ class AppDataManager:
                 WHERE
                     ID LIKE '%{feed_id}%'
         """
-        if self.start_date:
-            query += f" AND timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f" AND timestamp > {self.start_date_ms}"
 
         query += """
             GROUP BY
@@ -303,7 +313,6 @@ class AppDataManager:
         self,
         feed_addrs: Union[List[str], None],
         predictoor_addrs: Union[List[str], None],
-        start_date: int,
     ) -> List[dict]:
         """
         Get predictions data for the given feed and
@@ -338,8 +347,8 @@ class AppDataManager:
             conditions.append(f"({predictoor_conditions})")
 
         # Adding condition for the start date if provided
-        if start_date:
-            conditions.append(f"slot >= {start_date}")
+        if self.start_date_ms:
+            conditions.append(f"timestamp >= {self.start_date_ms}")
 
         # If there are any conditions, append them to the query
         if conditions:
@@ -414,8 +423,8 @@ class AppDataManager:
             SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
             FROM {format_to_parquet_file_path(self.parquet_files_path, Prediction.get_lake_table_name())}
         """
-        if self.start_date:
-            query_feeds += f"WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query_feeds += f"WHERE timestamp > {self.start_date_ms}"
         feeds = self._query_db(
             query_feeds,
             scalar=True,
@@ -424,15 +433,15 @@ class AppDataManager:
         query_payouts = f"""
             SELECT
                 SUM(
-                    CASE WHEN p.payout > 0 
+                    CASE WHEN p.payout > 0
                     THEN 1 ELSE 0 END
                 ) * 100.0 / COUNT(*) AS avg_accuracy,
                 SUM(p.stake) AS total_stake
             FROM
                 {format_to_parquet_file_path(self.parquet_files_path, BronzePrediction.get_lake_table_name())} p
         """
-        if self.start_date:
-            query_payouts += f"WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query_payouts += f"WHERE timestamp > {self.start_date_ms}"
         accuracy, volume = self._query_db(
             query_payouts,
             scalar=True,
@@ -443,8 +452,9 @@ class AppDataManager:
             SUM(last_price_value)
             FROM {format_to_parquet_file_path(self.parquet_files_path, Subscription.get_lake_table_name())}
         """
-        if self.start_date:
-            query_subscriptions += f" WHERE timestamp > {self.start_date}"
+
+        if self.start_date_ms:
+            query_subscriptions += f" WHERE timestamp > {self.start_date_ms}"
 
         sales, revenue = self._query_db(
             query_subscriptions,
@@ -465,8 +475,8 @@ class AppDataManager:
             SELECT COUNT(DISTINCT(user))
             FROM {format_to_parquet_file_path(self.parquet_files_path, Prediction.get_lake_table_name())}
         """
-        if self.start_date:
-            query_predictions += f" WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query_predictions += f" WHERE timestamp > {self.start_date_ms}"
         predictoors = self._query_db(
             query_predictions,
             scalar=True,
@@ -486,8 +496,8 @@ class AppDataManager:
                 FROM
                     {format_to_parquet_file_path(self.parquet_files_path, BronzePrediction.get_lake_table_name())} p
             """
-        if self.start_date:
-            query_payouts += f" WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query_payouts += f" WHERE timestamp > {self.start_date_ms}"
         avg_accuracy, tot_stake, tot_gross_income = self._query_db(
             query_payouts,
             scalar=True,
@@ -503,10 +513,10 @@ class AppDataManager:
     def get_first_and_last_slot_timestamp(self):
         first_timestamp, last_timestamp = self._query_db(
             f"""
-                SELECT 
+                SELECT
                     MIN(timestamp) as min,
                     MAX(timestamp) as max
-                FROM 
+                FROM
                     {format_to_parquet_file_path(self.parquet_files_path, Slot.get_lake_table_name())}
             """,
             scalar=True,
@@ -519,7 +529,7 @@ class AppDataManager:
         self.feeds_subscriptions = self._init_feed_subscription_stats()
 
         # data formatting for tables, columns and raw data
-        self.feeds_cols, self.feeds_table_data, self.raw_feeds_data = (
+        self.feeds_table_data, self.raw_feeds_data = (
             self._formatted_data_for_feeds_table
         )
 
@@ -528,119 +538,82 @@ class AppDataManager:
         self.predictoors_data = self._init_predictoor_payouts_stats()
 
         # data formatting for tables, columns and raw data
-        (
-            self.predictoors_cols,
-            self.predictoors_table_data,
-            self.raw_predictoors_data,
-        ) = self._formatted_data_for_predictoors_table
+        # pylint: disable=unbalanced-tuple-unpacking
+        self.predictoors_table_data, self.raw_predictoors_data = (
+            self._formatted_data_for_predictoors_table
+        )
 
     @property
     def _formatted_data_for_feeds_table(
         self,
-    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
+    ) -> Tuple[pandas.DataFrame, pandas.DataFrame]:
+        df = self.feeds_data.copy()
+        df["addr"] = df["full_addr"] = df["contract"]
+        df[["base_token", "quote_token"]] = df["pair"].str.split("/", expand=True)
+        df["source"] = df["source"].str.capitalize()
+        df = df.merge(self.feeds_payout_stats, on="contract")
+        df = df.merge(self.feeds_subscriptions, on="contract")
+        df["sales_str"] = df.apply(get_sales_str, axis=1)
+        df["sales_raw"] = df["sales"]
+        df.fillna(0, inplace=True)
 
-        new_feed_data = []
+        columns = [col["id"] for col in FEEDS_TABLE_COLS]
+        df = df[columns]
 
-        # split the pair column into two columns
-        for feed in self.feeds_data:
-            split_pair = feed["pair"].split("/")
-            feed_item = {}
-            feed_item["addr"] = feed["contract"]
-            feed_item["base_token"] = split_pair[0]
-            feed_item["quote_token"] = split_pair[1]
-            feed_item["source"] = feed["source"].capitalize()
-            feed_item["timeframe"] = feed["timeframe"]
-            feed_item["full_addr"] = feed["contract"]
+        formatted_data = df.copy()
+        formatted_data = format_df(formatted_data)
 
-            result = get_feeds_stat_with_contract(
-                feed["contract"], self.feeds_payout_stats
-            )
-
-            feed_item.update(result)
-
-            subscription_result = get_feeds_subscription_stat_with_contract(
-                feed["contract"], self.feeds_subscriptions
-            )
-
-            feed_item.update(subscription_result)
-
-            new_feed_data.append(feed_item)
-
-        columns = get_feed_column_ids(new_feed_data[0])
-
-        formatted_data = format_table(new_feed_data, columns)
-
-        return columns, formatted_data, new_feed_data
+        return formatted_data, df
 
     @property
     def _formatted_data_for_predictoors_table(
         self,
-    ) -> Tuple[List[Dict[str, str]], List[Dict[str, Any]], List[Dict[str, Any]]]:
+    ) -> Tuple[pandas.DataFrame, pandas.DataFrame]:
+        df = self.predictoors_data.copy()
+        df["addr"] = df["full_addr"] = df["user"]
+        df["accuracy"] = df["avg_accuracy"]
+        df["tx_costs_(OCEAN)"] = df["stake_count"] * self.fee_cost
+        df.fillna(0, inplace=True)
+        df["net_income_(OCEAN)"] = df["total_profit"] - df["tx_costs_(OCEAN)"]
 
-        new_predictoor_data = []
+        columns = [col["id"] for col in PREDICTOORS_TABLE_COLS]
 
-        if len(self.predictoors_data) == 0:
-            return (
-                PREDICTOORS_HOME_PAGE_TABLE_COLS,
-                [],
-                [],
-            )
+        df = df[columns]
 
-        # split the pair column into two columns
-        for data_item in self.predictoors_data:
-            tx_costs = self.fee_cost * float(data_item["stake_count"])
+        formatted_data = df.copy()
+        formatted_data = format_df(formatted_data)
 
-            temp_data_item = fill_none_with_zero(data_item)
-
-            temp_pred_item: Dict[str, Any] = {}
-            temp_pred_item["addr"] = str(temp_data_item["user"])
-            temp_pred_item["full_addr"] = str(temp_data_item["user"])
-            temp_pred_item["apr"] = temp_data_item["apr"]
-            temp_pred_item["accuracy"] = temp_data_item["avg_accuracy"]
-            temp_pred_item["number_of_feeds"] = temp_data_item["feed_count"]
-            temp_pred_item["staked_(OCEAN)"] = temp_data_item["total_stake"]
-            temp_pred_item["gross_income_(OCEAN)"] = temp_data_item["gross_income"]
-            temp_pred_item["stake_loss_(OCEAN)"] = temp_data_item["stake_loss"]
-            temp_pred_item["tx_costs_(OCEAN)"] = tx_costs
-            temp_pred_item["net_income_(OCEAN)"] = (
-                temp_data_item["total_profit"] - tx_costs
-            )
-
-            new_predictoor_data.append(temp_pred_item)
-
-        columns = get_feed_column_ids(new_predictoor_data[0])
-
-        formatted_data = format_table(new_predictoor_data, columns)
-
-        return columns, formatted_data, new_predictoor_data
+        return formatted_data, df
 
     def filter_for_feeds_table(
-        self, predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
+        self,
+        predictoor_feeds_only,
+        predictoors_addrs,
+        search_value,
+        selected_feeds_addrs,
     ):
-        filtered_data = self.feeds_data
+        filtered_data = self.feeds_data.copy()
 
         # filter feeds by payouts from selected predictoors
         if predictoor_feeds_only and (len(predictoors_addrs) > 0):
             feed_ids = self.feed_ids_based_on_predictoors(
                 predictoors_addrs,
             )
-            filtered_data = [
-                obj
-                for obj in filtered_data
-                if obj["contract"] in feed_ids
-                if obj not in selected_feeds
+            filtered_data = filtered_data[filtered_data["contract"].isin(feed_ids)]
+
+        if search_value:
+            filtered_data = filtered_data[
+                filtered_data["pair"].str.contains(search_value)
             ]
 
-        # filter feeds by pair address
-        filtered_data = (
-            filter_objects_by_field(
-                self.feeds_data, "pair", search_value, selected_feeds
-            )
-            if search_value
-            else filtered_data
-        )
+        filtered_data = filtered_data[
+            ~filtered_data["contract"].isin(selected_feeds_addrs)
+        ]
+        selected_feeds = self.feeds_data[
+            self.feeds_data["contract"].isin(selected_feeds_addrs)
+        ]
 
-        return selected_feeds + filtered_data
+        return pandas.concat([selected_feeds, filtered_data]).to_dict("records")
 
     @property
     @enforce_types
@@ -652,34 +625,21 @@ class AppDataManager:
         Returns:
             list: List of processed user payouts stats data.
         """
+        df = self.predictoors_data.copy()
+        df["addr"] = df["full_addr"] = df["user"]
+        df.fillna(0, inplace=True)
 
-        payout_stats = deepcopy(self.predictoors_data)
-        for data in payout_stats:
-            temp_data = fill_none_with_zero(data)
+        cols = [col["id"] for col in PREDICTOORS_HOME_PAGE_TABLE_COLS]
 
-            formatted_data = format_dict(
-                data=temp_data,
-                only_include_keys=["user", "total_profit", "avg_accuracy", "avg_stake"],
-            )
-
-            new_data = {
-                "user_address": formatted_data["user"],
-                "total_profit": formatted_data["total_profit"],
-                "avg_accuracy": formatted_data["avg_accuracy"],
-                "avg_stake": formatted_data["avg_stake"],
-                "user": data["user"],
-            }
-
-            data.clear()
-            data.update(new_data)
-
-        return payout_stats
+        formatted_data = df.copy()
+        formatted_data = formatted_data[cols]
+        return format_df(formatted_data)
 
     @property
     def homepage_feeds_cols(self):
         data = self.feeds_data
 
-        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
+        columns = FEEDS_HOME_PAGE_TABLE_COLS
         hidden_columns = ["contract"]
 
         return (columns, hidden_columns), data
@@ -688,14 +648,13 @@ class AppDataManager:
     def homepage_predictoors_cols(self):
         data = self.formatted_predictoors_home_page_table_data
 
-        columns = [{"name": col_to_human(col), "id": col} for col in data[0].keys()]
-        hidden_columns = ["user"]
+        if self.favourite_addresses:
+            df = data.copy()
+            df1 = df[df["full_addr"].isin(self.favourite_addresses)]
+            df2 = df[~df["full_addr"].isin(self.favourite_addresses)]
+            data = pandas.concat([df1, df2])
 
-        if not self.favourite_addresses:
-            return (columns, hidden_columns), data
-
-        data = [p for p in data if p["user"] in self.favourite_addresses] + [
-            p for p in data if p["user"] not in self.favourite_addresses
-        ]
+        columns = PREDICTOORS_HOME_PAGE_TABLE_COLS
+        hidden_columns = ["full_addr"]
 
         return (columns, hidden_columns), data

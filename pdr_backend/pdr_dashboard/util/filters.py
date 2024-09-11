@@ -1,6 +1,7 @@
 from typing import Optional
-from enforce_typing import enforce_types
+
 from dash import callback_context
+from enforce_typing import enforce_types
 
 
 @enforce_types
@@ -20,20 +21,6 @@ def filter_table_by_range(
         return label_text
 
     return f"{label_text} {min_val}-{max_val}"
-
-
-def table_column_filter_condition(item, field, values):
-    return not values or item[field] in values
-
-
-def table_search_condition(item, search_value):
-    if not search_value:
-        return True
-    search_value = search_value.lower()
-    return any(
-        search_value in item.get(key, "").lower()
-        for key in ["addr", "base_token", "quote_token"]
-    )
 
 
 def _float_repr(value):
@@ -195,39 +182,43 @@ def _denumerize(n):
         return "err"
 
 
-@enforce_types
-def table_column_range_condition(
-    item, field, min_value: Optional[str], max_value: Optional[str]
-):
-    item_value = float(item[field])
-    min_value = min_value or ""
-    max_value = max_value or ""
+def check_conditions(df, conditions):
+    df = df.copy()
 
-    if min_value and item_value < _float_repr(min_value):
-        return False
+    for condition in conditions:
+        df = check_condition(df, *condition)
 
-    if max_value and item_value > _float_repr(max_value):
-        return False
-
-    return True
+    return df
 
 
-def check_condition(item, condition_type, field, *values):
+def check_condition(df, condition_type, field, *values):
+    df = df.copy()
+
     if field and field.startswith("p_"):
         field = field[2:]
 
-    if condition_type == "filter":
-        return table_column_filter_condition(item, field, values[0])
+    if condition_type == "filter" and values[0]:
+        df = df[df[field].isin(values[0])]
 
     if condition_type == "range":
-        return table_column_range_condition(
-            item,
-            field,
-            values[0],
-            values[1],
-        )
+        if values[0]:
+            df = df[df[field] >= _float_repr(values[0])]
 
-    if condition_type == "search":
-        return table_search_condition(item, values[0])
+        if values[1]:
+            df = df[df[field] <= _float_repr(values[1])]
 
-    return True
+    if condition_type == "search" and values[0]:
+        df = df[searchable_df(df, values[0])]
+
+    return df
+
+
+def searchable_df(df, value):
+    if "base_token" not in df.columns:
+        return df["addr"].str.contains(value, case=False, na=False)
+
+    return (
+        df["addr"].str.contains(value, case=False, na=False)
+        | df["base_token"].str.contains(value, case=False, na=False)
+        | df["quote_token"].str.contains(value, case=False, na=False)
+    )

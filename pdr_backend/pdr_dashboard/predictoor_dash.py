@@ -24,14 +24,8 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
     app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
     app.config["suppress_callback_exceptions"] = True
 
-    try:
-        setup_app(app, ppss)
-    except Exception as e:
-        print(
-            f"""ERROR: Please make sure there is data in the lake.
-            Full error: {e}"""
-        )
-        return
+    #    try:
+    setup_app(app, ppss)
 
     app.run(debug=debug_mode, port=port)
 

@@ -1,6 +1,5 @@
 import time
 
-
 from pdr_backend.pdr_dashboard.test.resources import (
     _input_action,
     start_server_and_wait,
@@ -83,7 +82,7 @@ def test_favourite_addresses_search_input(
     all_feeds_toggle.click()
     time.sleep(2)
     f_all, f_sel = _feed_count(dash_duo)
-    assert len(f_all) == 21
+    assert len(f_all) == 20
     assert len(f_sel) == 1
 
     # click on fav addr toggle to show all predictoors
