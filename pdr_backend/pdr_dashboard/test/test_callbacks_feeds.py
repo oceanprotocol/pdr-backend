@@ -1,6 +1,6 @@
 import json
 import time
-from typing import Callable, Any
+from typing import Any, Callable
 
 from selenium.webdriver.common.by import By
 

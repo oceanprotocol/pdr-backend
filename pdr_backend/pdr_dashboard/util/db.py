@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas
@@ -23,6 +24,7 @@ from pdr_backend.pdr_dashboard.util.prices import (
     fetch_token_prices,
 )
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
+from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("predictoor_dashboard_utils")
 
@@ -32,7 +34,7 @@ class AppDataManager:
     def __init__(self, ppss):
         self.lake_dir = ppss.lake_ss.lake_dir
         self.network_name = ppss.web3_pp.network
-        self.start_date = None
+        self.start_date: Optional[datetime] = None
 
         self.min_timestamp, self.max_timestamp = (
             self.get_first_and_last_slot_timestamp()
@@ -54,6 +56,14 @@ class AppDataManager:
         self.favourite_addresses = [
             addr for addr in ppss.predictoor_ss.my_addresses if addr in valid_addresses
         ]
+
+    @property
+    def start_date_ms(self) -> int:
+        return UnixTimeMs.from_dt(self.start_date) if self.start_date else None
+
+    def set_start_date_from_period(self, period: int):
+        start_dt = datetime.now() - timedelta(days=period) if int(period) > 0 else None
+        self.start_date = start_dt
 
     @enforce_types
     def _query_db(self, query: str, scalar=False) -> Union[List[dict], Exception]:
@@ -77,7 +87,7 @@ class AppDataManager:
             return result
         except Exception as e:
             logger.error("Error querying the database: %s", e)
-            return []
+            return pandas.DataFrame()
 
     @enforce_types
     def _init_feeds_data(self):
@@ -104,8 +114,8 @@ class AppDataManager:
                 FROM
                     {BronzePrediction.get_lake_table_name()} p
             """
-        if self.start_date:
-            query += f"    WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f"    WHERE timestamp > {self.start_date_ms}"
 
         query += """
             GROUP BY
@@ -150,8 +160,8 @@ class AppDataManager:
                 {BronzePrediction.get_lake_table_name()} p
         """
 
-        if self.start_date:
-            query += f"    WHERE p.timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f"    WHERE p.timestamp > {self.start_date_ms}"
 
         query += """
             GROUP BY
@@ -182,8 +192,8 @@ class AppDataManager:
                 WHERE
                     "user" = '{opf_addresses["websocket"].lower()}'
                 """
-        if self.start_date:
-            query += f"AND timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f"AND timestamp > {self.start_date_ms}"
 
         query += f"""
                 GROUP BY
@@ -198,8 +208,8 @@ class AppDataManager:
                 WHERE
                     "user" = '{opf_addresses["dfbuyer"].lower()}'
                 """
-        if self.start_date:
-            query += f"AND timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f"AND timestamp > {self.start_date_ms}"
 
         query += f"""
                 GROUP BY
@@ -221,8 +231,8 @@ class AppDataManager:
                         {Subscription.get_lake_table_name()}
             """
 
-        if self.start_date:
-            query += f"WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f"WHERE timestamp > {self.start_date_ms}"
 
         query += """
                 ) AS main
@@ -257,8 +267,8 @@ class AppDataManager:
                 WHERE
                     ID LIKE '%{feed_id}%'
         """
-        if self.start_date:
-            query += f" AND timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query += f" AND timestamp > {self.start_date_ms}"
 
         query += """
             GROUP BY
@@ -302,7 +312,6 @@ class AppDataManager:
         self,
         feed_addrs: Union[List[str], None],
         predictoor_addrs: Union[List[str], None],
-        start_date: int,
     ) -> List[dict]:
         """
         Get predictions data for the given feed and
@@ -337,8 +346,8 @@ class AppDataManager:
             conditions.append(f"({predictoor_conditions})")
 
         # Adding condition for the start date if provided
-        if start_date:
-            conditions.append(f"slot >= {start_date}")
+        if self.start_date_ms:
+            conditions.append(f"timestamp >= {self.start_date_ms}")
 
         # If there are any conditions, append them to the query
         if conditions:
@@ -413,8 +422,8 @@ class AppDataManager:
             SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
             FROM {Prediction.get_lake_table_name()}
         """
-        if self.start_date:
-            query_feeds += f"WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query_feeds += f"WHERE timestamp > {self.start_date_ms}"
         feeds = self._query_db(
             query_feeds,
             scalar=True,
@@ -430,8 +439,8 @@ class AppDataManager:
             FROM
                 {BronzePrediction.get_lake_table_name()} p
         """
-        if self.start_date:
-            query_payouts += f"WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query_payouts += f"WHERE timestamp > {self.start_date_ms}"
         accuracy, volume = self._query_db(
             query_payouts,
             scalar=True,
@@ -442,8 +451,8 @@ class AppDataManager:
             SUM(last_price_value)
             FROM {Subscription.get_lake_table_name()}
         """
-        if self.start_date:
-            query_subscriptions += f" WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query_subscriptions += f" WHERE timestamp > {self.start_date_ms}"
         sales, revenue = self._query_db(
             query_subscriptions,
             scalar=True,
@@ -463,8 +472,8 @@ class AppDataManager:
             SELECT COUNT(DISTINCT(user))
             FROM {Prediction.get_lake_table_name()}
         """
-        if self.start_date:
-            query_predictions += f" WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query_predictions += f" WHERE timestamp > {self.start_date_ms}"
         predictoors = self._query_db(
             query_predictions,
             scalar=True,
@@ -484,8 +493,8 @@ class AppDataManager:
                 FROM
                     {BronzePrediction.get_lake_table_name()} p
             """
-        if self.start_date:
-            query_payouts += f" WHERE timestamp > {self.start_date}"
+        if self.start_date_ms:
+            query_payouts += f" WHERE timestamp > {self.start_date_ms}"
         avg_accuracy, tot_stake, tot_gross_income = self._query_db(
             query_payouts,
             scalar=True,

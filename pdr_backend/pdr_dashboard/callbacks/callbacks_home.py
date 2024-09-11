@@ -7,13 +7,9 @@ from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metr
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
 from pdr_backend.pdr_dashboard.util.data import (
     get_date_period_text_for_selected_predictoors,
-    get_start_date_from_period,
     select_or_clear_all_by_table,
 )
-from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
-from pdr_backend.pdr_dashboard.util.format import (
-    format_value,
-)
+from pdr_backend.pdr_dashboard.util.format import format_value
 
 
 # pylint: disable=too-many-statements
@@ -49,27 +45,21 @@ def get_callbacks_home(app):
         selected_feeds = [feeds_table[i] for i in feeds_table_selected_rows]
         feeds = ArgFeeds.from_table_data(selected_feeds)
 
-        selected_predictoors = [
-            predictoors_table[i] for i in predictoors_table_selected_rows
+        selected_feeds_addrs = [
+            feeds_table[i]["contract"] for i in feeds_table_selected_rows
         ]
-        predictoors_addrs = [row["full_addr"] for row in selected_predictoors]
+        selected_predictoors_addrs = [
+            predictoors_table[i]["full_addr"] for i in predictoors_table_selected_rows
+        ]
 
-        if len(selected_feeds) == 0 or len(selected_predictoors) == 0:
+        if len(selected_feeds) == 0 or len(selected_predictoors_addrs) == 0:
             payouts = []
         else:
-            start_date = (
-                get_start_date_from_period(int(date_period))
-                if int(date_period) > 0
-                else 0
-            )
+            app.data.set_start_date_from_period(int(date_period))
+
             payouts = app.data.payouts_from_bronze_predictions(
-                [row["contract"] for row in selected_feeds],
-                predictoors_addrs,
-                (
-                    UnixTimeMs(UnixTimeS(start_date).to_milliseconds())
-                    if start_date
-                    else None
-                ),
+                selected_feeds_addrs,
+                selected_predictoors_addrs,
             )
             payouts.fillna(0, inplace=True)
             payouts = payouts.to_dict(orient="records")
@@ -78,7 +68,7 @@ def get_callbacks_home(app):
         figs_metrics = get_figures_and_metrics(
             payouts,
             feeds,
-            predictoors_addrs,
+            selected_predictoors_addrs,
             app.data.fee_cost,
         )
 

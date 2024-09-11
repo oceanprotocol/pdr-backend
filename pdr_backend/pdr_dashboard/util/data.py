@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Union
 
 import dash
@@ -33,12 +33,8 @@ def select_or_clear_all_by_table(
     return selected_rows
 
 
-def get_start_date_from_period(number_days: int):
-    return int((datetime.now() - timedelta(days=number_days)).timestamp())
-
-
 def get_date_period_text_for_selected_predictoors(payouts: List):
-    if payouts:
+    if not payouts:
         return "there is no data available"
     start_date = payouts[0]["slot"] if len(payouts) > 0 else 0
     end_date = payouts[-1]["slot"] if len(payouts) > 0 else 0

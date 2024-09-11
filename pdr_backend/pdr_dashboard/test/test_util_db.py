@@ -84,7 +84,7 @@ def test_get_user_payouts_stats(
     assert test_row["total_profit"] == -24.045497962220715
 
     # test filtering by start date
-    db_mgr.start_date = UnixTimeMs(1721957490000)
+    db_mgr.start_date = UnixTimeMs(1721957490000).to_dt()
     result = db_mgr._init_predictoor_payouts_stats()
 
     assert isinstance(result, pandas.DataFrame)
@@ -123,6 +123,6 @@ def test_get_feed_daily_subscriptions_by_feed_id(_sample_app):
     ), "Revenue should be the sum of last_price_value of the subscriptions"
 
     # test filtering by start date
-    db_mgr.start_date = UnixTimeMs(1721957490000)
+    db_mgr.start_date = UnixTimeMs(1721957490000).to_dt()
     result = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id)
     assert len(result) == 0
