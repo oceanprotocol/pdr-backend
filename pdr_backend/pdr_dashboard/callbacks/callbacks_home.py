@@ -10,7 +10,10 @@ from pdr_backend.pdr_dashboard.util.data import (
     select_or_clear_all_by_table,
     get_start_date_from_period,
 )
-from pdr_backend.pdr_dashboard.util.format import format_value
+from pdr_backend.pdr_dashboard.util.format import (
+    format_value,
+    fill_none_with_zero,
+)
 
 
 # pylint: disable=too-many-statements
@@ -62,7 +65,7 @@ def get_callbacks_home(app):
                 if int(date_period) > 0
                 else 0
             )
-            payouts = app.data.payouts(
+            payouts = app.data.payouts_from_bronze_predictions(
                 [row["contract"] for row in selected_feeds],
                 selected_predictoors_addresses,
                 (
@@ -72,6 +75,12 @@ def get_callbacks_home(app):
                 ),
             )
 
+            for payout in payouts:
+                temp_payout = fill_none_with_zero(payout)
+                payout.clear()
+                payout.update(temp_payout)
+
+        # get figures
         figs_metrics = get_figures_and_metrics(
             payouts, feeds, selected_feeds_contracts, app.data.fee_cost
         )
@@ -119,6 +128,7 @@ def get_callbacks_home(app):
             Input("search-input-Predictoors", "value"),
             Input("predictoors_table", "data"),
             Input("show-favourite-addresses", "value"),
+            Input("general-lake-date-period-radio-items", "value"),
         ],
         State("predictoors_table", "selected_rows"),
         prevent_initial_call=True,
@@ -127,8 +137,13 @@ def get_callbacks_home(app):
         search_value,
         predictoors_table,
         show_favourite_addresses,
+        _,
         selected_rows,
     ):
+        # detect if the data_period is triggered
+        if "general-lake-date-period-radio-items" in dash.callback_context.triggered_id:
+            app.data.refresh_predictoors_data()
+
         selected_predictoors_rows_addresses = [
             predictoors_table[i]["user"] for i in selected_rows
         ]

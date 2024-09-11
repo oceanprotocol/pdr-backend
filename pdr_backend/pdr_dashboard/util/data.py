@@ -111,9 +111,9 @@ def get_feeds_stat_with_contract(
 
     if result:
         return {
-            "avg_accuracy": float(result["avg_accuracy"]),
-            "avg_stake_per_epoch_(OCEAN)": float(result["avg_stake"]),
-            "volume_(OCEAN)": float(result["volume"]),
+            "avg_accuracy": float(result["avg_accuracy"] or 0),
+            "avg_stake_per_epoch_(OCEAN)": float(result["avg_stake"] or 0),
+            "volume_(OCEAN)": float(result["volume"] or 0),
         }
 
     return {

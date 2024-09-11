@@ -7,6 +7,7 @@ from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.subscription import Subscription
+from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.pdr_dashboard.util.data import (
     filter_objects_by_field,
@@ -14,7 +15,10 @@ from pdr_backend.pdr_dashboard.util.data import (
     get_feeds_stat_with_contract,
     get_feeds_subscription_stat_with_contract,
 )
-from pdr_backend.pdr_dashboard.util.format import format_table
+from pdr_backend.pdr_dashboard.util.format import (
+    format_table,
+    fill_none_with_zero,
+)
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
@@ -93,7 +97,8 @@ class AppDataManager:
     def _init_feeds_data(self):
         return self._query_db(
             f"""
-                SELECT contract, pair, timeframe, source FROM {Prediction.get_lake_table_name()}
+                SELECT contract, pair, timeframe, source
+                FROM {BronzePrediction.get_lake_table_name()}
                 GROUP BY contract, pair, timeframe, source
             """,
         )
@@ -102,15 +107,19 @@ class AppDataManager:
     def _init_feed_payouts_stats(self):
         query = f"""
                 SELECT
-                    SPLIT_PART(ID, '-', 1) AS contract,
-                    SUM(stake) AS volume,
-                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
-                    AVG(stake) AS avg_stake
+                    p.contract,
+                    SUM(p.stake) AS volume,
+                    SUM(
+                        CASE WHEN p.payout > 0 
+                        THEN 1 ELSE 0 END
+                    ) * 100.0 / COUNT(*) AS avg_accuracy,
+                    AVG(p.stake) AS avg_stake
                 FROM
-                    {Payout.get_lake_table_name()}
+                    {BronzePrediction.get_lake_table_name()} p
             """
         if self.start_date:
             query += f"    WHERE timestamp > {self.start_date}"
+
         query += """
             GROUP BY
                 contract
@@ -120,7 +129,7 @@ class AppDataManager:
 
     @enforce_types
     def _init_predictoor_payouts_stats(self):
-        # Insert the generated CASE clause into the SQL query
+
         query = f"""
             SELECT
                 p."user",
@@ -130,24 +139,22 @@ class AppDataManager:
                 -- Calculate total loss: sum up the negative income, capping positives at 0
                 SUM(CASE WHEN p.payout = 0 THEN p.stake ELSE 0 END) AS stake_loss,
                 SUM(p.payout) AS total_payout,
-                --- Calculate total profit
+                -- Calculate total profit
                 SUM(p.payout - p.stake) AS total_profit,
-                --- Calculate total stake
-                SUM(p.stake) AS total_stake,
+                -- Calculate total stake
                 COUNT(p.ID) AS stake_count,
-                COUNT(DISTINCT SPLIT_PART(p.ID, '-', 1)) AS feed_count,
+                COUNT(DISTINCT p.contract) AS feed_count,
                 -- Count correct predictions where payout > 0
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) AS correct_predictions,
-                COUNT(*) AS predictions,
-                AVG(p.stake) AS avg_stake,
+                total_stake / stake_count AS avg_stake,
                 MIN(p.slot) AS first_payout_time,
                 MAX(p.slot) AS last_payout_time,
                 -- Calculate the APR
-                total_profit / total_stake * 100 AS apr,
+                (SUM(p.payout - p.stake) / NULLIF(SUM(p.stake), 0)) * 100 AS apr,
                 -- Calculate average accuracy
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy
             FROM
-                {Payout.get_lake_table_name()} p
+                {BronzePrediction.get_lake_table_name()} p
         """
 
         if self.start_date:
@@ -156,7 +163,8 @@ class AppDataManager:
         query += """
             GROUP BY
                 p."user"
-            ORDER BY apr DESC;
+            ORDER BY
+                apr DESC;
         """
         return self._query_db(query)
 
@@ -271,20 +279,71 @@ class AppDataManager:
 
         # Constructing the SQL query
         query = f"""
-            SELECT LIST(LEFT(ID, POSITION('-' IN ID) - 1)) as feed_addrs
-            FROM {Payout.get_lake_table_name()}
-            WHERE ID IN (
-                SELECT MIN(ID)
-                FROM {Payout.get_lake_table_name()}
+            SELECT LIST(DISTINCT p.contract) as feed_addrs
+            FROM bronze_pdr_predictions p
+            WHERE p.contract IN (
+                SELECT MIN(p.contract)
+                FROM {BronzePrediction.get_lake_table_name()} p
                 WHERE (
-                    {" OR ".join([f"ID LIKE '%{item}%'" for item in predictoor_addrs])}
+                    {" OR ".join([f"p.user LIKE '%{item}%'" for item in predictoor_addrs])}
                 )
-                GROUP BY LEFT(ID, POSITION('-' IN ID) - 1)
+                GROUP BY p.contract
             );
         """
 
         # Execute the query
         return self._query_db(query, scalar=True)
+
+    def payouts_from_bronze_predictions(
+        self,
+        feed_addrs: Union[List[str], None],
+        predictoor_addrs: Union[List[str], None],
+        start_date: int,
+    ) -> List[dict]:
+        """
+        Get predictions data for the given feed and
+        predictoor addresses from the bronze_pdr_predictions table.
+        Args:
+            feed_addrs (list): List of feed addresses.
+            predictoor_addrs (list): List of predictoor addresses.
+            start_date (int): The starting slot (timestamp)
+                for filtering the results.
+        Returns:
+            list: List of predictions data.
+        """
+
+        # Start constructing the SQL query
+        query = f"SELECT * FROM {BronzePrediction.get_lake_table_name()}"
+
+        # List to hold the WHERE clause conditions
+        conditions = []
+
+        # Adding conditions for feed addresses if provided
+        if feed_addrs:
+            feed_conditions = " OR ".join(
+                [f"contract = '{addr}'" for addr in feed_addrs]
+            )
+            conditions.append(f"({feed_conditions})")
+
+        # Adding conditions for predictoor addresses if provided
+        if predictoor_addrs:
+            predictoor_conditions = " OR ".join(
+                [f"user = '{addr}'" for addr in predictoor_addrs]
+            )
+            conditions.append(f"({predictoor_conditions})")
+
+        # Adding condition for the start date if provided
+        if start_date:
+            conditions.append(f"slot >= {start_date}")
+
+        # If there are any conditions, append them to the query
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        query += ";"
+
+        # Execute the query without passing parameters
+        return self._query_db(query)
 
     def payouts(
         self,
@@ -359,10 +418,13 @@ class AppDataManager:
 
         query_payouts = f"""
             SELECT
-                SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy,
-                SUM(stake) AS total_stake
+                SUM(
+                    CASE WHEN p.payout > 0 
+                    THEN 1 ELSE 0 END
+                ) * 100.0 / COUNT(*) AS avg_accuracy,
+                SUM(p.stake) AS total_stake
             FROM
-                {Payout.get_lake_table_name()}
+                {BronzePrediction.get_lake_table_name()} p
         """
         if self.start_date:
             query_payouts += f"WHERE timestamp > {self.start_date}"
@@ -406,11 +468,17 @@ class AppDataManager:
 
         query_payouts = f"""
                 SELECT
-                    SUM(CASE WHEN payout > 0 THEN 1 ELSE 0 END) * 100 / COUNT(*) AS avg_accuracy,
-                    SUM(stake) as tot_stake,
-                    SUM(CASE WHEN payout > stake THEN payout - stake ELSE 0 END) AS tot_gross_income
+                    SUM(
+                        CASE WHEN p.payout > 0
+                        THEN 1 ELSE 0 END
+                    ) * 100 / COUNT(*) AS avg_accuracy,
+                    SUM(p.stake) AS tot_stake,
+                    SUM(
+                        CASE WHEN p.payout > p.stake
+                        THEN p.payout - p.stake ELSE 0 END
+                    ) AS tot_gross_income
                 FROM
-                    {Payout.get_lake_table_name()}
+                    {BronzePrediction.get_lake_table_name()} p
             """
         if self.start_date:
             query_payouts += f" WHERE timestamp > {self.start_date}"
@@ -516,17 +584,21 @@ class AppDataManager:
         for data_item in self.predictoors_data:
             tx_costs = self.fee_cost * float(data_item["stake_count"])
 
-            temp_pred_item = {}
-            temp_pred_item["addr"] = str(data_item["user"])
-            temp_pred_item["full_addr"] = str(data_item["user"])
-            temp_pred_item["apr"] = data_item["apr"]
-            temp_pred_item["accuracy"] = data_item["avg_accuracy"]
-            temp_pred_item["number_of_feeds"] = str(data_item["feed_count"])
-            temp_pred_item["staked_(OCEAN)"] = data_item["total_stake"]
-            temp_pred_item["gross_income_(OCEAN)"] = data_item["gross_income"]
-            temp_pred_item["stake_loss_(OCEAN)"] = data_item["stake_loss"]
+            temp_data_item = fill_none_with_zero(data_item)
+
+            temp_pred_item: Dict[str, Any] = {}
+            temp_pred_item["addr"] = str(temp_data_item["user"])
+            temp_pred_item["full_addr"] = str(temp_data_item["user"])
+            temp_pred_item["apr"] = temp_data_item["apr"]
+            temp_pred_item["accuracy"] = temp_data_item["avg_accuracy"]
+            temp_pred_item["number_of_feeds"] = temp_data_item["feed_count"]
+            temp_pred_item["staked_(OCEAN)"] = temp_data_item["total_stake"]
+            temp_pred_item["gross_income_(OCEAN)"] = temp_data_item["gross_income"]
+            temp_pred_item["stake_loss_(OCEAN)"] = temp_data_item["stake_loss"]
             temp_pred_item["tx_costs_(OCEAN)"] = tx_costs
-            temp_pred_item["net_income_(OCEAN)"] = data_item["total_profit"] - tx_costs
+            temp_pred_item["net_income_(OCEAN)"] = (
+                temp_data_item["total_profit"] - tx_costs
+            )
 
             new_predictoor_data.append(temp_pred_item)
 

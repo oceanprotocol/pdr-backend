@@ -218,8 +218,10 @@ def _prepare_sample_app(tmpdir, include_my_addresses=False):
         str(tmpdir),
         "2024-07-26_00:00",
         "2024-07-26_02:00",
-        False,
+        True,
     )
+
+    etl.do_etl()
 
     db.duckdb_conn.close()
 
