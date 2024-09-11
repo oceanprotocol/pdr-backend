@@ -6,6 +6,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_search_bar,
 )
 from pdr_backend.pdr_dashboard.pages.common import TabularPage
+from pdr_backend.pdr_dashboard.util.format import PREDICTOORS_TABLE_COLS
 
 
 class PredictoorsPage(TabularPage):
@@ -96,10 +97,10 @@ class PredictoorsPage(TabularPage):
             [
                 dash_table.DataTable(
                     id="predictoors_page_table",
-                    columns=self.app.data.predictoors_cols,
+                    columns=PREDICTOORS_TABLE_COLS,
                     hidden_columns=["full_addr"],
                     row_selectable="single",
-                    data=self.app.data.predictoors_table_data,
+                    data=self.app.data.predictoors_table_data.to_dict("records"),
                     sort_action="custom",
                     sort_mode="single",
                 ),

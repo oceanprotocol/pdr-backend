@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 import dash
+import pandas
 
 from pdr_backend.pdr_dashboard.util.data import select_or_clear_all_by_table
 
@@ -43,33 +44,33 @@ def test_unrelated_trigger(sample_table_rows):
 
 def test_get_predictoors_data_from_payouts(_sample_app):
     db_mgr = _sample_app.data
-    db_mgr.predictoors_data = [
-        {
-            "user": "0x02e9d2eede4c5347e55346860c8a8988117bde9e",
-            "total_profit": 0.0,
-            "avg_accuracy": 100.0,
-            "avg_stake": 1.9908170679122585,
-        },
-        {
-            "user": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
-            "total_profit": 0.0,
-            "avg_accuracy": 100.0,
-            "avg_stake": 1.9908170679122585,
-        },
-    ]
+    db_mgr.predictoors_data = pandas.DataFrame(
+        [
+            {
+                "user": "0x02e9d2eede4c5347e55346860c8a8988117bde9e",
+                "total_profit": 0.0,
+                "avg_accuracy": 100.0,
+                "avg_stake": 1.9908170679122585,
+            },
+            {
+                "user": "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+                "total_profit": 0.0,
+                "avg_accuracy": 100.0,
+                "avg_stake": 1.9908170679122585,
+            },
+        ]
+    )
 
     result = db_mgr.formatted_predictoors_home_page_table_data
 
-    assert isinstance(result, list)
+    assert isinstance(result, pandas.DataFrame)
     assert len(result) == 2
 
-    test_row = [
-        row
-        for row in result
-        if row["user"] == "0x02e9d2eede4c5347e55346860c8a8988117bde9e"
-    ][0]
+    test_row = result[
+        result["full_addr"] == "0x02e9d2eede4c5347e55346860c8a8988117bde9e"
+    ].to_dict(orient="records")[0]
 
-    assert test_row["user_address"] == "0x02e...bde9e"
+    assert test_row["addr"] == "0x02e...bde9e"
     assert test_row["total_profit"] == "0"
     assert test_row["avg_accuracy"] == "100.0%"
     assert test_row["avg_stake"] == "1.99"

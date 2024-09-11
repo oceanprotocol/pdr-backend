@@ -1,36 +1,11 @@
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Union
 
 import dash
 from enforce_typing import enforce_types
 
 logger = logging.getLogger("predictoor_dashboard_utils")
-
-
-@enforce_types
-def get_feed_column_ids(data: Dict[str, Any]):
-    return [
-        {"name": col_to_human(col=col, replace_rules=["total_"]), "id": col}
-        for col in data.keys()
-    ]
-
-
-@enforce_types
-def filter_objects_by_field(
-    objects: List[Dict[str, Any]],
-    field: str,
-    search_string: str,
-    previous_objects: Optional[List] = None,
-) -> List[Dict[str, Any]]:
-    if previous_objects is None:
-        previous_objects = []
-
-    return [
-        obj
-        for obj in objects
-        if search_string.lower() in obj[field].lower() and obj not in previous_objects
-    ]
 
 
 @enforce_types
@@ -58,10 +33,6 @@ def select_or_clear_all_by_table(
     return selected_rows
 
 
-def get_start_date_from_period(number_days: int):
-    return int((datetime.now() - timedelta(days=number_days)).timestamp())
-
-
 def get_date_period_text_for_selected_predictoors(payouts: List):
     if not payouts:
         return "there is no data available"
@@ -84,58 +55,7 @@ def get_date_period_text_header(start_date: str, end_date: str):
     return date_period_text
 
 
-@enforce_types
-def col_to_human(col: str, replace_rules: List[str] = ["avg_", "total_"]) -> str:
-    temp_col = col
-    for rule in replace_rules:
-        temp_col = temp_col.replace(rule, "")
-
-    return temp_col.replace("_", " ").title()
-
-
-@enforce_types
-def find_with_key_value(
-    objects: List[Dict[str, Any]], key: str, value: str
-) -> Union[Dict[str, Any], None]:
-    for obj in objects:
-        if obj[key] == value:
-            return obj
-
-    return None
-
-
-def get_feeds_stat_with_contract(
-    contract: str, feed_stats: List[Dict[str, Any]]
-) -> Dict[str, Union[float, int]]:
-    result = find_with_key_value(feed_stats, "contract", contract)
-
-    if result:
-        return {
-            "avg_accuracy": float(result["avg_accuracy"] or 0),
-            "avg_stake_per_epoch_(OCEAN)": float(result["avg_stake"] or 0),
-            "volume_(OCEAN)": float(result["volume"] or 0),
-        }
-
-    return {
-        "avg_accuracy": 0,
-        "avg_stake_per_epoch_(OCEAN)": 0,
-        "volume_(OCEAN)": 0,
-    }
-
-
-def get_feeds_subscription_stat_with_contract(
-    contract: str, feed_subcription_stats: List[Dict[str, Any]]
-) -> Dict[str, Union[float, int, str]]:
-    result = find_with_key_value(feed_subcription_stats, "contract", contract)
-
-    if not result:
-        return {
-            "price_(OCEAN)": 0,
-            "sales": 0,
-            "sales_raw": 0,
-            "sales_revenue_(OCEAN)": 0,
-        }
-
+def get_sales_str(result):
     sales_str = f"{result['sales']}"
 
     df_buy_count_str = (
@@ -151,9 +71,4 @@ def get_feeds_subscription_stat_with_contract(
         if counts_str:
             sales_str += f"_{counts_str}"
 
-    return {
-        "price_(OCEAN)": result["price"],
-        "sales": sales_str,
-        "sales_raw": result["sales"],
-        "sales_revenue_(OCEAN)": result["sales_revenue"],
-    }
+    return sales_str

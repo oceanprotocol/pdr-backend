@@ -1,7 +1,51 @@
-from typing import Union, Dict, List, Any
+from typing import Union
 
 from enforce_typing import enforce_types
 from numerize import numerize
+
+PREDICTOORS_HOME_PAGE_TABLE_COLS = [
+    {"name": "User Address", "id": "addr"},
+    {"name": "User", "id": "full_addr"},
+    {"name": "Profit", "id": "total_profit"},
+    {"name": "Accuracy", "id": "avg_accuracy"},
+    {"name": "Stake", "id": "avg_stake"},
+]
+
+FEEDS_HOME_PAGE_TABLE_COLS = [
+    {"name": "Pair", "id": "pair"},
+    {"name": "Source", "id": "source"},
+    {"name": "Timeframe", "id": "timeframe"},
+    {"name": "Full Addr", "id": "contract"},
+]
+
+FEEDS_TABLE_COLS = [
+    {"name": "Addr", "id": "addr"},
+    {"name": "Base Token", "id": "base_token"},
+    {"name": "Quote Token", "id": "quote_token"},
+    {"name": "Source", "id": "source"},
+    {"name": "Timeframe", "id": "timeframe"},
+    {"name": "Full Addr", "id": "full_addr"},
+    {"name": "Avg Accuracy", "id": "avg_accuracy"},
+    {"name": "Avg Stake Per Epoch (Ocean)", "id": "avg_stake"},
+    {"name": "Volume (Ocean)", "id": "volume"},
+    {"name": "Price (Ocean)", "id": "price"},
+    {"name": "Sales", "id": "sales_str"},
+    {"name": "Sales Raw", "id": "sales_raw"},
+    {"name": "Sales Revenue (Ocean)", "id": "sales_revenue"},
+]
+
+PREDICTOORS_TABLE_COLS = [
+    {"name": "Addr", "id": "addr"},
+    {"name": "Apr", "id": "apr"},
+    {"name": "Full Addr", "id": "full_addr"},
+    {"name": "Accuracy", "id": "accuracy"},
+    {"name": "Number Of Feeds", "id": "feed_count"},
+    {"name": "Staked (Ocean)", "id": "total_stake"},
+    {"name": "Gross Income (Ocean)", "id": "gross_income"},
+    {"name": "Stake Loss (Ocean)", "id": "stake_loss"},
+    {"name": "Tx Costs (Ocean)", "id": "tx_costs_(OCEAN)"},
+    {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
+]
 
 FORMAT_CONFIG = {
     "feeds_page_Accuracy_metric": "percentage",
@@ -16,69 +60,21 @@ FORMAT_CONFIG = {
     "user": "eth_address",
     "avg_accuracy": "percentage",
     "avg_stake": "currency_conditional",
-    "sales_revenue_(OCEAN)": "currency_conditional",
-    "sales": "sales_info_data",
+    "sales_str": "sales_info_data",
     "total_profit": "currency_without_decimal",
-    "volume_(OCEAN)": "currency_without_decimal",
-    "avg_stake_per_epoch_(OCEAN)": "currency_conditional",
-    "staked_(OCEAN)": "currency_conditional",
-    "gross_income_(OCEAN)": "currency_conditional",
-    "stake_loss_(OCEAN)": "currency_conditional",
+    "volume": "currency_without_decimal",
+    "total_stake": "currency_conditional",
+    "gross_income": "currency_conditional",
+    "stake_loss": "currency_conditional",
     "tx_costs_(OCEAN)": "currency_conditional",
     "net_income_(OCEAN)": "currency_conditional",
+    "sales_revenue": "currency_conditional",
     "apr": "percentage",
     "accuracy": "percentage",
     "predictoors_page_accuracy_metric": "percentage",
     "predictoors_page_staked_metric": "currency",
     "predictoors_page_gross_income_metric": "currency",
 }
-
-
-@enforce_types
-def pick_from_dict(data: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
-    """
-    Pick keys from dictionary.
-    Args:
-        data (Dict[str, Any]): Data.
-        keys (List[str]): Keys.
-    Returns:
-        Dict[str, Any]: Picked keys.
-    """
-    return {key: data[key] for key in keys}
-
-
-@enforce_types
-def format_dict(
-    data: Dict[str, Union[int, float, str]], only_include_keys: List[str]
-) -> dict[str, str]:
-    """
-    Format dictionary.
-    Args:
-        data (Dict[str, Union[int, float, str]]): Data.
-    Returns:
-        Dict[str, str]: Formatted dictionary.
-    """
-    return {
-        key: format_value(
-            data[key] if isinstance(data[key], str) else float(data[key]), key
-        )
-        for key in only_include_keys
-    }
-
-
-@enforce_types
-def fill_none_with_zero(
-    data: Dict[str, Union[int, float, str]]
-) -> Dict[str, Union[int, float, str]]:
-    """
-    Fill none with zero.
-    Args:
-        data (Dict[str, Union[int, float, str]]): Data.
-    Returns:
-        Dict[str, Union[int, float]]: Data with none values replaced with zero.
-    """
-
-    return {key: (value if value is not None else 0) for key, value in data.items()}
 
 
 @enforce_types
@@ -97,8 +93,8 @@ def format_value(value: Union[int, float, str], value_id: str) -> str:
 
 
 @enforce_types
-def format_table(
-    rows: list[dict[str, Union[int, float]]], columns: list[dict[str, str]]
+def format_df(
+    df,
 ) -> list[dict[str, str]]:
     """
     Format table rows.
@@ -108,13 +104,13 @@ def format_table(
     Returns:
         list[dict[str, str]]: Formatted table rows.
     """
-    return [
-        {
-            column["id"]: format_value(row[column["id"]], column["id"])
-            for column in columns
-        }
-        for row in rows
-    ]
+    columns = df.columns
+
+    for column in columns:
+        # pylint: disable=cell-var-from-loop
+        df[column] = df[column].apply(lambda x: format_value(x, column))
+
+    return df
 
 
 @enforce_types

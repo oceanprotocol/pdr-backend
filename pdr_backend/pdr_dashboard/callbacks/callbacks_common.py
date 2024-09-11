@@ -1,16 +1,13 @@
 from dash import Input, Output
+
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
-    get_navbar,
     NAV_ITEMS,
+    get_navbar,
 )
-from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
-from pdr_backend.pdr_dashboard.pages.home import HomePage
 from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
+from pdr_backend.pdr_dashboard.pages.home import HomePage
 from pdr_backend.pdr_dashboard.pages.predictoors import PredictoorsPage
-from pdr_backend.pdr_dashboard.util.data import (
-    get_date_period_text_header,
-    get_start_date_from_period,
-)
+from pdr_backend.pdr_dashboard.util.data import get_date_period_text_header
 
 
 def get_callbacks_common(app):
@@ -31,14 +28,8 @@ def get_callbacks_common(app):
         [Input("general-lake-date-period-radio-items", "value")],
     )
     def set_period_start_date(selected_period_start):
-        start_date = (
-            get_start_date_from_period(int(selected_period_start))
-            if int(selected_period_start) > 0
-            else None
-        )
-        app.data.start_date = (
-            UnixTimeMs(UnixTimeS(start_date).to_milliseconds()) if start_date else None
-        )
+        app.data.set_start_date_from_period(int(selected_period_start))
+
         return app.data.start_date
 
     @app.callback(

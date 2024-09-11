@@ -4,6 +4,7 @@ from pathlib import Path
 import dash_bootstrap_components as dbc
 import yaml
 from dash import dcc, html
+
 from pdr_backend.pdr_dashboard.util.format import format_value
 
 NAV_ITEMS = [
