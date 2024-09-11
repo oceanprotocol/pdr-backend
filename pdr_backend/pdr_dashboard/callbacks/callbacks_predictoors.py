@@ -31,7 +31,7 @@ def get_callbacks_predictoors(app):
             for key, value in stats.items()
         ]
 
-        return app.data.predictoors_table_data, metrics_children_data
+        return app.data.predictoors_table_data.to_dict("records"), metrics_children_data
 
     @app.callback(
         Output("predictoors_page_table", "data"),

@@ -30,7 +30,7 @@ def get_callbacks_feeds(app):
             for key, value in app.data.feeds_metrics_data.items()
         ]
 
-        return app.data.feeds_table_data, metrics_children_data
+        return app.data.feeds_table_data.to_dict("records"), metrics_children_data
 
     @app.callback(
         Output("feeds_page_table", "data"),
