@@ -285,7 +285,7 @@ class AppDataManager:
         # Constructing the SQL query
         query = f"""
             SELECT LIST(DISTINCT p.contract) as feed_addrs
-            FROM bronze_pdr_predictions p
+            FROM {format_to_parquet_file_path(self.parquet_files_path, BronzePrediction.get_lake_table_name())} p
             WHERE p.contract IN (
                 SELECT MIN(p.contract)
                 FROM {format_to_parquet_file_path(self.parquet_files_path, BronzePrediction.get_lake_table_name())} p
