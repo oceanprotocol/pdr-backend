@@ -352,23 +352,48 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
 
     @enforce_types
     def export_tables_to_parquet_files(self):
-        # Check if the folder exists, if not, create it
+        # Define the folder where exports will be saved
         export_folder_path = f"{self.base_path}/exports"
         tables = self.query_data("SHOW TABLES")["name"]
+
+        # Ensure the export folder exists
         if not os.path.exists(export_folder_path):
             os.makedirs(export_folder_path)
+
         for table in tables:
-            parquet_file = f"{table}.parquet"
+            # Ensure the folder for each table exists
+            table_folder_path = f"{export_folder_path}/{table}"
+            if not os.path.exists(table_folder_path):
+                os.makedirs(table_folder_path)
 
-            # Export the table to a Parquet file
-            query = f"COPY {table} TO '{export_folder_path}/{parquet_file}' (FORMAT 'parquet');"
+            # Get the maximum timestamp from Parquet files, if they exist
+            try:
+                max_timestamp_from_parquet = (
+                    duckdb.execute(
+                        f"SELECT MAX(timestamp) FROM '{table_folder_path}/*.parquet'"
+                    ).fetchone()[0]
+                    or 0
+                )
+            except Exception:
+                # If no files or error, assume no data exported yet
+                max_timestamp_from_parquet = 0
+
+            # Get the maximum timestamp from the DuckDB table
+            max_timestamp_from_db = (
+                self.query_scalar(f"SELECT MAX(timestamp) FROM {table}") or 0
+            )
+
+            # If the database has no new data, skip this table
+            if max_timestamp_from_db <= max_timestamp_from_parquet:
+                continue
+
+            # Define the Parquet file name based on the max timestamp from the DB
+            parquet_file = f"{table}_{max_timestamp_from_db}.parquet"
+            parquet_file_path = f"{table_folder_path}/{parquet_file}"
+
+            # Export only new rows (i.e., with timestamps greater than the last export)
+            query = f"""
+            COPY (SELECT * FROM {table} WHERE timestamp > {max_timestamp_from_parquet})
+            TO '{parquet_file_path}' (FORMAT 'parquet');
+            """
             self.execute_sql(query)
-        """
-        else:
-            for table in tables:
-                parquet_file = f"{table}.parquet"
-                last_event_timestamp = duckdb.execute(f"SELECT MAX(last_event_timestamp) FROM '{export_folder_path}/{parquet_file}'")
-                print(table, last_event_timestamp)
-
-                self.execute_sql(f"CREATE TABLE temp_table AS SELECT * FROM '{export_folder_path}/{parquet_file}' (FORMAT PARQUET);")
-        """
