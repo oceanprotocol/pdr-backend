@@ -9,12 +9,14 @@ import logging
 import os
 from typing import Any, Optional
 
+import time
 import duckdb
 import polars as pl
 from enforce_typing import enforce_types
 from polars._typing import SchemaDict
 
 from pdr_backend.lake.base_data_store import BaseDataStore
+from pdr_backend.util.time_types import UnixTimeS
 
 logger = logging.getLogger("duckDB")
 
@@ -351,7 +353,17 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         )
 
     @enforce_types
-    def export_tables_to_parquet_files(self):
+    def export_tables_to_parquet_files(self, seconds_between_eports: int):
+        """
+        Incrementaly exports the new data to parquet files each 'seconds_between_eports' seconds,
+        into a new exports folder where each table is represented by a folter,
+        and each export is a new parquet file
+        @arguments:
+            seconds_between_eports - interval at which to export new data to parquet files
+        @example:
+            export_tables_to_parquet_files(600)
+        """
+
         # Define the folder where exports will be saved
         export_folder_path = f"{self.base_path}/exports"
         tables = self.query_data("SHOW TABLES")["name"]
@@ -368,15 +380,25 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
 
             # Get the maximum timestamp from Parquet files, if they exist
             try:
+                result = duckdb.execute(
+                    f"SELECT MAX(timestamp) FROM '{table_folder_path}/*.parquet'"
+                ).fetchone()
+
+                # If result is None or the first element is None, set to 0
                 max_timestamp_from_parquet = (
-                    duckdb.execute(
-                        f"SELECT MAX(timestamp) FROM '{table_folder_path}/*.parquet'"
-                    ).fetchone()[0]
-                    or 0
+                    result[0] if result is not None and result[0] is not None else 0
                 )
             except Exception:
                 # If no files or error, assume no data exported yet
                 max_timestamp_from_parquet = 0
+
+            # only export if seconds_between_eports has passed from the last eport
+            current_timestamp = UnixTimeS(int(time.time())).to_milliseconds()
+            if (
+                current_timestamp - max_timestamp_from_parquet
+                < seconds_between_eports * 1000
+            ):
+                continue
 
             # Get the maximum timestamp from the DuckDB table
             max_timestamp_from_db = (

@@ -348,4 +348,6 @@ class ETL:
     @enforce_types
     def _export_table_data_to_parquet_files(self):
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-        db.export_tables_to_parquet_files()
+
+        # export new data each hour
+        db.export_tables_to_parquet_files(seconds_between_eports=3600)
