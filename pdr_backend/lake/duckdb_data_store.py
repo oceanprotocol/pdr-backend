@@ -353,15 +353,21 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         )
 
     @enforce_types
-    def export_tables_to_parquet_files(self, seconds_between_eports: int):
+    def export_tables_to_parquet_files(
+        self,
+        seconds_between_eports: int,
+        number_of_files_after_which_combine_into_one: int,
+    ):
         """
         Incrementaly exports the new data to parquet files each 'seconds_between_eports' seconds,
         into a new exports folder where each table is represented by a folter,
         and each export is a new parquet file
         @arguments:
             seconds_between_eports - interval at which to export new data to parquet files
+            number_of_files_after_which_combine_into_one - when folder reaches this number of files,
+            combine them into 1 file
         @example:
-            export_tables_to_parquet_files(600)
+            export_tables_to_parquet_files(600, 24)
         """
 
         # Define the folder where exports will be saved
@@ -419,3 +425,30 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             TO '{parquet_file_path}' (FORMAT 'parquet');
             """
             self.execute_sql(query)
+
+            # check number of files in directory
+            files = [
+                f
+                for f in os.listdir(table_folder_path)
+                if os.path.isfile(os.path.join(table_folder_path, f))
+            ]
+            if len(files) > number_of_files_after_which_combine_into_one:
+                # combine all files into 1
+                query = f"""
+                COPY (SELECT * FROM '{table_folder_path}/*.parquet' ORDER BY timestamp ASC)
+                TO '{parquet_file_path}' (FORMAT 'parquet');
+                """
+                self.execute_sql(query)
+
+                # delete all files beside the combined one
+                delete_files_not_named(table_folder_path, parquet_file)
+
+
+def delete_files_not_named(directory_path, keep_name):
+    # Iterate through all files in the directory
+    for filename in os.listdir(directory_path):
+        file_path = os.path.join(directory_path, filename)
+        # Check if it is a file and not the one we want to keep
+        if os.path.isfile(file_path) and filename != keep_name:
+            os.remove(file_path)
+            print(f"Deleted: {file_path}")
