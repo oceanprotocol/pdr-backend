@@ -25,19 +25,19 @@ def get_callbacks_home(app):
         Output("stake_metric", "children"),
         Output("available_data_period_text", "children"),
         [
-            Input("feeds_table", "data"),
             Input("feeds_table", "selected_rows"),
-            Input("predictoors_table", "selected_rows"),
-            Input("predictoors_table", "data"),
-            Input("general-lake-date-period-radio-items", "value"),
+        ],
+        [
+            State("feeds_table", "data"),
+            State("predictoors_table", "selected_rows"),
+            State("predictoors_table", "data"),
         ],
     )
     def get_display_data_from_db(
-        feeds_table,
         feeds_table_selected_rows,
+        feeds_table,
         predictoors_table_selected_rows,
         predictoors_table,
-        date_period,
     ):
         # feeds_table_selected_rows is a list of ints
         # feeds_data is a list of dicts
@@ -55,8 +55,6 @@ def get_callbacks_home(app):
         if len(selected_feeds) == 0 or len(selected_predictoors_addrs) == 0:
             payouts = []
         else:
-            app.data.set_start_date_from_period(int(date_period))
-
             payouts = app.data.payouts_from_bronze_predictions(
                 selected_feeds_addrs,
                 selected_predictoors_addrs,
@@ -93,17 +91,29 @@ def get_callbacks_home(app):
         [
             Input("search-input-Predictoors", "value"),
             Input("predictoors_table", "selected_rows"),
-            Input("predictoors_table", "data"),
             Input("show-favourite-addresses", "value"),
+            Input("general-lake-date-period-radio-items", "value"),
+        ],
+        [
+            State("predictoors_table", "data"),
         ],
         prevent_initial_call=True,
     )
     def update_predictoors_table_on_search(
         search_value,
         selected_rows,
-        predictoors_table,
         show_favourite_addresses,
+        date_period,
+        predictoors_table,
     ):
+        if (
+            "general-lake-date-period-radio-items"
+            in dash.callback_context.triggered_prop_ids
+        ):
+            app.data.set_start_date_from_period(date_period)
+            app.data.refresh_predictoors_data()
+            app.data.refresh_feeds_data()
+
         formatted_predictoors_data = (
             app.data.formatted_predictoors_home_page_table_data.copy()
         )
@@ -151,22 +161,24 @@ def get_callbacks_home(app):
         Output("feeds_table", "selected_rows"),
         [
             Input("search-input-Feeds", "value"),
-            Input("feeds_table", "selected_rows"),
-            Input("feeds_table", "data"),
             Input("toggle-switch-predictoor-feeds", "value"),
             Input("predictoors_table", "selected_rows"),
+            Input("predictoors_table", "data"),
         ],
-        State("predictoors_table", "data"),
+        [
+            State("feeds_table", "selected_rows"),
+            State("feeds_table", "data"),
+        ],
         prevent_initial_call=True,
     )
     # pylint: disable=unused-argument
     def update_feeds_table_on_search(
         search_value,
-        selected_rows,
-        feeds_table,
         predictoor_feeds_only,
         predictoors_table_selected_rows,
         predictoors_table,
+        selected_rows,
+        feeds_table,
     ):
         selected_feeds = [feeds_table[i]["contract"] for i in selected_rows]
         # Extract selected predictoor addresses
