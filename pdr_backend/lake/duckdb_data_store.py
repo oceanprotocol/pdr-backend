@@ -355,93 +355,74 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
     @enforce_types
     def export_tables_to_parquet_files(
         self,
-        seconds_between_eports: int,
+        seconds_between_exports: int,
         number_of_files_after_which_combine_into_one: int,
     ):
-        """
-        Incrementaly exports the new data to parquet files each 'seconds_between_eports' seconds,
-        into a new exports folder where each table is represented by a folter,
-        and each export is a new parquet file
-        @arguments:
-            seconds_between_eports - interval at which to export new data to parquet files
-            number_of_files_after_which_combine_into_one - when folder reaches this number of files,
-            combine them into 1 file
-        @example:
-            export_tables_to_parquet_files(600, 24)
-        """
-
-        # Define the folder where exports will be saved
         export_folder_path = f"{self.base_path}/exports"
         tables = self.query_data("SHOW TABLES")["name"]
 
-        # Ensure the export folder exists
-        if not os.path.exists(export_folder_path):
-            os.makedirs(export_folder_path)
+        # Ensure export folder exists
+        os.makedirs(export_folder_path, exist_ok=True)
 
         for table in tables:
-            # Ensure the folder for each table exists
-            table_folder_path = f"{export_folder_path}/{table}"
-            if not os.path.exists(table_folder_path):
-                os.makedirs(table_folder_path)
+            table_folder_path = os.path.join(export_folder_path, table)
+            os.makedirs(table_folder_path, exist_ok=True)
 
-            # Get the maximum timestamp from Parquet files, if they exist
-            try:
-                result = duckdb.execute(
-                    f"SELECT MAX(timestamp) FROM '{table_folder_path}/*.parquet'"
-                ).fetchone()
-
-                # If result is None or the first element is None, set to 0
-                max_timestamp_from_parquet = (
-                    result[0] if result is not None and result[0] is not None else 0
-                )
-            except Exception:
-                # If no files or error, assume no data exported yet
-                max_timestamp_from_parquet = 0
-
-            # only export if seconds_between_eports has passed from the last eport
-            current_timestamp = UnixTimeS(int(time.time())).to_milliseconds()
-            if (
-                current_timestamp - max_timestamp_from_parquet
-                < seconds_between_eports * 1000
-            ):
+            if not self._should_export(table_folder_path, seconds_between_exports):
                 continue
 
-            # Get the maximum timestamp from the DuckDB table
-            max_timestamp_from_db = (
-                self.query_scalar(f"SELECT MAX(timestamp) FROM {table}") or 0
-            )
+            self._export_table_to_parquet(table, table_folder_path)
 
-            # If the database has no new data, skip this table
-            if max_timestamp_from_db <= max_timestamp_from_parquet:
-                continue
+            if self._should_combine_files(table_folder_path, number_of_files_after_which_combine_into_one):
+                self._combine_parquet_files(table_folder_path)
 
-            # Define the Parquet file name based on the max timestamp from the DB
-            parquet_file = f"{table}_{max_timestamp_from_db}.parquet"
-            parquet_file_path = f"{table_folder_path}/{parquet_file}"
+    def _should_export(self, table_folder_path: str, seconds_between_exports: int) -> bool:
+        max_timestamp_from_parquet = self._get_max_timestamp_from_parquet_files(table_folder_path)
+        current_timestamp = UnixTimeS(int(time.time())).to_milliseconds()
 
-            # Export only new rows (i.e., with timestamps greater than the last export)
-            query = f"""
-            COPY (SELECT * FROM {table} WHERE timestamp > {max_timestamp_from_parquet})
-            TO '{parquet_file_path}' (FORMAT 'parquet');
-            """
-            self.execute_sql(query)
+        return current_timestamp - max_timestamp_from_parquet >= seconds_between_exports * 1000
 
-            # check number of files in directory
-            files = [
-                f
-                for f in os.listdir(table_folder_path)
-                if os.path.isfile(os.path.join(table_folder_path, f))
-            ]
-            if len(files) > number_of_files_after_which_combine_into_one:
-                # combine all files into 1
-                query = f"""
-                COPY (SELECT * FROM '{table_folder_path}/*.parquet' ORDER BY timestamp ASC)
-                TO '{parquet_file_path}' (FORMAT 'parquet');
-                """
-                self.execute_sql(query)
+    def _get_max_timestamp_from_parquet_files(self, table_folder_path: str) -> int:
+        try:
+            result = duckdb.execute(
+                f"SELECT MAX(timestamp) FROM '{table_folder_path}/*.parquet'"
+            ).fetchone()
 
-                # delete all files beside the combined one
-                delete_files_not_named(table_folder_path, parquet_file)
+            return result[0] if result and result[0] is not None else 0
+        except Exception:
+            return 0  # Assume no data exported yet if there's an error
+
+    def _export_table_to_parquet(self, table: str, table_folder_path: str):
+        max_timestamp_from_db = self.query_scalar(f"SELECT MAX(timestamp) FROM {table}") or 0
+        max_timestamp_from_parquet = self._get_max_timestamp_from_parquet_files(table_folder_path)
+
+        if max_timestamp_from_db <= max_timestamp_from_parquet:
+            return  # No new data to export
+
+        parquet_file = f"{table}_{max_timestamp_from_db}.parquet"
+        parquet_file_path = os.path.join(table_folder_path, parquet_file)
+
+        query = f"""
+        COPY (SELECT * FROM {table} WHERE timestamp > {max_timestamp_from_parquet})
+        TO '{parquet_file_path}' (FORMAT 'parquet');
+        """
+        self.execute_sql(query)
+
+
+    def _should_combine_files(self, table_folder_path: str, file_limit: int) -> bool:
+        files = [f for f in os.listdir(table_folder_path) if os.path.isfile(os.path.join(table_folder_path, f))]
+        return len(files) > file_limit
+
+    def _combine_parquet_files(self, table_folder_path: str):
+        combined_file = f"{table_folder_path}/combined.parquet"
+        query = f"""
+        COPY (SELECT * FROM '{table_folder_path}/*.parquet' ORDER BY timestamp ASC)
+        TO '{combined_file}' (FORMAT 'parquet');
+        """
+        self.execute_sql(query)
+
+        # Delete old files except the combined one
+        delete_files_not_named(table_folder_path, os.path.basename(combined_file))
 
 
 def delete_files_not_named(directory_path, keep_name):
