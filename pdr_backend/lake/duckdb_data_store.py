@@ -373,14 +373,23 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
 
             self._export_table_to_parquet(table, table_folder_path)
 
-            if self._should_combine_files(table_folder_path, number_of_files_after_which_combine_into_one):
+            if self._should_combine_files(
+                table_folder_path, number_of_files_after_which_combine_into_one
+            ):
                 self._combine_parquet_files(table_folder_path)
 
-    def _should_export(self, table_folder_path: str, seconds_between_exports: int) -> bool:
-        max_timestamp_from_parquet = self._get_max_timestamp_from_parquet_files(table_folder_path)
+    def _should_export(
+        self, table_folder_path: str, seconds_between_exports: int
+    ) -> bool:
+        max_timestamp_from_parquet = self._get_max_timestamp_from_parquet_files(
+            table_folder_path
+        )
         current_timestamp = UnixTimeS(int(time.time())).to_milliseconds()
 
-        return current_timestamp - max_timestamp_from_parquet >= seconds_between_exports * 1000
+        return (
+            current_timestamp - max_timestamp_from_parquet
+            >= seconds_between_exports * 1000
+        )
 
     def _get_max_timestamp_from_parquet_files(self, table_folder_path: str) -> int:
         try:
@@ -393,8 +402,12 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             return 0  # Assume no data exported yet if there's an error
 
     def _export_table_to_parquet(self, table: str, table_folder_path: str):
-        max_timestamp_from_db = self.query_scalar(f"SELECT MAX(timestamp) FROM {table}") or 0
-        max_timestamp_from_parquet = self._get_max_timestamp_from_parquet_files(table_folder_path)
+        max_timestamp_from_db = (
+            self.query_scalar(f"SELECT MAX(timestamp) FROM {table}") or 0
+        )
+        max_timestamp_from_parquet = self._get_max_timestamp_from_parquet_files(
+            table_folder_path
+        )
 
         if max_timestamp_from_db <= max_timestamp_from_parquet:
             return  # No new data to export
@@ -408,9 +421,12 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         """
         self.execute_sql(query)
 
-
     def _should_combine_files(self, table_folder_path: str, file_limit: int) -> bool:
-        files = [f for f in os.listdir(table_folder_path) if os.path.isfile(os.path.join(table_folder_path, f))]
+        files = [
+            f
+            for f in os.listdir(table_folder_path)
+            if os.path.isfile(os.path.join(table_folder_path, f))
+        ]
         return len(files) > file_limit
 
     def _combine_parquet_files(self, table_folder_path: str):
