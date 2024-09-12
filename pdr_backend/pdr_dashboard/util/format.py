@@ -16,6 +16,8 @@ FEEDS_HOME_PAGE_TABLE_COLS = [
     {"name": "Source", "id": "source"},
     {"name": "Timeframe", "id": "timeframe"},
     {"name": "Full Addr", "id": "contract"},
+    {"name": "Avg Accuracy", "id": "avg_accuracy"},
+    {"name": "Sales", "id": "sales_raw"},
 ]
 
 FEEDS_TABLE_COLS = [
