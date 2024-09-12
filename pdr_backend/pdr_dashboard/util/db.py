@@ -355,7 +355,8 @@ class AppDataManager:
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
 
-        query += ";"
+        # ORDER BY slot
+        query += " ORDER BY slot;"
 
         # Execute the query without passing parameters
         return self._query_db(query)
