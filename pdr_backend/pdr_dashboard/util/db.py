@@ -11,7 +11,6 @@ from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
-from pdr_backend.pdr_dashboard.util.data import get_sales_str
 from pdr_backend.pdr_dashboard.util.format import (
     FEEDS_HOME_PAGE_TABLE_COLS,
     FEEDS_TABLE_COLS,
@@ -550,9 +549,9 @@ class AppDataManager:
         df["source"] = df["source"].str.capitalize()
         df = df.merge(self.feeds_payout_stats, on="contract")
         df = df.merge(self.feeds_subscriptions, on="contract")
-        df["sales_str"] = df.apply(get_sales_str, axis=1)
-        df["sales_raw"] = df["sales"]
         df.fillna(0, inplace=True)
+
+        df["sales_str"] = ""
 
         columns = [col["id"] for col in FEEDS_TABLE_COLS]
         df = df[columns]
@@ -639,7 +638,6 @@ class AppDataManager:
         df = self.feeds_data.copy()
         df = df.merge(self.feeds_payout_stats, on="contract")
         df = df.merge(self.feeds_subscriptions, on="contract")
-        df["sales_raw"] = df["sales"]
         df.fillna(0, inplace=True)
 
         columns = [col["id"] for col in FEEDS_HOME_PAGE_TABLE_COLS]
