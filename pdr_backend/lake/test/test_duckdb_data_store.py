@@ -8,16 +8,23 @@ import time
 
 import duckdb
 import polars as pl
+from unittest.mock import patch
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import Table, TempTable
+from pdr_backend.util.time_types import UnixTimeS
 
 
 # Initialize the DuckDBDataStore instance for testing
-def _setup_fixture(tmpdir):
-    example_df = pl.DataFrame(
-        {"timestamp": ["2022-01-01", "2022-02-01", "2022-03-01"], "value": [10, 20, 30]}
-    )
+def _setup_fixture(tmpdir, df=None):
+    example_df = df
+    if example_df is None:
+        example_df = pl.DataFrame(
+            {
+                "timestamp": ["2022-01-01", "2022-02-01", "2022-03-01"],
+                "value": [10, 20, 30],
+            }
+        )
     table_name = "test_df"
 
     return [DuckDBDataStore(str(tmpdir)), example_df, table_name]
@@ -345,3 +352,106 @@ def test_create_table(tmpdir):
     # Check if the table is registered
     check_result = db.table_exists(table_name)
     assert check_result
+
+
+def test_should_export(tmpdir):
+    db, _, _ = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "test_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Create a test case where max timestamp from parquet files is in the past
+    seconds_between_exports = 600  # 10 minutes
+    current_timestamp = UnixTimeS(int(time.time())).to_milliseconds()
+
+    # Mock _get_max_timestamp_from_parquet_files to return a timestamp 15 minutes ago
+    db._get_max_timestamp_from_parquet_files = (
+        lambda path: current_timestamp - 15 * 60 * 1000
+    )
+
+    assert db._should_export(table_folder_path, seconds_between_exports) == True
+
+    # Now mock it to return a more recent timestamp, within the export window
+    db._get_max_timestamp_from_parquet_files = (
+        lambda path: current_timestamp - 5 * 60 * 1000
+    )
+
+    assert db._should_export(table_folder_path, seconds_between_exports) == False
+
+
+@patch("pdr_backend.lake.duckdb_data_store.duckdb.execute")
+def test_get_max_timestamp_from_parquet_files(mock_duckdb_execute, tmpdir):
+    db, example_df, table_name = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "exports")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Simulate the existence of a Parquet file with a max timestamp
+    parquet_file = os.path.join(table_folder_path, f"{table_name}_1640995200.parquet")
+    example_df.write_parquet(parquet_file)
+
+    # Mock DuckDB to return a known max timestamp
+    mock_duckdb_execute.return_value.fetchone.return_value = (1640995200,)
+
+    max_timestamp = db._get_max_timestamp_from_parquet_files(table_folder_path)
+    assert max_timestamp == 1640995200
+
+    # Simulate no Parquet files
+    db._get_max_timestamp_from_parquet_files = lambda path: 0
+    assert db._get_max_timestamp_from_parquet_files(table_folder_path) == 0
+
+
+@patch("pdr_backend.lake.duckdb_data_store.DuckDBDataStore.query_scalar")
+def test_export_table_to_parquet(mock_query_scalar, tmpdir):
+    # read the pdr_payouts.csv file in the same folder
+    df = pl.read_csv("pdr_backend/lake/test/pdr_payouts.csv")
+    db, example_df, table_name = _setup_fixture(tmpdir, df)
+    table_folder_path = os.path.join(str(tmpdir), "test_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Mocking _get_max_timestamp_from_parquet_files to return 0 (i.e., no previous export)
+    db._get_max_timestamp_from_parquet_files = lambda path: 0
+
+    # Insert example data into DuckDB table
+    db.create_from_df(example_df, table_name)
+
+    mock_query_scalar.return_value = 1640995200
+    # Export the table to Parquet
+    db._export_table_to_parquet(table_name, table_folder_path)
+
+    # Check if the Parquet file is created
+    files = os.listdir(table_folder_path)
+    assert any(file.endswith(".parquet") for file in files), "No Parquet file created"
+
+
+def test_should_combine_files(tmpdir):
+    db, _, _ = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "test_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Create dummy Parquet files
+    for i in range(5):
+        open(os.path.join(table_folder_path, f"file_{i}.parquet"), "w").close()
+
+    assert db._should_combine_files(table_folder_path, 3) == True  # More than the limit
+    assert (
+        db._should_combine_files(table_folder_path, 6) == False
+    )  # Less than the limit
+
+
+def test_combine_parquet_files(tmpdir):
+    df = pl.read_csv("pdr_backend/lake/test/pdr_payouts.csv")
+    db, example_df, table_name = _setup_fixture(tmpdir, df)
+    table_folder_path = os.path.join(str(tmpdir), "test_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Write some Parquet files
+    for i in range(3):
+        parquet_file = os.path.join(
+            table_folder_path, f"{table_name}_16409952{i}.parquet"
+        )
+        example_df.write_parquet(parquet_file)
+
+    db._combine_parquet_files(table_folder_path)
+
+    # Ensure that after combining, there is only one file left
+    files = os.listdir(table_folder_path)
+    assert len(files) == 1, "Failed to combine Parquet files"

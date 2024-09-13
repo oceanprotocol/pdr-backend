@@ -437,6 +437,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         """
         self.execute_sql(query)
 
+        print(f"Combined: {combined_file}")
         # Delete old files except the combined one
         delete_files_not_named(table_folder_path, os.path.basename(combined_file))
 
@@ -444,6 +445,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
 def delete_files_not_named(directory_path, keep_name):
     # Iterate through all files in the directory
     for filename in os.listdir(directory_path):
+        print(f"Checking: {filename}")
         file_path = os.path.join(directory_path, filename)
         # Check if it is a file and not the one we want to keep
         if os.path.isfile(file_path) and filename != keep_name:
