@@ -85,25 +85,29 @@ def test_predictoors_table_filters(_sample_app, dash_duo):
 
     _navigate_to_predictoors_page(dash_duo)
     dash_duo.wait_for_element("#predictoors_page_table")
-    dash_duo.wait_for_element("#p_accuracy_dropdown")
+    dash_duo.wait_for_element("#p_avg_accuracy_dropdown")
 
     table = dash_duo.find_element("#predictoors_page_table table")
 
     _clear_predictoors_filters(dash_duo)
     # Test filtering with accuracy min value
     _set_input_value_and_submit(
-        dash_duo, "#p_accuracy_dropdown", "#p_accuracy_min", "90", "#p_accuracy_button"
+        dash_duo,
+        "#p_avg_accuracy_dropdown",
+        "#p_avg_accuracy_min",
+        "90",
+        "#p_avg_accuracy_button",
     )
 
     _assert_table_row_count(dash_duo, "#predictoors_page_table", 1)
-    _verify_table_data(table, "filtered_p_accuracy_min_90.json")
+    _verify_table_data(table, "filtered_p_avg_accuracy_min_90.json")
 
     # Test filtering with accuracy min value
     _set_input_value_and_submit(
-        dash_duo, None, "#p_accuracy_min", "55", "#p_accuracy_button"
+        dash_duo, None, "#p_avg_accuracy_min", "55", "#p_avg_accuracy_button"
     )
     _assert_table_row_count(dash_duo, "#predictoors_page_table", 4)
-    _verify_table_data(table, "filtered_p_accuracy_min_55.json")
+    _verify_table_data(table, "filtered_p_avg_accuracy_min_55.json")
 
     # Test filtering with staked max value + natural language
     _set_input_value_and_submit(

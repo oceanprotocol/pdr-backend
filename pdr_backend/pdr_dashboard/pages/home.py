@@ -54,7 +54,7 @@ class HomePage:
         if not feed_ids:
             return [], feed_data
 
-        feed_data = self.app.data.feeds_data.copy()
+        feed_data = self.app.data.formatted_feeds_home_page_table_data.copy()
         feed_data = feed_data[feed_data["contract"].isin(feed_ids)]
 
         return list(range(len(feed_ids))), feed_data

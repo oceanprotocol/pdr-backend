@@ -572,7 +572,6 @@ class AppDataManager:
     ) -> Tuple[pandas.DataFrame, pandas.DataFrame]:
         df = self.predictoors_data.copy()
         df["addr"] = df["full_addr"] = df["user"]
-        df["accuracy"] = df["avg_accuracy"]
         df["tx_costs_(OCEAN)"] = df["stake_count"] * self.fee_cost
         df.fillna(0, inplace=True)
         df["net_income_(OCEAN)"] = df["total_profit"] - df["tx_costs_(OCEAN)"]
@@ -593,7 +592,7 @@ class AppDataManager:
         search_value,
         selected_feeds_addrs,
     ):
-        filtered_data = self.feeds_data.copy()
+        filtered_data = self.formatted_feeds_home_page_table_data.copy()
 
         # filter feeds by payouts from selected predictoors
         if predictoor_feeds_only and (len(predictoors_addrs) > 0):
@@ -610,8 +609,10 @@ class AppDataManager:
         filtered_data = filtered_data[
             ~filtered_data["contract"].isin(selected_feeds_addrs)
         ]
-        selected_feeds = self.feeds_data[
-            self.feeds_data["contract"].isin(selected_feeds_addrs)
+        selected_feeds = self.formatted_feeds_home_page_table_data[
+            self.formatted_feeds_home_page_table_data["contract"].isin(
+                selected_feeds_addrs
+            )
         ]
 
         return pandas.concat([selected_feeds, filtered_data]).to_dict("records")
@@ -637,8 +638,25 @@ class AppDataManager:
         return format_df(formatted_data)
 
     @property
+    @enforce_types
+    def formatted_feeds_home_page_table_data(self):
+        df = self.feeds_data.copy()
+        df = df.merge(self.feeds_payout_stats, on="contract")
+        df = df.merge(self.feeds_subscriptions, on="contract")
+        df["sales_raw"] = df["sales"]
+        df.fillna(0, inplace=True)
+
+        columns = [col["id"] for col in FEEDS_HOME_PAGE_TABLE_COLS]
+        df = df[columns]
+
+        formatted_data = df.copy()
+        formatted_data = format_df(formatted_data)
+
+        return formatted_data
+
+    @property
     def homepage_feeds_cols(self):
-        data = self.feeds_data
+        data = self.formatted_feeds_home_page_table_data
 
         columns = FEEDS_HOME_PAGE_TABLE_COLS
         hidden_columns = ["contract"]
