@@ -352,5 +352,5 @@ class ETL:
         # export new data each hour and combine exported files after 24 files(daily)
         db.export_tables_to_parquet_files(
             seconds_between_exports=3600,
-            number_of_files_after_which_combine_into_one=24,
+            number_of_files_after_which_re_export_db=100,
         )

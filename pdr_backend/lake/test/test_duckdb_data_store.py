@@ -422,36 +422,60 @@ def test_export_table_to_parquet(mock_query_scalar, tmpdir):
     assert any(file.endswith(".parquet") for file in files), "No Parquet file created"
 
 
-def test_should_combine_files(tmpdir):
+def test_should_nuke_table_folders_and_re_export_db_bronze(tmpdir):
+    db, _, table_name = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "bronze_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Test when "bronze" is in the table_name
+    result = db._should_nuke_table_folders_and_re_export_db(
+        table_folder_path, 5, "bronze_table"
+    )
+    assert result == True, "Failed to nuke bronze table folders"
+
+
+def test_should_nuke_table_folders_and_re_export_db_non_bronze_exceed_file_limit(
+    tmpdir,
+):
+    db, _, table_name = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "test_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Create dummy files
+    for i in range(10):
+        open(os.path.join(table_folder_path, f"file_{i}.parquet"), "w").close()
+
+    # Test when the number of files exceeds the limit
+    result = db._should_nuke_table_folders_and_re_export_db(
+        table_folder_path, 5, "test_table"
+    )
+    assert result == True, "Failed to detect exceeding file limit"
+
+
+def test_should_nuke_table_folders_and_re_export_db_non_bronze_below_file_limit(tmpdir):
+    db, _, table_name = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "test_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Create dummy files
+    for i in range(3):
+        open(os.path.join(table_folder_path, f"file_{i}.parquet"), "w").close()
+
+    # Test when the number of files is below the limit
+    result = db._should_nuke_table_folders_and_re_export_db(
+        table_folder_path, 5, "test_table"
+    )
+    assert result == False, "Incorrectly detected nuke requirement for non-bronze table"
+
+
+@patch("pdr_backend.lake.duckdb_data_store.delete_files")
+def test_nuke_table_folders_and_re_export_db(mock_delete_files, tmpdir):
     db, _, _ = _setup_fixture(tmpdir)
     table_folder_path = os.path.join(str(tmpdir), "test_table")
     os.makedirs(table_folder_path, exist_ok=True)
 
-    # Create dummy Parquet files
-    for i in range(5):
-        open(os.path.join(table_folder_path, f"file_{i}.parquet"), "w").close()
+    # Simulate deleting the files by mocking `delete_files`
+    db._nuke_table_folders_and_re_export_db(table_folder_path)
 
-    assert db._should_combine_files(table_folder_path, 3) == True  # More than the limit
-    assert (
-        db._should_combine_files(table_folder_path, 6) == False
-    )  # Less than the limit
-
-
-def test_combine_parquet_files(tmpdir):
-    df = pl.read_csv("pdr_backend/lake/test/pdr_payouts.csv")
-    db, example_df, table_name = _setup_fixture(tmpdir, df)
-    table_folder_path = os.path.join(str(tmpdir), "test_table")
-    os.makedirs(table_folder_path, exist_ok=True)
-
-    # Write some Parquet files
-    for i in range(3):
-        parquet_file = os.path.join(
-            table_folder_path, f"{table_name}_16409952{i}.parquet"
-        )
-        example_df.write_parquet(parquet_file)
-
-    db._combine_parquet_files(table_folder_path)
-
-    # Ensure that after combining, there is only one file left
-    files = os.listdir(table_folder_path)
-    assert len(files) == 1, "Failed to combine Parquet files"
+    # Ensure delete_files was called with the correct folder path
+    mock_delete_files.assert_called_once_with(table_folder_path)
