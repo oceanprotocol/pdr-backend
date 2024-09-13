@@ -481,3 +481,51 @@ def test_nuke_table_folders_and_re_export_db(mock_delete_files, tmpdir):
 
     # Ensure delete_files was called with the correct folder path
     mock_delete_files.assert_called_once_with(table_folder_path)
+
+
+from unittest.mock import patch, MagicMock
+
+
+@patch("pdr_backend.lake.duckdb_data_store.DuckDBDataStore._should_export")
+@patch("pdr_backend.lake.duckdb_data_store.DuckDBDataStore._export_table_to_parquet")
+@patch(
+    "pdr_backend.lake.duckdb_data_store.DuckDBDataStore._nuke_table_folders_and_re_export_db"
+)
+@patch(
+    "pdr_backend.lake.duckdb_data_store.DuckDBDataStore._should_nuke_table_folders_and_re_export_db"
+)
+@patch("pdr_backend.lake.duckdb_data_store.get_export_folder_path")
+def test_export_tables_to_parquet_files(
+    mock_get_export_folder_path,
+    mock_should_nuke_table_folders,
+    mock_nuke_table_folders,
+    mock_should_export,
+    mock_export_table_to_parquet,
+    tmpdir,
+):
+    db, _, _ = _setup_fixture(tmpdir)
+
+    # Mock return values for internal methods
+    mock_get_export_folder_path.return_value = os.path.join(str(tmpdir), "exports")
+    mock_should_nuke_table_folders.return_value = False  # Simulate no nuke
+    mock_should_export.return_value = True  # Simulate exporting is needed
+
+    # Simulate tables in the database
+    db.query_data = MagicMock(return_value={"name": ["table1", "table2"]})
+
+    # Call the method
+    db.export_tables_to_parquet_files(
+        seconds_between_exports=600, number_of_files_after_which_re_export_db=5
+    )
+
+    # Check that _should_nuke_table_folders_and_re_export_db was called for each table
+    assert mock_should_nuke_table_folders.call_count == 2
+
+    # Ensure _export_table_to_parquet was called for each table
+    assert mock_export_table_to_parquet.call_count == 2
+
+    # Ensure _nuke_table_folders_and_re_export_db was not called since nuke condition is False
+    mock_nuke_table_folders.assert_not_called()
+
+    # Ensure _should_export was called for each table
+    assert mock_should_export.call_count == 2
