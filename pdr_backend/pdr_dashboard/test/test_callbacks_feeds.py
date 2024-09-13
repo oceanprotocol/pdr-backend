@@ -92,7 +92,7 @@ def test_feeds_table(_sample_app, dash_duo):
         "Quote Token",
         "Source",
         "Timeframe",
-        "Avg Accuracy",
+        "Accuracy",
         "Avg Stake Per Epoch (Ocean)",
         "Volume (Ocean)",
         "Price (Ocean)",

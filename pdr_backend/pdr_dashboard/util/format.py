@@ -16,6 +16,8 @@ FEEDS_HOME_PAGE_TABLE_COLS = [
     {"name": "Source", "id": "source"},
     {"name": "Timeframe", "id": "timeframe"},
     {"name": "Full Addr", "id": "contract"},
+    {"name": "Accuracy", "id": "avg_accuracy"},
+    {"name": "Sales", "id": "sales_raw"},
 ]
 
 FEEDS_TABLE_COLS = [
@@ -25,7 +27,7 @@ FEEDS_TABLE_COLS = [
     {"name": "Source", "id": "source"},
     {"name": "Timeframe", "id": "timeframe"},
     {"name": "Full Addr", "id": "full_addr"},
-    {"name": "Avg Accuracy", "id": "avg_accuracy"},
+    {"name": "Accuracy", "id": "avg_accuracy"},
     {"name": "Avg Stake Per Epoch (Ocean)", "id": "avg_stake"},
     {"name": "Volume (Ocean)", "id": "volume"},
     {"name": "Price (Ocean)", "id": "price"},
@@ -38,7 +40,7 @@ PREDICTOORS_TABLE_COLS = [
     {"name": "Addr", "id": "addr"},
     {"name": "Apr", "id": "apr"},
     {"name": "Full Addr", "id": "full_addr"},
-    {"name": "Accuracy", "id": "accuracy"},
+    {"name": "Accuracy", "id": "avg_accuracy"},
     {"name": "Number Of Feeds", "id": "feed_count"},
     {"name": "Staked (Ocean)", "id": "total_stake"},
     {"name": "Gross Income (Ocean)", "id": "gross_income"},
