@@ -7,13 +7,14 @@
 import glob
 import logging
 import os
-from typing import Any, Optional
+from typing import Any, Optional, Type
 
 import time
 import duckdb
 import polars as pl
 from enforce_typing import enforce_types
 from polars._typing import SchemaDict
+from pdr_backend.lake.lake_mapper import LakeMapper
 
 from pdr_backend.lake.base_data_store import BaseDataStore
 from pdr_backend.util.time_types import UnixTimeS
@@ -356,9 +357,9 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
     def export_tables_to_parquet_files(
         self,
         seconds_between_exports: int,
-        number_of_files_after_which_combine_into_one: int,
+        number_of_files_after_which_re_export_db: int,
     ):
-        export_folder_path = f"{self.base_path}/exports"
+        export_folder_path = get_export_folder_path(self.base_path)
         tables = self.query_data("SHOW TABLES")["name"]
 
         # Ensure export folder exists
@@ -368,15 +369,15 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             table_folder_path = os.path.join(export_folder_path, table)
             os.makedirs(table_folder_path, exist_ok=True)
 
+            if self._should_nuke_table_folders_and_re_export_db(
+                table_folder_path, number_of_files_after_which_re_export_db, table
+            ):
+                self._nuke_table_folders_and_re_export_db(table_folder_path)
+
             if not self._should_export(table_folder_path, seconds_between_exports):
                 continue
 
             self._export_table_to_parquet(table, table_folder_path)
-
-            if self._should_combine_files(
-                table_folder_path, number_of_files_after_which_combine_into_one
-            ):
-                self._combine_parquet_files(table_folder_path)
 
     def _should_export(
         self, table_folder_path: str, seconds_between_exports: int
@@ -421,7 +422,11 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         """
         self.execute_sql(query)
 
-    def _should_combine_files(self, table_folder_path: str, file_limit: int) -> bool:
+    def _should_nuke_table_folders_and_re_export_db(
+        self, table_folder_path: str, file_limit: int, table_name: str
+    ) -> bool:
+        if "bronze" in table_name:
+            return True
         files = [
             f
             for f in os.listdir(table_folder_path)
@@ -429,23 +434,22 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         ]
         return len(files) > file_limit
 
-    def _combine_parquet_files(self, table_folder_path: str):
-        combined_file = f"{table_folder_path}/combined.parquet"
-        query = f"""
-        COPY (SELECT * FROM '{table_folder_path}/*.parquet' ORDER BY timestamp ASC)
-        TO '{combined_file}' (FORMAT 'parquet');
-        """
-        self.execute_sql(query)
-
-        # Delete old files except the combined one
-        delete_files_not_named(table_folder_path, os.path.basename(combined_file))
+    def _nuke_table_folders_and_re_export_db(self, table_folder_path: str):
+        # Delete parquet files from table directory
+        delete_files(table_folder_path)
 
 
-def delete_files_not_named(directory_path, keep_name):
+def get_export_folder_path(base_path):
+    return f"{base_path}/exports"
+
+
+def tbl_parquet_path(base_path: str, table_class: Type[LakeMapper]) -> str:
+    export_folder_path = get_export_folder_path(base_path)
+    return f"'{export_folder_path}/{table_class.get_lake_table_name()}/*.parquet'"
+
+
+def delete_files(directory_path):
     # Iterate through all files in the directory
     for filename in os.listdir(directory_path):
         file_path = os.path.join(directory_path, filename)
-        # Check if it is a file and not the one we want to keep
-        if os.path.isfile(file_path) and filename != keep_name:
-            os.remove(file_path)
-            print(f"Deleted: {file_path}")
+        os.remove(file_path)

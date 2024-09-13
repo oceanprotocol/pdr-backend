@@ -1,11 +1,12 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union, Type
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas
 from enforce_typing import enforce_types
 
 import duckdb
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
@@ -19,23 +20,23 @@ from pdr_backend.pdr_dashboard.util.format import (
     PREDICTOORS_TABLE_COLS,
     format_df,
 )
+from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
 )
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.lake_mapper import LakeMapper
 
 logger = logging.getLogger("predictoor_dashboard_utils")
 
 
 # pylint: disable=too-many-instance-attributes
 class AppDataManager:
-    def __init__(self, ppss):
-        self.parquet_files_path = f"{ppss.lake_ss.lake_dir}/exports/"
+    def __init__(self, ppss: PPSS):
         self.network_name = ppss.web3_pp.network
         self.start_date: Optional[datetime] = None
+        self.lake_dir = ppss.lake_ss.lake_dir
 
         self.min_timestamp, self.max_timestamp = (
             self.get_first_and_last_slot_timestamp()
@@ -57,11 +58,6 @@ class AppDataManager:
         self.favourite_addresses = [
             addr for addr in ppss.predictoor_ss.my_addresses if addr in valid_addresses
         ]
-
-    def format_to_parquet_file_path(self, table_class: Type[LakeMapper]) -> str:
-        return (
-            f"'{self.parquet_files_path}{table_class.get_lake_table_name()}/*.parquet'"
-        )
 
     @property
     def start_date_ms(self) -> int:
@@ -97,7 +93,7 @@ class AppDataManager:
         df = self._query_db(
             f"""
                 SELECT contract, pair, timeframe, source
-                FROM {self.format_to_parquet_file_path(BronzePrediction)}
+                FROM {tbl_parquet_path(self.lake_dir, BronzePrediction)}
                 GROUP BY contract, pair, timeframe, source
             """,
         )
@@ -115,7 +111,7 @@ class AppDataManager:
                     ) * 100.0 / COUNT(*) AS avg_accuracy,
                     AVG(p.stake) AS avg_stake
                 FROM
-                    {self.format_to_parquet_file_path(BronzePrediction)} p
+                    {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
             """
         if self.start_date_ms:
             query += f"    WHERE timestamp > {self.start_date_ms}"
@@ -160,7 +156,7 @@ class AppDataManager:
                 -- Calculate average accuracy
                 SUM(CASE WHEN p.payout > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS avg_accuracy
             FROM
-                {self.format_to_parquet_file_path(BronzePrediction)} p
+                {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
         """
 
         if self.start_date_ms:
@@ -191,7 +187,7 @@ class AppDataManager:
                     SPLIT_PART(ID, '-', 1) AS contract,
                     COUNT(*) AS ws_buy_count
                 FROM
-                    {self.format_to_parquet_file_path(Subscription)}
+                    {tbl_parquet_path(self.lake_dir, Subscription)}
                 WHERE
                     "user" = '{opf_addresses["websocket"].lower()}'
                 """
@@ -207,7 +203,7 @@ class AppDataManager:
                     SPLIT_PART(ID, '-', 1) AS contract,
                     COUNT(*) AS df_buy_count
                 FROM
-                    {self.format_to_parquet_file_path(Subscription)}
+                    {tbl_parquet_path(self.lake_dir, Subscription)}
                 WHERE
                     "user" = '{opf_addresses["dfbuyer"].lower()}'
                 """
@@ -231,7 +227,7 @@ class AppDataManager:
                         SPLIT_PART(ID, '-', 1) AS main_contract,
                         last_price_value
                     FROM
-                        {self.format_to_parquet_file_path(Subscription)}
+                        {tbl_parquet_path(self.lake_dir, Subscription)}
             """
 
         if self.start_date_ms:
@@ -266,7 +262,7 @@ class AppDataManager:
                     COUNT(*) AS count,
                     SUM(last_price_value) AS revenue
                 FROM
-                    {self.format_to_parquet_file_path(Subscription)}
+                    {tbl_parquet_path(self.lake_dir, Subscription)}
                 WHERE
                     ID LIKE '%{feed_id}%'
         """
@@ -297,10 +293,10 @@ class AppDataManager:
         # Constructing the SQL query
         query = f"""
             SELECT LIST(DISTINCT p.contract) as feed_addrs
-            FROM {self.format_to_parquet_file_path(BronzePrediction)} p
+            FROM {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
             WHERE p.contract IN (
                 SELECT MIN(p.contract)
-                FROM {self.format_to_parquet_file_path(BronzePrediction)} p
+                FROM {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
                 WHERE (
                     {" OR ".join([f"p.user LIKE '%{item}%'" for item in predictoor_addrs])}
                 )
@@ -330,7 +326,7 @@ class AppDataManager:
 
         # Start constructing the SQL query
         query = f"""SELECT * FROM
-                {self.format_to_parquet_file_path(BronzePrediction)}
+                {tbl_parquet_path(self.lake_dir, BronzePrediction)}
             """
 
         # List to hold the WHERE clause conditions
@@ -381,7 +377,7 @@ class AppDataManager:
         """
 
         # Start constructing the SQL query
-        query = f"SELECT * FROM {self.format_to_parquet_file_path(Payout)}"
+        query = f"SELECT * FROM {tbl_parquet_path(self.lake_dir, Payout)}"
 
         # List to hold the WHERE clause conditions
         conditions = []
@@ -426,7 +422,7 @@ class AppDataManager:
     def feeds_metrics(self) -> dict[str, Any]:
         query_feeds = f"""
             SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
-            FROM {self.format_to_parquet_file_path(Prediction)}
+            FROM {tbl_parquet_path(self.lake_dir, Prediction)}
         """
         if self.start_date_ms:
             query_feeds += f"WHERE timestamp > {self.start_date_ms}"
@@ -443,7 +439,7 @@ class AppDataManager:
                 ) * 100.0 / COUNT(*) AS avg_accuracy,
                 SUM(p.stake) AS total_stake
             FROM
-                {self.format_to_parquet_file_path(BronzePrediction)} p
+                {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
         """
         if self.start_date_ms:
             query_payouts += f"WHERE timestamp > {self.start_date_ms}"
@@ -455,7 +451,7 @@ class AppDataManager:
         query_subscriptions = f"""
             SELECT COUNT(ID),
             SUM(last_price_value)
-            FROM {self.format_to_parquet_file_path(Subscription)}
+            FROM {tbl_parquet_path(self.lake_dir, Subscription)}
         """
 
         if self.start_date_ms:
@@ -478,7 +474,7 @@ class AppDataManager:
     def predictoors_metrics(self) -> dict[str, Any]:
         query_predictions = f"""
             SELECT COUNT(DISTINCT(user))
-            FROM {self.format_to_parquet_file_path(Prediction)}
+            FROM {tbl_parquet_path(self.lake_dir, Prediction)}
         """
         if self.start_date_ms:
             query_predictions += f" WHERE timestamp > {self.start_date_ms}"
@@ -499,7 +495,7 @@ class AppDataManager:
                         THEN p.payout - p.stake ELSE 0 END
                     ) AS tot_gross_income
                 FROM
-                    {self.format_to_parquet_file_path(BronzePrediction)} p
+                    {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
             """
         if self.start_date_ms:
             query_payouts += f" WHERE timestamp > {self.start_date_ms}"
@@ -522,7 +518,7 @@ class AppDataManager:
                     MIN(timestamp) as min,
                     MAX(timestamp) as max
                 FROM
-                    {self.format_to_parquet_file_path(Slot)}
+                    {tbl_parquet_path(self.lake_dir, Slot)}
             """,
             scalar=True,
         )
