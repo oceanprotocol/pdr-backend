@@ -5,10 +5,10 @@
 import os
 import threading
 import time
+from unittest.mock import patch
 
 import duckdb
 import polars as pl
-from unittest.mock import patch
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import Table, TempTable
@@ -368,14 +368,14 @@ def test_should_export(tmpdir):
         lambda path: current_timestamp - 15 * 60 * 1000
     )
 
-    assert db._should_export(table_folder_path, seconds_between_exports) == True
+    assert db._should_export(table_folder_path, seconds_between_exports) is True
 
     # Now mock it to return a more recent timestamp, within the export window
     db._get_max_timestamp_from_parquet_files = (
         lambda path: current_timestamp - 5 * 60 * 1000
     )
 
-    assert db._should_export(table_folder_path, seconds_between_exports) == False
+    assert db._should_export(table_folder_path, seconds_between_exports) is False
 
 
 @patch("pdr_backend.lake.duckdb_data_store.duckdb.execute")
@@ -423,7 +423,7 @@ def test_export_table_to_parquet(mock_query_scalar, tmpdir):
 
 
 def test_should_nuke_table_folders_and_re_export_db_bronze(tmpdir):
-    db, _, table_name = _setup_fixture(tmpdir)
+    db, _, _ = _setup_fixture(tmpdir)
     table_folder_path = os.path.join(str(tmpdir), "bronze_table")
     os.makedirs(table_folder_path, exist_ok=True)
 
@@ -431,41 +431,43 @@ def test_should_nuke_table_folders_and_re_export_db_bronze(tmpdir):
     result = db._should_nuke_table_folders_and_re_export_db(
         table_folder_path, 5, "bronze_table"
     )
-    assert result == True, "Failed to nuke bronze table folders"
+    assert result is True, "Failed to nuke bronze table folders"
 
 
 def test_should_nuke_table_folders_and_re_export_db_non_bronze_exceed_file_limit(
     tmpdir,
 ):
-    db, _, table_name = _setup_fixture(tmpdir)
+    db, _, _ = _setup_fixture(tmpdir)
     table_folder_path = os.path.join(str(tmpdir), "test_table")
     os.makedirs(table_folder_path, exist_ok=True)
 
     # Create dummy files
     for i in range(10):
-        open(os.path.join(table_folder_path, f"file_{i}.parquet"), "w").close()
+        with open(os.path.join(table_folder_path, f"file_{i}.parquet"), "w"):
+            pass
 
     # Test when the number of files exceeds the limit
     result = db._should_nuke_table_folders_and_re_export_db(
         table_folder_path, 5, "test_table"
     )
-    assert result == True, "Failed to detect exceeding file limit"
+    assert result is True, "Failed to detect exceeding file limit"
 
 
 def test_should_nuke_table_folders_and_re_export_db_non_bronze_below_file_limit(tmpdir):
-    db, _, table_name = _setup_fixture(tmpdir)
+    db, _, _ = _setup_fixture(tmpdir)
     table_folder_path = os.path.join(str(tmpdir), "test_table")
     os.makedirs(table_folder_path, exist_ok=True)
 
     # Create dummy files
     for i in range(3):
-        open(os.path.join(table_folder_path, f"file_{i}.parquet"), "w").close()
+        with open(os.path.join(table_folder_path, f"file_{i}.parquet"), "w"):
+            pass
 
     # Test when the number of files is below the limit
     result = db._should_nuke_table_folders_and_re_export_db(
         table_folder_path, 5, "test_table"
     )
-    assert result == False, "Incorrectly detected nuke requirement for non-bronze table"
+    assert result is False, "Incorrectly detected nuke requirement for non-bronze table"
 
 
 @patch("pdr_backend.lake.duckdb_data_store.delete_files")
