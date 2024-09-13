@@ -349,8 +349,9 @@ class ETL:
     def _export_table_data_to_parquet_files(self):
         db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
 
-        # export new data each hour and combine exported files after 24 files(daily)
-        db.export_tables_to_parquet_files(
-            seconds_between_exports=3600,
-            number_of_files_after_which_re_export_db=100,
-        )
+        if self.ppss.lake_ss.export_db_data_to_parquet_files:
+            # periodically export data to parquet files
+            db.export_tables_to_parquet_files(
+                self.ppss.lake_ss.seconds_between_parquet_exports,
+                self.ppss.lake_ss.number_of_files_after_which_re_export_db,
+            )

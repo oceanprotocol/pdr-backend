@@ -5,7 +5,7 @@
 import os
 import threading
 import time
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import duckdb
 import polars as pl
@@ -481,9 +481,6 @@ def test_nuke_table_folders_and_re_export_db(mock_delete_files, tmpdir):
 
     # Ensure delete_files was called with the correct folder path
     mock_delete_files.assert_called_once_with(table_folder_path)
-
-
-from unittest.mock import patch, MagicMock
 
 
 @patch("pdr_backend.lake.duckdb_data_store.DuckDBDataStore._should_export")

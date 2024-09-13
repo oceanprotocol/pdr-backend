@@ -81,7 +81,6 @@ class AppDataManager:
             if scalar:
                 result = duckdb.execute(query).fetchone()
                 return result[0] if result and len(result) == 1 else result
-            # For non-scalar, fetch as a dataframe and convert to dictionary
             df = duckdb.execute(query).pl()
             return df.to_pandas()
         except Exception as e:
