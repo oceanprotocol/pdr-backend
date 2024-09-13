@@ -53,7 +53,7 @@ class TabularPage:
 
 def button_label(label, page):
     if label == "Accuracy" and page == "predictoors":
-        return "p_accuracy"
+        return "p_avg_accuracy"
 
     label = label.replace(" ", "_")
 

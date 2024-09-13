@@ -568,7 +568,6 @@ class AppDataManager:
     ) -> Tuple[pandas.DataFrame, pandas.DataFrame]:
         df = self.predictoors_data.copy()
         df["addr"] = df["full_addr"] = df["user"]
-        df["accuracy"] = df["avg_accuracy"]
         df["tx_costs_(OCEAN)"] = df["stake_count"] * self.fee_cost
         df.fillna(0, inplace=True)
         df["net_income_(OCEAN)"] = df["total_profit"] - df["tx_costs_(OCEAN)"]

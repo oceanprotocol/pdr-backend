@@ -40,7 +40,7 @@ PREDICTOORS_TABLE_COLS = [
     {"name": "Addr", "id": "addr"},
     {"name": "Apr", "id": "apr"},
     {"name": "Full Addr", "id": "full_addr"},
-    {"name": "Accuracy", "id": "accuracy"},
+    {"name": "Accuracy", "id": "avg_accuracy"},
     {"name": "Number Of Feeds", "id": "feed_count"},
     {"name": "Staked (Ocean)", "id": "total_stake"},
     {"name": "Gross Income (Ocean)", "id": "gross_income"},

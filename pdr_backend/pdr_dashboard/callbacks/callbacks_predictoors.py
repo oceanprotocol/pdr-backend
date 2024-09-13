@@ -37,7 +37,7 @@ def get_callbacks_predictoors(app):
         Output("predictoors_page_table", "data"),
         [
             Input("apr_button", "n_clicks"),
-            Input("p_accuracy_button", "n_clicks"),
+            Input("p_avg_accuracy_button", "n_clicks"),
             Input("gross_income_button", "n_clicks"),
             Input("nr_feeds_button", "n_clicks"),
             Input("staked_button", "n_clicks"),
@@ -49,8 +49,8 @@ def get_callbacks_predictoors(app):
         ],
         State("apr_min", "value"),
         State("apr_max", "value"),
-        State("p_accuracy_min", "value"),
-        State("p_accuracy_max", "value"),
+        State("p_avg_accuracy_min", "value"),
+        State("p_avg_accuracy_max", "value"),
         State("gross_income_min", "value"),
         State("gross_income_max", "value"),
         State("nr_feeds_min", "value"),
@@ -67,7 +67,7 @@ def get_callbacks_predictoors(app):
     )
     def filter_table(
         _n_clicks_apr,
-        _n_clicks_p_accuracy,
+        _n_clicks_p_avg_accuracy,
         _n_clicks_gross_income,
         _n_clicks_nr_feeds,
         _n_clicks_staked,
@@ -78,8 +78,8 @@ def get_callbacks_predictoors(app):
         sort_by,
         apr_min,
         apr_max,
-        p_accuracy_min,
-        p_accuracy_max,
+        p_avg_accuracy_min,
+        p_avg_accuracy_max,
         gross_income_min,
         gross_income_max,
         nr_feeds_min,
@@ -99,7 +99,7 @@ def get_callbacks_predictoors(app):
 
         conditions = [
             ("range", "apr", apr_min, apr_max),
-            ("range", "p_accuracy", p_accuracy_min, p_accuracy_max),
+            ("range", "p_avg_accuracy", p_avg_accuracy_min, p_avg_accuracy_max),
             ("range", "gross_income", gross_income_min, gross_income_max),
             ("range", "feed_count", nr_feeds_min, nr_feeds_max),
             ("range", "total_stake", staked_min, staked_max),
@@ -134,14 +134,14 @@ def get_callbacks_predictoors(app):
         return filter_table_by_range(min_val, max_val, "APR")
 
     @app.callback(
-        Output("p_accuracy_dropdown", "label"),
-        State("p_accuracy_min", "value"),
-        State("p_accuracy_max", "value"),
-        Input("p_accuracy_button", "n_clicks"),
+        Output("p_avg_accuracy_dropdown", "label"),
+        State("p_avg_accuracy_min", "value"),
+        State("p_avg_accuracy_max", "value"),
+        Input("p_avg_accuracy_button", "n_clicks"),
         Input("clear_predictoors_filters_button", "n_clicks"),
     )
-    def filter_table_by_p_accuracy_range(
-        min_val, max_val, _n_clicks_p_accuracy_btn, _n_clicks_filters_bnt
+    def filter_table_by_p_avg_accuracy_range(
+        min_val, max_val, _n_clicks_p_avg_accuracy_btn, _n_clicks_filters_bnt
     ):
         return filter_table_by_range(min_val, max_val, "Accuracy")
 
@@ -220,8 +220,8 @@ def get_callbacks_predictoors(app):
     @app.callback(
         Output("apr_min", "value"),
         Output("apr_max", "value"),
-        Output("p_accuracy_min", "value"),
-        Output("p_accuracy_max", "value"),
+        Output("p_avg_accuracy_min", "value"),
+        Output("p_avg_accuracy_max", "value"),
         Output("gross_income_min", "value"),
         Output("gross_income_max", "value"),
         Output("nr_feeds_min", "value"),
