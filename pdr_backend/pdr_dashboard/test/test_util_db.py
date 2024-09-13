@@ -6,6 +6,7 @@ from enforce_typing import enforce_types
 
 from pdr_backend.lake.subscription import Subscription
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
 
 
 @enforce_types
@@ -98,7 +99,7 @@ def test_get_feed_daily_subscriptions_by_feed_id(_sample_app):
 
     result = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id)
     all_subscriptions = db_mgr._query_db(
-        f"SELECT * FROM {db_mgr.format_to_parquet_file_path(Subscription)}"
+        f"SELECT * FROM {tbl_parquet_path(db_mgr.lake_dir, Subscription)}"
     )
 
     # Verify the response type and length
