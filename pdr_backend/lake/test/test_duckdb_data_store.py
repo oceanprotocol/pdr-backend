@@ -360,7 +360,7 @@ def test_should_export(tmpdir):
     os.makedirs(table_folder_path, exist_ok=True)
 
     # Create a test case where max timestamp from parquet files is in the past
-    seconds_between_exports = 600  # 10 minutes
+    seconds_between_exports = UnixTimeS(600)  # 10 minutes
     current_timestamp = UnixTimeS(int(time.time())).to_milliseconds()
 
     # Mock _get_max_timestamp_from_parquet_files to return a timestamp 15 minutes ago
