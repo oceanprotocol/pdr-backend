@@ -53,22 +53,3 @@ def get_date_period_text_header(start_date: str, end_date: str):
         -> {datetime.fromtimestamp(float(end_date)).strftime('%d-%m-%y')}
     """
     return date_period_text
-
-
-def get_sales_str(result):
-    sales_str = f"{result['sales']}"
-
-    df_buy_count_str = (
-        f"{result['df_buy_count']}-DF" if result["df_buy_count"] > 0 else ""
-    )
-    ws_buy_count_str = (
-        f"{result['ws_buy_count']}-WS" if result["ws_buy_count"] > 0 else ""
-    )
-
-    if df_buy_count_str or ws_buy_count_str:
-        counts_str = "_".join(filter(None, [df_buy_count_str, ws_buy_count_str]))
-
-        if counts_str:
-            sales_str += f"_{counts_str}"
-
-    return sales_str
