@@ -24,7 +24,7 @@ install_requirements = [
     "imblearn",
     "kaleido==0.2.1",
     "mypy==1.11.2",
-    "numpy==2.1.0",
+    "numpy==2.1.1",
     "numerize==0.12.0",
     "pandas==2.2.2",
     "pathlib",
