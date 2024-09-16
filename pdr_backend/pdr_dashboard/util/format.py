@@ -135,12 +135,12 @@ def format_sales_info_data(total, df_buy, ws_buy) -> str:
     total_str = format_currency(total, suffix="", show_decimal=False)
 
     df_buy_str = (
-        f"{format_currency(df_buy, suffix="", show_decimal=False)} DF"
+        f"{format_currency(df_buy, suffix='', show_decimal=False)} DF"
         if df_buy > 0
         else ""
     )
     ws_buy_str = (
-        f"{format_currency(ws_buy, suffix="", show_decimal=False)} WS"
+        f"{format_currency(ws_buy, suffix='', show_decimal=False)} WS"
         if ws_buy > 0
         else ""
     )
