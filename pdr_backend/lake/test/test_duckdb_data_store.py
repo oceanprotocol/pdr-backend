@@ -470,24 +470,22 @@ def test_should_nuke_table_folders_and_re_export_db_non_bronze_below_file_limit(
     assert result is False, "Incorrectly detected nuke requirement for non-bronze table"
 
 
-@patch("pdr_backend.lake.duckdb_data_store.delete_files")
-def test_nuke_table_folders_and_re_export_db(mock_delete_files, tmpdir):
+@patch("pdr_backend.lake.duckdb_data_store.delete_folder")
+def test_nuke_table_folders_and_re_export_db(mock_delete_folder, tmpdir):
     db, _, _ = _setup_fixture(tmpdir)
     table_folder_path = os.path.join(str(tmpdir), "test_table")
     os.makedirs(table_folder_path, exist_ok=True)
 
-    # Simulate deleting the files by mocking `delete_files`
-    db._nuke_table_folders_and_re_export_db(table_folder_path)
+    # Simulate deleting the files by mocking `delete_folder`
+    db._nuke_table_folders(table_folder_path)
 
-    # Ensure delete_files was called with the correct folder path
-    mock_delete_files.assert_called_once_with(table_folder_path)
+    # Ensure delete_folder was called with the correct folder path
+    mock_delete_folder.assert_called_once_with(table_folder_path)
 
 
 @patch("pdr_backend.lake.duckdb_data_store.DuckDBDataStore._should_export")
 @patch("pdr_backend.lake.duckdb_data_store.DuckDBDataStore._export_table_to_parquet")
-@patch(
-    "pdr_backend.lake.duckdb_data_store.DuckDBDataStore._nuke_table_folders_and_re_export_db"
-)
+@patch("pdr_backend.lake.duckdb_data_store.DuckDBDataStore._nuke_table_folders")
 @patch(
     "pdr_backend.lake.duckdb_data_store.DuckDBDataStore._should_nuke_table_folders_and_re_export_db"
 )
@@ -522,7 +520,7 @@ def test_export_tables_to_parquet_files(
     # Ensure _export_table_to_parquet was called for each table
     assert mock_export_table_to_parquet.call_count == 2
 
-    # Ensure _nuke_table_folders_and_re_export_db was not called since nuke condition is False
+    # Ensure _nuke_table_folders was not called since nuke condition is False
     mock_nuke_table_folders.assert_not_called()
 
     # Ensure _should_export was called for each table
