@@ -512,7 +512,8 @@ def test_export_tables_to_parquet_files(
 
     # Call the method
     db.export_tables_to_parquet_files(
-        seconds_between_exports=600, number_of_files_after_which_re_export_db=5
+        seconds_between_exports=UnixTimeS(600),
+        number_of_files_after_which_re_export_db=5,
     )
 
     # Check that _should_nuke_table_folders_and_re_export_db was called for each table

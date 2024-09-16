@@ -9,7 +9,7 @@ import logging
 import os
 from typing import Any, Optional, Type
 
-import time
+from datetime import datetime
 import duckdb
 import polars as pl
 from enforce_typing import enforce_types
@@ -17,7 +17,7 @@ from polars._typing import SchemaDict
 from pdr_backend.lake.lake_mapper import LakeMapper
 
 from pdr_backend.lake.base_data_store import BaseDataStore
-from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 
 logger = logging.getLogger("duckDB")
 
@@ -356,7 +356,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
     @enforce_types
     def export_tables_to_parquet_files(
         self,
-        seconds_between_exports: int,
+        seconds_between_exports: UnixTimeS,
         number_of_files_after_which_re_export_db: int,
     ):
         export_folder_path = get_export_folder_path(self.base_path)
@@ -380,16 +380,16 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             self._export_table_to_parquet(table, table_folder_path)
 
     def _should_export(
-        self, table_folder_path: str, seconds_between_exports: int
+        self, table_folder_path: str, seconds_between_exports: UnixTimeS
     ) -> bool:
         max_timestamp_from_parquet = self._get_max_timestamp_from_parquet_files(
             table_folder_path
         )
-        current_timestamp = UnixTimeS(int(time.time())).to_milliseconds()
+        current_timestamp = UnixTimeMs.from_dt(datetime.now())
 
         return (
             current_timestamp - max_timestamp_from_parquet
-            >= seconds_between_exports * 1000
+            >= seconds_between_exports.to_milliseconds()
         )
 
     def _get_max_timestamp_from_parquet_files(self, table_folder_path: str) -> int:

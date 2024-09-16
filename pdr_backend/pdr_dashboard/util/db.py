@@ -68,7 +68,9 @@ class AppDataManager:
         self.start_date = start_dt
 
     @enforce_types
-    def _query_db(self, query: str, scalar=False) -> Union[List[dict], Any]:
+    def _query_db(
+        self, query: str, scalar=False
+    ) -> Union[List[dict], pandas.DataFrame]:
         """
         Query the database with the given query.
         Args:
