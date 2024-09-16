@@ -6,7 +6,9 @@
 # The DuckDBDataStore class is a subclass of the Base
 import glob
 import logging
+import shutil
 import os
+from pathlib import Path
 from typing import Any, Optional, Type
 
 from datetime import datetime
@@ -367,12 +369,11 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
 
         for table in tables:
             table_folder_path = os.path.join(export_folder_path, table)
-            os.makedirs(table_folder_path, exist_ok=True)
 
             if self._should_nuke_table_folders_and_re_export_db(
                 table_folder_path, number_of_files_after_which_re_export_db, table
             ):
-                self._nuke_table_folders_and_re_export_db(table_folder_path)
+                self._nuke_table_folders(table_folder_path)
 
             if not self._should_export(table_folder_path, seconds_between_exports):
                 continue
@@ -403,6 +404,8 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             return 0  # Assume no data exported yet if there's an error
 
     def _export_table_to_parquet(self, table: str, table_folder_path: str):
+        os.makedirs(table_folder_path, exist_ok=True)
+
         max_timestamp_from_db = (
             self.query_scalar(f"SELECT MAX(timestamp) FROM {table}") or 0
         )
@@ -425,18 +428,16 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
     def _should_nuke_table_folders_and_re_export_db(
         self, table_folder_path: str, file_limit: int, table_name: str
     ) -> bool:
+        path = Path(table_folder_path)
         if "bronze" in table_name:
             return True
-        files = [
-            f
-            for f in os.listdir(table_folder_path)
-            if os.path.isfile(os.path.join(table_folder_path, f))
-        ]
-        return len(files) > file_limit
 
-    def _nuke_table_folders_and_re_export_db(self, table_folder_path: str):
+        nr_of_files_in_folder = sum(1 for _ in path.rglob("*"))
+        return nr_of_files_in_folder > file_limit
+
+    def _nuke_table_folders(self, table_folder_path: str):
         # Delete parquet files from table directory
-        delete_files(table_folder_path)
+        delete_folder(table_folder_path)
 
 
 def get_export_folder_path(base_path):
@@ -448,9 +449,7 @@ def tbl_parquet_path(base_path: str, table_class: Type[LakeMapper]) -> str:
     return f"'{export_folder_path}/{table_class.get_lake_table_name()}/*.parquet'"
 
 
-def delete_files(directory_path):
-    # Iterate through all files in the directory
-    for filename in os.listdir(directory_path):
-        print(f"Checking: {filename}")
-        file_path = os.path.join(directory_path, filename)
-        os.remove(file_path)
+def delete_folder(directory_path):
+    # Delete table folder
+    if os.path.exists(directory_path):
+        shutil.rmtree(directory_path)
