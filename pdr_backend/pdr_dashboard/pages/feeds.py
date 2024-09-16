@@ -117,7 +117,12 @@ class FeedsPage(TabularPage):
                 dash_table.DataTable(
                     id="feeds_page_table",
                     columns=FEEDS_TABLE_COLS,
-                    hidden_columns=["full_addr", "sales_raw"],
+                    hidden_columns=[
+                        "full_addr",
+                        "df_buy_count",
+                        "ws_buy_count",
+                        "sales",
+                    ],
                     row_selectable="single",
                     data=self.app.data.feeds_table_data.to_dict("records"),
                     sort_action="custom",

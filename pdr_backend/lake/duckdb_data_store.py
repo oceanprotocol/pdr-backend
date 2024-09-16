@@ -116,7 +116,7 @@ class _StoreCRUD:
         """
 
         # Create the table
-        self.execute_sql(f"CREATE TABLE {table_name} AS SELECT * FROM df")
+        self.execute_sql(f"CREATE TABLE {table_name} AS SELECT * FROM df", df=df)
 
     @enforce_types
     def insert_from_df(self, df: pl.DataFrame, table_name: str):
@@ -252,7 +252,9 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         )  # Keep a persistent connection
 
     @enforce_types
-    def execute_sql(self, query: str):
+    def execute_sql(
+        self, query: str, *args, **kwargs
+    ):  # pylint: disable=unused-argument
         """
         Execute a SQL query across DuckDB using SQL.
         @arguments:
@@ -265,6 +267,11 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
 
         # if self.duckdb_conn is None:
         #     raise Exception("DuckDB connection is not established")
+
+        # define the DataFrame for the query to recognize it
+        # see: https://duckdb.org/docs/guides/glossary.html#replacement-scan
+        df = kwargs.get("df")  # pylint: disable=unused-variable
+
         self.duckdb_conn.execute("BEGIN TRANSACTION")
         self.duckdb_conn.execute(query)
         self.duckdb_conn.execute("COMMIT")
