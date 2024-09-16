@@ -15,6 +15,12 @@ It also serves users who want to understand any issues and caveats in the instal
 For more details, see the [the pytest-asyncio changelog](https://pytest-asyncio.readthedocs.io/en/latest/reference/changelog.html#id1), under Known Issues.
 The library itself recommends using version 0.21 until the issue is resolved.
 
+- `dash[testing]` is frozen at version 2.17.1. This is because we implemented some creative solutions to determine table header texts, which may break with newer versions.
+Since the PDR Dashboard is still very actively developed, it is safer for us to freeze the version until we can update the codebase.
+
+- `web3` is frozen at version 6.20.2. This is because of external dependencies with Barge and transactions. We are currently working on a solution to upgrade to the latest version.
+More details can be found [here](https://github.com/oceanprotocol/pdr-backend/issues/1592).
+
 ## For new dependencies: Types Management
 
 For type checking, we use mypy, which may require dependencies for type hints.

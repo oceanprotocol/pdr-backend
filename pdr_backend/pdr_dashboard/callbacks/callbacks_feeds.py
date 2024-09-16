@@ -85,7 +85,7 @@ def get_callbacks_feeds(app):
             ("filter", "quote_token", quote_token),
             ("filter", "source", source),
             ("filter", "timeframe", timeframe),
-            ("range", "sales_raw", sales_min, sales_max),
+            ("range", "sales", sales_min, sales_max),
             ("range", "sales_revenue", revenue_min, revenue_max),
             ("range", "avg_accuracy", accuracy_min, accuracy_max),
             ("range", "volume", volume_min, volume_max),

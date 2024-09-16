@@ -17,7 +17,7 @@ FEEDS_HOME_PAGE_TABLE_COLS = [
     {"name": "Timeframe", "id": "timeframe"},
     {"name": "Full Addr", "id": "contract"},
     {"name": "Accuracy", "id": "avg_accuracy"},
-    {"name": "Sales", "id": "sales_raw"},
+    {"name": "Sales", "id": "sales"},
 ]
 
 FEEDS_TABLE_COLS = [
@@ -32,8 +32,10 @@ FEEDS_TABLE_COLS = [
     {"name": "Volume (Ocean)", "id": "volume"},
     {"name": "Price (Ocean)", "id": "price"},
     {"name": "Sales", "id": "sales_str"},
-    {"name": "Sales Raw", "id": "sales_raw"},
+    {"name": "Sales Raw", "id": "sales"},
     {"name": "Sales Revenue (Ocean)", "id": "sales_revenue"},
+    {"name": "hidden_df", "id": "df_buy_count"},
+    {"name": "hidden_ws", "id": "ws_buy_count"},
 ]
 
 PREDICTOORS_TABLE_COLS = [
@@ -62,7 +64,6 @@ FORMAT_CONFIG = {
     "user": "eth_address",
     "avg_accuracy": "percentage",
     "avg_stake": "currency_conditional",
-    "sales_str": "sales_info_data",
     "total_profit": "currency_without_decimal",
     "volume": "currency_without_decimal",
     "total_stake": "currency_conditional",
@@ -108,45 +109,48 @@ def format_df(
     """
     columns = df.columns
 
+    if "sales" in columns and "df_buy_count" in columns and "ws_buy_count" in columns:
+        df["sales_str"] = (
+            df.apply(
+                lambda x: format_sales_info_data(
+                    x.sales, x.df_buy_count, x.ws_buy_count
+                ),
+                axis=1,
+            )
+            if not df.empty
+            else ""
+        )
+
     for column in columns:
         # pylint: disable=cell-var-from-loop
+        if column == "sales_str":
+            continue
         df[column] = df[column].apply(lambda x: format_value(x, column))
 
     return df
 
 
 @enforce_types
-def format_sales_info_data(data: Union[str, int]) -> str:
-    """
-    Format sales multiple data.
-    Args:
-        data str: Sales data. eg: 2160_2140-DF_20-WS
-    Returns:
-        str: Formatted sales data. eg: 2.16K (2.14K DF, 20 WS)
-    """
-    splitted_data = str(data).split("_")
+def format_sales_info_data(total, df_buy, ws_buy) -> str:
+    total_str = format_currency(total, suffix="", show_decimal=False)
 
-    result_data = []
+    df_buy_str = (
+        f"{format_currency(df_buy, suffix='', show_decimal=False)} DF"
+        if df_buy > 0
+        else ""
+    )
+    ws_buy_str = (
+        f"{format_currency(ws_buy, suffix='', show_decimal=False)} WS"
+        if ws_buy > 0
+        else ""
+    )
+    sales_info = ""
 
-    for _, item in enumerate(splitted_data):
-        if item.isnumeric():
-            result_data.append(
-                format_currency(int(item), suffix="", show_decimal=False)
-            )
-        else:
-            splitted_item = item.split("-")
-            formatted_nr = format_currency(
-                int(splitted_item[0]), suffix="", show_decimal=False
-            )
+    if df_buy_str or ws_buy_str:
+        sales_info = ", ".join(filter(None, [df_buy_str, ws_buy_str]))
+        sales_info = f" ({sales_info})"
 
-            result_data.append(f"{formatted_nr} {splitted_item[1]}")
-
-    info_part = (", ").join(result_data[1:])
-
-    if info_part:
-        info_part = f" ({info_part})"
-
-    return result_data[0] + info_part
+    return total_str + sales_info
 
 
 @enforce_types
