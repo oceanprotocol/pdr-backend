@@ -18,6 +18,11 @@ jobs:
         python-version: [3.8]
 
     steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
       - uses: actions/checkout@v2
 
       - name: Set up Python {{ matrix.python-version }}
