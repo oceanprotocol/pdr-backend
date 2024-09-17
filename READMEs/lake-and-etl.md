@@ -20,6 +20,7 @@ To complete this we'll be interacting different components in our stack, such as
 - [**ETL**](#etl)
 - [**Checkpoints**](#checkpoints)
 - [**Dumb Components**](#dumb-components)
+- [**Export to parquet files**](#export-to-parquet-file)
 - [**Examples**](#examples)
 - [**Dos and Don'ts**](#dos-and-donts)
 
@@ -239,3 +240,12 @@ Lake components should be self-contained, "dumb", and perform one role.
 GQLDF is upstream from ETL and does not have any knowledge of it. Do not create dependencies where there are none. I.E. If you delete CSV data from `lake_data`, do not expect this change to be reflected in RAW or ETL tables. Similarly, ETL should assume that GQLDF is performing it's role as expected.
 
 Rather, help improve the lake validation and CLI tools to improve the lake DX and operations. Think about the entry points, validations, and [how to improve the user flow](https://github.com/oceanprotocol/pdr-backend/issues/1087#issuecomment-2155527087) so these checks being done outside core systems, once, while remaining user friendly.
+
+## Export to parquet files
+By default, the ETL process exports DuckDB lake data into Parquet files stored in the exports directory. This setup allows the dashboard to read the data without interfering with the direct connection to the lake.
+
+The process of exporting is done periodically at a specified `seconds_between_parquet_exports` frequency inside `PPSS.yaml` config file and can be changed to the user needs.
+
+To nuke and re-export parquet files for periodical cleanups, the `number_of_files_after_which_re_export_db` it's used, and can be easily configured.
+
+Additionally, the export process can be disabled entirely by setting `export_db_data_to_parquet_files = False` in the configuration file.

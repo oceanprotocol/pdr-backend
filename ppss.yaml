@@ -12,6 +12,9 @@ lake_ss:
   #    - kraken BTC/USDT 5m
   st_timestr: 30 days ago # starting date for data
   fin_timestr: now # ending date for data
+  export_db_data_to_parquet_files: True # export duckdb data base tables to parquet files
+  seconds_between_parquet_exports: 600 # export again to parquet after this amount of seconds have passed from last
+  number_of_files_after_which_re_export_db: 2 # number of files at which re-export table as 1 parquet file
   api: ccxt
 
 predictoor_ss:

@@ -90,6 +90,9 @@ def _lake_ss(lake_dir, feeds, st_timestr=None, fin_timestr=None):
             "st_timestr": st_timestr or "2023-06-18",
             "fin_timestr": fin_timestr or "2023-06-21",
             "timeframe": "5m",
+            "export_db_data_to_parquet_files": True,
+            "seconds_between_parquet_exports": 3600,
+            "number_of_files_after_which_re_export_db": 100,
         }
     )
 

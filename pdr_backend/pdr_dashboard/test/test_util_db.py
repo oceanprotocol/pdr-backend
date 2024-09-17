@@ -1,25 +1,26 @@
 from unittest.mock import patch
 
 import pandas
+
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.subscription import Subscription
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
 
 
 @enforce_types
-@patch("pdr_backend.pdr_dashboard.util.db.DuckDBDataStore")
-def test_query_db(
-    mock_duckdb_data_store,
-    _sample_app,
-):
+@patch("pdr_backend.pdr_dashboard.util.db.duckdb.execute")
+def test_query_db(mock_duckdb_execute, _sample_app):
     query = "query"
     db_mgr = _sample_app.data
     db_mgr._query_db(query)
 
-    lake_dir = db_mgr.lake_dir
-    mock_duckdb_data_store.assert_called_once_with(lake_dir, read_only=True)
-    mock_duckdb_data_store.return_value.query_data.assert_called_once_with(query)
+    # Assert that duckdb.execute was called once with the correct query
+    mock_duckdb_execute.assert_called_once_with(query)
+
+    # Mocking the return value from duckdb.execute(query)
+    mock_duckdb_execute.return_value.pl.assert_called_once()
 
 
 @enforce_types
@@ -98,7 +99,7 @@ def test_get_feed_daily_subscriptions_by_feed_id(_sample_app):
 
     result = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id)
     all_subscriptions = db_mgr._query_db(
-        f"SELECT * FROM {Subscription.get_lake_table_name()}"
+        f"SELECT * FROM {tbl_parquet_path(db_mgr.lake_dir, Subscription)}"
     )
 
     # Verify the response type and length
