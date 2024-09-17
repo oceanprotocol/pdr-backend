@@ -10,13 +10,19 @@ Live data from a specified supported blockchain is fetched and stored in a local
 
 To set up and run the Predictoor dashboard, follow these steps:
 
-1. **Fetch chain data into the lake**
+1. **Fetch chain data into the lake and export to paruqet files**
 
 The first step is to fetch the data from the blockchain using the lake's ETL, by this command:
 
 ```console
 pdr lake etl update ./my_ppss.yaml sapphire-mainnet
 ```
+
+By default the lake is going to automatically export data from lake to parquet files.
+Be aware that the export is executed periodically and could be configured and even disabled using this PPSS lake config params:
+- export_db_data_to_parquet_files
+- seconds_between_parquet_exports
+- number_of_files_after_which_re_export_db
 
 For more information on how the lake works and how to configure it, refer to [`this readme`](./lake-and-etl.md).
 
@@ -28,7 +34,7 @@ By configuring the **ppss -> predictoor_ss -> my_addresses** list and providing 
 
 3. **Run the dash app from command line**
 
-After fetching the chain data locally into the lake, the next step is to read, process, and display the data by running the dashboard with the following command:
+After fetching the chain data locally into the lake and exporting it into parquet files, the next step is to read, process, and display the data by running the dashboard with the following command:
 
 ```console
 pdr dashboard ./my_ppss.yaml sapphire-mainnet
