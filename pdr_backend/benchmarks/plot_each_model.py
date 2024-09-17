@@ -9,9 +9,7 @@ import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 
 # Example file path
-FILE_PATH = (
-    "/Users/abc/Dev/ClassifLinearElasticNet Balanced_50kIterations_Summary.csv"
-)
+FILE_PATH = "/Users/abc/Dev/ClassifLinearElasticNet Balanced_50kIterations_Summary.csv"
 
 
 def load_data_from_csv(file_path):
