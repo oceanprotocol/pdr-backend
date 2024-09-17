@@ -6,15 +6,20 @@
 # The DuckDBDataStore class is a subclass of the Base
 import glob
 import logging
+import shutil
 import os
-from typing import Any, Optional
+from pathlib import Path
+from typing import Any, Optional, Type
 
+from datetime import datetime
 import duckdb
 import polars as pl
 from enforce_typing import enforce_types
 from polars._typing import SchemaDict
+from pdr_backend.lake.lake_mapper import LakeMapper
 
 from pdr_backend.lake.base_data_store import BaseDataStore
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 
 logger = logging.getLogger("duckDB")
 
@@ -356,3 +361,102 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         return (
             f"INSERT INTO {to_table.table_name} SELECT * FROM {from_table.table_name};"
         )
+
+    @enforce_types
+    def export_tables_to_parquet_files(
+        self,
+        seconds_between_exports: UnixTimeS,
+        number_of_files_after_which_re_export_db: int,
+    ):
+        export_folder_path = get_export_folder_path(self.base_path)
+        tables = self.query_data("SHOW TABLES")["name"]
+
+        # Ensure export folder exists
+        os.makedirs(export_folder_path, exist_ok=True)
+
+        for table in tables:
+            table_folder_path = os.path.join(export_folder_path, table)
+
+            if self._should_nuke_table_folders_and_re_export_db(
+                table_folder_path, number_of_files_after_which_re_export_db, table
+            ):
+                self._nuke_table_folders(table_folder_path)
+
+            if not self._should_export(table_folder_path, seconds_between_exports):
+                continue
+
+            self._export_table_to_parquet(table, table_folder_path)
+
+    def _should_export(
+        self, table_folder_path: str, seconds_between_exports: UnixTimeS
+    ) -> bool:
+        max_timestamp_from_parquet = self._get_max_timestamp_from_parquet_files(
+            table_folder_path
+        )
+        current_timestamp = UnixTimeMs.from_dt(datetime.now())
+
+        return (
+            current_timestamp - max_timestamp_from_parquet
+            >= seconds_between_exports.to_milliseconds()
+        )
+
+    def _get_max_timestamp_from_parquet_files(self, table_folder_path: str) -> int:
+        try:
+            result = duckdb.execute(
+                f"SELECT MAX(timestamp) FROM '{table_folder_path}/*.parquet'"
+            ).fetchone()
+
+            return result[0] if result and result[0] is not None else 0
+        except Exception:
+            return 0  # Assume no data exported yet if there's an error
+
+    def _export_table_to_parquet(self, table: str, table_folder_path: str):
+        os.makedirs(table_folder_path, exist_ok=True)
+
+        max_timestamp_from_db = (
+            self.query_scalar(f"SELECT MAX(timestamp) FROM {table}") or 0
+        )
+        max_timestamp_from_parquet = self._get_max_timestamp_from_parquet_files(
+            table_folder_path
+        )
+
+        if max_timestamp_from_db <= max_timestamp_from_parquet:
+            return  # No new data to export
+
+        parquet_file = f"{table}_{max_timestamp_from_db}.parquet"
+        parquet_file_path = os.path.join(table_folder_path, parquet_file)
+
+        query = f"""
+        COPY (SELECT * FROM {table} WHERE timestamp > {max_timestamp_from_parquet})
+        TO '{parquet_file_path}' (FORMAT 'parquet');
+        """
+        self.execute_sql(query)
+
+    def _should_nuke_table_folders_and_re_export_db(
+        self, table_folder_path: str, file_limit: int, table_name: str
+    ) -> bool:
+        path = Path(table_folder_path)
+        if "bronze" in table_name:
+            return True
+
+        nr_of_files_in_folder = sum(1 for _ in path.rglob("*"))
+        return nr_of_files_in_folder > file_limit
+
+    def _nuke_table_folders(self, table_folder_path: str):
+        # Delete parquet files from table directory
+        delete_folder(table_folder_path)
+
+
+def get_export_folder_path(base_path):
+    return f"{base_path}/exports"
+
+
+def tbl_parquet_path(base_path: str, table_class: Type[LakeMapper]) -> str:
+    export_folder_path = get_export_folder_path(base_path)
+    return f"'{export_folder_path}/{table_class.get_lake_table_name()}/*.parquet'"
+
+
+def delete_folder(directory_path):
+    # Delete table folder
+    if os.path.exists(directory_path):
+        shutil.rmtree(directory_path)
