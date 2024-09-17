@@ -13,7 +13,7 @@ from pdr_backend.cli.cli_arguments import NETWORK_Mixin, PPSS_Mixin
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("cli")
-LAKE_SUBCOMMANDS = ["describe", "validate", "query", "raw", "etl"]
+LAKE_SUBCOMMANDS = ["describe", "validate", "query", "raw", "etl", "setupdata"]
 SUPPORTS_L2_COMMANDS = ["raw", "etl"]
 
 

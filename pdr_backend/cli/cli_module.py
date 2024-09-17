@@ -61,8 +61,10 @@ def _do_main():
         return
 
     func_name = f"do_{sys.argv[1]}"
+
     func = globals().get(func_name)
     if func is None:
+        print(f"Unknown command: {sys.argv[1]}")
         do_help_long(1)
 
     parser = get_arg_parser(func_name)

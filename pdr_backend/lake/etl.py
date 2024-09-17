@@ -23,6 +23,7 @@ from pdr_backend.lake.table import (
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
+from pdr_backend.util.csvs import export_table_data_to_parquet_files
 
 from pdr_backend.lake.sql_etl_predictions import _do_sql_predictions
 from pdr_backend.lake.sql_etl_payouts import _do_sql_payouts
@@ -165,7 +166,7 @@ class ETL:
             )
 
             # Export data to parquet files
-            self._export_table_data_to_parquet_files()
+            export_table_data_to_parquet_files(self.ppss)
         except Exception as e:
             logger.info("Error when executing ETL: %s", e)
 
@@ -344,16 +345,3 @@ class ETL:
                 "do_bronze_queries - completed query %s",
                 etl_query,
             )
-
-    @enforce_types
-    def _export_table_data_to_parquet_files(self):
-        db = DuckDBDataStore(self.ppss.lake_ss.lake_dir)
-
-        if not self.ppss.lake_ss.export_db_data_to_parquet_files:
-            return
-
-        # periodically export data to parquet files
-        db.export_tables_to_parquet_files(
-            UnixTimeS(self.ppss.lake_ss.seconds_between_parquet_exports),
-            self.ppss.lake_ss.number_of_files_after_which_re_export_db,
-        )

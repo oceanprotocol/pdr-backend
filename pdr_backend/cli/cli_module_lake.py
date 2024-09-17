@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 import logging
+import os
 
 from enforce_typing import enforce_types
 
@@ -14,6 +15,8 @@ from pdr_backend.lake.table import drop_tables_from_st
 from pdr_backend.lake_info.lake_info import LakeInfo
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.util.networkutil import download_file
+from pdr_backend.util.csvs import export_table_data_to_parquet_files
 
 logger = logging.getLogger("cli")
 
@@ -26,6 +29,7 @@ def do_lake_subcommand(args):
     parsed_args = parser.parse_args(args)
 
     func_name = f"do_lake_{parsed_args.subcommand}"
+
     if hasattr(parsed_args, "l2_subcommand_type"):
         func_name += f"_{parsed_args.l2_subcommand_type}"
 
@@ -124,3 +128,25 @@ def do_lake_query(args, ppss):
     except Exception as e:
         logger.error("Error querying lake: %s", e)
         print(e)
+
+
+def do_lake_setupdata(args, ppss):
+    """
+    Downloads the DuckDB file from the pdr-lake-cache repository
+    and places it into the lake_folder.
+    """
+    lake_folder = ppss.lake_ss.lake_dir
+    duckdb_url = "https://raw.githubusercontent.com/oceanprotocol/pdr-lake-cache/main/exports/duckdb_backup.db"
+
+    if not os.path.exists(lake_folder):
+        os.makedirs(lake_folder)
+
+    file_path = os.path.join(lake_folder, "duckdb.db")
+
+    try:
+        logger.info("Downloading DuckDB from %s", duckdb_url)
+        download_file(duckdb_url, file_path)
+        logger.info("DuckDB successfully downloaded to %s", file_path)
+        export_table_data_to_parquet_files(ppss)
+    except Exception as e:
+        logger.error("Failed to download the DuckDB file: %s", str(e))

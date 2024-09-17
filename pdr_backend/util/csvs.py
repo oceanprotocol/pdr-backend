@@ -10,6 +10,9 @@ from typing import Dict, List
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.subgraph_predictions import Prediction
+from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
+from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.ppss.ppss import PPSS
 
 logger = logging.getLogger("csvs")
 
@@ -108,4 +111,18 @@ def save_analysis_csv(all_predictions: List[Prediction], csv_output_dir: str):
             "True Value": "truevalue",
             "Predicted Value": "predvalue",
         },
+    )
+
+
+@enforce_types
+def export_table_data_to_parquet_files(ppss: PPSS):
+    db = DuckDBDataStore(ppss.lake_ss.lake_dir)
+
+    if not ppss.lake_ss.export_db_data_to_parquet_files:
+        return
+
+    # periodically export data to parquet files
+    db.export_tables_to_parquet_files(
+        UnixTimeS(ppss.lake_ss.seconds_between_parquet_exports),
+        ppss.lake_ss.number_of_files_after_which_re_export_db,
     )
