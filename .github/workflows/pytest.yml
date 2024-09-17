@@ -15,6 +15,7 @@ env:
 
 jobs:
   test:
+    if: ${{ !(github.event_name == 'synchronized' && github.ref_name == 'main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
