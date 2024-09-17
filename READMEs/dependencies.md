@@ -19,7 +19,7 @@ The library itself recommends using version 0.21 until the issue is resolved.
 Since the PDR Dashboard is still very actively developed, it is safer for us to freeze the version until we can update the codebase.
 
 - `web3` is frozen at version 6.20.2. This is because of external dependencies with Barge and transactions. We are currently working on a solution to upgrade to the latest version.
-More details can be found [here](https://github.com/oceanprotocol/pdr-backend/issues/1592).
+More details can be found [here](https://github.com/oceanprotocol/pdr-backend/issues/1592) in the issue.
 
 ## For new dependencies: Types Management
 
