@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-
+    if: ${{ !(github.event.action == 'synchronized' && github.ref_name == 'main') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
