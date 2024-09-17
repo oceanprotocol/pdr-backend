@@ -220,6 +220,9 @@ def mock_ppss(
             "lake_dir": os.path.join(tmpdir, "lake_data"),
             "st_timestr": st_timestr,
             "fin_timestr": fin_timestr,
+            "export_db_data_to_parquet_files": True,
+            "seconds_between_parquet_exports": 3600,
+            "number_of_files_after_which_re_export_db": 100,
         }
     )
 

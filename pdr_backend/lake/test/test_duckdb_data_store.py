@@ -5,19 +5,26 @@
 import os
 import threading
 import time
+from unittest.mock import patch, MagicMock
 
 import duckdb
 import polars as pl
 
 from pdr_backend.lake.duckdb_data_store import DuckDBDataStore
 from pdr_backend.lake.table import Table, TempTable
+from pdr_backend.util.time_types import UnixTimeS
 
 
 # Initialize the DuckDBDataStore instance for testing
-def _setup_fixture(tmpdir):
-    example_df = pl.DataFrame(
-        {"timestamp": ["2022-01-01", "2022-02-01", "2022-03-01"], "value": [10, 20, 30]}
-    )
+def _setup_fixture(tmpdir, df=None):
+    example_df = df
+    if example_df is None:
+        example_df = pl.DataFrame(
+            {
+                "timestamp": ["2022-01-01", "2022-02-01", "2022-03-01"],
+                "value": [10, 20, 30],
+            }
+        )
     table_name = "test_df"
 
     return [DuckDBDataStore(str(tmpdir)), example_df, table_name]
@@ -345,3 +352,176 @@ def test_create_table(tmpdir):
     # Check if the table is registered
     check_result = db.table_exists(table_name)
     assert check_result
+
+
+def test_should_export(tmpdir):
+    db, _, _ = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "test_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Create a test case where max timestamp from parquet files is in the past
+    seconds_between_exports = UnixTimeS(600)  # 10 minutes
+    current_timestamp = UnixTimeS(int(time.time())).to_milliseconds()
+
+    # Mock _get_max_timestamp_from_parquet_files to return a timestamp 15 minutes ago
+    db._get_max_timestamp_from_parquet_files = (
+        lambda path: current_timestamp - 15 * 60 * 1000
+    )
+
+    assert db._should_export(table_folder_path, seconds_between_exports) is True
+
+    # Now mock it to return a more recent timestamp, within the export window
+    db._get_max_timestamp_from_parquet_files = (
+        lambda path: current_timestamp - 5 * 60 * 1000
+    )
+
+    assert db._should_export(table_folder_path, seconds_between_exports) is False
+
+
+@patch("pdr_backend.lake.duckdb_data_store.duckdb.execute")
+def test_get_max_timestamp_from_parquet_files(mock_duckdb_execute, tmpdir):
+    db, example_df, table_name = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "exports")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Simulate the existence of a Parquet file with a max timestamp
+    parquet_file = os.path.join(table_folder_path, f"{table_name}_1640995200.parquet")
+    example_df.write_parquet(parquet_file)
+
+    # Mock DuckDB to return a known max timestamp
+    mock_duckdb_execute.return_value.fetchone.return_value = (1640995200,)
+
+    max_timestamp = db._get_max_timestamp_from_parquet_files(table_folder_path)
+    assert max_timestamp == 1640995200
+
+    # Simulate no Parquet files
+    db._get_max_timestamp_from_parquet_files = lambda path: 0
+    assert db._get_max_timestamp_from_parquet_files(table_folder_path) == 0
+
+
+@patch("pdr_backend.lake.duckdb_data_store.DuckDBDataStore.query_scalar")
+def test_export_table_to_parquet(mock_query_scalar, tmpdir):
+    # read the pdr_payouts.csv file in the same folder
+    df = pl.read_csv("pdr_backend/lake/test/pdr_payouts.csv")
+    db, example_df, table_name = _setup_fixture(tmpdir, df)
+    table_folder_path = os.path.join(str(tmpdir), "test_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Mocking _get_max_timestamp_from_parquet_files to return 0 (i.e., no previous export)
+    db._get_max_timestamp_from_parquet_files = lambda path: 0
+
+    # Insert example data into DuckDB table
+    db.create_from_df(example_df, table_name)
+
+    mock_query_scalar.return_value = 1640995200
+    # Export the table to Parquet
+    db._export_table_to_parquet(table_name, table_folder_path)
+
+    # Check if the Parquet file is created
+    files = os.listdir(table_folder_path)
+    assert any(file.endswith(".parquet") for file in files), "No Parquet file created"
+
+
+def test_should_nuke_table_folders_and_re_export_db_bronze(tmpdir):
+    db, _, _ = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "bronze_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Test when "bronze" is in the table_name
+    result = db._should_nuke_table_folders_and_re_export_db(
+        table_folder_path, 5, "bronze_table"
+    )
+    assert result is True, "Failed to nuke bronze table folders"
+
+
+def test_should_nuke_table_folders_and_re_export_db_non_bronze_exceed_file_limit(
+    tmpdir,
+):
+    db, _, _ = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "test_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Create dummy files
+    for i in range(10):
+        with open(os.path.join(table_folder_path, f"file_{i}.parquet"), "w"):
+            pass
+
+    # Test when the number of files exceeds the limit
+    result = db._should_nuke_table_folders_and_re_export_db(
+        table_folder_path, 5, "test_table"
+    )
+    assert result is True, "Failed to detect exceeding file limit"
+
+
+def test_should_nuke_table_folders_and_re_export_db_non_bronze_below_file_limit(tmpdir):
+    db, _, _ = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "test_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Create dummy files
+    for i in range(3):
+        with open(os.path.join(table_folder_path, f"file_{i}.parquet"), "w"):
+            pass
+
+    # Test when the number of files is below the limit
+    result = db._should_nuke_table_folders_and_re_export_db(
+        table_folder_path, 5, "test_table"
+    )
+    assert result is False, "Incorrectly detected nuke requirement for non-bronze table"
+
+
+@patch("pdr_backend.lake.duckdb_data_store.delete_folder")
+def test_nuke_table_folders_and_re_export_db(mock_delete_folder, tmpdir):
+    db, _, _ = _setup_fixture(tmpdir)
+    table_folder_path = os.path.join(str(tmpdir), "test_table")
+    os.makedirs(table_folder_path, exist_ok=True)
+
+    # Simulate deleting the files by mocking `delete_folder`
+    db._nuke_table_folders(table_folder_path)
+
+    # Ensure delete_folder was called with the correct folder path
+    mock_delete_folder.assert_called_once_with(table_folder_path)
+
+
+@patch("pdr_backend.lake.duckdb_data_store.DuckDBDataStore._should_export")
+@patch("pdr_backend.lake.duckdb_data_store.DuckDBDataStore._export_table_to_parquet")
+@patch("pdr_backend.lake.duckdb_data_store.DuckDBDataStore._nuke_table_folders")
+@patch(
+    "pdr_backend.lake.duckdb_data_store.DuckDBDataStore._should_nuke_table_folders_and_re_export_db"
+)
+@patch("pdr_backend.lake.duckdb_data_store.get_export_folder_path")
+def test_export_tables_to_parquet_files(
+    mock_get_export_folder_path,
+    mock_should_nuke_table_folders,
+    mock_nuke_table_folders,
+    mock_should_export,
+    mock_export_table_to_parquet,
+    tmpdir,
+):
+    db, _, _ = _setup_fixture(tmpdir)
+
+    # Mock return values for internal methods
+    mock_get_export_folder_path.return_value = os.path.join(str(tmpdir), "exports")
+    mock_should_nuke_table_folders.return_value = False  # Simulate no nuke
+    mock_should_export.return_value = True  # Simulate exporting is needed
+
+    # Simulate tables in the database
+    db.query_data = MagicMock(return_value={"name": ["table1", "table2"]})
+
+    # Call the method
+    db.export_tables_to_parquet_files(
+        seconds_between_exports=UnixTimeS(600),
+        number_of_files_after_which_re_export_db=5,
+    )
+
+    # Check that _should_nuke_table_folders_and_re_export_db was called for each table
+    assert mock_should_nuke_table_folders.call_count == 2
+
+    # Ensure _export_table_to_parquet was called for each table
+    assert mock_export_table_to_parquet.call_count == 2
+
+    # Ensure _nuke_table_folders was not called since nuke condition is False
+    mock_nuke_table_folders.assert_not_called()
+
+    # Ensure _should_export was called for each table
+    assert mock_should_export.call_count == 2
