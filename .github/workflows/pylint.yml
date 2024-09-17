@@ -6,6 +6,7 @@ name: Pylint Style Tests
 
 on:
   pull_request:
+    types: [opened, reopened]
   push:
     branches: [main]
 
