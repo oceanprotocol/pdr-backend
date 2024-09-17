@@ -495,7 +495,7 @@ class AppDataManager:
                         THEN p.payout - p.stake ELSE 0 END
                     ) AS tot_gross_income
                 FROM
-                    {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
+                    {tbl_parquet_path(self.lake_dir, BronzePrediction)}
             """
         if self.start_date_ms:
             query_payouts += f" WHERE timestamp > {self.start_date_ms}"
