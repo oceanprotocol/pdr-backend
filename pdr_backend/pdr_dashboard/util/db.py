@@ -116,9 +116,9 @@ class AppDataManager:
             return pl_resp.to_pandas()
 
         except FileNotFoundError:
-            print(f"Error: The directory '{cache_file_dir}' does not exist.")
+            logger.error("Error: The directory '%s' does not exist.", cache_file_dir)
         except Exception as e:
-            print(f"An error occurred while querying or caching data: {str(e)}")
+            logger.error("An error occurred while querying or caching data: %s", str(e))
 
         return None
 
@@ -135,8 +135,11 @@ class AppDataManager:
         """
         try:
             if cache_file_name:
+                period_days = (
+                    (datetime.now() - self.start_date).days if self.start_date else 0
+                )
                 cache_data = self._check_cache_query_data(
-                    query, cache_file_name, scalar
+                    query, f"{cache_file_name}_{period_days}_days", scalar
                 )
                 return cache_data
 
@@ -183,11 +186,7 @@ class AppDataManager:
                 contract
             ORDER BY volume DESC
         """
-        period_days = (datetime.now() - self.start_date).days if self.start_date else 0
-        df = self._query_db(
-            query,
-            cache_file_name=f"feed_payouts_stats_{period_days}_days",
-        )
+        df = self._query_db(query, cache_file_name="feed_payouts_stats")
 
         df["avg_accuracy"] = df["avg_accuracy"].astype(float)
         df["avg_stake"] = df["avg_stake"].astype(float)
@@ -234,13 +233,7 @@ class AppDataManager:
             ORDER BY
                 apr DESC
         """
-        start_date_day = (
-            (datetime.now() - self.start_date).days if self.start_date else 0
-        )
-        df = self._query_db(
-            query,
-            cache_file_name=f"predictoor_payouts_stats_{start_date_day}_days",
-        )
+        df = self._query_db(query, cache_file_name="predictoor_payouts_stats")
 
         df["avg_accuracy"] = df["avg_accuracy"].astype(float)
         df["total_stake"] = df["total_stake"].astype(float)
@@ -318,13 +311,7 @@ class AppDataManager:
             GROUP BY
                 main_contract, ubc.df_buy_count, wbc.ws_buy_count
         """
-        start_date_day = (
-            (datetime.now() - self.start_date).days if self.start_date else 0
-        )
-        df = self._query_db(
-            query,
-            cache_file_name=f"feed_subscription_stats_{start_date_day}_days",
-        )
+        df = self._query_db(query, cache_file_name="feed_subscription_stats")
         df["sales_revenue"] = df["sales_revenue"].astype(float)
         df["price"] = df["price"].astype(float)
 
@@ -501,14 +488,9 @@ class AppDataManager:
             SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
             FROM {tbl_parquet_path(self.lake_dir, Prediction)}
         """
-        start_date_day = (
-            (datetime.now() - self.start_date).days if self.start_date else 0
-        )
         if self.start_date_ms:
             query_feeds += f"WHERE timestamp > {self.start_date_ms}"
-        feeds = self._query_db(
-            query_feeds, scalar=True, cache_file_name=f"feeds_{start_date_day}_days"
-        )
+        feeds = self._query_db(query_feeds, scalar=True, cache_file_name="feeds")
 
         query_payouts = f"""
             SELECT
@@ -523,9 +505,7 @@ class AppDataManager:
         if self.start_date_ms:
             query_payouts += f"WHERE timestamp > {self.start_date_ms}"
         accuracy, volume = self._query_db(
-            query_payouts,
-            scalar=True,
-            cache_file_name=f"feeds_accuracy_{start_date_day}_days",
+            query_payouts, scalar=True, cache_file_name="feeds_accuracy"
         )
 
         query_subscriptions = f"""
@@ -538,9 +518,7 @@ class AppDataManager:
             query_subscriptions += f" WHERE timestamp > {self.start_date_ms}"
 
         sales, revenue = self._query_db(
-            query_subscriptions,
-            scalar=True,
-            cache_file_name=f"sales_revenue_{start_date_day}_days",
+            query_subscriptions, scalar=True, cache_file_name="sales_revenue"
         )
 
         return {
@@ -559,11 +537,8 @@ class AppDataManager:
         """
         if self.start_date_ms:
             query_predictions += f" WHERE timestamp > {self.start_date_ms}"
-        period_days = (datetime.now() - self.start_date).days if self.start_date else 0
         predictoors = self._query_db(
-            query_predictions,
-            scalar=True,
-            cache_file_name=f"predictoors_metrics_{period_days}_days",
+            query_predictions, scalar=True, cache_file_name="predictoors_metrics"
         )
 
         query_payouts = f"""
