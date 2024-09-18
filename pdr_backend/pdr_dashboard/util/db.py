@@ -128,7 +128,7 @@ class AppDataManager:
 
     @enforce_types
     def _query_db(
-        self, query: str, scalar=False, cache_file_name=None
+        self, query: str, scalar=False, cache_file_name=None, periodical=True
     ) -> Union[List[dict], pandas.DataFrame]:
         """
         Query the database with the given query.
@@ -139,13 +139,15 @@ class AppDataManager:
         """
         try:
             if cache_file_name:
-                period_days = (
-                    (datetime.now(tz=timezone.utc) - self.start_date).days
-                    if self.start_date
-                    else 0
-                )
+                if periodical:
+                    period_days = (
+                        (datetime.now(tz=timezone.utc) - self.start_date).days
+                        if self.start_date
+                        else 0
+                    )
+                    cache_file_name = f"{cache_file_name}_{period_days}_days"
                 cache_data = self._check_cache_query_data(
-                    query, f"{cache_file_name}_{period_days}_days", scalar
+                    query, cache_file_name, scalar
                 )
                 return cache_data
 
@@ -167,6 +169,8 @@ class AppDataManager:
                 FROM {tbl_parquet_path(self.lake_dir, BronzePrediction)}
                 GROUP BY contract, pair, timeframe, source
             """,
+            cache_file_name="feeds_data",
+            periodical=False,
         )
         return df
 
@@ -585,6 +589,8 @@ class AppDataManager:
                     {tbl_parquet_path(self.lake_dir, Slot)}
             """,
             scalar=True,
+            cache_file_name="first_and_last_slot_timestamp",
+            periodical=False,
         )
         return first_timestamp / 1000, last_timestamp / 1000
 
