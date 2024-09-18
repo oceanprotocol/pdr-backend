@@ -240,7 +240,6 @@ class AppDataManager:
                 apr DESC
         """
         df = self._query_db(query, cache_file_name="predictoor_payouts_stats")
-        print(df)
 
         df["avg_accuracy"] = df["avg_accuracy"].astype(float)
         df["total_stake"] = df["total_stake"].astype(float)
