@@ -22,7 +22,7 @@ from pdr_backend.lake.table import (
 )
 from pdr_backend.lake.table_bronze_pdr_predictions import BronzePrediction
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
+from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.util.csvs import export_table_data_to_parquet_files
 
 from pdr_backend.lake.sql_etl_predictions import _do_sql_predictions

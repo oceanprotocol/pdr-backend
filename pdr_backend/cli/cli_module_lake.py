@@ -130,13 +130,13 @@ def do_lake_query(args, ppss):
         print(e)
 
 
-def do_lake_setupdata(args, ppss):
+def do_lake_setupdata(_, ppss):
     """
     Downloads the DuckDB file from the pdr-lake-cache repository
     and places it into the lake_folder.
     """
     lake_folder = ppss.lake_ss.lake_dir
-    duckdb_url = "https://raw.githubusercontent.com/oceanprotocol/pdr-lake-cache/main/exports/duckdb_backup.db"
+    duckdb_url = "https://raw.githubusercontent.com/oceanprotocol/pdr-lake-cache/main/exports/duckdb_backup.db" # pylint: disable=line-too-long
 
     if not os.path.exists(lake_folder):
         os.makedirs(lake_folder)
