@@ -18,20 +18,23 @@ from pdr_backend.util.time_types import UnixTimeS
 def test_process_payouts(_sample_app):
 
     ## convert List[Payout] to List[dict]
-    payouts = _sample_app.data.payouts(None, None, 0).to_dict(orient="records")
+    payouts = _sample_app.data.payouts(None, None, 0)
 
     feed = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
     user = "0x43584049fe6127ea6745d8ba42274e911f2a2d5c"
 
     ## filter payouts by user and feed
-    filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
-    filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
+    filtered_payouts = payouts[
+        payouts["ID"].str.contains(user) & payouts["ID"].str.contains(feed)
+    ]
+    filtered_payouts = filtered_payouts.sort_values("slot")
     tx_fee_cost = 0.2
 
     result = process_payouts(
         payouts=filtered_payouts, tx_fee_cost=tx_fee_cost, calculate_confint=True
     )
 
+    filtered_payouts = filtered_payouts.to_dict("records")
     slots = result.slot_in_unixts
     accuracies = result.accuracies
     profits = result.profits
@@ -137,8 +140,7 @@ def test_create_figure():
 @patch("plotly.graph_objects.Figure", new=MockFigure)
 def test_get_figures_and_metrics(_sample_app):
     db_mgr = _sample_app.data
-    ## convert List[Payout] to List[dict]
-    payouts = db_mgr.payouts(None, None, 0).to_dict(orient="records")
+    payouts = db_mgr.payouts(None, None, 0)
 
     sample_feeds = ArgFeeds(
         [
@@ -211,11 +213,9 @@ def test_get_feed_figures(
 ):
     feed_id = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
     db_mgr = _sample_app.data
-    payouts = db_mgr.payouts([feed_id], None, 0).to_dict(orient="records")
+    payouts = db_mgr.payouts([feed_id], None, 0)
 
-    subscriptions = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id).to_dict(
-        orient="records"
-    )
+    subscriptions = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id)
 
     # Execute the function
     figures = get_feed_figures(payouts, subscriptions)

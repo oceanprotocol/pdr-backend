@@ -4,6 +4,7 @@ from itertools import groupby, product
 from operator import itemgetter
 from typing import List, NamedTuple, Optional, Union
 
+import pandas
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
@@ -336,7 +337,7 @@ class ProcessedPayouts:
 
 
 def process_payouts(
-    payouts: List[dict], tx_fee_cost, calculate_confint: bool = False
+    payouts: pandas.DataFrame, tx_fee_cost, calculate_confint: bool = False
 ) -> ProcessedPayouts:
     """
     Process payouts data for a given predictor and feed.
@@ -349,33 +350,43 @@ def process_payouts(
     """
     processed = ProcessedPayouts()
 
-    profit = 0.0
-    for p in payouts:
-        processed.predictions += 1
-        processed.tx_cost += tx_fee_cost
-        profit_change = float(max(p["payout"], 0) - p["stake"])
-        profit += profit_change
-        processed.correct_predictions += p["payout"] > 0
+    p = payouts.copy()
+    processed.predictions = len(payouts)
+    p["predictions_crt"] = range(1, len(payouts) + 1)
+    processed.tx_cost = tx_fee_cost * len(payouts)
+    p["profit_change"] = p.apply(
+        lambda x: max(x["payout"], 0) - x["stake"], axis=1
+    ).astype(float)
+    processed.profit_change = p["profit_change"].sum()
+    p["correct_prediction"] = p["payout"].apply(lambda x: x > 0).astype(int)
+    p["correct_predictions_crt"] = p["correct_prediction"].cumsum()
+    processed.correct_predictions = p["correct_prediction"].sum()
 
-        if calculate_confint:
-            acc_l, acc_u = proportion_confint(
-                count=processed.correct_predictions, nobs=processed.predictions
-            )
+    if calculate_confint:
+        series = p.apply(
+            lambda x: proportion_confint(
+                count=x["correct_predictions_crt"], nobs=x["predictions_crt"]
+            ),
+            axis=1,
+        ).apply(pandas.Series)
 
-            processed.acc_intervals.append(
-                AccInterval(
-                    acc_l,
-                    acc_u,
-                )
-            )
+        p["acc_l"] = series[0]
+        p["acc_u"] = series[1]
 
-        processed.slot_in_unixts.append(UnixTimeS(int(p["slot"])).to_milliseconds())
-        processed.accuracies.append(
-            (processed.correct_predictions / processed.predictions) * 100
-        )
-        processed.profits.append(profit)
-        processed.stakes.append(p["stake"])
-        processed.tx_costs.append(processed.tx_cost)
+    processed.acc_intervals = p.apply(
+        lambda x: AccInterval(x["acc_l"], x["acc_u"]), axis=1
+    ).tolist()
+
+    processed.slot_in_unixts = (
+        p["slot"].apply(lambda x: UnixTimeS(int(x)).to_milliseconds()).tolist()
+    )
+    processed.accuracies = p.apply(
+        lambda x: x["correct_predictions_crt"] / x["predictions_crt"] * 100, axis=1
+    ).tolist()
+
+    processed.profits = p["profit_change"].cumsum().tolist()
+    processed.stakes = p["stake"].tolist()
+    processed.tx_costs = [processed.tx_cost] * len(payouts)
 
     return processed
 
@@ -437,7 +448,7 @@ def create_figure(
 
 @enforce_types
 def get_figures_and_metrics(
-    payouts: Optional[List], feeds: ArgFeeds, predictors: List[str], fee_cost: float
+    payouts: pandas.DataFrame, feeds: ArgFeeds, predictors: List[str], fee_cost: float
 ) -> FiguresAndMetricsResult:
     """
     Get figures for accuracy, profit, and costs.
@@ -452,7 +463,7 @@ def get_figures_and_metrics(
     figs_metrics = FiguresAndMetricsResult()
     fee_cost = 2 * fee_cost
 
-    if not payouts:
+    if payouts.empty:
         figs_metrics.make_figures()
         return figs_metrics
 
@@ -461,11 +472,12 @@ def get_figures_and_metrics(
     prediction_count = 0
 
     for predictor, feed in product(predictors, feeds):
-        filtered_payouts = [
-            p for p in payouts if predictor in p["ID"] and feed.contract in p["ID"]
+        filtered_payouts = payouts[
+            payouts["ID"].str.contains(predictor)
+            & payouts["ID"].str.contains(feed.contract)
         ]
 
-        if not filtered_payouts:
+        if filtered_payouts.empty:
             continue
 
         show_confidence_interval = len(predictors) == 1 and len(feeds) == 1
@@ -518,30 +530,37 @@ def get_figures_and_metrics(
 
 
 @enforce_types
-def get_feed_figures(payouts: Optional[List], subscriptions: List) -> FeedModalFigures:
+def get_feed_figures(
+    payouts: pandas.DataFrame, subscriptions: pandas.DataFrame
+) -> FeedModalFigures:
     """
     Return figures for a selected feed from the feeds table.
     """
-
     # Initialize empty figures with default settings
     result = FeedModalFigures()
 
+    if payouts.empty:
+        return result
+
     # Process subscription data
-    for subscription in subscriptions:
-        result.subscription_purchases.append(subscription["count"])
-        result.subscription_revenues.append(subscription["revenue"])
-        unix_timestamp = int(
-            datetime.datetime.combine(subscription["day"], datetime.time()).timestamp()
-            * 1000
-        )
-        result.subscription_dates.append(unix_timestamp)
+    result.subscription_purchases = subscriptions["count"].tolist()
+    result.subscription_revenues = subscriptions["revenue"].tolist()
+    result.subscription_dates = (
+        subscriptions["day"]
+        .apply(lambda x: datetime.datetime.combine(x, datetime.time()))
+        .tolist()
+    )
 
     # Sort payouts by slots and group by slot
-    if payouts and len(payouts) > 0:
-        payouts.sort(key=itemgetter("slot"))
+    payouts.sort_values("slot", inplace=True)
+
+    if not payouts.empty:
+        # TODO: use df
         grouped_payouts = {
             slot: list(group)
-            for slot, group in groupby(payouts, key=itemgetter("slot"))
+            for slot, group in groupby(
+                payouts.to_dict("records"), key=itemgetter("slot")
+            )
         }
     else:
         grouped_payouts = {}
@@ -571,7 +590,7 @@ def get_feed_figures(payouts: Optional[List], subscriptions: List) -> FeedModalF
 
 
 @enforce_types
-def get_predictoor_figures(payouts: List):
+def get_predictoor_figures(payouts: pandas.DataFrame):
     """
     Return figures for a selected feed from the feeds table.
     """
@@ -579,13 +598,15 @@ def get_predictoor_figures(payouts: List):
     # Initialize empty figures with default settings
     result = PredictoorModalFigures()
 
-    if not payouts:
+    if payouts.empty:
         return result
 
     # Sort payouts by slots and group by slot
-    payouts.sort(key=itemgetter("slot"))
+    payouts.sort_values("slot", inplace=True)
+    # TODO: use df
     grouped_payouts = {
-        slot: list(group) for slot, group in groupby(payouts, key=itemgetter("slot"))
+        slot: list(group)
+        for slot, group in groupby(payouts.to_dict("records"), key=itemgetter("slot"))
     }
 
     correct_predictions = 0

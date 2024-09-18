@@ -2,11 +2,11 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import duckdb
 import pandas
 from enforce_typing import enforce_types
 
-import duckdb
-from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
 from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
@@ -19,11 +19,11 @@ from pdr_backend.pdr_dashboard.util.format import (
     PREDICTOORS_TABLE_COLS,
     format_df,
 )
-from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
 )
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.time_types import UnixTimeMs
 
@@ -358,7 +358,10 @@ class AppDataManager:
         query += " ORDER BY slot;"
 
         # Execute the query without passing parameters
-        return self._query_db(query)
+        result = self._query_db(query)
+        result.fillna(0, inplace=True)
+
+        return result
 
     def payouts(
         self,
@@ -416,7 +419,10 @@ class AppDataManager:
         query = query % tuple(params)
 
         # Execute the query
-        return self._query_db(query)
+        result = self._query_db(query)
+        result.fillna(0, inplace=True)
+
+        return result
 
     @enforce_types
     def feeds_metrics(self) -> dict[str, Any]:
