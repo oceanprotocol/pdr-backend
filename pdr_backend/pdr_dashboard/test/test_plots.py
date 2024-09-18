@@ -48,7 +48,7 @@ def test_process_payouts(_sample_app):
     assert costs > 0
     assert predictions == 24
     assert len(slots) == len(filtered_payouts)
-    assert slots[0] == UnixTimeS(filtered_payouts[0]["slot"]).to_milliseconds()
+    assert slots.iloc[0] == UnixTimeS(filtered_payouts[0]["slot"]).to_milliseconds()
 
     ## calculate accuracies
     test_accuracies = [

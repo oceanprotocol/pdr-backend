@@ -65,15 +65,15 @@ class FeedModalFigures(ModalFigures):
         for key, value in fig_config.items():
             setattr(self, key, create_figure([], **value))
 
-        self.slots = []
-        self.stakes = []
-        self.accuracies = []
-        self.profits = []
-        self.predictions_list = []
+        self.slots = pandas.Series()
+        self.stakes = pandas.Series()
+        self.accuracies = pandas.Series()
+        self.profits = pandas.Series()
+        self.predictions_list = pandas.Series()
 
-        self.subscription_purchases = []
-        self.subscription_revenues = []
-        self.subscription_dates = []
+        self.subscription_purchases = pandas.Series()
+        self.subscription_revenues = pandas.Series()
+        self.subscription_dates = pandas.Series()
 
     def update_figures(self):
         self.sales_fig.add_traces(
@@ -146,12 +146,12 @@ class PredictoorModalFigures(ModalFigures):
         for key, value in fig_config.items():
             setattr(self, key, create_figure([], **value))
 
-        self.slots = []
-        self.stakes = []
-        self.accuracies = []
-        self.profits = []
-        self.incomes = []
-        self.nr_of_feeds = []
+        self.slots = pandas.Series()
+        self.stakes = pandas.Series()
+        self.accuracies = pandas.Series()
+        self.profits = pandas.Series()
+        self.incomes = pandas.Series()
+        self.nr_of_feeds = pandas.Series()
 
     def update_figures(self):
         defaults = {
@@ -263,15 +263,15 @@ class AccInterval(NamedTuple):
 
 class ProcessedPayouts:
     def __init__(self):
-        self.slot_in_unixts = []
-        self.accuracies = []
-        self.profits = []
-        self.stakes = []
+        self.slot_in_unixts = pandas.Series()
+        self.accuracies = pandas.Series()
+        self.profits = pandas.Series()
+        self.stakes = pandas.Series()
         self.correct_predictions = 0
         self.predictions = 0
         self.acc_intervals = []
         self.tx_cost = 0.0
-        self.tx_costs = []
+        self.tx_costs = pandas.Series()
 
     def as_accuracy_scatters_bounds(self, short_name, show_confidence_interval: bool):
         scatters = [
@@ -329,7 +329,7 @@ class ProcessedPayouts:
         return [
             go.Bar(
                 x=[label],
-                y=[self.tx_costs[-1]],
+                y=[self.tx_costs.iloc[-1]],
                 name=short_name,
             )
         ]
@@ -375,16 +375,16 @@ def process_payouts(
         lambda x: AccInterval(x["acc_l"], x["acc_u"]), axis=1
     ).tolist()
 
-    processed.slot_in_unixts = (
-        p["slot"].apply(lambda x: UnixTimeS(int(x)).to_milliseconds()).tolist()
+    processed.slot_in_unixts = p["slot"].apply(
+        lambda x: UnixTimeS(int(x)).to_milliseconds()
     )
     processed.accuracies = p.apply(
         lambda x: x["correct_predictions_crt"] / x["predictions_crt"] * 100, axis=1
-    ).tolist()
+    )
 
-    processed.profits = p["profit_change"].cumsum().tolist()
-    processed.stakes = p["stake"].tolist()
-    processed.tx_costs = [processed.tx_cost] * len(payouts)
+    processed.profits = p["profit_change"].cumsum()
+    processed.stakes = p["stake"]
+    processed.tx_costs = pandas.Series([tx_fee_cost for i in range(len(payouts))])
 
     return processed
 
@@ -489,11 +489,14 @@ def get_figures_and_metrics(
         all_stakes.extend(processed_data.stakes)
         correct_prediction_count += processed_data.correct_predictions
         prediction_count += processed_data.predictions
+
         figs_metrics.total_profit += (
-            processed_data.profits[-1] if processed_data.profits else 0.0
+            processed_data.profits.iloc[-1] if not processed_data.profits.empty else 0.0
         )
         figs_metrics.total_cost += (
-            processed_data.tx_costs[-1] if processed_data.tx_costs else 0.0
+            processed_data.tx_costs.iloc[-1]
+            if not processed_data.tx_costs.empty
+            else 0.0
         )
 
         short_name = f"{predictor[:5]} - {feed.str_without_exchange()}"
@@ -541,12 +544,10 @@ def get_feed_figures(
         return result
 
     # Process subscription data
-    result.subscription_purchases = subscriptions["count"].tolist()
-    result.subscription_revenues = subscriptions["revenue"].tolist()
-    result.subscription_dates = (
-        subscriptions["day"]
-        .apply(lambda x: datetime.datetime.combine(x, datetime.time()))
-        .tolist()
+    result.subscription_purchases = subscriptions["count"]
+    result.subscription_revenues = subscriptions["revenue"]
+    result.subscription_dates = subscriptions["day"].apply(
+        lambda x: datetime.datetime.combine(x, datetime.time())
     )
 
     payouts["profit"] = payouts.apply(
@@ -556,7 +557,7 @@ def get_feed_figures(
     payouts["count"] = 1
 
     sums = payouts.groupby("slot").sum()
-    result.stakes = sums["stake"].tolist()
+    result.stakes = sums["stake"]
     result.profits = sums["profit"]
     result.accuracies = sums.apply(
         lambda x: x["correct_prediction"] / x["count"] * 100, axis=1
@@ -564,7 +565,7 @@ def get_feed_figures(
     result.slots = [
         UnixTimeS(int(slot)).to_milliseconds() for slot in sums.index.tolist()
     ]
-    result.predictions_list = sums["count"].tolist()
+    result.predictions_list = sums["count"]
 
     # Update figures with the processed data
     result.update_figures()
@@ -592,16 +593,16 @@ def get_predictoor_figures(payouts: pandas.DataFrame):
 
     sums = payouts.groupby("slot").sum()
 
-    result.incomes = sums["payout"].tolist()
-    result.stakes = sums["stake"].tolist()
-    result.profits = sums["profit"].cumsum().tolist()
+    result.incomes = sums["payout"]
+    result.stakes = sums["stake"]
+    result.profits = sums["profit"].cumsum()
     result.accuracies = sums.apply(
         lambda x: x["correct_prediction"] / x["count"] * 100, axis=1
     )
     result.slots = [
         UnixTimeS(int(slot)).to_milliseconds() for slot in sums.index.tolist()
     ]
-    result.nr_of_feeds = sums["count"].tolist()
+    result.nr_of_feeds = sums["count"]
 
     # Update figures with the processed data
     result.update_figures()
