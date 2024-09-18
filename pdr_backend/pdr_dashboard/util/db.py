@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import time
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -65,7 +65,11 @@ class AppDataManager:
         return UnixTimeMs.from_dt(self.start_date) if self.start_date else None
 
     def set_start_date_from_period(self, period: int):
-        start_dt = datetime.now() - timedelta(days=period) if int(period) > 0 else None
+        start_dt = (
+            datetime.now(tz=timezone.utc) - timedelta(days=period)
+            if int(period) > 0
+            else None
+        )
         self.start_date = start_dt
 
     @enforce_types
@@ -136,7 +140,9 @@ class AppDataManager:
         try:
             if cache_file_name:
                 period_days = (
-                    (datetime.now() - self.start_date).days if self.start_date else 0
+                    (datetime.now(tz=timezone.utc) - self.start_date).days
+                    if self.start_date
+                    else 0
                 )
                 cache_data = self._check_cache_query_data(
                     query, f"{cache_file_name}_{period_days}_days", scalar
@@ -234,6 +240,7 @@ class AppDataManager:
                 apr DESC
         """
         df = self._query_db(query, cache_file_name="predictoor_payouts_stats")
+        print(df)
 
         df["avg_accuracy"] = df["avg_accuracy"].astype(float)
         df["total_stake"] = df["total_stake"].astype(float)
