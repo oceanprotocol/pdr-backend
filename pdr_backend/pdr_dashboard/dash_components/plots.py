@@ -1,8 +1,7 @@
 import datetime
 from abc import ABC, abstractmethod
-from itertools import groupby, product
-from operator import itemgetter
-from typing import List, NamedTuple, Optional, Union
+from itertools import product
+from typing import List, NamedTuple, Union
 
 import pandas
 import plotly.graph_objects as go
@@ -357,7 +356,6 @@ def process_payouts(
     p["profit_change"] = p.apply(
         lambda x: max(x["payout"], 0) - x["stake"], axis=1
     ).astype(float)
-    processed.profit_change = p["profit_change"].sum()
     p["correct_prediction"] = p["payout"].apply(lambda x: x > 0).astype(int)
     p["correct_predictions_crt"] = p["correct_prediction"].cumsum()
     processed.correct_predictions = p["correct_prediction"].sum()
