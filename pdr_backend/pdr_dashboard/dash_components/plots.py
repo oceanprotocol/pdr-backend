@@ -551,37 +551,22 @@ def get_feed_figures(
         .tolist()
     )
 
-    # Sort payouts by slots and group by slot
-    payouts.sort_values("slot", inplace=True)
+    payouts["profit"] = payouts.apply(
+        lambda x: max(x["payout"], 0) - x["stake"], axis=1
+    )
+    payouts["correct_prediction"] = payouts["payout"].apply(lambda x: x > 0).astype(int)
+    payouts["count"] = 1
 
-    if not payouts.empty:
-        # TODO: use df
-        grouped_payouts = {
-            slot: list(group)
-            for slot, group in groupby(
-                payouts.to_dict("records"), key=itemgetter("slot")
-            )
-        }
-    else:
-        grouped_payouts = {}
-
-    correct_predictions = 0
-    total_predictions = 0
-
-    # Process each slot's payouts
-    for slot, payout_group in grouped_payouts.items():
-        slot_stake = sum(p["stake"] for p in payout_group)
-        slot_profit = sum(max(p["payout"], 0) - p["stake"] for p in payout_group)
-        slot_predictions = len(payout_group)
-
-        correct_predictions += sum(1 for p in payout_group if p["payout"] > 0)
-        total_predictions += slot_predictions
-
-        result.stakes.append(slot_stake)
-        result.profits.append(slot_profit)
-        result.accuracies.append((correct_predictions / total_predictions) * 100)
-        result.slots.append(UnixTimeS(int(slot)).to_milliseconds())
-        result.predictions_list.append(slot_predictions)
+    sums = payouts.groupby("slot").sum()
+    result.stakes = sums["stake"].tolist()
+    result.profits = sums["profit"]
+    result.accuracies = sums.apply(
+        lambda x: x["correct_prediction"] / x["count"] * 100, axis=1
+    )
+    result.slots = [
+        UnixTimeS(int(slot)).to_milliseconds() for slot in sums.index.tolist()
+    ]
+    result.predictions_list = sums["count"].tolist()
 
     # Update figures with the processed data
     result.update_figures()
@@ -601,34 +586,24 @@ def get_predictoor_figures(payouts: pandas.DataFrame):
     if payouts.empty:
         return result
 
-    # Sort payouts by slots and group by slot
-    payouts.sort_values("slot", inplace=True)
-    # TODO: use df
-    grouped_payouts = {
-        slot: list(group)
-        for slot, group in groupby(payouts.to_dict("records"), key=itemgetter("slot"))
-    }
+    payouts["profit"] = payouts.apply(
+        lambda x: max(x["payout"], 0) - x["stake"], axis=1
+    )
+    payouts["correct_prediction"] = payouts["payout"].apply(lambda x: x > 0).astype(int)
+    payouts["count"] = 1
 
-    correct_predictions = 0
-    total_predictions = 0
-    total_profit = 0
+    sums = payouts.groupby("slot").sum()
 
-    # Process each slot's payouts
-    for slot, payout_group in grouped_payouts.items():
-        slot_stake = sum(p["stake"] for p in payout_group)
-        slot_profit = sum(max(p["payout"], 0) - p["stake"] for p in payout_group)
-        slot_predictions = len(payout_group)
-
-        correct_predictions += sum(1 for p in payout_group if p["payout"] > 0)
-        total_predictions += slot_predictions
-        total_profit += slot_profit
-
-        result.incomes.append(sum(p["payout"] for p in payout_group))
-        result.stakes.append(slot_stake)
-        result.profits.append(total_profit)
-        result.accuracies.append((correct_predictions / total_predictions) * 100)
-        result.slots.append(UnixTimeS(int(slot)).to_milliseconds())
-        result.nr_of_feeds.append(slot_predictions)
+    result.incomes = sums["payout"].tolist()
+    result.stakes = sums["stake"].tolist()
+    result.profits = sums["profit"].cumsum().tolist()
+    result.accuracies = sums.apply(
+        lambda x: x["correct_prediction"] / x["count"] * 100, axis=1
+    )
+    result.slots = [
+        UnixTimeS(int(slot)).to_milliseconds() for slot in sums.index.tolist()
+    ]
+    result.nr_of_feeds = sums["count"].tolist()
 
     # Update figures with the processed data
     result.update_figures()
