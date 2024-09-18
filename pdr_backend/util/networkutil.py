@@ -40,7 +40,7 @@ def get_subgraph_url(network: str) -> str:
 
 
 @enforce_types
-def download_file(url: str, file_path: str, timeout: int = 10):
+def download_file(url: str, file_path: str, timeout: int = 1000):
     """
     Downloads a file from a given URL and saves it to
     the specified file path.
@@ -49,7 +49,7 @@ def download_file(url: str, file_path: str, timeout: int = 10):
         url (str): The URL of the file to download.
         file_path (str): The local path where the file will be saved.
         timeout (int, optional): The maximum number of seconds 
-        to wait for a response from the server. Defaults to 10.
+        to wait for a response from the server. Defaults to 1000.
     """
     try:
         response = requests.get(url, stream=True, timeout=timeout)
