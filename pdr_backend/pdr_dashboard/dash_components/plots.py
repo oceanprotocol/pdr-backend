@@ -1,7 +1,7 @@
 import datetime
 from abc import ABC, abstractmethod
 from itertools import product
-from typing import List, NamedTuple, Union
+from typing import List, Union
 
 import pandas
 import plotly.graph_objects as go
@@ -256,11 +256,6 @@ class FiguresAndMetricsResult:
             setattr(self, value["fig_attr"], fig)
 
 
-class AccInterval(NamedTuple):
-    acc_l: float
-    acc_u: float
-
-
 class ProcessedPayouts:
     def __init__(self):
         self.slot_in_unixts = pandas.Series()
@@ -269,7 +264,8 @@ class ProcessedPayouts:
         self.stakes = pandas.Series()
         self.correct_predictions = 0
         self.predictions = 0
-        self.acc_intervals = []
+        self.acc_l = pandas.Series()
+        self.acc_u = pandas.Series()
         self.tx_cost = 0.0
         self.tx_costs = pandas.Series()
 
@@ -287,7 +283,7 @@ class ProcessedPayouts:
             scatters = scatters + [
                 go.Scatter(
                     x=self.slot_in_unixts,
-                    y=[interval.acc_l * 100 for interval in self.acc_intervals],
+                    y=self.acc_l * 100,
                     mode="lines",
                     name="accuracy_lowerbound",
                     marker_color="#636EFA",
@@ -295,7 +291,7 @@ class ProcessedPayouts:
                 ),
                 go.Scatter(
                     x=self.slot_in_unixts,
-                    y=[interval.acc_u * 100 for interval in self.acc_intervals],
+                    y=self.acc_u * 100,
                     mode="lines",
                     fill="tonexty",
                     name="accuracy_upperbound",
@@ -368,12 +364,8 @@ def process_payouts(
             axis=1,
         ).apply(pandas.Series)
 
-        p["acc_l"] = series[0]
-        p["acc_u"] = series[1]
-
-        processed.acc_intervals = p.apply(
-            lambda x: AccInterval(x["acc_l"], x["acc_u"]), axis=1
-        ).tolist()
+        processed.acc_l = series[0]
+        processed.acc_u = series[1]
 
     processed.slot_in_unixts = p["slot"].apply(
         lambda x: UnixTimeS(int(x)).to_milliseconds()

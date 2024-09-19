@@ -41,7 +41,8 @@ def test_process_payouts(_sample_app):
     stakes = result.stakes
     correct_predictions = result.correct_predictions
     predictions = result.predictions
-    acc_intervals = result.acc_intervals
+    acc_u = result.acc_u.to_list()
+    acc_l = result.acc_l.to_list()
     costs = result.tx_cost
 
     assert correct_predictions == 14
@@ -82,11 +83,14 @@ def test_process_payouts(_sample_app):
         assert math.isclose(stake, test_stakes[i], rel_tol=1e-9)
 
     ## calculate accuracy intervals
-    assert len(acc_intervals) == len(test_stakes)
+    assert len(acc_u) == len(test_stakes)
+    assert len(acc_l) == len(test_stakes)
 
-    for i, acc_interval in enumerate(acc_intervals):
-        assert isinstance(acc_interval.acc_l, float)
-        assert isinstance(acc_interval.acc_u, float)
+    for acc_interval in acc_l:
+        assert isinstance(acc_interval, float)
+
+    for acc_interval in acc_u:
+        assert isinstance(acc_interval, float)
 
 
 class MockFigure:
