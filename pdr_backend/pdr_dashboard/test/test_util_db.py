@@ -1,23 +1,26 @@
 from unittest.mock import patch
 
+import time
 import pandas
-
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.subscription import Subscription
 from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
 
+# Define necessary global variables for the tests
+test_query = "SELECT * FROM test_table"
+cache_file_name = "test_query"
+
 
 @enforce_types
 @patch("pdr_backend.pdr_dashboard.util.db.duckdb.execute")
 def test_query_db(mock_duckdb_execute, _sample_app):
-    query = "query"
     db_mgr = _sample_app.data
-    db_mgr._query_db(query)
+    db_mgr._query_db(test_query)
 
     # Assert that duckdb.execute was called once with the correct query
-    mock_duckdb_execute.assert_called_once_with(query)
+    mock_duckdb_execute.assert_called_once_with(test_query)
 
     # Mocking the return value from duckdb.execute(query)
     mock_duckdb_execute.return_value.pl.assert_called_once()
@@ -128,3 +131,100 @@ def test_get_feed_daily_subscriptions_by_feed_id(_sample_app):
     db_mgr.start_date = UnixTimeMs(1721957490000).to_dt()
     result = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id)
     assert len(result) == 0
+
+
+@patch("os.makedirs")
+@patch("os.path.exists")
+@patch("os.path.getmtime")
+@patch("duckdb.execute")
+def test_cache_exists_recent_file(
+    mock_duckdb_execute, mock_getmtime, mock_exists, _mock_makedirs, _sample_app
+):
+    """
+    Test when cache file exists and is less than 1 hour old.
+    """
+    db_mgr = _sample_app.data
+    mock_exists.return_value = True  # Simulate that the cache file exists
+    mock_getmtime.return_value = (
+        time.time() - 1000
+    )  # Cache file is 1000 seconds old (< 1 hour)
+
+    mock_duckdb_execute.return_value.fetchone.return_value = (42,)
+
+    # Call the function
+    result = db_mgr._check_cache_query_data(test_query, cache_file_name, scalar=True)
+
+    # Check that no new query was executed, and cached data was used
+    mock_duckdb_execute.assert_called_with(
+        f"SELECT * FROM '{db_mgr.lake_dir}/exports/cache/test_query.parquet'"
+    )
+    assert result == 42
+
+
+@patch("os.makedirs")
+@patch("os.path.exists")
+@patch("duckdb.execute")
+def test_cache_does_not_exist(
+    mock_duckdb_execute, mock_exists, _mock_makedirs, _sample_app
+):
+    """
+    Test when cache file does not exist, so query is executed and cached.
+    """
+    db_mgr = _sample_app.data
+    mock_exists.return_value = False  # Simulate that the cache file does not exist
+    mock_duckdb_execute.return_value.fetchone.return_value = (55,)
+
+    # Call the function
+    result = db_mgr._check_cache_query_data(test_query, cache_file_name, scalar=True)
+
+    file_path = f"{db_mgr.lake_dir}/exports/cache/test_query.parquet"
+    # Check that the query was executed and cached
+    mock_duckdb_execute.assert_any_call(
+        f"COPY ({test_query}) TO '{file_path}' (FORMAT 'parquet')"
+    )
+    assert result == 55
+
+
+@patch("os.makedirs")
+@patch("os.path.exists")
+@patch("duckdb.execute")
+def test_non_scalar_query(
+    mock_duckdb_execute, mock_exists, _mock_makedirs, _sample_app
+):
+    """
+    Test non-scalar queries return a DataFrame.
+    """
+    db_mgr = _sample_app.data
+    mock_exists.return_value = False  # Simulate that the cache file does not exist
+    mock_df = pandas.DataFrame({"col1": [1, 2], "col2": [3, 4]})
+    mock_duckdb_execute.return_value.pl.return_value.to_pandas.return_value = mock_df
+
+    # Call the function
+    result = db_mgr._check_cache_query_data(test_query, cache_file_name, scalar=False)
+
+    # Check that the result is returned as a pandas DataFrame
+    assert isinstance(result, pandas.DataFrame)
+    assert mock_duckdb_execute.called
+
+
+@patch("os.makedirs")
+@patch("os.path.exists")
+@patch("os.path.getmtime")
+@patch("duckdb.execute")
+def test_cache_not_used_for_scalar(
+    mock_duckdb_execute, mock_getmtime, mock_exists, _mock_makedirs, _sample_app
+):
+    """
+    Test when cache exists but scalar data is requested and cache is not used.
+    """
+    db_mgr = _sample_app.data
+    mock_exists.return_value = True  # Cache exists
+    mock_getmtime.return_value = time.time() - 1000  # File is < 1 hour old
+    mock_duckdb_execute.return_value.fetchone.return_value = (10,)
+
+    scalar_query = "SELECT count(*) FROM test_table"
+    # Call the function
+    result = db_mgr._check_cache_query_data(scalar_query, cache_file_name, scalar=True)
+
+    # Check if scalar result is returned
+    assert result == 10
