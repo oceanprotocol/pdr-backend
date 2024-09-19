@@ -371,9 +371,9 @@ def process_payouts(
         p["acc_l"] = series[0]
         p["acc_u"] = series[1]
 
-    processed.acc_intervals = p.apply(
-        lambda x: AccInterval(x["acc_l"], x["acc_u"]), axis=1
-    ).tolist()
+        processed.acc_intervals = p.apply(
+            lambda x: AccInterval(x["acc_l"], x["acc_u"]), axis=1
+        ).tolist()
 
     processed.slot_in_unixts = p["slot"].apply(
         lambda x: UnixTimeS(int(x)).to_milliseconds()
