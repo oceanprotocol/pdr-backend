@@ -38,6 +38,7 @@ class AppDataManager:
         self.network_name = ppss.web3_pp.network
         self.start_date: Optional[datetime] = None
         self.lake_dir = ppss.lake_ss.lake_dir
+        self.second_between_caches = ppss.lake_ss.seconds_between_parquet_exports
 
         self.min_timestamp, self.max_timestamp = (
             self.get_first_and_last_slot_timestamp()
@@ -100,7 +101,7 @@ class AppDataManager:
             # Check if cache file exists and is less than 1 hour old
             if os.path.exists(cache_file_path):
                 file_age = time.time() - os.path.getmtime(cache_file_path)
-                if file_age < 3600:  # 3600 seconds = 1 hour
+                if file_age < self.second_between_caches:
                     query = f"SELECT * FROM '{cache_file_path}'"
             else:
                 # If cache file doesn't exist, run the query and cache the result

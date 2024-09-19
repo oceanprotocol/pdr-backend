@@ -9,7 +9,7 @@ from pdr_backend.util.time_types import UnixTimeMs
 from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
 
 # Define necessary global variables for the tests
-query = "SELECT * FROM test_table"
+test_query = "SELECT * FROM test_table"
 cache_file_name = "test_query"
 
 
@@ -17,10 +17,10 @@ cache_file_name = "test_query"
 @patch("pdr_backend.pdr_dashboard.util.db.duckdb.execute")
 def test_query_db(mock_duckdb_execute, _sample_app):
     db_mgr = _sample_app.data
-    db_mgr._query_db(query)
+    db_mgr._query_db(test_query)
 
     # Assert that duckdb.execute was called once with the correct query
-    mock_duckdb_execute.assert_called_once_with(query)
+    mock_duckdb_execute.assert_called_once_with(test_query)
 
     # Mocking the return value from duckdb.execute(query)
     mock_duckdb_execute.return_value.pl.assert_called_once()
@@ -151,7 +151,7 @@ def test_cache_exists_recent_file(
     mock_duckdb_execute.return_value.fetchone.return_value = (42,)
 
     # Call the function
-    result = db_mgr._check_cache_query_data(query, cache_file_name, scalar=True)
+    result = db_mgr._check_cache_query_data(test_query, cache_file_name, scalar=True)
 
     # Check that no new query was executed, and cached data was used
     mock_duckdb_execute.assert_called_with(
@@ -174,11 +174,12 @@ def test_cache_does_not_exist(
     mock_duckdb_execute.return_value.fetchone.return_value = (55,)
 
     # Call the function
-    result = db_mgr._check_cache_query_data(query, cache_file_name, scalar=True)
+    result = db_mgr._check_cache_query_data(test_query, cache_file_name, scalar=True)
 
+    file_path = "/exports/cache/test_query.parquet"
     # Check that the query was executed and cached
     mock_duckdb_execute.assert_any_call(
-        f"COPY ({query}) TO '{db_mgr.lake_dir}/exports/cache/test_query.parquet' (FORMAT 'parquet')"
+        f"COPY ({test_query}) TO '{db_mgr.lake_dir}/{file_path}' (FORMAT 'parquet')"
     )
     assert result == 55
 
@@ -198,7 +199,7 @@ def test_non_scalar_query(
     mock_duckdb_execute.return_value.pl.return_value.to_pandas.return_value = mock_df
 
     # Call the function
-    result = db_mgr._check_cache_query_data(query, cache_file_name, scalar=False)
+    result = db_mgr._check_cache_query_data(test_query, cache_file_name, scalar=False)
 
     # Check that the result is returned as a pandas DataFrame
     assert isinstance(result, pandas.DataFrame)
