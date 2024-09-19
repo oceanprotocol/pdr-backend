@@ -41,30 +41,31 @@ def test_get_payouts(
 ):
     db_mgr = _sample_app.data
 
-    result = db_mgr.payouts([], [], 1704153000)
-    assert len(result) == 2349
+    db_mgr.start_date = UnixTimeMs(1704152700000).to_dt()
+    result = db_mgr.payouts_from_bronze_predictions([], [])
+    assert len(result) == 2369
 
-    result = db_mgr.payouts(
+    db_mgr.start_date = UnixTimeMs(1721952002000).to_dt()
+    result = db_mgr.payouts_from_bronze_predictions(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
-        1704152700000,
     )
     assert isinstance(result, pandas.DataFrame)
     assert len(result) == 24
 
     # start date after all payouts should return an empty list
-    result = db_mgr.payouts(
+    db_mgr.start_date = UnixTimeMs(1759154000000).to_dt()
+    result = db_mgr.payouts_from_bronze_predictions(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
-        1759154000000,
     )
     assert len(result) == 0
 
     # start date 0 should not filter on start date
-    result = db_mgr.payouts(
+    db_mgr.start_date = 0
+    result = db_mgr.payouts_from_bronze_predictions(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
-        0,
     )
     assert len(result) == 24
 

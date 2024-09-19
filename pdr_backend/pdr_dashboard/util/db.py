@@ -9,7 +9,6 @@ from enforce_typing import enforce_types
 
 import duckdb
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
@@ -433,65 +432,10 @@ class AppDataManager:
         query += " ORDER BY slot;"
 
         # Execute the query without passing parameters
-        return self._query_db(query)
+        result = self._query_db(query)
+        result.fillna(0, inplace=True)
 
-    def payouts(
-        self,
-        feed_addrs: Union[List[str], None],
-        predictoor_addrs: Union[List[str], None],
-        start_date: int,
-    ) -> List[dict]:
-        """
-        Get payouts data for the given feed and predictoor addresses.
-        Args:
-            feed_addrs (list): List of feed addresses.
-            predictoor_addrs (list): List of predictoor addresses.
-            start_date (int): The starting slot (timestamp) for filtering the results.
-        Returns:
-            list: List of payouts data.
-        """
-
-        # Start constructing the SQL query
-        query = f"SELECT * FROM {tbl_parquet_path(self.lake_dir, Payout)}"
-
-        # List to hold the WHERE clause conditions
-        conditions = []
-
-        # Adding conditions for feed addresses if provided
-        if feed_addrs:
-            feed_conditions = " OR ".join(["ID LIKE %s" for _ in feed_addrs])
-            conditions.append(f"({feed_conditions})")
-
-        # Adding conditions for predictoor addresses if provided
-        if predictoor_addrs:
-            predictoor_conditions = " OR ".join(
-                ["ID LIKE %s" for _ in predictoor_addrs]
-            )
-            conditions.append(f"({predictoor_conditions})")
-
-        # Adding condition for the start date if provided
-        if start_date:
-            conditions.append("timestamp >= %s")
-
-        # If there are any conditions, append them to the query
-        if conditions:
-            query += " WHERE " + " AND ".join(conditions)
-
-        query += ";"
-
-        # List of parameters to prevent SQL injection
-        params = []
-        if feed_addrs:
-            params.extend([f"'%{item}%'" for item in feed_addrs])
-        if predictoor_addrs:
-            params.extend([f"'%{item}%'" for item in predictoor_addrs])
-        if start_date:
-            params.append(str(start_date))
-
-        query = query % tuple(params)
-
-        # Execute the query
-        return self._query_db(query)
+        return result
 
     @enforce_types
     def feeds_metrics(self) -> dict[str, Any]:
