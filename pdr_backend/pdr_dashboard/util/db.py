@@ -119,8 +119,34 @@ class AppDataManager:
             pl_resp = duckdb.execute(query).pl()
             return pl_resp.to_pandas()
 
-        except FileNotFoundError:
-            logger.error("Error: The directory '%s' does not exist.", cache_file_dir)
+        except FileNotFoundError as fnf_error:
+            logger.error(
+                "Error: The directory '%s' does not exist. Details: %s",
+                cache_file_dir,
+                str(fnf_error),
+            )
+
+        except PermissionError as perm_error:
+            logger.error(
+                "Error: Insufficient permissions to access '%s'. Details: %s",
+                cache_file_path,
+                str(perm_error),
+            )
+
+        except duckdb.BinderException as duckdb_bind_error:
+            logger.error(
+                "DuckDB binder error while executing query: %s", str(duckdb_bind_error)
+            )
+
+        except duckdb.IOException as duckdb_io_error:
+            logger.error("DuckDB I/O error: %s", str(duckdb_io_error))
+
+        except OSError as os_error:
+            logger.error(
+                "OS error while accessing the cache directory or file: %s",
+                str(os_error),
+            )
+
         except Exception as e:
             logger.error("An error occurred while querying or caching data: %s", str(e))
 
