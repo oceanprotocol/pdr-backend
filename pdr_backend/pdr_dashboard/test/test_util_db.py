@@ -177,10 +177,10 @@ def test_cache_does_not_exist(
     # Call the function
     result = db_mgr._check_cache_query_data(test_query, cache_file_name, scalar=True)
 
-    file_path = "/exports/cache/test_query.parquet"
+    file_path = f"{db_mgr.lake_dir}/exports/cache/test_query.parquet"
     # Check that the query was executed and cached
     mock_duckdb_execute.assert_any_call(
-        f"COPY ({test_query}) TO '{db_mgr.lake_dir}/{file_path}' (FORMAT 'parquet')"
+        f"COPY ({test_query}) TO '{file_path}' (FORMAT 'parquet')"
     )
     assert result == 55
 
