@@ -559,9 +559,13 @@ def get_feed_figures(
     sums = payouts.groupby("slot").sum()
     result.stakes = sums["stake"]
     result.profits = sums["profit"]
+
+    sums["cnt_cumsum"] = sums["count"].cumsum()
+    sums["cnt_corrpred"] = sums["correct_prediction"].cumsum()
     result.accuracies = sums.apply(
-        lambda x: x["correct_prediction"] / x["count"] * 100, axis=1
+        lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100, axis=1
     )
+
     result.slots = [
         UnixTimeS(int(slot)).to_milliseconds() for slot in sums.index.tolist()
     ]
@@ -596,8 +600,11 @@ def get_predictoor_figures(payouts: pandas.DataFrame):
     result.incomes = sums["payout"]
     result.stakes = sums["stake"]
     result.profits = sums["profit"].cumsum()
+
+    sums["cnt_cumsum"] = sums["count"].cumsum()
+    sums["cnt_corrpred"] = sums["correct_prediction"].cumsum()
     result.accuracies = sums.apply(
-        lambda x: x["correct_prediction"] / x["count"] * 100, axis=1
+        lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100, axis=1
     )
     result.slots = [
         UnixTimeS(int(slot)).to_milliseconds() for slot in sums.index.tolist()
