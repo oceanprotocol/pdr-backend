@@ -1,5 +1,7 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import os
+import time
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import duckdb
@@ -35,6 +37,7 @@ class AppDataManager:
         self.network_name = ppss.web3_pp.network
         self.start_date: Optional[datetime] = None
         self.lake_dir = ppss.lake_ss.lake_dir
+        self.second_between_caches = ppss.lake_ss.seconds_between_parquet_exports
 
         self.min_timestamp, self.max_timestamp = (
             self.get_first_and_last_slot_timestamp()
@@ -62,12 +65,96 @@ class AppDataManager:
         return UnixTimeMs.from_dt(self.start_date) if self.start_date else None
 
     def set_start_date_from_period(self, period: int):
-        start_dt = datetime.now() - timedelta(days=period) if int(period) > 0 else None
+        start_dt = (
+            datetime.now(tz=timezone.utc) - timedelta(days=period)
+            if int(period) > 0
+            else None
+        )
         self.start_date = start_dt
 
     @enforce_types
+    def _check_cache_query_data(
+        self, query: str, cache_file_name: str, scalar: bool
+    ) -> Union[List[dict], pandas.DataFrame, None]:
+        """
+        Executes a query and caches the result in a parquet file for up to an hour.
+        If a cached file exists and is less than an hour old, the cached result is used.
+
+        Args:
+            query: SQL query to execute.
+            cache_file_name: Name of the cache file (without extension).
+            scalar: Boolean flag indicating if the result should be a scalar.
+
+        Returns:
+            Query result as a list of dictionaries (for scalar=False)
+            or a scalar value (for scalar=True),
+            or None if the query execution fails.
+        """
+        cache_file_dir = os.path.join(self.lake_dir, "exports", "cache")
+        cache_file_path = os.path.join(cache_file_dir, f"{cache_file_name}.parquet")
+
+        try:
+            # Ensure the cache directory exists
+            os.makedirs(cache_file_dir, exist_ok=True)
+
+            # Check if cache file exists and is less than 1 hour old
+            if os.path.exists(cache_file_path):
+                file_age = time.time() - os.path.getmtime(cache_file_path)
+                if file_age < self.second_between_caches:
+                    query = f"SELECT * FROM '{cache_file_path}'"
+            else:
+                # If cache file doesn't exist, run the query and cache the result
+                duckdb.execute(
+                    f"COPY ({query}) TO '{cache_file_path}' (FORMAT 'parquet')"
+                )
+
+            # Fetch and return results
+            if scalar:
+                resp = duckdb.execute(query).fetchone()
+                if resp is None:
+                    return None
+                return resp[0] if len(resp) == 1 else resp
+
+            # For non-scalar queries, fetch the result as a DataFrame and return as pandas.DataFrame
+            pl_resp = duckdb.execute(query).pl()
+            return pl_resp.to_pandas()
+
+        except FileNotFoundError as fnf_error:
+            logger.error(
+                "Error: The directory '%s' does not exist. Details: %s",
+                cache_file_dir,
+                str(fnf_error),
+            )
+
+        except PermissionError as perm_error:
+            logger.error(
+                "Error: Insufficient permissions to access '%s'. Details: %s",
+                cache_file_path,
+                str(perm_error),
+            )
+
+        except duckdb.BinderException as duckdb_bind_error:
+            logger.error(
+                "DuckDB binder error while executing query: %s", str(duckdb_bind_error)
+            )
+
+        except duckdb.IOException as duckdb_io_error:
+            logger.error("DuckDB I/O error: %s", str(duckdb_io_error))
+
+        except OSError as os_error:
+            logger.error(
+                "OS error while accessing the cache directory or file: %s",
+                str(os_error),
+            )
+
+        except Exception as e:
+            logger.error("An error occurred while querying or caching data: %s", str(e))
+
+        return None
+
+    @enforce_types
     def _query_db(
-        self, query: str, scalar=False
+        self, query: str, scalar=False, cache_file_name=None, periodical=True
     ) -> Union[List[dict], pandas.DataFrame]:
         """
         Query the database with the given query.
@@ -77,6 +164,19 @@ class AppDataManager:
             dict: Query result.
         """
         try:
+            if cache_file_name:
+                if periodical:
+                    period_days = (
+                        (datetime.now(tz=timezone.utc) - self.start_date).days
+                        if self.start_date
+                        else 0
+                    )
+                    cache_file_name = f"{cache_file_name}_{period_days}_days"
+                cache_data = self._check_cache_query_data(
+                    query, cache_file_name, scalar
+                )
+                return cache_data
+
             # If scalar, fetch a single result
             if scalar:
                 result = duckdb.execute(query).fetchone()
@@ -95,6 +195,8 @@ class AppDataManager:
                 FROM {tbl_parquet_path(self.lake_dir, BronzePrediction)}
                 GROUP BY contract, pair, timeframe, source
             """,
+            cache_file_name="feeds_data",
+            periodical=False,
         )
         return df
 
@@ -118,9 +220,9 @@ class AppDataManager:
         query += """
             GROUP BY
                 contract
-            ORDER BY volume DESC;
+            ORDER BY volume DESC
         """
-        df = self._query_db(query)
+        df = self._query_db(query, cache_file_name="feed_payouts_stats")
 
         df["avg_accuracy"] = df["avg_accuracy"].astype(float)
         df["avg_stake"] = df["avg_stake"].astype(float)
@@ -165,9 +267,9 @@ class AppDataManager:
             GROUP BY
                 p."user"
             ORDER BY
-                apr DESC;
+                apr DESC
         """
-        df = self._query_db(query)
+        df = self._query_db(query, cache_file_name="predictoor_payouts_stats")
 
         df["avg_accuracy"] = df["avg_accuracy"].astype(float)
         df["total_stake"] = df["total_stake"].astype(float)
@@ -245,8 +347,7 @@ class AppDataManager:
             GROUP BY
                 main_contract, ubc.df_buy_count, wbc.ws_buy_count
         """
-
-        df = self._query_db(query)
+        df = self._query_db(query, cache_file_name="feed_subscription_stats")
         df["sales_revenue"] = df["sales_revenue"].astype(float)
         df["price"] = df["price"].astype(float)
 
@@ -370,10 +471,7 @@ class AppDataManager:
         """
         if self.start_date_ms:
             query_feeds += f"WHERE timestamp > {self.start_date_ms}"
-        feeds = self._query_db(
-            query_feeds,
-            scalar=True,
-        )
+        feeds = self._query_db(query_feeds, scalar=True, cache_file_name="feeds")
 
         query_payouts = f"""
             SELECT
@@ -388,8 +486,7 @@ class AppDataManager:
         if self.start_date_ms:
             query_payouts += f"WHERE timestamp > {self.start_date_ms}"
         accuracy, volume = self._query_db(
-            query_payouts,
-            scalar=True,
+            query_payouts, scalar=True, cache_file_name="feeds_accuracy"
         )
 
         query_subscriptions = f"""
@@ -402,8 +499,7 @@ class AppDataManager:
             query_subscriptions += f" WHERE timestamp > {self.start_date_ms}"
 
         sales, revenue = self._query_db(
-            query_subscriptions,
-            scalar=True,
+            query_subscriptions, scalar=True, cache_file_name="sales_revenue"
         )
 
         return {
@@ -423,8 +519,7 @@ class AppDataManager:
         if self.start_date_ms:
             query_predictions += f" WHERE timestamp > {self.start_date_ms}"
         predictoors = self._query_db(
-            query_predictions,
-            scalar=True,
+            query_predictions, scalar=True, cache_file_name="predictoors_metrics"
         )
 
         query_payouts = f"""
@@ -465,6 +560,8 @@ class AppDataManager:
                     {tbl_parquet_path(self.lake_dir, Slot)}
             """,
             scalar=True,
+            cache_file_name="first_and_last_slot_timestamp",
+            periodical=False,
         )
         return first_timestamp / 1000, last_timestamp / 1000
 
