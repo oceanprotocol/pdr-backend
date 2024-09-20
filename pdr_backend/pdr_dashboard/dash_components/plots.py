@@ -488,7 +488,7 @@ def get_figures_and_metrics(
     for predictor, feed in product(predictors, feeds):
         filtered_payouts = payouts.filter(
             payouts["ID"].str.contains(predictor)
-            & payouts["ID"].str.contains(feed.contract)
+            & payouts["ID"].str.contains(str(feed.contract))
         )
 
         if filtered_payouts.is_empty():
@@ -562,30 +562,43 @@ def get_feed_figures(
     # Process subscription data
     result.subscription_purchases = subscriptions["count"]
     result.subscription_revenues = subscriptions["revenue"]
-    result.subscription_dates = subscriptions["day"].apply(
-        lambda x: datetime.datetime.combine(x, datetime.time())
+
+    subscriptions = subscriptions.with_columns(
+        pl.col("day")
+        .map_elements(lambda x: datetime.datetime.combine(x, datetime.time()))
+        .alias("day_dt"),
+    )
+    result.subscription_dates = subscriptions["day_dt"]
+
+    payouts = payouts.with_columns(
+        pl.struct(["payout", "stake"])
+        .map_elements(lambda x: max(x["payout"], 0) - x["stake"], pl.Float64)
+        .alias("profit"),
+        pl.lit(1).alias("count"),
+        pl.lit(1).cum_sum().alias("cnt_cumsum"),
+        pl.when(pl.col("payout") > 0)
+        .then(1)
+        .otherwise(0)
+        .cum_sum()
+        .alias("cnt_corrpred"),
     )
 
-    payouts["profit"] = payouts.apply(
-        lambda x: max(x["payout"], 0) - x["stake"], axis=1
-    )
-    payouts["correct_prediction"] = payouts["payout"].apply(lambda x: x > 0)
-    payouts.cast({"correct_prediction": pl.Int32})
-    payouts["count"] = 1
-
-    sums = payouts.groupby("slot").sum()
+    sums = payouts.group_by("slot").sum()
     result.stakes = sums["stake"]
     result.profits = sums["profit"]
 
-    sums["cnt_cumsum"] = sums["count"].cumsum()
-    sums["cnt_corrpred"] = sums["correct_prediction"].cumsum()
-    result.accuracies = sums.apply(
-        lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100, axis=1
+    sums = sums.with_columns(
+        pl.struct(["cnt_corrpred", "cnt_cumsum"])
+        .map_elements(lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100)
+        .alias("accuracies"),
+        pl.col("slot")
+        .map_elements(lambda x: UnixTimeS(int(x)).to_milliseconds())
+        .alias("slot_in_unixts"),
     )
 
-    result.slots = [
-        UnixTimeS(int(slot)).to_milliseconds() for slot in sums.index.tolist()
-    ]
+    result.accuracies = sums["accuracies"]
+    result.slots = sums["slot_in_unixts"]
+
     result.predictions_list = sums["count"]
 
     # Update figures with the processed data
@@ -606,27 +619,37 @@ def get_predictoor_figures(payouts: pl.DataFrame):
     if payouts.is_empty():
         return result
 
-    payouts["profit"] = payouts.apply(
-        lambda x: max(x["payout"], 0) - x["stake"], axis=1
+    payouts = payouts.with_columns(
+        pl.struct(["payout", "stake"])
+        .map_elements(lambda x: max(x["payout"], 0) - x["stake"], pl.Float64)
+        .alias("profit"),
+        pl.lit(1).alias("count"),
+        pl.lit(1).cum_sum().alias("cnt_cumsum"),
+        pl.when(pl.col("payout") > 0)
+        .then(1)
+        .otherwise(0)
+        .cum_sum()
+        .alias("cnt_corrpred"),
     )
-    payouts["correct_prediction"] = payouts["payout"].apply(lambda x: x > 0)
-    payouts.cast({"correct_prediction": pl.Int32})
-    payouts["count"] = 1
 
-    sums = payouts.groupby("slot").sum()
+    sums = payouts.group_by("slot").sum()
 
     result.incomes = sums["payout"]
     result.stakes = sums["stake"]
-    result.profits = sums["profit"].cumsum()
+    result.profits = sums["profit"].cum_sum()
 
-    sums["cnt_cumsum"] = sums["count"].cumsum()
-    sums["cnt_corrpred"] = sums["correct_prediction"].cumsum()
-    result.accuracies = sums.apply(
-        lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100, axis=1
+    sums = sums.with_columns(
+        pl.struct(["cnt_corrpred", "cnt_cumsum"])
+        .map_elements(lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100)
+        .alias("accuracies"),
+        pl.col("slot")
+        .map_elements(lambda x: UnixTimeS(int(x)).to_milliseconds())
+        .alias("slot_in_unixts"),
     )
-    result.slots = [
-        UnixTimeS(int(slot)).to_milliseconds() for slot in sums.index.tolist()
-    ]
+
+    result.accuracies = sums["accuracies"]
+    result.slots = sums["slot_in_unixts"]
+
     result.nr_of_feeds = sums["count"]
 
     # Update figures with the processed data

@@ -128,13 +128,12 @@ def format_df(
         if col == "sales_str":
             continue
 
-        try:
-            df = df.with_columns(
-                pl.col(col).map_elements(lambda x: format_value(x, col)).alias(col)
-            )
-        except Exception as e:
-            # TODO
-            print("aa")
+        df = df.with_columns(
+            # pylint: disable=cell-var-from-loop
+            pl.col(col)
+            .map_elements(lambda x: format_value(x, col))
+            .alias(col)
+        )
 
     return df
 
