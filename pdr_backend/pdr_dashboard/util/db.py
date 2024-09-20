@@ -480,18 +480,9 @@ class AppDataManager:
 
     @enforce_types
     def predictoors_metrics(self) -> dict[str, Any]:
-        query_predictions = f"""
-            SELECT COUNT(DISTINCT(user))
-            FROM {tbl_parquet_path(self.lake_dir, Prediction)}
-        """
-        if self.start_date_ms:
-            query_predictions += f" WHERE timestamp > {self.start_date_ms}"
-        predictoors = self._query_db(
-            query_predictions, scalar=True, cache_file_name="predictoors_metrics"
-        )
-
-        query_payouts = f"""
+        query_predictoors_metrics = f"""
                 SELECT
+                    COUNT(DISTINCT(user)) AS predictoors,
                     SUM(
                         CASE WHEN p.payout > 0
                         THEN 1 ELSE 0 END
@@ -505,10 +496,11 @@ class AppDataManager:
                     {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
             """
         if self.start_date_ms:
-            query_payouts += f" WHERE timestamp > {self.start_date_ms}"
-        avg_accuracy, tot_stake, tot_gross_income = self._query_db(
-            query_payouts,
+            query_predictoors_metrics += f" WHERE timestamp > {self.start_date_ms}"
+        predictoors, avg_accuracy, tot_stake, tot_gross_income = self._query_db(
+            query_predictoors_metrics,
             scalar=True,
+            cache_file_name="predictoor_metrics_predictoors",
         )
 
         return {
