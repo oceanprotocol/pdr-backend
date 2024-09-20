@@ -72,6 +72,24 @@ class AppDataManager:
         )
         self.start_date = start_dt
 
+    def is_cache_valid(self, cache_file_path: str, seconds_between_caches: int) -> bool:
+        """Checks if the cache file exists and is within the valid time limit."""
+        if os.path.exists(cache_file_path):
+            file_age = time.time() - os.path.getmtime(cache_file_path)
+            return file_age < seconds_between_caches
+        return False
+
+    def run_query_and_cache(self, cache_file_path: str, query: str):
+        """Runs the query and caches the result in a parquet file."""
+        duckdb.execute(f"COPY ({query}) TO '{cache_file_path}' (FORMAT 'parquet')")
+
+    def fetch_query_result(self, query: str, scalar: bool):
+        """Fetches the query result, either from cache or the database."""
+        if scalar:
+            result = duckdb.execute(query).fetchone()
+            return result[0] if result and len(result) == 1 else result
+        return duckdb.execute(query).pl().to_pandas()
+
     @enforce_types
     def _check_cache_query_data(
         self, query: str, cache_file_name: str, scalar: bool
@@ -93,64 +111,14 @@ class AppDataManager:
         cache_file_dir = os.path.join(self.lake_dir, "exports", "cache")
         cache_file_path = os.path.join(cache_file_dir, f"{cache_file_name}.parquet")
 
-        try:
-            # Ensure the cache directory exists
-            os.makedirs(cache_file_dir, exist_ok=True)
+        # If the cache is valid, use it; otherwise, re-run the query and cache the results
+        if self.is_cache_valid(cache_file_path, self.second_between_caches):
+            query = f"SELECT * FROM '{cache_file_path}'"
+        else:
+            self.run_query_and_cache(cache_file_path, query)
 
-            # Check if cache file exists and is less than 1 hour old
-            if os.path.exists(cache_file_path):
-                file_age = time.time() - os.path.getmtime(cache_file_path)
-                if file_age < self.second_between_caches:
-                    query = f"SELECT * FROM '{cache_file_path}'"
-            else:
-                # If cache file doesn't exist, run the query and cache the result
-                duckdb.execute(
-                    f"COPY ({query}) TO '{cache_file_path}' (FORMAT 'parquet')"
-                )
-
-            # Fetch and return results
-            if scalar:
-                resp = duckdb.execute(query).fetchone()
-                if resp is None:
-                    return None
-                return resp[0] if len(resp) == 1 else resp
-
-            # For non-scalar queries, fetch the result as a DataFrame and return as pandas.DataFrame
-            pl_resp = duckdb.execute(query).pl()
-            return pl_resp.to_pandas()
-
-        except FileNotFoundError as fnf_error:
-            logger.error(
-                "Error: The directory '%s' does not exist. Details: %s",
-                cache_file_dir,
-                str(fnf_error),
-            )
-
-        except PermissionError as perm_error:
-            logger.error(
-                "Error: Insufficient permissions to access '%s'. Details: %s",
-                cache_file_path,
-                str(perm_error),
-            )
-
-        except duckdb.BinderException as duckdb_bind_error:
-            logger.error(
-                "DuckDB binder error while executing query: %s", str(duckdb_bind_error)
-            )
-
-        except duckdb.IOException as duckdb_io_error:
-            logger.error("DuckDB I/O error: %s", str(duckdb_io_error))
-
-        except OSError as os_error:
-            logger.error(
-                "OS error while accessing the cache directory or file: %s",
-                str(os_error),
-            )
-
-        except Exception as e:
-            logger.error("An error occurred while querying or caching data: %s", str(e))
-
-        return None
+        # Fetch and return the query result
+        return self.fetch_query_result(query, scalar)
 
     @enforce_types
     def _query_db(
