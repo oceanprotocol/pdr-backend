@@ -424,13 +424,16 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             return  # No new data to export
 
         parquet_file = f"{table}_{max_timestamp_from_db}.parquet"
+        temp_parquet_file = f"{table}_{max_timestamp_from_db}.parquet"
         parquet_file_path = os.path.join(table_folder_path, parquet_file)
+        temp_parquet_file_path = os.path.join(table_folder_path, temp_parquet_file)
 
         query = f"""
         COPY (SELECT * FROM {table} WHERE timestamp > {max_timestamp_from_parquet})
-        TO '{parquet_file_path}' (FORMAT 'parquet');
+        TO '{temp_parquet_file_path}' (FORMAT 'parquet');
         """
         self.execute_sql(query)
+        os.rename(temp_parquet_file_path, parquet_file_path)
 
     def _should_nuke_table_folders_and_re_export_db(
         self, table_folder_path: str, file_limit: int, table_name: str
