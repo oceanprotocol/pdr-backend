@@ -111,6 +111,7 @@ class AppDataManager:
         cache_file_dir = os.path.join(self.lake_dir, "exports", "cache")
         cache_file_path = os.path.join(cache_file_dir, f"{cache_file_name}.parquet")
 
+        os.makedirs(cache_file_dir, exist_ok=True)
         # If the cache is valid, use it; otherwise, re-run the query and cache the results
         if self.is_cache_valid(cache_file_path, self.second_between_caches):
             query = f"SELECT * FROM '{cache_file_path}'"
