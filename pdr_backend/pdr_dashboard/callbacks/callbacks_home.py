@@ -53,14 +53,12 @@ def get_callbacks_home(app):
         ]
 
         if len(selected_feeds) == 0 or len(selected_predictoors_addrs) == 0:
-            payouts = []
+            payouts = pandas.DataFrame()
         else:
             payouts = app.data.payouts_from_bronze_predictions(
                 selected_feeds_addrs,
                 selected_predictoors_addrs,
             )
-            payouts.fillna(0, inplace=True)
-            payouts = payouts.to_dict(orient="records")
 
         # get figures
         figs_metrics = get_figures_and_metrics(

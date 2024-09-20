@@ -4,11 +4,11 @@ import os
 import time
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import duckdb
 import pandas
 from enforce_typing import enforce_types
 
-import duckdb
-from pdr_backend.ppss.ppss import PPSS
+from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
 from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.slot import Slot
 from pdr_backend.lake.subscription import Subscription
@@ -20,11 +20,11 @@ from pdr_backend.pdr_dashboard.util.format import (
     PREDICTOORS_TABLE_COLS,
     format_df,
 )
-from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
 from pdr_backend.pdr_dashboard.util.prices import (
     calculate_tx_gas_fee_cost_in_OCEAN,
     fetch_token_prices,
 )
+from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.time_types import UnixTimeMs
 
