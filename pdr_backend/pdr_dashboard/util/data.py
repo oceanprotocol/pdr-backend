@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Union
 
 import dash
-import pandas
+import polars as pl
 from enforce_typing import enforce_types
 
 logger = logging.getLogger("predictoor_dashboard_utils")
@@ -34,12 +34,12 @@ def select_or_clear_all_by_table(
     return selected_rows
 
 
-def get_date_period_text_for_selected_predictoors(payouts: pandas.DataFrame):
-    if payouts.empty:
+def get_date_period_text_for_selected_predictoors(payouts: pl.DataFrame):
+    if payouts.is_empty():
         return "there is no data available"
 
-    start_date = payouts.iloc[0]["slot"]
-    end_date = payouts.iloc[-1]["slot"]
+    start_date = payouts.item(0, "slot")
+    end_date = payouts.item(-1, "slot")
     date_period_text = f"""
         {datetime.fromtimestamp(start_date).strftime('%d-%m-%y')}
         -> {datetime.fromtimestamp(end_date).strftime('%d-%m-%y')}

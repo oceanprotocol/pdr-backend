@@ -31,7 +31,7 @@ def get_callbacks_predictoors(app):
             for key, value in stats.items()
         ]
 
-        return app.data.predictoors_table_data.to_dict("records"), metrics_children_data
+        return app.data.predictoors_table_data.to_dicts(), metrics_children_data
 
     @app.callback(
         Output("predictoors_page_table", "data"),
@@ -114,12 +114,12 @@ def get_callbacks_predictoors(app):
         if sort_by:
             # Extract sort criteria
             sort_col = sort_by[0]["column_id"]
-            ascending = sort_by[0]["direction"] == "asc"
-            new_table_data = new_table_data.sort_values(
-                by=[sort_col, "full_addr"], ascending=ascending
+            descending = sort_by[0]["direction"] == "desc"
+            new_table_data = new_table_data.sort(
+                by=[sort_col, "full_addr"], descending=descending
             )
 
-        return format_df(new_table_data).to_dict("records")
+        return format_df(new_table_data).to_dicts()
 
     @app.callback(
         Output("apr_dropdown", "label"),

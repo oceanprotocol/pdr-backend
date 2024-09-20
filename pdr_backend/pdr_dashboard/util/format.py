@@ -1,4 +1,5 @@
 from typing import Union
+import polars as pl
 
 from enforce_typing import enforce_types
 from numerize import numerize
@@ -110,22 +111,30 @@ def format_df(
     columns = df.columns
 
     if "sales" in columns and "df_buy_count" in columns and "ws_buy_count" in columns:
-        df["sales_str"] = (
-            df.apply(
-                lambda x: format_sales_info_data(
-                    x.sales, x.df_buy_count, x.ws_buy_count
-                ),
-                axis=1,
+        if df.is_empty():
+            df = df.with_columns(pl.col("sales_str").alias("sales_str"))
+        else:
+            df = df.with_columns(
+                sales_str=pl.struct(
+                    ["sales", "df_buy_count", "ws_buy_count"]
+                ).map_elements(
+                    lambda x: format_sales_info_data(
+                        x["sales"], x["df_buy_count"], x["ws_buy_count"]
+                    )
+                )
             )
-            if not df.empty
-            else ""
-        )
 
-    for column in columns:
-        # pylint: disable=cell-var-from-loop
-        if column == "sales_str":
+    for col in columns:
+        if col == "sales_str":
             continue
-        df[column] = df[column].apply(lambda x: format_value(x, column))
+
+        try:
+            df = df.with_columns(
+                pl.col(col).map_elements(lambda x: format_value(x, col)).alias(col)
+            )
+        except Exception as e:
+            # TODO
+            print("aa")
 
     return df
 

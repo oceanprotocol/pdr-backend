@@ -1,4 +1,5 @@
 from dash import dash_table, dcc, html
+import polars as pl
 
 from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
@@ -23,14 +24,23 @@ class FeedsPage(TabularPage):
         self.app = app
         self.app.data.refresh_feeds_data()
 
-        df = app.data.feeds_data.copy()
-        df[["base_token", "quote_token"]] = df["pair"].str.split("/", expand=True)
-        df["source"] = df["source"].str.capitalize()
+        df = app.data.feeds_data.clone()
+        df = df.with_columns(
+            pl.col("pair")
+            .str.split_exact("/", 1)
+            .map_elements(lambda x: x["field_0"])
+            .alias("base_token"),
+            pl.col("pair")
+            .str.split_exact("/", 1)
+            .map_elements(lambda x: x["field_1"])
+            .alias("quote_token"),
+            pl.col("source").str.to_titlecase().alias("source"),
+        )
 
-        filters_objects[0].options = df["base_token"].unique().tolist()
-        filters_objects[1].options = df["quote_token"].unique().tolist()
-        filters_objects[2].options = df["source"].unique().tolist()
-        filters_objects[3].options = df["timeframe"].unique().tolist()
+        filters_objects[0].options = df["base_token"].unique().to_list()
+        filters_objects[1].options = df["quote_token"].unique().to_list()
+        filters_objects[2].options = df["source"].unique().to_list()
+        filters_objects[3].options = df["timeframe"].unique().to_list()
 
     def layout(self):
         return html.Div(
@@ -124,7 +134,7 @@ class FeedsPage(TabularPage):
                         "sales",
                     ],
                     row_selectable="single",
-                    data=self.app.data.feeds_table_data.to_dict("records"),
+                    data=self.app.data.feeds_table_data.to_dicts(),
                     sort_action="custom",
                     sort_mode="single",
                 ),

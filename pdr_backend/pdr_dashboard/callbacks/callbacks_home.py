@@ -1,5 +1,5 @@
 import dash
-import pandas
+import polars as pl
 from dash import Input, Output, State
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
@@ -53,7 +53,7 @@ def get_callbacks_home(app):
         ]
 
         if len(selected_feeds) == 0 or len(selected_predictoors_addrs) == 0:
-            payouts = pandas.DataFrame()
+            payouts = pl.DataFrame()
         else:
             payouts = app.data.payouts_from_bronze_predictions(
                 selected_feeds_addrs,
@@ -113,18 +113,18 @@ def get_callbacks_home(app):
             app.data.refresh_feeds_data()
 
         formatted_predictoors_data = (
-            app.data.formatted_predictoors_home_page_table_data.copy()
+            app.data.formatted_predictoors_home_page_table_data.clone()
         )
         selected_predictoors_addrs = [
             predictoors_table[i]["full_addr"] for i in selected_rows
         ]
 
         if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
-            custom_predictoors = formatted_predictoors_data[
-                formatted_predictoors_data["full_addr"].isin(
+            custom_predictoors = formatted_predictoors_data.filter(
+                formatted_predictoors_data["full_addr"].is_in(
                     app.data.favourite_addresses
                 )
-            ]
+            )
             custom_predictoors_addrs = list(custom_predictoors["full_addr"])
 
             if show_favourite_addresses:
@@ -136,23 +136,23 @@ def get_callbacks_home(app):
                     if predictoor_addr not in custom_predictoors_addrs
                 ]
 
-        filtered_data = formatted_predictoors_data.copy()
+        filtered_data = formatted_predictoors_data.clone()
         if search_value:
-            filtered_data = filtered_data[
+            filtered_data = filtered_data.filter(
                 filtered_data["full_addr"].str.contains(search_value)
-            ]
+            )
 
-        filtered_data = filtered_data[
-            ~filtered_data["full_addr"].isin(selected_predictoors_addrs)
-        ]
-        selected_predictoors = formatted_predictoors_data[
-            formatted_predictoors_data["full_addr"].isin(selected_predictoors_addrs)
-        ]
+        filtered_data = filtered_data.filter(
+            ~filtered_data["full_addr"].is_in(selected_predictoors_addrs)
+        )
+        selected_predictoors = formatted_predictoors_data.filter(
+            formatted_predictoors_data["full_addr"].is_in(selected_predictoors_addrs)
+        )
 
-        filtered_data = pandas.concat([selected_predictoors, filtered_data])
+        filtered_data = pl.concat([selected_predictoors, filtered_data])
         selected_predictoor_indices = list(range(len(selected_predictoors_addrs)))
 
-        return (filtered_data.to_dict("records"), selected_predictoor_indices)
+        return (filtered_data.to_dicts(), selected_predictoor_indices)
 
     @app.callback(
         Output("feeds_table", "data"),
