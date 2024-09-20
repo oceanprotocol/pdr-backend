@@ -120,7 +120,8 @@ def format_df(
                 ).map_elements(
                     lambda x: format_sales_info_data(
                         x["sales"], x["df_buy_count"], x["ws_buy_count"]
-                    )
+                    ),
+                    return_dtype=str,
                 )
             )
 
@@ -131,7 +132,7 @@ def format_df(
         df = df.with_columns(
             # pylint: disable=cell-var-from-loop
             pl.col(col)
-            .map_elements(lambda x: format_value(x, col))
+            .map_elements(lambda x: format_value(x, col), return_dtype=str)
             .alias(col)
         )
 

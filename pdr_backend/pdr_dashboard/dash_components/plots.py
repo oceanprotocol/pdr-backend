@@ -363,7 +363,7 @@ def process_payouts(
         .cum_sum()
         .alias("correct_predictions_crt"),
         pl.col("slot")
-        .map_elements(lambda x: UnixTimeS(int(x)).to_milliseconds())
+        .map_elements(lambda x: UnixTimeS(int(x)).to_milliseconds(), pl.Int64)
         .alias("slot_in_unixts"),
     )
     processed.tx_cost = tx_fee_cost * len(payouts)
@@ -376,7 +376,8 @@ def process_payouts(
             .map_elements(
                 lambda x: proportion_confint(
                     count=x["correct_predictions_crt"], nobs=x["predictions_crt"]
-                )
+                ),
+                return_dtype=pl.List(pl.Float64),
             )
             .alias("acc_bounds")
         )
@@ -565,7 +566,9 @@ def get_feed_figures(
 
     subscriptions = subscriptions.with_columns(
         pl.col("day")
-        .map_elements(lambda x: datetime.datetime.combine(x, datetime.time()))
+        .map_elements(
+            lambda x: datetime.datetime.combine(x, datetime.time()), pl.Datetime
+        )
         .alias("day_dt"),
     )
     result.subscription_dates = subscriptions["day_dt"]
@@ -589,10 +592,10 @@ def get_feed_figures(
 
     sums = sums.with_columns(
         pl.struct(["cnt_corrpred", "cnt_cumsum"])
-        .map_elements(lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100)
+        .map_elements(lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100, pl.Float64)
         .alias("accuracies"),
         pl.col("slot")
-        .map_elements(lambda x: UnixTimeS(int(x)).to_milliseconds())
+        .map_elements(lambda x: UnixTimeS(int(x)).to_milliseconds(), pl.Int64)
         .alias("slot_in_unixts"),
     )
 
@@ -640,10 +643,10 @@ def get_predictoor_figures(payouts: pl.DataFrame):
 
     sums = sums.with_columns(
         pl.struct(["cnt_corrpred", "cnt_cumsum"])
-        .map_elements(lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100)
+        .map_elements(lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100, pl.Float64)
         .alias("accuracies"),
         pl.col("slot")
-        .map_elements(lambda x: UnixTimeS(int(x)).to_milliseconds())
+        .map_elements(lambda x: UnixTimeS(int(x)).to_milliseconds(), pl.Int64)
         .alias("slot_in_unixts"),
     )
 

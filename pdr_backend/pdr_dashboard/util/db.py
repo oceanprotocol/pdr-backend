@@ -595,11 +595,11 @@ class AppDataManager:
             pl.col("contract").alias("addr"),
             pl.col("pair")
             .str.split_exact("/", 1)
-            .map_elements(lambda x: x["field_0"])
+            .map_elements(lambda x: x["field_0"], return_dtype=pl.String)
             .alias("base_token"),
             pl.col("pair")
             .str.split_exact("/", 1)
-            .map_elements(lambda x: x["field_1"])
+            .map_elements(lambda x: x["field_1"], return_dtype=pl.String)
             .alias("quote_token"),
             pl.col("source").str.to_titlecase().alias("source"),
             pl.lit("").alias("sales_str"),
@@ -629,7 +629,10 @@ class AppDataManager:
         df = df.fill_null(0)
         df = df.with_columns(
             pl.struct(["total_profit", "tx_costs_(OCEAN)"])
-            .map_elements(lambda x: x["total_profit"] - x["tx_costs_(OCEAN)"])
+            .map_elements(
+                lambda x: x["total_profit"] - x["tx_costs_(OCEAN)"],
+                return_dtype=pl.Float64,
+            )
             .alias("net_income_(OCEAN)")
         )
 
