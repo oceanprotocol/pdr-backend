@@ -33,6 +33,7 @@ class BaseContract(ABC):
     def name(self):
         return self.contract_name
 
+    # pylint: disable=too-many-positional-arguments
     def send_encrypted_tx(
         self,
         function_name,

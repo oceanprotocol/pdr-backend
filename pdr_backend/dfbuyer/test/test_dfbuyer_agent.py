@@ -191,6 +191,7 @@ def test_dfbuyer_agent_get_missing_consume_times(mock_dfbuyer_agent):
 @patch.object(DFBuyerAgent, "_get_missing_consume_times")
 @patch.object(DFBuyerAgent, "_batch_txs")
 @patch.object(Web3Config, "get_block")
+# pylint: disable=too-many-positional-arguments
 def test_dfbuyer_agent_take_step(
     mock_get_block,
     mock_batch_txs,
