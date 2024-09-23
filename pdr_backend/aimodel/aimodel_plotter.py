@@ -262,6 +262,7 @@ def _plot_contour(aimodel_plotdata: AimodelPlotdata):
 
 
 @enforce_types
+# pylint: disable=too-many-positional-arguments
 def _add_contour_subplot(d, chosen_I, dim0, dim1, Z, colorscale, fig, row):
     """In-place update 'fig' at specified subplot row"""
     Z = Z.reshape(dim1.shape)

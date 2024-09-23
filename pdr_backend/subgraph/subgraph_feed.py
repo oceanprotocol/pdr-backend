@@ -18,6 +18,7 @@ logger = logging.getLogger("subgraph_feed")
 
 
 class SubgraphFeed(StrMixin):  # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-positional-arguments
     @enforce_types
     def __init__(
         self,

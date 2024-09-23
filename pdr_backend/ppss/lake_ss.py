@@ -123,6 +123,7 @@ class LakeSS(MultiFeedMixin):
 
 
 @enforce_types
+# pylint: disable=too-many-positional-arguments
 def lake_ss_test_dict(
     lake_dir: str,
     feeds: Optional[list] = None,

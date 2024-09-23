@@ -14,7 +14,7 @@ class AimodelPlotdata:
     """Simple class to manage many inputs going into plot_model."""
 
     # pylint: disable=too-many-instance-attributes
-
+    # pylint: disable=too-many-positional-arguments
     def __init__(
         self,
         model: Aimodel,

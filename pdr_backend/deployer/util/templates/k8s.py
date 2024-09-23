@@ -6,6 +6,7 @@ from enforce_typing import enforce_types
 
 
 @enforce_types
+# pylint: disable=too-many-positional-arguments
 def get_k8s_predictoor_template(
     name,
     app,
