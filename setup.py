@@ -26,7 +26,7 @@ install_requirements = [
     "mypy==1.11.2",
     "numpy==2.1.1",
     "numerize==0.12.0",
-    "pandas==2.2.2",
+    "pandas==2.2.3",
     "pathlib",
     "plotly==5.24.1",
     "polars==1.7.1",
