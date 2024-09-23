@@ -384,7 +384,6 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
                 table,
                 seconds_between_exports,
             ):
-                print("nuke", table)
                 self._nuke_table_folders(table_folder_path)
 
             if not self._should_export(table_folder_path, seconds_between_exports):
@@ -409,7 +408,6 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             result = duckdb.execute(
                 f"SELECT MAX(timestamp) FROM '{table_folder_path}/*.parquet'"
             ).fetchone()
-            # print(result, result[0])
             return result[0] if result and result[0] is not None else 0
         except Exception:
             return 0  # Assume no data exported yet if there's an error
@@ -428,16 +426,13 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             return  # No new data to export
 
         parquet_file = f"{table}_{max_timestamp_from_db}.parquet"
-        temp_parquet_file = f"{table}_{max_timestamp_from_db}.parquet"
         parquet_file_path = os.path.join(table_folder_path, parquet_file)
-        temp_parquet_file_path = os.path.join(table_folder_path, temp_parquet_file)
 
         query = f"""
         COPY (SELECT * FROM {table} WHERE timestamp > {max_timestamp_from_parquet})
-        TO '{temp_parquet_file_path}' (FORMAT 'parquet');
+        TO '{parquet_file_path}' (FORMAT 'parquet');
         """
         self.execute_sql(query)
-        os.rename(temp_parquet_file_path, parquet_file_path)
 
     def _should_nuke_table_folders_and_re_export_db(
         self,

@@ -429,7 +429,7 @@ def test_should_nuke_table_folders_and_re_export_db_bronze(tmpdir):
 
     # Test when "bronze" is in the table_name
     result = db._should_nuke_table_folders_and_re_export_db(
-        table_folder_path, 5, "bronze_table"
+        table_folder_path, 5, "bronze_table", 20
     )
     assert result is True, "Failed to nuke bronze table folders"
 
@@ -448,7 +448,7 @@ def test_should_nuke_table_folders_and_re_export_db_non_bronze_exceed_file_limit
 
     # Test when the number of files exceeds the limit
     result = db._should_nuke_table_folders_and_re_export_db(
-        table_folder_path, 5, "test_table"
+        table_folder_path, 5, "test_table", 20
     )
     assert result is True, "Failed to detect exceeding file limit"
 
@@ -465,7 +465,7 @@ def test_should_nuke_table_folders_and_re_export_db_non_bronze_below_file_limit(
 
     # Test when the number of files is below the limit
     result = db._should_nuke_table_folders_and_re_export_db(
-        table_folder_path, 5, "test_table"
+        table_folder_path, 5, "test_table", 20
     )
     assert result is False, "Incorrectly detected nuke requirement for non-bronze table"
 
