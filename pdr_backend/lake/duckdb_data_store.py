@@ -443,14 +443,14 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
     ) -> bool:
         path = Path(table_folder_path)
         if "bronze" in table_name:
-            files = [
-                f
-                for f in os.listdir(table_folder_path)
-                if os.path.isfile(os.path.join(table_folder_path, f))
-            ]
-            if len(files) == 0:
+            if not path.exists() or not path.is_dir():
                 return False
-            file_age = time.time() - os.path.getmtime(f"{table_folder_path}/{files[0]}")
+
+            files = [f for f in path.iterdir() if f.is_file()]
+            if not files:
+                return False
+
+            file_age = time.time() - files[0].stat().st_mtime
             return file_age > second_between_exports
 
         nr_of_files_in_folder = sum(1 for _ in path.rglob("*"))
