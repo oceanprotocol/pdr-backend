@@ -426,10 +426,12 @@ def test_should_nuke_table_folders_and_re_export_db_bronze(tmpdir):
     db, _, _ = _setup_fixture(tmpdir)
     table_folder_path = os.path.join(str(tmpdir), "bronze_table")
     os.makedirs(table_folder_path, exist_ok=True)
+    with open(f"{table_folder_path}/table.parquet", "a"):
+        pass
 
     # Test when "bronze" is in the table_name
     result = db._should_nuke_table_folders_and_re_export_db(
-        table_folder_path, 5, "bronze_table", 20
+        table_folder_path, 5, "bronze_table", 0
     )
     assert result is True, "Failed to nuke bronze table folders"
 

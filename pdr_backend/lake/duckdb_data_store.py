@@ -448,8 +448,9 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
                 for f in os.listdir(table_folder_path)
                 if os.path.isfile(os.path.join(table_folder_path, f))
             ]
+            if len(files) == 0:
+                return False
             file_age = time.time() - os.path.getmtime(f"{table_folder_path}/{files[0]}")
-            # print(file_age)
             return file_age > second_between_exports
 
         nr_of_files_in_folder = sum(1 for _ in path.rglob("*"))
