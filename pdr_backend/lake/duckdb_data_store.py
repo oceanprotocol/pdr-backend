@@ -7,7 +7,6 @@
 import glob
 import logging
 import shutil
-import time
 import os
 from pathlib import Path
 from typing import Any, Optional, Type
@@ -382,9 +381,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
                 table_folder_path,
                 number_of_files_after_which_re_export_db,
                 table,
-                seconds_between_exports,
             ):
-                print("nuke", table)
                 self._nuke_table_folders(table_folder_path)
 
             if not self._should_export(table_folder_path, seconds_between_exports):
@@ -409,7 +406,7 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             result = duckdb.execute(
                 f"SELECT MAX(timestamp) FROM '{table_folder_path}/*.parquet'"
             ).fetchone()
-            # print(result, result[0])
+
             return result[0] if result and result[0] is not None else 0
         except Exception:
             return 0  # Assume no data exported yet if there's an error
@@ -441,18 +438,10 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         table_folder_path: str,
         file_limit: int,
         table_name: str,
-        second_between_exports: UnixTimeS,
     ) -> bool:
         path = Path(table_folder_path)
         if "bronze" in table_name:
-            files = [
-                f
-                for f in os.listdir(table_folder_path)
-                if os.path.isfile(os.path.join(table_folder_path, f))
-            ]
-            file_age = time.time() - os.path.getmtime(f"{table_folder_path}/{files[0]}")
-            # print(file_age)
-            return file_age > second_between_exports
+            return True
 
         nr_of_files_in_folder = sum(1 for _ in path.rglob("*"))
         return nr_of_files_in_folder > file_limit
