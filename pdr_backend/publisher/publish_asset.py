@@ -17,6 +17,7 @@ MAX_UINT256 = 2**256 - 1
 
 
 @enforce_types
+# pylint: disable=too-many-positional-arguments
 def publish_asset(
     s_per_epoch: int,
     s_per_subscription: int,
