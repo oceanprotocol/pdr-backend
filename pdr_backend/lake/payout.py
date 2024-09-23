@@ -14,6 +14,7 @@ from pdr_backend.util.time_types import UnixTimeS
 
 @enforce_types
 class Payout(LakeMapper):  # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-positional-arguments
     def __init__(
         self,
         ID: str,
