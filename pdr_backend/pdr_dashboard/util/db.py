@@ -1,10 +1,8 @@
 import logging
 from datetime import datetime, timedelta, timezone
-import os
-import time
+
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import duckdb
 import pandas
 from enforce_typing import enforce_types
 
@@ -27,8 +25,9 @@ from pdr_backend.pdr_dashboard.util.prices import (
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
 from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.pdr_dashboard.util.duckdb_file_reader import DuckDBFileReader
 
-logger = logging.getLogger("predictoor_dashboard_utils")
+logger = logging.getLogger("dashboard_db")
 
 
 # pylint: disable=too-many-instance-attributes
@@ -37,7 +36,9 @@ class AppDataManager:
         self.network_name = ppss.web3_pp.network
         self.start_date: Optional[datetime] = None
         self.lake_dir = ppss.lake_ss.lake_dir
-        self.second_between_caches = ppss.lake_ss.seconds_between_parquet_exports
+        self.file_reader = DuckDBFileReader(
+            ppss.lake_ss.lake_dir, ppss.lake_ss.seconds_between_parquet_exports
+        )
 
         self.min_timestamp, self.max_timestamp = (
             self.get_first_and_last_slot_timestamp()
@@ -71,94 +72,11 @@ class AppDataManager:
             else None
         )
         self.start_date = start_dt
-
-    def is_cache_valid(self, cache_file_path: str, seconds_between_caches: int) -> bool:
-        """Checks if the cache file exists and is within the valid time limit."""
-        if os.path.exists(cache_file_path):
-            file_age = time.time() - os.path.getmtime(cache_file_path)
-            return file_age < seconds_between_caches
-        return False
-
-    def run_query_and_cache(self, cache_file_path: str, query: str):
-        """Runs the query and caches the result in a parquet file."""
-        duckdb.execute(f"COPY ({query}) TO '{cache_file_path}' (FORMAT 'parquet')")
-
-    def fetch_query_result(self, query: str, scalar: bool):
-        """Fetches the query result, either from cache or the database."""
-        if scalar:
-            result = duckdb.execute(query).fetchone()
-            return result[0] if result and len(result) == 1 else result
-        return duckdb.execute(query).pl().to_pandas()
-
-    @enforce_types
-    def _check_cache_query_data(
-        self, query: str, cache_file_name: str, scalar: bool
-    ) -> Union[List[dict], pandas.DataFrame, None]:
-        """
-        Executes a query and caches the result in a parquet file for up to an hour.
-        If a cached file exists and is less than an hour old, the cached result is used.
-
-        Args:
-            query: SQL query to execute.
-            cache_file_name: Name of the cache file (without extension).
-            scalar: Boolean flag indicating if the result should be a scalar.
-
-        Returns:
-            Query result as a list of dictionaries (for scalar=False)
-            or a scalar value (for scalar=True),
-            or None if the query execution fails.
-        """
-        cache_file_dir = os.path.join(self.lake_dir, "exports", "cache")
-        cache_file_path = os.path.join(cache_file_dir, f"{cache_file_name}.parquet")
-
-        os.makedirs(cache_file_dir, exist_ok=True)
-        # If the cache is valid, use it; otherwise, re-run the query and cache the results
-        if self.is_cache_valid(cache_file_path, self.second_between_caches):
-            query = f"SELECT * FROM '{cache_file_path}'"
-        else:
-            self.run_query_and_cache(cache_file_path, query)
-
-        # Fetch and return the query result
-        return self.fetch_query_result(query, scalar)
-
-    @enforce_types
-    def _query_db(
-        self, query: str, scalar=False, cache_file_name=None, periodical=True
-    ) -> Union[List[dict], pandas.DataFrame]:
-        """
-        Query the database with the given query.
-        Args:
-            query (str): SQL query.
-        Returns:
-            dict: Query result.
-        """
-        try:
-            if cache_file_name:
-                if periodical:
-                    period_days = (
-                        (datetime.now(tz=timezone.utc) - self.start_date).days
-                        if self.start_date
-                        else 0
-                    )
-                    cache_file_name = f"{cache_file_name}_{period_days}_days"
-                cache_data = self._check_cache_query_data(
-                    query, cache_file_name, scalar
-                )
-                return cache_data
-
-            # If scalar, fetch a single result
-            if scalar:
-                result = duckdb.execute(query).fetchone()
-                return result[0] if result and len(result) == 1 else result
-            df = duckdb.execute(query).pl()
-            return df.to_pandas()
-        except Exception as e:
-            logger.error("Error querying the database: %s", e)
-            return pandas.DataFrame()
+        self.file_reader.set_start_date(start_dt)
 
     @enforce_types
     def _init_feeds_data(self):
-        df = self._query_db(
+        df = self.file_reader._query_db(
             f"""
                 SELECT contract, pair, timeframe, source
                 FROM {tbl_parquet_path(self.lake_dir, BronzePrediction)}
@@ -191,7 +109,7 @@ class AppDataManager:
                 contract
             ORDER BY volume DESC
         """
-        df = self._query_db(query, cache_file_name="feed_payouts_stats")
+        df = self.file_reader._query_db(query, cache_file_name="feed_payouts_stats")
 
         df["avg_accuracy"] = df["avg_accuracy"].astype(float)
         df["avg_stake"] = df["avg_stake"].astype(float)
@@ -238,7 +156,9 @@ class AppDataManager:
             ORDER BY
                 apr DESC
         """
-        df = self._query_db(query, cache_file_name="predictoor_payouts_stats")
+        df = self.file_reader._query_db(
+            query, cache_file_name="predictoor_payouts_stats"
+        )
 
         df["avg_accuracy"] = df["avg_accuracy"].astype(float)
         df["total_stake"] = df["total_stake"].astype(float)
@@ -316,7 +236,9 @@ class AppDataManager:
             GROUP BY
                 main_contract, ubc.df_buy_count, wbc.ws_buy_count
         """
-        df = self._query_db(query, cache_file_name="feed_subscription_stats")
+        df = self.file_reader._query_db(
+            query, cache_file_name="feed_subscription_stats"
+        )
         df["sales_revenue"] = df["sales_revenue"].astype(float)
         df["price"] = df["price"].astype(float)
 
@@ -346,7 +268,7 @@ class AppDataManager:
             ORDER BY day;
         """
 
-        return self._query_db(query)
+        return self.file_reader._query_db(query)
 
     def feed_ids_based_on_predictoors(
         self, predictoor_addrs: Optional[List[str]] = None
@@ -374,7 +296,7 @@ class AppDataManager:
         """
 
         # Execute the query
-        return self._query_db(query, scalar=True)
+        return self.file_reader._query_db(query, scalar=True)
 
     def payouts_from_bronze_predictions(
         self,
@@ -427,7 +349,7 @@ class AppDataManager:
         query += " ORDER BY slot;"
 
         # Execute the query without passing parameters
-        result = self._query_db(query)
+        result = self.file_reader._query_db(query)
         result.fillna(0, inplace=True)
 
         return result
@@ -440,7 +362,9 @@ class AppDataManager:
         """
         if self.start_date_ms:
             query_feeds += f"WHERE timestamp > {self.start_date_ms}"
-        feeds = self._query_db(query_feeds, scalar=True, cache_file_name="feeds")
+        feeds = self.file_reader._query_db(
+            query_feeds, scalar=True, cache_file_name="feeds"
+        )
 
         query_payouts = f"""
             SELECT
@@ -454,7 +378,7 @@ class AppDataManager:
         """
         if self.start_date_ms:
             query_payouts += f"WHERE timestamp > {self.start_date_ms}"
-        accuracy, volume = self._query_db(
+        accuracy, volume = self.file_reader._query_db(
             query_payouts, scalar=True, cache_file_name="feeds_accuracy"
         )
 
@@ -467,7 +391,7 @@ class AppDataManager:
         if self.start_date_ms:
             query_subscriptions += f" WHERE timestamp > {self.start_date_ms}"
 
-        sales, revenue = self._query_db(
+        sales, revenue = self.file_reader._query_db(
             query_subscriptions, scalar=True, cache_file_name="sales_revenue"
         )
 
@@ -498,10 +422,12 @@ class AppDataManager:
             """
         if self.start_date_ms:
             query_predictoors_metrics += f" WHERE timestamp > {self.start_date_ms}"
-        predictoors, avg_accuracy, tot_stake, tot_gross_income = self._query_db(
-            query_predictoors_metrics,
-            scalar=True,
-            cache_file_name="predictoor_metrics_predictoors",
+        predictoors, avg_accuracy, tot_stake, tot_gross_income = (
+            self.file_reader._query_db(
+                query_predictoors_metrics,
+                scalar=True,
+                cache_file_name="predictoor_metrics_predictoors",
+            )
         )
 
         return {
@@ -512,7 +438,7 @@ class AppDataManager:
         }
 
     def get_first_and_last_slot_timestamp(self):
-        first_timestamp, last_timestamp = self._query_db(
+        first_timestamp, last_timestamp = self.file_reader._query_db(
             f"""
                 SELECT
                     MIN(timestamp) as min,
