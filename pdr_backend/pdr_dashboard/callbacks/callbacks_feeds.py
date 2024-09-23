@@ -56,6 +56,7 @@ def get_callbacks_feeds(app):
         State("volume_max", "value"),
         prevent_initial_call=True,
     )
+    # pylint: disable=too-many-positional-arguments
     def filter_table(
         base_token,
         quote_token,

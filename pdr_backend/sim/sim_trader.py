@@ -58,6 +58,7 @@ class SimTrader:
         return profit
 
     # pylint: disable = too-many-return-statements
+    # pylint: disable = too-many-positional-arguments
     def trade_iter(
         self,
         cur_close: float,

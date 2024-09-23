@@ -560,6 +560,9 @@ max-statements=50
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=2
 
+# Maximum number of positional arguments, defined to mirror max number of class attributes because it applies to constructors
+max-positional-arguments=7
+
 
 [EXCEPTIONS]
 
