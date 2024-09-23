@@ -7,6 +7,7 @@
 import glob
 import logging
 import shutil
+import time
 import os
 from pathlib import Path
 from typing import Any, Optional, Type
@@ -378,7 +379,10 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             table_folder_path = os.path.join(export_folder_path, table)
 
             if self._should_nuke_table_folders_and_re_export_db(
-                table_folder_path, number_of_files_after_which_re_export_db, table
+                table_folder_path,
+                number_of_files_after_which_re_export_db,
+                table,
+                seconds_between_exports,
             ):
                 self._nuke_table_folders(table_folder_path)
 
@@ -394,7 +398,6 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             table_folder_path
         )
         current_timestamp = UnixTimeMs.from_dt(datetime.now())
-
         return (
             current_timestamp - max_timestamp_from_parquet
             >= seconds_between_exports.to_milliseconds()
@@ -405,7 +408,6 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
             result = duckdb.execute(
                 f"SELECT MAX(timestamp) FROM '{table_folder_path}/*.parquet'"
             ).fetchone()
-
             return result[0] if result and result[0] is not None else 0
         except Exception:
             return 0  # Assume no data exported yet if there's an error
@@ -433,11 +435,23 @@ class DuckDBDataStore(BaseDataStore, _StoreInfo, _StoreCRUD):
         self.execute_sql(query)
 
     def _should_nuke_table_folders_and_re_export_db(
-        self, table_folder_path: str, file_limit: int, table_name: str
+        self,
+        table_folder_path: str,
+        file_limit: int,
+        table_name: str,
+        second_between_exports: UnixTimeS,
     ) -> bool:
         path = Path(table_folder_path)
         if "bronze" in table_name:
-            return True
+            if not path.exists() or not path.is_dir():
+                return False
+
+            files = [f for f in path.iterdir() if f.is_file()]
+            if not files:
+                return False
+
+            file_age = time.time() - files[0].stat().st_mtime
+            return file_age > second_between_exports
 
         nr_of_files_in_folder = sum(1 for _ in path.rglob("*"))
         return nr_of_files_in_folder > file_limit
