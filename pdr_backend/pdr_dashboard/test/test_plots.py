@@ -18,36 +18,38 @@ from pdr_backend.util.time_types import UnixTimeS
 def test_process_payouts(_sample_app):
 
     ## convert List[Payout] to List[dict]
-    payouts = _sample_app.data.payouts_from_bronze_predictions(None, None).to_dict(
-        orient="records"
-    )
+    payouts = _sample_app.data.payouts_from_bronze_predictions(None, None)
 
     feed = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
     user = "0x43584049fe6127ea6745d8ba42274e911f2a2d5c"
 
     ## filter payouts by user and feed
-    filtered_payouts = [p for p in payouts if user in p["ID"] and feed in p["ID"]]
-    filtered_payouts = sorted(filtered_payouts, key=lambda x: x["slot"])
+    filtered_payouts = payouts[
+        payouts["ID"].str.contains(user) & payouts["ID"].str.contains(feed)
+    ]
+    filtered_payouts = filtered_payouts.sort_values("slot")
     tx_fee_cost = 0.2
 
     result = process_payouts(
         payouts=filtered_payouts, tx_fee_cost=tx_fee_cost, calculate_confint=True
     )
 
+    filtered_payouts = filtered_payouts.to_dict("records")
     slots = result.slot_in_unixts
     accuracies = result.accuracies
     profits = result.profits
     stakes = result.stakes
     correct_predictions = result.correct_predictions
     predictions = result.predictions
-    acc_intervals = result.acc_intervals
+    acc_u = result.acc_u.to_list()
+    acc_l = result.acc_l.to_list()
     costs = result.tx_cost
 
     assert correct_predictions == 14
     assert costs > 0
     assert predictions == 24
     assert len(slots) == len(filtered_payouts)
-    assert slots[0] == UnixTimeS(filtered_payouts[0]["slot"]).to_milliseconds()
+    assert slots.iloc[0] == UnixTimeS(filtered_payouts[0]["slot"]).to_milliseconds()
 
     ## calculate accuracies
     test_accuracies = [
@@ -81,11 +83,14 @@ def test_process_payouts(_sample_app):
         assert math.isclose(stake, test_stakes[i], rel_tol=1e-9)
 
     ## calculate accuracy intervals
-    assert len(acc_intervals) == len(test_stakes)
+    assert len(acc_u) == len(test_stakes)
+    assert len(acc_l) == len(test_stakes)
 
-    for i, acc_interval in enumerate(acc_intervals):
-        assert isinstance(acc_interval.acc_l, float)
-        assert isinstance(acc_interval.acc_u, float)
+    for acc_interval in acc_l:
+        assert isinstance(acc_interval, float)
+
+    for acc_interval in acc_u:
+        assert isinstance(acc_interval, float)
 
 
 class MockFigure:
@@ -140,9 +145,7 @@ def test_create_figure():
 def test_get_figures_and_metrics(_sample_app):
     db_mgr = _sample_app.data
     ## convert List[Payout] to List[dict]
-    payouts = db_mgr.payouts_from_bronze_predictions(None, None).to_dict(
-        orient="records"
-    )
+    payouts = db_mgr.payouts_from_bronze_predictions(None, None)
 
     sample_feeds = ArgFeeds(
         [
@@ -215,13 +218,9 @@ def test_get_feed_figures(
 ):
     feed_id = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
     db_mgr = _sample_app.data
-    payouts = db_mgr.payouts_from_bronze_predictions([feed_id], None).to_dict(
-        orient="records"
-    )
+    payouts = db_mgr.payouts_from_bronze_predictions([feed_id], None)
 
-    subscriptions = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id).to_dict(
-        orient="records"
-    )
+    subscriptions = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id)
 
     # Execute the function
     figures = get_feed_figures(payouts, subscriptions)

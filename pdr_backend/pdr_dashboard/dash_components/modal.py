@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 import dash_bootstrap_components as dbc
+import pandas
 from dash import html
 
 from pdr_backend.cli.arg_feeds import ArgFeed
@@ -84,7 +85,9 @@ class ModalContent:
 
         if not selected_row:
             figures_args: List[List] = (
-                [[], []] if self.modal_id == "feeds_modal" else [[]]
+                [pandas.DataFrame(), pandas.DataFrame()]
+                if self.modal_id == "feeds_modal"
+                else [pandas.DataFrame()]
             )
             self.figures = figures_func(*figures_args).get_figures()
             return
@@ -100,16 +103,16 @@ class ModalContent:
 
             payouts = self.data_manager.payouts_from_bronze_predictions(
                 [feed.contract], None
-            ).to_dict(orient="records")
+            )
             subscriptions = self.data_manager.feed_daily_subscriptions_by_feed_id(
                 feed.contract
-            ).to_dict(orient="records")
+            )
             figures_args = [payouts, subscriptions]
         elif self.modal_id == "predictoors_modal":
             payouts = self.data_manager.payouts_from_bronze_predictions(
                 feed_addrs=[],
                 predictoor_addrs=[selected_row["full_addr"]],
-            ).to_dict(orient="records")
+            )
             figures_args = [payouts]
 
         self.figures = figures_func(*figures_args).get_figures()
