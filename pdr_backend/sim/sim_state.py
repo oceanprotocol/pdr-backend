@@ -25,6 +25,7 @@ class AimodelMetrics:
 
         self.yerrs: List[float] = []  # [i] : regressor pred'n errs, w/ sign
 
+    # pylint: disable=too-many-positional-arguments
     def update(self, acc_est, acc_l, acc_u, f1, precision, recall, loss, yerr):
         self.acc_ests.append(acc_est)
         self.acc_ls.append(acc_l)

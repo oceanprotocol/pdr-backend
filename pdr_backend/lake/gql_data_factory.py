@@ -145,6 +145,7 @@ class GQLDataFactory:
             new_events_table._append_to_db(data, self.ppss)
 
     @enforce_types
+    # pylint: disable=too-many-positional-arguments
     def _do_subgraph_fetch(
         self,
         dataclass: Type[LakeMapper],

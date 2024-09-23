@@ -12,6 +12,7 @@ from pdr_backend.deployer.util.models.SingleAgentConfig import SingleAgentConfig
 
 @dataclass
 # pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-positional-arguments
 class PredictoorAgentConfig(SingleAgentConfig):
     pair: str
     timeframe: str
