@@ -33,7 +33,7 @@ def toggle_modal_helper(
     return False, []
 
 
-def wrap_outputs(results, loading_id_prefix="loading", spinner=None):
+def wrap_outputs_loading(results, loading_id_prefix="loading", spinner=None):
     """
     Wraps the callback results in a `dcc.Loading` component with `dbc.Spinner`.
 
@@ -53,7 +53,7 @@ def wrap_outputs(results, loading_id_prefix="loading", spinner=None):
         dcc.Loading(
             id=f"{loading_id_prefix}_{i}",
             type="default",
-            children=html.Span(results[i]),
+            children=results[i],
             custom_spinner=spinner or html.H2(dbc.Spinner(), style={"height": "100%"}),
         )
         for i in range(len(results))
@@ -78,7 +78,7 @@ def with_loading(loading_id_prefix="loading", spinner=None):
         @wraps(func)
         def wrapper(*args, **kwargs):
             results = func(*args, **kwargs)
-            return wrap_outputs(results, loading_id_prefix, spinner)
+            return wrap_outputs_loading(results, loading_id_prefix, spinner)
 
         return wrapper
 

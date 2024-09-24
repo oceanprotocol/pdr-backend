@@ -314,6 +314,8 @@ button {
   height: 100px;
   margin-bottom: 25px;
   border-bottom: 1px solid #adadad;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 #navbar-container {

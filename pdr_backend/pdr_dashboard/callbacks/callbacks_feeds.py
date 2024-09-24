@@ -8,7 +8,10 @@ from pdr_backend.pdr_dashboard.util.filters import (
     filter_table_by_range,
 )
 from pdr_backend.pdr_dashboard.util.format import format_df
-from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper, with_loading
+from pdr_backend.pdr_dashboard.util.helpers import (
+    toggle_modal_helper,
+    with_loading,
+)
 
 
 def get_callbacks_feeds(app):
@@ -18,7 +21,6 @@ def get_callbacks_feeds(app):
         [Input("start-date", "data")],
         prevent_initial_call=True,
     )
-    @with_loading("loading-feedspage-metrics")
     def update_page_data(_start_date):
         app.data.refresh_feeds_data()
 
@@ -192,7 +194,6 @@ def get_callbacks_feeds(app):
         State("feeds_page_table", "selected_rows"),
         State("feeds_page_table", "data"),
     )
-    @with_loading("loading-feedspage-modal")
     # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, feeds_table_data):
         content = ModalContent("feeds_modal", app.data)

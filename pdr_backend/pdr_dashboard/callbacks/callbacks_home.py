@@ -99,7 +99,6 @@ def get_callbacks_home(app):
         ],
         prevent_initial_call=True,
     )
-    @with_loading("loading-home-predictoor-table")
     def update_predictoors_table_on_search(
         search_value,
         selected_rows,
@@ -172,7 +171,6 @@ def get_callbacks_home(app):
         ],
         prevent_initial_call=True,
     )
-    @with_loading("loading-home-feeds-table")
     def update_feeds_table_on_search(
         search_value,
         predictoor_feeds_only,
