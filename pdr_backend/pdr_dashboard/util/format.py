@@ -57,8 +57,8 @@ FORMAT_COLS_CONFIG = {
     "user": "eth_address",
     "avg_accuracy": "percentage",
     "avg_stake": "currency_conditional",
-    "total_profit": "currency_without_decimal",
-    "volume": "currency_without_decimal",
+    "total_profit": "currency",
+    "volume": "currency",
     "total_stake": "currency_conditional",
     "gross_income": "currency_conditional",
     "stake_loss": "currency_conditional",
@@ -67,6 +67,7 @@ FORMAT_COLS_CONFIG = {
     "sales_revenue": "currency_conditional",
     "apr": "percentage",
     "accuracy": "percentage",
+    "price": "currency_conditional",
 }
 
 FORMAT_VALUES_CONFIG = {
@@ -155,21 +156,29 @@ def format_sales_info_data(df) -> str:
     if df.is_empty():
         return df.with_columns(pl.col("sales_str").alias("sales_str"))
 
-    total = format_currency(df, "sales", suffix="", show_decimal=False)["sales"]
-    df_buy = format_currency(df, "df_buy_count", suffix=" DF", show_decimal=False)["df_buy_count"]
-    ws_buy = format_currency(df, "ws_buy_count", suffix=" WS", show_decimal=False)["ws_buy_count"]
+    total = format_currency(df, "sales")["sales"]
+    df_buy = format_currency(df, "df_buy_count", suffix=" DF")["df_buy_count"]
+    ws_buy = format_currency(df, "ws_buy_count", suffix=" WS")["ws_buy_count"]
 
     df2 = df.with_columns(
-        pl.when(pl.col("df_buy_count") > 0).then(df_buy).otherwise(pl.lit("")).alias("df_buy_str"),
-        pl.when(pl.col("ws_buy_count") > 0).then(ws_buy).otherwise(pl.lit("")).alias("ws_buy_str")
+        pl.when(pl.col("df_buy_count") > 0)
+        .then(df_buy)
+        .otherwise(pl.lit(""))
+        .alias("df_buy_str"),
+        pl.when(pl.col("ws_buy_count") > 0)
+        .then(ws_buy)
+        .otherwise(pl.lit(""))
+        .alias("ws_buy_str"),
     )
 
     df2 = df2.with_columns(
         (
-            total +
-            pl.lit(" (") +
-            (pl.col("df_buy_str") + ", " + pl.col("ws_buy_str")).str.strip_chars_start(", ").str.strip_chars_end(", ") +
-            pl.lit(")")
+            total
+            + pl.lit(" (")
+            + (pl.col("df_buy_str") + ", " + pl.col("ws_buy_str"))
+            .str.strip_chars_start(", ")
+            .str.strip_chars_end(", ")
+            + pl.lit(")")
         ).alias("sales_info")
     )
 
@@ -177,9 +186,7 @@ def format_sales_info_data(df) -> str:
 
 
 @enforce_types
-def format_currency(
-    df, col, base=None, suffix: str = " OCEAN", show_decimal: bool = False, prefix=""
-):
+def format_currency(df, col, base=None, suffix: str = ""):
     """
     Format Ocean amount.
     Args:
@@ -188,13 +195,9 @@ def format_currency(
         str: Formatted Ocean amount.
     """
     if base is None:
-        base = (
-            pl.col(col).round(2).cast(pl.String)
-            if show_decimal
-            else pl.col(col).map_elements(numerize.numerize, return_dtype=pl.String)
-        )
+        base = pl.col(col).map_elements(numerize.numerize, return_dtype=pl.String)
 
-    return df.with_columns((pl.lit(prefix) + base + pl.lit(suffix)).alias(col))
+    return df.with_columns((base + pl.lit(suffix)).alias(col))
 
 
 @enforce_types
@@ -205,32 +208,7 @@ def format_currency_conditional(df, col) -> str:
         .otherwise(pl.col(col).map_elements(numerize.numerize, return_dtype=pl.String))
     )
 
-    return format_currency(df, col, base, suffix="")
-
-
-@enforce_types
-def format_currency_without_decimal(df, col):
-    return format_currency(df, col, suffix="", show_decimal=False)
-
-
-@enforce_types
-def format_currency_without_decimal_with_suffix(amount: Union[float, int]) -> str:
-    return format_currency(amount, suffix=" OCEAN", show_decimal=False)
-
-
-@enforce_types
-def format_currency_with_decimal(value: Union[float, int]) -> str:
-    return format_currency(value, suffix="", show_decimal=True)
-
-
-@enforce_types
-def format_currency_with_decimal_and_suffix(value: Union[float, int]) -> str:
-    return format_currency(value, suffix=" OCEAN", show_decimal=True)
-
-
-@enforce_types
-def format_approximate_currency_with_decimal(value: Union[float, int]) -> str:
-    return format_currency(value, suffix="", show_decimal=True, prefix="~")
+    return format_currency(df, col, base=base)
 
 
 @enforce_types
@@ -261,28 +239,9 @@ def format_currency_without_decimal_with_suffix_val(amount: Union[float, int]) -
 
 
 @enforce_types
-def format_currency_with_decimal_val(value: Union[float, int]) -> str:
-    return format_currency_val(value, suffix="", show_decimal=True)
-
-
-@enforce_types
-def format_currency_with_decimal_and_suffix_val(value: Union[float, int]) -> str:
-    return format_currency_val(value, suffix=" OCEAN", show_decimal=True)
-
-
-@enforce_types
 def format_approximate_currency_with_decimal_val(value: Union[float, int]) -> str:
     formatted_value = format_currency_val(value, suffix="", show_decimal=True)
     return f"~{formatted_value}"
-
-
-@enforce_types
-def format_currency_conditional_val(amount: Union[float, int]) -> str:
-    show_decimal = False
-    if -1000 < amount < 1000:
-        show_decimal = True
-
-    return format_currency_val(amount, suffix="", show_decimal=show_decimal)
 
 
 @enforce_types

@@ -1,9 +1,7 @@
 import polars as pl
 from pdr_backend.pdr_dashboard.util.format import (
-    format_approximate_currency_with_decimal,
+    format_approximate_currency_with_decimal_val,
     format_currency,
-    format_currency_with_decimal,
-    format_currency_with_decimal_and_suffix,
     format_eth_address,
     format_percentage,
     format_percentage_val,
@@ -58,25 +56,12 @@ def test_format_percentage():
     assert format_percentage_val(12.345) == "12.35%"
 
 
-def test_format_currency_with_decimal():
-    assert format_currency_with_decimal(1234567890.1234567890) == "1234567890.12"
-    assert format_currency_with_decimal(1234567890) == "1234567890"
-
-
-def test_format_currency_with_decimal_and_suffix():
-    assert (
-        format_currency_with_decimal_and_suffix(1234567890.1234567890)
-        == "1234567890.12 OCEAN"
-    )
-    assert format_currency_with_decimal_and_suffix(1234567890) == "1234567890 OCEAN"
-
-
 def test_format_approximate_currency_with_decimal():
     assert (
-        format_approximate_currency_with_decimal(1234567890.1234567890)
+        format_approximate_currency_with_decimal_val(1234567890.1234567890)
         == "~1234567890.12"
     )
-    assert format_approximate_currency_with_decimal(1234567890) == "~1234567890"
+    assert format_approximate_currency_with_decimal_val(1234567890) == "~1234567890"
 
 
 def test_format_value():
