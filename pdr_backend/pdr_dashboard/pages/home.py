@@ -155,7 +155,7 @@ class HomePage:
                 html.Span(
                     "there is no data available",
                     id="available_data_period_text",
-                    style={"fontWeight": "bold", "fontSize": "34px", "lineHeight": "1"},
+                    style={"fontWeight": "bold", "fontSize": "30px", "lineHeight": "1"},
                 ),
             ],
             style={"display": "flex", "flexDirection": "column"},

@@ -1,3 +1,11 @@
+:root {
+  --main-color: #fbeef5;
+  --secondary-color: #ed67b5;
+  --color-grey-light: rgb(223, 223, 223);
+  --color-grey-dark: #aaa;
+  --font-size: 16px;
+}
+
 html,
 body,
 #root {
@@ -79,14 +87,14 @@ body {
 }
 
 #feeds_page_table table td,
-#predictoors_page_table table td {
-  padding: 10px 15px;
+#predictoors_page_table table td{
+  padding: 15px 15px;
   text-align: center;
 }
 
 #feeds_page_table table th,
 #predictoors_page_table table th {
-  padding: 5px;
+  padding: 15px 0;
 }
 
 #feeds_page_table table th .column-actions,
@@ -111,8 +119,9 @@ body {
 }
 
 button {
-  background-color: #007bff !important;
-  color: white;
+  background-color: var(--main-color) !important;
+  color: black;
+  font-weight: bold;
   border: 0;
 }
 
@@ -122,17 +131,18 @@ button {
   padding: 8px 16px;
   margin-right: 0 !important;
   margin-left: 10px;
-  background-color: #007bff;
-  color: white;
-  border: 1px solid #007bff;
+  background-color: var(--main-color);
+  color: black;
+  border: 1px solid var(--main-color);
   border-radius: 5px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 /* Style for selected label */
 .date-period-radio-items label:has(input:checked) {
-  background-color: #00254d;
-  border-color: #0056b3;
+  background-color: var(--secondary-color);
+  border-color: var(--main-color)
 }
 
 .form-check-label,
@@ -157,14 +167,14 @@ button {
   border: 0;
   min-width: 90px;
   font-size: 15px;
-  background-color: #dedede;
+  background-color: var(--color-grey-dark);
   border-radius: 3px;
 }
 
 .button-clear-all {
   border: 0;
   font-size: 15px;
-  background-color: #dedede;
+  background-color: var(--color-grey-dark);
   border-radius: 3px;
 }
 
@@ -181,7 +191,7 @@ button {
   padding: 0;
   text-align: center;
   color: white;
-  background-color: #6c757d !important;
+  background-color: var(--color-grey-dark) !important;
   border: 0px none;
   margin-left: 5px;
 }
@@ -192,8 +202,8 @@ button {
 
 .dropdown-toggle {
   background-color: transparent !important;
-  color: #aaa;
-  border-color: #aaa;
+  color: var(--color-grey-dark);
+  border-color: var(--color-grey-dark);
   border-radius: 4px;
   padding: 5px 10px;
 }
@@ -311,7 +321,7 @@ button {
 .header-container{
   height: 100px;
   margin-bottom: 25px;
-  border-bottom: 1px solid #adadad;
+  border-bottom: 1px solid var(--color-grey-dark);
 }
 
 #navbar-container {
@@ -347,7 +357,7 @@ button {
 
 .search-input {
   border-radius: 4px;
-  border: 1px solid #aaa;
+  border: 1px solid var(--color-grey-dark);
   padding: 5px 10px;
   width: 500px !important;
   text-align: center;
@@ -383,6 +393,21 @@ button {
 
 #available-data-text{
   font-weight: bold;
-  font-size: 20px;
+  font-size: 16px;
   margin-right: 10px;
+}
+
+table{
+  border: 1px solid var(--color-grey-light);
+  border-radius: 5px !important;
+}
+
+td, th{
+  border: 0 !important;
+  border-bottom: 1px solid var(--color-grey-light) !important;
+  padding: 5px 0;
+}
+
+th{
+  background-color: var(--main-color) !important;
 }
