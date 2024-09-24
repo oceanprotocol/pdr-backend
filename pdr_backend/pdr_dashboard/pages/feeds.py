@@ -28,11 +28,11 @@ class FeedsPage(TabularPage):
         df = df.with_columns(
             pl.col("pair")
             .str.split_exact("/", 1)
-            .map_elements(lambda x: x["field_0"])
+            .map_elements(lambda x: x["field_0"], return_dtype=pl.String)
             .alias("base_token"),
             pl.col("pair")
             .str.split_exact("/", 1)
-            .map_elements(lambda x: x["field_1"])
+            .map_elements(lambda x: x["field_1"], return_dtype=pl.String)
             .alias("quote_token"),
             pl.col("source").str.to_titlecase().alias("source"),
         )

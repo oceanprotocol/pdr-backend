@@ -587,7 +587,7 @@ def get_feed_figures(
         ]
     )
 
-    sums = payouts.group_by("slot").sum()
+    sums = payouts.group_by("slot").sum().sort("slot")
     result.stakes = sums["stake"]
     result.profits = sums["profit"]
 
@@ -633,7 +633,7 @@ def get_predictoor_figures(payouts: pl.DataFrame):
         pl.col("correct_prediction").cum_sum().alias("cnt_corrpred"),
     )
 
-    sums = payouts.group_by("slot").sum()
+    sums = payouts.group_by("slot").sum().sort("slot")
 
     result.incomes = sums["payout"]
     result.stakes = sums["stake"]
