@@ -350,21 +350,16 @@ def process_payouts(
 
     p = p.with_columns(
         pl.lit(1).alias("predictions_crt"),
-        pl.struct(["payout", "stake"])
-        .map_elements(lambda x: max(x["payout"], 0) - x["stake"], pl.Float64)
-        .alias("profit_change"),
+        (pl.col("payout").clip(lower_bound=0) - pl.col("stake")).alias("profit_change"),
+        pl.when(pl.col("payout") > 0).then(1).otherwise(0).alias("correct_prediction"),
+        pl.col("slot")
+        .cast(pl.Int64)
+        .map_elements(lambda x: UnixTimeS(x).to_milliseconds(), pl.Int64)
+        .alias("slot_in_unixts"),
     )
     p = p.with_columns(
         pl.col("predictions_crt").cum_sum().alias("predictions_crt"),
-        pl.when(pl.col("payout") > 0).then(1).otherwise(0).alias("correct_prediction"),
-        pl.when(pl.col("payout") > 0)
-        .then(1)
-        .otherwise(0)
-        .cum_sum()
-        .alias("correct_predictions_crt"),
-        pl.col("slot")
-        .map_elements(lambda x: UnixTimeS(int(x)).to_milliseconds(), pl.Int64)
-        .alias("slot_in_unixts"),
+        pl.col("correct_prediction").cum_sum().alias("correct_predictions_crt"),
     )
     processed.tx_cost = tx_fee_cost * len(payouts)
 
@@ -379,22 +374,23 @@ def process_payouts(
                 ),
                 return_dtype=pl.List(pl.Float64),
             )
-            .alias("acc_bounds")
+            .alias("acc_bounds"),
         )
 
-        df = df.with_columns(pl.col("acc_bounds").list.get(0).alias("acc_l"))
-        df = df.with_columns(pl.col("acc_bounds").list.get(1).alias("acc_u"))
+        df = df.with_columns(
+            [
+                pl.col("acc_bounds").list.get(0).alias("acc_l"),
+                pl.col("acc_bounds").list.get(1).alias("acc_u"),
+            ]
+        )
 
         processed.acc_l = df["acc_l"]
         processed.acc_u = df["acc_u"]
 
     p = p.with_columns(
-        pl.struct(["correct_predictions_crt", "predictions_crt"])
-        .map_elements(
-            lambda x: x["correct_predictions_crt"] / x["predictions_crt"] * 100,
-            return_dtype=pl.Float64,
+        ((pl.col("correct_predictions_crt") / pl.col("predictions_crt")) * 100).alias(
+            "accuracies"
         )
-        .alias("accuracies")
     )
 
     processed.slot_in_unixts = p["slot_in_unixts"]
@@ -574,16 +570,21 @@ def get_feed_figures(
     result.subscription_dates = subscriptions["day_dt"]
 
     payouts = payouts.with_columns(
-        pl.struct(["payout", "stake"])
-        .map_elements(lambda x: max(x["payout"], 0) - x["stake"], pl.Float64)
-        .alias("profit"),
-        pl.lit(1).alias("count"),
-        pl.lit(1).cum_sum().alias("cnt_cumsum"),
-        pl.when(pl.col("payout") > 0)
-        .then(1)
-        .otherwise(0)
-        .cum_sum()
-        .alias("cnt_corrpred"),
+        [
+            (pl.col("payout").clip(lower_bound=0) - pl.col("stake")).alias("profit"),
+            pl.when(pl.col("payout") > 0)
+            .then(1)
+            .otherwise(0)
+            .alias("correct_prediction"),
+            pl.lit(1).alias("count"),
+        ]
+    )
+
+    payouts = payouts.with_columns(
+        [
+            pl.col("count").cum_sum().alias("cnt_cumsum"),
+            pl.col("correct_prediction").cum_sum().alias("cnt_corrpred"),
+        ]
     )
 
     sums = payouts.group_by("slot").sum()
@@ -591,11 +592,10 @@ def get_feed_figures(
     result.profits = sums["profit"]
 
     sums = sums.with_columns(
-        pl.struct(["cnt_corrpred", "cnt_cumsum"])
-        .map_elements(lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100, pl.Float64)
-        .alias("accuracies"),
+        (pl.col("cnt_corrpred") / pl.col("cnt_cumsum") * 100).alias("accuracies"),
         pl.col("slot")
-        .map_elements(lambda x: UnixTimeS(int(x)).to_milliseconds(), pl.Int64)
+        .cast(pl.Int64)
+        .map_elements(lambda x: UnixTimeS(x).to_milliseconds(), pl.Int64)
         .alias("slot_in_unixts"),
     )
 
@@ -623,16 +623,14 @@ def get_predictoor_figures(payouts: pl.DataFrame):
         return result
 
     payouts = payouts.with_columns(
-        pl.struct(["payout", "stake"])
-        .map_elements(lambda x: max(x["payout"], 0) - x["stake"], pl.Float64)
-        .alias("profit"),
+        (pl.col("payout").clip(lower_bound=0) - pl.col("stake")).alias("profit"),
         pl.lit(1).alias("count"),
-        pl.lit(1).cum_sum().alias("cnt_cumsum"),
-        pl.when(pl.col("payout") > 0)
-        .then(1)
-        .otherwise(0)
-        .cum_sum()
-        .alias("cnt_corrpred"),
+        pl.when(pl.col("payout") > 0).then(1).otherwise(0).alias("correct_prediction"),
+    )
+
+    payouts = payouts.with_columns(
+        pl.col("count").cum_sum().alias("cnt_cumsum"),
+        pl.col("correct_prediction").cum_sum().alias("cnt_corrpred"),
     )
 
     sums = payouts.group_by("slot").sum()
@@ -642,11 +640,10 @@ def get_predictoor_figures(payouts: pl.DataFrame):
     result.profits = sums["profit"].cum_sum()
 
     sums = sums.with_columns(
-        pl.struct(["cnt_corrpred", "cnt_cumsum"])
-        .map_elements(lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100, pl.Float64)
-        .alias("accuracies"),
+        (pl.col("cnt_corrpred") / pl.col("cnt_cumsum") * 100).alias("accuracies"),
         pl.col("slot")
-        .map_elements(lambda x: UnixTimeS(int(x)).to_milliseconds(), pl.Int64)
+        .cast(pl.Int64)
+        .map_elements(lambda x: UnixTimeS(x).to_milliseconds(), pl.Int64)
         .alias("slot_in_unixts"),
     )
 
