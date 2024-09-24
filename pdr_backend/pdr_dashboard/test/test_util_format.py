@@ -6,6 +6,7 @@ from pdr_backend.pdr_dashboard.util.format import (
     format_currency_with_decimal_and_suffix,
     format_eth_address,
     format_percentage,
+    format_percentage_val,
     format_value,
 )
 
@@ -41,9 +42,20 @@ def test_format_currency():
 
 
 def test_format_percentage():
-    assert format_percentage(1) == "1.0%"
-    assert format_percentage(12) == "12.0%"
-    assert format_percentage(12.345) == "12.35%"
+    df = pl.DataFrame(
+        {
+            "percentage": [1.0, 12.0, 12.345],
+        }
+    )
+
+    result = format_percentage(df, "percentage")
+    assert result["percentage"][0] == "1.0%"
+    assert result["percentage"][1] == "12.0%"
+    assert result["percentage"][2] == "12.35%"
+
+    assert format_percentage_val(1) == "1.0%"
+    assert format_percentage_val(12) == "12.0%"
+    assert format_percentage_val(12.345) == "12.35%"
 
 
 def test_format_currency_with_decimal():

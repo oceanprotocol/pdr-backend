@@ -53,8 +53,8 @@ PREDICTOORS_TABLE_COLS = [
 ]
 
 FORMAT_CONFIG = {
-    "feeds_page_Accuracy_metric": "percentage",
-    "accuracy_metric": "percentage",
+    "feeds_page_Accuracy_metric": "percentage_val",
+    "accuracy_metric": "percentage_val",
     "feeds_page_Volume_metric": "currency",
     "feeds_page_Revenue_metric": "currency",
     "feeds_page_Sales_metric": "currency_without_decimal",
@@ -63,7 +63,7 @@ FORMAT_CONFIG = {
     "costs_metric": "approximate_currency_with_decimal",
     "addr": "eth_address",
     "user": "eth_address",
-    "avg_accuracy": "percentage",
+    "avg_accuracy": "percentage_val",
     "avg_stake": "currency_conditional",
     "total_profit": "currency_without_decimal",
     "volume": "currency_without_decimal",
@@ -75,12 +75,12 @@ FORMAT_CONFIG = {
     "sales_revenue": "currency_conditional",
     "apr": "percentage",
     "accuracy": "percentage",
-    "predictoors_page_accuracy_metric": "percentage",
+    "predictoors_page_accuracy_metric": "percentage_val",
     "predictoors_page_staked_metric": "currency",
     "predictoors_page_gross_income_metric": "currency",
 }
 
-FORMAT_DF_COLS = ["eth_address"]
+FORMAT_DF_COLS = ["eth_address", "percentage"]
 
 
 @enforce_types
@@ -96,18 +96,6 @@ def format_value(value: Union[int, float, str], value_id: str) -> str:
     if value_id in FORMAT_CONFIG:
         return globals()["format_" + FORMAT_CONFIG[value_id]](value)
     return str(value)
-
-
-@enforce_types
-def format_df_col(df, col) -> pl.DataFrame:
-    if col not in FORMAT_DF_COLS:
-        raise ValueError(f"Column {col} not in FORMAT_DF_COLS")
-
-    return df.with_columns(
-        pl.col(col)
-        .map_elements(lambda x: format_value(x, col), return_dtype=pl.String)
-        .alias(col)
-    )
 
 
 @enforce_types
@@ -147,6 +135,7 @@ def format_df(
             df = df.with_columns(pl.col(col).cast(pl.String).alias(col))
             continue
 
+        # TODO: only temporary, until all formatting functions are implemented
         if FORMAT_CONFIG[col] in FORMAT_DF_COLS:
             func_name = globals()["format_" + FORMAT_CONFIG[col]]
             df = func_name(df, col)
@@ -169,6 +158,13 @@ def format_eth_address(df, col):
         .then(pl.col(col).str.slice(0, 5) + "..." + pl.col(col).str.slice(-5))
         .otherwise(pl.lit("No address"))
         .alias(col)
+    )
+
+
+@enforce_types
+def format_percentage(df, col) -> str:
+    return df.with_columns(
+        (pl.col(col).round(2).cast(pl.String) + pl.lit("%")).alias(col)
     )
 
 
@@ -213,18 +209,6 @@ def format_currency(
 
 
 @enforce_types
-def format_percentage(accuracy: Union[float, int]) -> str:
-    """
-    Format accuracy.
-    Args:
-        accuracy (float): Accuracy.
-    Returns:
-        str: Formatted accuracy.
-    """
-    return f"{round(float(accuracy), 2)}%"
-
-
-@enforce_types
 def format_currency_conditional(amount: Union[float, int]) -> str:
     show_decimal = False
     if -1000 < amount < 1000:
@@ -257,3 +241,15 @@ def format_currency_with_decimal_and_suffix(value: Union[float, int]) -> str:
 def format_approximate_currency_with_decimal(value: Union[float, int]) -> str:
     formatted_value = format_currency(value, suffix="", show_decimal=True)
     return f"~{formatted_value}"
+
+
+@enforce_types
+def format_percentage_val(accuracy: Union[float, int]) -> str:
+    """
+    Format accuracy.
+    Args:
+        accuracy (float): Accuracy.
+    Returns:
+        str: Formatted accuracy.
+    """
+    return f"{round(float(accuracy), 2)}%"
