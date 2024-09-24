@@ -1,3 +1,4 @@
+import polars as pl
 from pdr_backend.pdr_dashboard.util.format import (
     format_approximate_currency_with_decimal,
     format_currency,
@@ -10,18 +11,20 @@ from pdr_backend.pdr_dashboard.util.format import (
 
 
 def test_format_eth_address():
-    assert (
-        format_eth_address("0x1234567890123456789012345678901234567890")
-        == "0x123...67890"
-    )
-    assert (
-        format_eth_address("0x123456789012345678901234567890123456789")
-        == "0x123...56789"
+    df = pl.DataFrame(
+        {
+            "address": [
+                "0x1234567890123456789012345678901234567890",
+                "0x123456789012345678901234567890123456789",
+                "",
+            ]
+        }
     )
 
-
-def test_format_eth_address_empty():
-    assert format_eth_address("") == "No address"
+    result = format_eth_address(df, "address")
+    assert result["address"][0] == "0x123...67890"
+    assert result["address"][1] == "0x123...56789"
+    assert result["address"][2] == "No address"
 
 
 def test_format_currency():
@@ -72,10 +75,6 @@ def test_format_value():
     assert format_value(9876.12, "profit_metric") == "9.88K OCEAN"
     assert format_value(9876.12, "stake_metric") == "9.88K OCEAN"
     assert format_value(9876, "costs_metric") == "~9876"
-    assert (
-        format_value("0x1234567890123456789012345678901234567890", "addr")
-        == "0x123...67890"
-    )
     assert format_value(12.0, "avg_accuracy") == "12.0%"
     assert format_value(9876.12, "sales_revenue") == "9.88K"
     assert format_value(9876543, "volume") == "9.88M"

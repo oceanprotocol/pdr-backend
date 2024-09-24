@@ -80,6 +80,8 @@ FORMAT_CONFIG = {
     "predictoors_page_gross_income_metric": "currency",
 }
 
+FORMAT_DF_COLS = ["eth_address"]
+
 
 @enforce_types
 def format_value(value: Union[int, float, str], value_id: str) -> str:
@@ -94,6 +96,18 @@ def format_value(value: Union[int, float, str], value_id: str) -> str:
     if value_id in FORMAT_CONFIG:
         return globals()["format_" + FORMAT_CONFIG[value_id]](value)
     return str(value)
+
+
+@enforce_types
+def format_df_col(df, col) -> pl.DataFrame:
+    if col not in FORMAT_DF_COLS:
+        raise ValueError(f"Column {col} not in FORMAT_DF_COLS")
+
+    return df.with_columns(
+        pl.col(col)
+        .map_elements(lambda x: format_value(x, col), return_dtype=pl.String)
+        .alias(col)
+    )
 
 
 @enforce_types
@@ -129,6 +143,15 @@ def format_df(
         if col == "sales_str":
             continue
 
+        if col not in FORMAT_CONFIG:
+            df = df.with_columns(pl.col(col).cast(pl.String).alias(col))
+            continue
+
+        if FORMAT_CONFIG[col] in FORMAT_DF_COLS:
+            func_name = globals()["format_" + FORMAT_CONFIG[col]]
+            df = func_name(df, col)
+            continue
+
         df = df.with_columns(
             # pylint: disable=cell-var-from-loop
             pl.col(col)
@@ -137,6 +160,16 @@ def format_df(
         )
 
     return df
+
+
+@enforce_types
+def format_eth_address(df, col):
+    return df.with_columns(
+        pl.when(pl.col(col).str.len_chars() > 0)
+        .then(pl.col(col).str.slice(0, 5) + "..." + pl.col(col).str.slice(-5))
+        .otherwise(pl.lit("No address"))
+        .alias(col)
+    )
 
 
 @enforce_types
@@ -160,21 +193,6 @@ def format_sales_info_data(total, df_buy, ws_buy) -> str:
         sales_info = f" ({sales_info})"
 
     return total_str + sales_info
-
-
-@enforce_types
-def format_eth_address(address: str) -> str:
-    """
-    Shorten ethereum address.
-    Args:
-        address (str): Address.
-    Returns:
-        str: Formatted address.
-    """
-    if not address:
-        return "No address"
-
-    return f"{address[:5]}...{address[-5:]}"
 
 
 @enforce_types
