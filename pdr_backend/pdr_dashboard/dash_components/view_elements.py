@@ -47,7 +47,7 @@ def get_period_selection_radio_items(component_id: str):
             {"label": "1M", "value": "30"},
             {"label": "ALL", "value": "0"},
         ],
-        value="0",  # default selected value
+        value="7",  # default selected value
         labelStyle={"display": "inline-block", "margin-right": "10px"},
     )
 
@@ -81,15 +81,10 @@ def get_metric(label, value, value_id):
                     "alignItems": "center",
                 },
             ),
-            dcc.Loading(
-                id="loading",
-                type="default",
-                children=html.Span(
-                    format_value(value if value else 0, value_id),
-                    id=value_id,
-                    style={"fontWeight": "bold"},
-                ),
-                custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
+            html.Span(
+                format_value(value if value else 0, value_id),
+                id=value_id,
+                style={"fontWeight": "bold"},
             ),
         ],
         style={"display": "flex", "flexDirection": "column", "font-size": "20px"},

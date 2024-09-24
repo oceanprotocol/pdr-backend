@@ -30,6 +30,8 @@ body {
   margin: 0px;
   padding: 0px;
   width: 100%;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 #error_message {

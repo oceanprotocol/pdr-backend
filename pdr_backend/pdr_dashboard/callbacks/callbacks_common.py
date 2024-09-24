@@ -8,6 +8,7 @@ from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
 from pdr_backend.pdr_dashboard.pages.home import HomePage
 from pdr_backend.pdr_dashboard.pages.predictoors import PredictoorsPage
 from pdr_backend.pdr_dashboard.util.data import get_date_period_text_header
+from pdr_backend.pdr_dashboard.util.helpers import with_loading
 
 
 def get_callbacks_common(app):
@@ -36,6 +37,7 @@ def get_callbacks_common(app):
         Output("available-data-text", "children"),
         [Input("page-content", "children")],
     )
+    @with_loading("loading-available-period")
     def display_available_data(_):
         return get_date_period_text_header(
             app.data.min_timestamp, app.data.max_timestamp

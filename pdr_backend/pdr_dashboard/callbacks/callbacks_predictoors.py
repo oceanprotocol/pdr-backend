@@ -8,7 +8,10 @@ from pdr_backend.pdr_dashboard.util.filters import (
     filter_table_by_range,
 )
 from pdr_backend.pdr_dashboard.util.format import format_df
-from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
+from pdr_backend.pdr_dashboard.util.helpers import (
+    toggle_modal_helper,
+    with_loading,
+)
 
 
 def get_callbacks_predictoors(app):
@@ -18,6 +21,7 @@ def get_callbacks_predictoors(app):
         [Input("start-date", "data")],
         prevent_initial_call=True,
     )
+    @with_loading("loading-predictoorspage-metrics")
     def update_page_data(_start_date):
         app.data.refresh_predictoors_data()
         stats = app.data.predictoors_metrics()
@@ -285,6 +289,7 @@ def get_callbacks_predictoors(app):
         State("predictoors_page_table", "selected_rows"),
         State("predictoors_page_table", "data"),
     )
+    @with_loading("loading-predictoorspage-modal")
     # pylint: disable=unused-argument
     def update_graphs(is_open, selected_rows, predictoors_table_data):
         content = ModalContent("predictoors_modal", app.data)

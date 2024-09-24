@@ -10,6 +10,7 @@ from pdr_backend.pdr_dashboard.util.data import (
     select_or_clear_all_by_table,
 )
 from pdr_backend.pdr_dashboard.util.format import format_value
+from pdr_backend.pdr_dashboard.util.helpers import with_loading
 
 
 # pylint: disable=too-many-statements
@@ -33,6 +34,7 @@ def get_callbacks_home(app):
             State("predictoors_table", "data"),
         ],
     )
+    @with_loading("loading-home-figures")
     def get_display_data_from_db(
         feeds_table_selected_rows,
         feeds_table,
@@ -97,6 +99,7 @@ def get_callbacks_home(app):
         ],
         prevent_initial_call=True,
     )
+    @with_loading("loading-home-predictoor-table")
     def update_predictoors_table_on_search(
         search_value,
         selected_rows,
@@ -169,7 +172,7 @@ def get_callbacks_home(app):
         ],
         prevent_initial_call=True,
     )
-    # pylint: disable=unused-argument
+    @with_loading("loading-home-feeds-table")
     def update_feeds_table_on_search(
         search_value,
         predictoor_feeds_only,

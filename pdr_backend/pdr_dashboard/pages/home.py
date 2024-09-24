@@ -30,12 +30,7 @@ class HomePage:
         return html.Div(
             [
                 self.get_graphs_column_metrics_row(),
-                dcc.Loading(
-                    id="loading",
-                    type="default",
-                    children=self.get_graphs_column_plots_row(),
-                    custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
-                ),
+                self.get_graphs_column_plots_row(),
             ],
             id="graphs_container",
             style={
@@ -48,8 +43,8 @@ class HomePage:
             },
         )
 
-    def get_feeds_for_favourite_predictoors(self, feed_data):
-        feed_ids = self.app.data.feed_ids_based_on_predictoors()
+    def get_feeds_for_favourite_predictoors(self, feed_data, predictoor_addrs):
+        feed_ids = self.app.data.feed_ids_based_on_predictoors(predictoor_addrs)
 
         if not feed_ids:
             return [], feed_data
@@ -64,8 +59,14 @@ class HomePage:
         predictoor_cols, predictoor_data = self.app.data.homepage_predictoors_cols
 
         self.selected_predictoors = list(range(len(self.app.data.favourite_addresses)))
+        selected_predictoors_addrs = self.app.data.favourite_addresses
+        if len(self.selected_predictoors) == 0:
+            self.selected_predictoors = list([0])
+            selected_predictoors_addrs = [predictoor_data["full_addr"][0]]
+
         self.selected_feeds, feed_data = self.get_feeds_for_favourite_predictoors(
-            feed_data
+            feed_data,
+            selected_predictoors_addrs,
         )
 
         return html.Div(
