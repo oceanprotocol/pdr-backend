@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 import time
-import pandas
+import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.subscription import Subscription
@@ -32,7 +32,7 @@ def test_get_feeds_data(_sample_app):
     db_mgr = _sample_app.data
     result = db_mgr._init_feeds_data()
 
-    assert isinstance(result, pandas.DataFrame)
+    assert isinstance(result, pl.DataFrame)
     assert len(result) == 20
 
 
@@ -52,7 +52,7 @@ def test_get_payouts(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
     )
-    assert isinstance(result, pandas.DataFrame)
+    assert isinstance(result, pl.DataFrame)
     assert len(result) == 24
 
     # start date after all payouts should return an empty list
@@ -80,12 +80,12 @@ def test_get_user_payouts_stats(
     db_mgr = _sample_app.data
     result = db_mgr._init_predictoor_payouts_stats()
 
-    assert isinstance(result, pandas.DataFrame)
+    assert isinstance(result, pl.DataFrame)
     assert len(result) == 57
 
-    test_row = result[
+    test_row = result.filter(
         result["user"] == "0x768c5195ea841c544cd09c61650417132615c0b9"
-    ].to_dict(orient="records")[0]
+    ).to_dicts()[0]
 
     assert test_row["user"] == "0x768c5195ea841c544cd09c61650417132615c0b9"
     assert test_row["avg_accuracy"] == 36.231884057971016
@@ -97,7 +97,7 @@ def test_get_user_payouts_stats(
     db_mgr.file_reader.start_date = UnixTimeMs(1721957490000).to_dt()
     result = db_mgr._init_predictoor_payouts_stats()
 
-    assert isinstance(result, pandas.DataFrame)
+    assert isinstance(result, pl.DataFrame)
     assert len(result) == 37
 
 
@@ -112,11 +112,11 @@ def test_get_feed_daily_subscriptions_by_feed_id(_sample_app):
     )
 
     # Verify the response type and length
-    assert isinstance(result, pandas.DataFrame)
+    assert isinstance(result, pl.DataFrame)
     assert len(result) == 1
 
-    result = result.to_dict(orient="records")
-    all_subscriptions = all_subscriptions.to_dict(orient="records")
+    result = result.to_dicts()
+    all_subscriptions = all_subscriptions.to_dicts()
 
     # Filter subscriptions from the given contract
     subscriptions_from_given_contract = [
@@ -205,16 +205,16 @@ def test_non_scalar_query(
     """
     db_mgr = _sample_app.data
     mock_exists.return_value = False  # Simulate that the cache file does not exist
-    mock_df = pandas.DataFrame({"col1": [1, 2], "col2": [3, 4]})
-    mock_duckdb_execute.return_value.pl.return_value.to_pandas.return_value = mock_df
+    mock_df = pl.DataFrame({"col1": [1, 2], "col2": [3, 4]})
+    mock_duckdb_execute.return_value.pl.return_value = mock_df
 
     # Call the function
     result = db_mgr.file_reader._check_cache_query_data(
         test_query, cache_file_name, scalar=False
     )
 
-    # Check that the result is returned as a pandas DataFrame
-    assert isinstance(result, pandas.DataFrame)
+    # Check that the result is returned as a polars DataFrame
+    assert isinstance(result, pl.DataFrame)
     assert mock_duckdb_execute.called
 
 

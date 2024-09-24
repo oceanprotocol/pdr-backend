@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import pandas
+import polars as pl
 from enforce_typing import enforce_types
 
 from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
@@ -56,7 +56,7 @@ class AppDataManager:
         self.refresh_feeds_data()
         self.refresh_predictoors_data()
 
-        valid_addresses = list(self.predictoors_data["user"].str.lower())
+        valid_addresses = list(self.predictoors_data["user"].str.to_lowercase())
         self.favourite_addresses = [
             addr for addr in ppss.predictoor_ss.my_addresses if addr in valid_addresses
         ]
@@ -110,10 +110,9 @@ class AppDataManager:
             ORDER BY volume DESC
         """
         df = self.file_reader._query_db(query, cache_file_name="feed_payouts_stats")
-
-        df["avg_accuracy"] = df["avg_accuracy"].astype(float)
-        df["avg_stake"] = df["avg_stake"].astype(float)
-        df["volume"] = df["volume"].astype(float)
+        df.cast(
+            {"avg_accuracy": pl.Float64, "avg_stake": pl.Float64, "volume": pl.Float64}
+        )
 
         return df
 
@@ -156,14 +155,18 @@ class AppDataManager:
             ORDER BY
                 apr DESC
         """
+
         df = self.file_reader._query_db(
             query, cache_file_name="predictoor_payouts_stats"
         )
-
-        df["avg_accuracy"] = df["avg_accuracy"].astype(float)
-        df["total_stake"] = df["total_stake"].astype(float)
-        df["gross_income"] = df["gross_income"].astype(float)
-        df["stake_loss"] = df["stake_loss"].astype(float)
+        df.cast(
+            {
+                "avg_accuracy": pl.Float64,
+                "total_stake": pl.Float64,
+                "gross_income": pl.Float64,
+                "stake_loss": pl.Float64,
+            }
+        )
 
         return df
 
@@ -236,11 +239,11 @@ class AppDataManager:
             GROUP BY
                 main_contract, ubc.df_buy_count, wbc.ws_buy_count
         """
+
         df = self.file_reader._query_db(
             query, cache_file_name="feed_subscription_stats"
         )
-        df["sales_revenue"] = df["sales_revenue"].astype(float)
-        df["price"] = df["price"].astype(float)
+        df.cast({"sales_revenue": pl.Float64, "price": pl.Float64})
 
         return df
 
@@ -349,8 +352,9 @@ class AppDataManager:
         query += " ORDER BY slot;"
 
         # Execute the query without passing parameters
+
         result = self.file_reader._query_db(query)
-        result.fillna(0, inplace=True)
+        result = result.fill_null(0)
 
         return result
 
@@ -475,21 +479,30 @@ class AppDataManager:
     @property
     def _formatted_data_for_feeds_table(
         self,
-    ) -> Tuple[pandas.DataFrame, pandas.DataFrame]:
-        df = self.feeds_data.copy()
-        df["addr"] = df["full_addr"] = df["contract"]
-        df[["base_token", "quote_token"]] = df["pair"].str.split("/", expand=True)
-        df["source"] = df["source"].str.capitalize()
-        df = df.merge(self.feeds_payout_stats, on="contract")
-        df = df.merge(self.feeds_subscriptions, on="contract")
-        df.fillna(0, inplace=True)
-
-        df["sales_str"] = ""
+    ) -> Tuple[pl.DataFrame, pl.DataFrame]:
+        df = self.feeds_data.clone()
+        df = df.with_columns(
+            pl.col("contract").alias("full_addr"),
+            pl.col("contract").alias("addr"),
+            pl.col("pair")
+            .str.split_exact("/", 1)
+            .map_elements(lambda x: x["field_0"], return_dtype=pl.String)
+            .alias("base_token"),
+            pl.col("pair")
+            .str.split_exact("/", 1)
+            .map_elements(lambda x: x["field_1"], return_dtype=pl.String)
+            .alias("quote_token"),
+            pl.col("source").str.to_titlecase().alias("source"),
+            pl.lit("").alias("sales_str"),
+        )
+        df = df.join(self.feeds_payout_stats, on="contract")
+        df = df.join(self.feeds_subscriptions, on="contract")
+        df = df.fill_null(0)
 
         columns = [col["id"] for col in FEEDS_TABLE_COLS]
         df = df[columns]
 
-        formatted_data = df.copy()
+        formatted_data = df.clone()
         formatted_data = format_df(formatted_data)
 
         return formatted_data, df
@@ -497,18 +510,28 @@ class AppDataManager:
     @property
     def _formatted_data_for_predictoors_table(
         self,
-    ) -> Tuple[pandas.DataFrame, pandas.DataFrame]:
-        df = self.predictoors_data.copy()
-        df["addr"] = df["full_addr"] = df["user"]
-        df["tx_costs_(OCEAN)"] = df["stake_count"] * self.fee_cost
-        df.fillna(0, inplace=True)
-        df["net_income_(OCEAN)"] = df["total_profit"] - df["tx_costs_(OCEAN)"]
+    ) -> Tuple[pl.DataFrame, pl.DataFrame]:
+        df = self.predictoors_data.clone()
+        df = df.with_columns(
+            pl.col("user").alias("full_addr"),
+            pl.col("user").alias("addr"),
+            pl.col("stake_count").mul(self.fee_cost).alias("tx_costs_(OCEAN)"),
+        )
+        df = df.fill_null(0)
+        df = df.with_columns(
+            pl.struct(["total_profit", "tx_costs_(OCEAN)"])
+            .map_elements(
+                lambda x: x["total_profit"] - x["tx_costs_(OCEAN)"],
+                return_dtype=pl.Float64,
+            )
+            .alias("net_income_(OCEAN)")
+        )
 
         columns = [col["id"] for col in PREDICTOORS_TABLE_COLS]
 
         df = df[columns]
 
-        formatted_data = df.copy()
+        formatted_data = df.clone()
         formatted_data = format_df(formatted_data)
 
         return formatted_data, df
@@ -520,30 +543,32 @@ class AppDataManager:
         search_value,
         selected_feeds_addrs,
     ):
-        filtered_data = self.formatted_feeds_home_page_table_data.copy()
+        filtered_data = self.formatted_feeds_home_page_table_data.clone()
 
         # filter feeds by payouts from selected predictoors
         if predictoor_feeds_only and (len(predictoors_addrs) > 0):
             feed_ids = self.feed_ids_based_on_predictoors(
                 predictoors_addrs,
             )
-            filtered_data = filtered_data[filtered_data["contract"].isin(feed_ids)]
+            filtered_data = filtered_data.filter(
+                filtered_data["contract"].is_in(feed_ids)
+            )
 
         if search_value:
-            filtered_data = filtered_data[
+            filtered_data = filtered_data.filter(
                 filtered_data["pair"].str.contains(search_value)
-            ]
+            )
 
-        filtered_data = filtered_data[
-            ~filtered_data["contract"].isin(selected_feeds_addrs)
-        ]
-        selected_feeds = self.formatted_feeds_home_page_table_data[
-            self.formatted_feeds_home_page_table_data["contract"].isin(
+        filtered_data = filtered_data.filter(
+            ~filtered_data["contract"].is_in(selected_feeds_addrs)
+        )
+        selected_feeds = self.formatted_feeds_home_page_table_data.filter(
+            self.formatted_feeds_home_page_table_data["contract"].is_in(
                 selected_feeds_addrs
             )
-        ]
+        )
 
-        return pandas.concat([selected_feeds, filtered_data]).to_dict("records")
+        return pl.concat([selected_feeds, filtered_data]).to_dicts()
 
     @property
     @enforce_types
@@ -555,28 +580,31 @@ class AppDataManager:
         Returns:
             list: List of processed user payouts stats data.
         """
-        df = self.predictoors_data.copy()
-        df["addr"] = df["full_addr"] = df["user"]
-        df.fillna(0, inplace=True)
+        df = self.predictoors_data.clone()
+        df = df.with_columns(
+            pl.col("user").alias("full_addr"),
+            pl.col("user").alias("addr"),
+        )
+        df = df.fill_null(0)
 
         cols = [col["id"] for col in PREDICTOORS_HOME_PAGE_TABLE_COLS]
 
-        formatted_data = df.copy()
+        formatted_data = df.clone()
         formatted_data = formatted_data[cols]
         return format_df(formatted_data)
 
     @property
     @enforce_types
     def formatted_feeds_home_page_table_data(self):
-        df = self.feeds_data.copy()
-        df = df.merge(self.feeds_payout_stats, on="contract")
-        df = df.merge(self.feeds_subscriptions, on="contract")
-        df.fillna(0, inplace=True)
+        df = self.feeds_data.clone()
+        df = df.join(self.feeds_payout_stats, on="contract")
+        df = df.join(self.feeds_subscriptions, on="contract")
+        df = df.fill_nan(0)
 
         columns = [col["id"] for col in FEEDS_HOME_PAGE_TABLE_COLS]
         df = df[columns]
 
-        formatted_data = df.copy()
+        formatted_data = df.clone()
         formatted_data = format_df(formatted_data)
 
         return formatted_data
@@ -595,10 +623,10 @@ class AppDataManager:
         data = self.formatted_predictoors_home_page_table_data
 
         if self.favourite_addresses:
-            df = data.copy()
-            df1 = df[df["full_addr"].isin(self.favourite_addresses)]
-            df2 = df[~df["full_addr"].isin(self.favourite_addresses)]
-            data = pandas.concat([df1, df2])
+            df = data.clone()
+            df1 = df.filter(df["full_addr"].is_in(self.favourite_addresses))
+            df2 = df.filter(~df["full_addr"].is_in(self.favourite_addresses))
+            data = pl.concat([df1, df2])
 
         columns = PREDICTOORS_HOME_PAGE_TABLE_COLS
         hidden_columns = ["full_addr"]

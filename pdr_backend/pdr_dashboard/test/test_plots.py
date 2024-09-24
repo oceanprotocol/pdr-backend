@@ -24,17 +24,17 @@ def test_process_payouts(_sample_app):
     user = "0x43584049fe6127ea6745d8ba42274e911f2a2d5c"
 
     ## filter payouts by user and feed
-    filtered_payouts = payouts[
+    filtered_payouts = payouts.filter(
         payouts["ID"].str.contains(user) & payouts["ID"].str.contains(feed)
-    ]
-    filtered_payouts = filtered_payouts.sort_values("slot")
+    )
+    filtered_payouts = filtered_payouts.sort("slot")
     tx_fee_cost = 0.2
 
     result = process_payouts(
         payouts=filtered_payouts, tx_fee_cost=tx_fee_cost, calculate_confint=True
     )
 
-    filtered_payouts = filtered_payouts.to_dict("records")
+    filtered_payouts = filtered_payouts.to_dicts()
     slots = result.slot_in_unixts
     accuracies = result.accuracies
     profits = result.profits
@@ -49,7 +49,7 @@ def test_process_payouts(_sample_app):
     assert costs > 0
     assert predictions == 24
     assert len(slots) == len(filtered_payouts)
-    assert slots.iloc[0] == UnixTimeS(filtered_payouts[0]["slot"]).to_milliseconds()
+    assert slots[0] == UnixTimeS(filtered_payouts[0]["slot"]).to_milliseconds()
 
     ## calculate accuracies
     test_accuracies = [

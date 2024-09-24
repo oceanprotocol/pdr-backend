@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from itertools import product
 from typing import List, Union
 
-import pandas
+import polars as pl
 import plotly.graph_objects as go
 from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
@@ -65,15 +65,15 @@ class FeedModalFigures(ModalFigures):
         for key, value in fig_config.items():
             setattr(self, key, create_figure([], **value))
 
-        self.slots = pandas.Series()
-        self.stakes = pandas.Series()
-        self.accuracies = pandas.Series()
-        self.profits = pandas.Series()
-        self.predictions_list = pandas.Series()
+        self.slots = pl.Series()
+        self.stakes = pl.Series()
+        self.accuracies = pl.Series()
+        self.profits = pl.Series()
+        self.predictions_list = pl.Series()
 
-        self.subscription_purchases = pandas.Series()
-        self.subscription_revenues = pandas.Series()
-        self.subscription_dates = pandas.Series()
+        self.subscription_purchases = pl.Series()
+        self.subscription_revenues = pl.Series()
+        self.subscription_dates = pl.Series()
 
     def update_figures(self):
         self.sales_fig.add_traces(
@@ -146,12 +146,12 @@ class PredictoorModalFigures(ModalFigures):
         for key, value in fig_config.items():
             setattr(self, key, create_figure([], **value))
 
-        self.slots = pandas.Series()
-        self.stakes = pandas.Series()
-        self.accuracies = pandas.Series()
-        self.profits = pandas.Series()
-        self.incomes = pandas.Series()
-        self.nr_of_feeds = pandas.Series()
+        self.slots = pl.Series()
+        self.stakes = pl.Series()
+        self.accuracies = pl.Series()
+        self.profits = pl.Series()
+        self.incomes = pl.Series()
+        self.nr_of_feeds = pl.Series()
 
     def update_figures(self):
         defaults = {
@@ -258,16 +258,16 @@ class FiguresAndMetricsResult:
 
 class ProcessedPayouts:
     def __init__(self):
-        self.slot_in_unixts = pandas.Series()
-        self.accuracies = pandas.Series()
-        self.profits = pandas.Series()
-        self.stakes = pandas.Series()
+        self.slot_in_unixts = pl.Series()
+        self.accuracies = pl.Series()
+        self.profits = pl.Series()
+        self.stakes = pl.Series()
         self.correct_predictions = 0
         self.predictions = 0
-        self.acc_l = pandas.Series()
-        self.acc_u = pandas.Series()
+        self.acc_l = pl.Series()
+        self.acc_u = pl.Series()
         self.tx_cost = 0.0
-        self.tx_costs = pandas.Series()
+        self.tx_costs = pl.Series()
 
     def as_accuracy_scatters_bounds(self, short_name, show_confidence_interval: bool):
         scatters = [
@@ -325,14 +325,14 @@ class ProcessedPayouts:
         return [
             go.Bar(
                 x=[label],
-                y=[self.tx_costs.iloc[-1]],
+                y=[self.tx_costs[-1]],
                 name=short_name,
             )
         ]
 
 
 def process_payouts(
-    payouts: pandas.DataFrame, tx_fee_cost, calculate_confint: bool = False
+    payouts: pl.DataFrame, tx_fee_cost, calculate_confint: bool = False
 ) -> ProcessedPayouts:
     """
     Process payouts data for a given predictor and feed.
@@ -345,38 +345,59 @@ def process_payouts(
     """
     processed = ProcessedPayouts()
 
-    p = payouts.copy()
+    p = payouts.clone()
     processed.predictions = len(payouts)
-    p["predictions_crt"] = range(1, len(payouts) + 1)
+
+    p = p.with_columns(
+        pl.lit(1).alias("predictions_crt"),
+        (pl.col("payout").clip(lower_bound=0) - pl.col("stake")).alias("profit_change"),
+        pl.when(pl.col("payout") > 0).then(1).otherwise(0).alias("correct_prediction"),
+        pl.col("slot")
+        .cast(pl.Int64)
+        .map_elements(lambda x: UnixTimeS(x).to_milliseconds(), pl.Int64)
+        .alias("slot_in_unixts"),
+    )
+    p = p.with_columns(
+        pl.col("predictions_crt").cum_sum().alias("predictions_crt"),
+        pl.col("correct_prediction").cum_sum().alias("correct_predictions_crt"),
+    )
     processed.tx_cost = tx_fee_cost * len(payouts)
-    p["profit_change"] = p.apply(
-        lambda x: max(x["payout"], 0) - x["stake"], axis=1
-    ).astype(float)
-    p["correct_prediction"] = p["payout"].apply(lambda x: x > 0).astype(int)
-    p["correct_predictions_crt"] = p["correct_prediction"].cumsum()
+
     processed.correct_predictions = p["correct_prediction"].sum()
 
     if calculate_confint:
-        series = p.apply(
-            lambda x: proportion_confint(
-                count=x["correct_predictions_crt"], nobs=x["predictions_crt"]
-            ),
-            axis=1,
-        ).apply(pandas.Series)
+        df = p.with_columns(
+            pl.struct(["correct_predictions_crt", "predictions_crt"])
+            .map_elements(
+                lambda x: proportion_confint(
+                    count=x["correct_predictions_crt"], nobs=x["predictions_crt"]
+                ),
+                return_dtype=pl.List(pl.Float64),
+            )
+            .alias("acc_bounds"),
+        )
 
-        processed.acc_l = series[0]
-        processed.acc_u = series[1]
+        df = df.with_columns(
+            [
+                pl.col("acc_bounds").list.get(0).alias("acc_l"),
+                pl.col("acc_bounds").list.get(1).alias("acc_u"),
+            ]
+        )
 
-    processed.slot_in_unixts = p["slot"].apply(
-        lambda x: UnixTimeS(int(x)).to_milliseconds()
+        processed.acc_l = df["acc_l"]
+        processed.acc_u = df["acc_u"]
+
+    p = p.with_columns(
+        ((pl.col("correct_predictions_crt") / pl.col("predictions_crt")) * 100).alias(
+            "accuracies"
+        )
     )
-    processed.accuracies = p.apply(
-        lambda x: x["correct_predictions_crt"] / x["predictions_crt"] * 100, axis=1
-    )
 
-    processed.profits = p["profit_change"].cumsum()
+    processed.slot_in_unixts = p["slot_in_unixts"]
+    processed.accuracies = p["accuracies"]
+    processed.profits = p["profit_change"].cum_sum()
     processed.stakes = p["stake"]
-    processed.tx_costs = pandas.Series([tx_fee_cost for i in range(len(payouts))])
+    processed.tx_costs = pl.Series([tx_fee_cost for i in range(len(payouts))])
 
     return processed
 
@@ -438,7 +459,7 @@ def create_figure(
 
 @enforce_types
 def get_figures_and_metrics(
-    payouts: pandas.DataFrame, feeds: ArgFeeds, predictors: List[str], fee_cost: float
+    payouts: pl.DataFrame, feeds: ArgFeeds, predictors: List[str], fee_cost: float
 ) -> FiguresAndMetricsResult:
     """
     Get figures for accuracy, profit, and costs.
@@ -453,7 +474,7 @@ def get_figures_and_metrics(
     figs_metrics = FiguresAndMetricsResult()
     fee_cost = 2 * fee_cost
 
-    if payouts.empty:
+    if payouts.is_empty():
         figs_metrics.make_figures()
         return figs_metrics
 
@@ -462,12 +483,12 @@ def get_figures_and_metrics(
     prediction_count = 0
 
     for predictor, feed in product(predictors, feeds):
-        filtered_payouts = payouts[
+        filtered_payouts = payouts.filter(
             payouts["ID"].str.contains(predictor)
-            & payouts["ID"].str.contains(feed.contract)
-        ]
+            & payouts["ID"].str.contains(str(feed.contract))
+        )
 
-        if filtered_payouts.empty:
+        if filtered_payouts.is_empty():
             continue
 
         show_confidence_interval = len(predictors) == 1 and len(feeds) == 1
@@ -483,11 +504,11 @@ def get_figures_and_metrics(
         prediction_count += processed_data.predictions
 
         figs_metrics.total_profit += (
-            processed_data.profits.iloc[-1] if not processed_data.profits.empty else 0.0
+            processed_data.profits[-1] if not processed_data.profits.is_empty() else 0.0
         )
         figs_metrics.total_cost += (
-            processed_data.tx_costs.iloc[-1]
-            if not processed_data.tx_costs.empty
+            processed_data.tx_costs[-1]
+            if not processed_data.tx_costs.is_empty()
             else 0.0
         )
 
@@ -524,7 +545,7 @@ def get_figures_and_metrics(
 
 @enforce_types
 def get_feed_figures(
-    payouts: pandas.DataFrame, subscriptions: pandas.DataFrame
+    payouts: pl.DataFrame, subscriptions: pl.DataFrame
 ) -> FeedModalFigures:
     """
     Return figures for a selected feed from the feeds table.
@@ -532,35 +553,55 @@ def get_feed_figures(
     # Initialize empty figures with default settings
     result = FeedModalFigures()
 
-    if payouts.empty:
+    if payouts.is_empty():
         return result
 
     # Process subscription data
     result.subscription_purchases = subscriptions["count"]
     result.subscription_revenues = subscriptions["revenue"]
-    result.subscription_dates = subscriptions["day"].apply(
-        lambda x: datetime.datetime.combine(x, datetime.time())
+
+    subscriptions = subscriptions.with_columns(
+        pl.col("day")
+        .map_elements(
+            lambda x: datetime.datetime.combine(x, datetime.time()), pl.Datetime
+        )
+        .alias("day_dt"),
+    )
+    result.subscription_dates = subscriptions["day_dt"]
+
+    payouts = payouts.with_columns(
+        [
+            (pl.col("payout").clip(lower_bound=0) - pl.col("stake")).alias("profit"),
+            pl.when(pl.col("payout") > 0)
+            .then(1)
+            .otherwise(0)
+            .alias("correct_prediction"),
+            pl.lit(1).alias("count"),
+        ]
     )
 
-    payouts["profit"] = payouts.apply(
-        lambda x: max(x["payout"], 0) - x["stake"], axis=1
+    payouts = payouts.with_columns(
+        [
+            pl.col("count").cum_sum().alias("cnt_cumsum"),
+            pl.col("correct_prediction").cum_sum().alias("cnt_corrpred"),
+        ]
     )
-    payouts["correct_prediction"] = payouts["payout"].apply(lambda x: x > 0).astype(int)
-    payouts["count"] = 1
 
-    sums = payouts.groupby("slot").sum()
+    sums = payouts.group_by("slot").sum().sort("slot")
     result.stakes = sums["stake"]
     result.profits = sums["profit"]
 
-    sums["cnt_cumsum"] = sums["count"].cumsum()
-    sums["cnt_corrpred"] = sums["correct_prediction"].cumsum()
-    result.accuracies = sums.apply(
-        lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100, axis=1
+    sums = sums.with_columns(
+        (pl.col("cnt_corrpred") / pl.col("cnt_cumsum") * 100).alias("accuracies"),
+        pl.col("slot")
+        .cast(pl.Int64)
+        .map_elements(lambda x: UnixTimeS(x).to_milliseconds(), pl.Int64)
+        .alias("slot_in_unixts"),
     )
 
-    result.slots = [
-        UnixTimeS(int(slot)).to_milliseconds() for slot in sums.index.tolist()
-    ]
+    result.accuracies = sums["accuracies"]
+    result.slots = sums["slot_in_unixts"]
+
     result.predictions_list = sums["count"]
 
     # Update figures with the processed data
@@ -570,7 +611,7 @@ def get_feed_figures(
 
 
 @enforce_types
-def get_predictoor_figures(payouts: pandas.DataFrame):
+def get_predictoor_figures(payouts: pl.DataFrame):
     """
     Return figures for a selected feed from the feeds table.
     """
@@ -578,29 +619,37 @@ def get_predictoor_figures(payouts: pandas.DataFrame):
     # Initialize empty figures with default settings
     result = PredictoorModalFigures()
 
-    if payouts.empty:
+    if payouts.is_empty():
         return result
 
-    payouts["profit"] = payouts.apply(
-        lambda x: max(x["payout"], 0) - x["stake"], axis=1
+    payouts = payouts.with_columns(
+        (pl.col("payout").clip(lower_bound=0) - pl.col("stake")).alias("profit"),
+        pl.lit(1).alias("count"),
+        pl.when(pl.col("payout") > 0).then(1).otherwise(0).alias("correct_prediction"),
     )
-    payouts["correct_prediction"] = payouts["payout"].apply(lambda x: x > 0).astype(int)
-    payouts["count"] = 1
 
-    sums = payouts.groupby("slot").sum()
+    payouts = payouts.with_columns(
+        pl.col("count").cum_sum().alias("cnt_cumsum"),
+        pl.col("correct_prediction").cum_sum().alias("cnt_corrpred"),
+    )
+
+    sums = payouts.group_by("slot").sum().sort("slot")
 
     result.incomes = sums["payout"]
     result.stakes = sums["stake"]
-    result.profits = sums["profit"].cumsum()
+    result.profits = sums["profit"].cum_sum()
 
-    sums["cnt_cumsum"] = sums["count"].cumsum()
-    sums["cnt_corrpred"] = sums["correct_prediction"].cumsum()
-    result.accuracies = sums.apply(
-        lambda x: x["cnt_corrpred"] / x["cnt_cumsum"] * 100, axis=1
+    sums = sums.with_columns(
+        (pl.col("cnt_corrpred") / pl.col("cnt_cumsum") * 100).alias("accuracies"),
+        pl.col("slot")
+        .cast(pl.Int64)
+        .map_elements(lambda x: UnixTimeS(x).to_milliseconds(), pl.Int64)
+        .alias("slot_in_unixts"),
     )
-    result.slots = [
-        UnixTimeS(int(slot)).to_milliseconds() for slot in sums.index.tolist()
-    ]
+
+    result.accuracies = sums["accuracies"]
+    result.slots = sums["slot_in_unixts"]
+
     result.nr_of_feeds = sums["count"]
 
     # Update figures with the processed data

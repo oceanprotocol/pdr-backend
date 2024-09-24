@@ -1,9 +1,9 @@
 import logging
-from typing import List, Union, Optional
+from typing import Union, Optional, Any
 from datetime import datetime, timezone
 import os
 import time
-import pandas
+import polars as pl
 from enforce_typing import enforce_types
 import duckdb
 
@@ -37,12 +37,12 @@ class DuckDBFileReader:
         if scalar:
             result = duckdb.execute(query).fetchone()
             return result[0] if result and len(result) == 1 else result
-        return duckdb.execute(query).pl().to_pandas()
+        return duckdb.execute(query).pl()
 
     @enforce_types
     def _check_cache_query_data(
         self, query: str, cache_file_name: str, scalar: bool
-    ) -> Union[List[dict], pandas.DataFrame, None]:
+    ) -> Union[Any, pl.DataFrame, None]:
         """
         Executes a query and caches the result in a parquet file for up to an hour.
         If a cached file exists and is less than an hour old, the cached result is used.
@@ -73,7 +73,7 @@ class DuckDBFileReader:
     @enforce_types
     def _query_db(
         self, query: str, scalar=False, cache_file_name=None, periodical=True
-    ) -> Union[List[dict], pandas.DataFrame]:
+    ) -> Union[Any, pl.DataFrame]:
         """
         Query the database with the given query.
         Args:
@@ -99,8 +99,8 @@ class DuckDBFileReader:
             if scalar:
                 result = duckdb.execute(query).fetchone()
                 return result[0] if result and len(result) == 1 else result
-            df = duckdb.execute(query).pl()
-            return df.to_pandas()
+
+            return duckdb.execute(query).pl()
         except Exception as e:
             logger.error("Error querying the database: %s", e)
-            return pandas.DataFrame()
+            return pl.DataFrame()
