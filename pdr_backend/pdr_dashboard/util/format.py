@@ -102,6 +102,15 @@ def format_value(value: Union[int, float, str], value_id: str) -> str:
 
 
 @enforce_types
+def format_column(df, col):
+    if col not in FORMAT_COLS_CONFIG:
+        return df.with_columns(pl.col(col).cast(pl.String).alias(col))
+
+    func_name = globals()["format_" + FORMAT_COLS_CONFIG[col]]
+    return func_name(df, col)
+
+
+@enforce_types
 def format_df(
     df,
 ) -> list[dict[str, str]]:
@@ -122,13 +131,7 @@ def format_df(
         if col == "sales_str":
             continue
 
-        if col not in FORMAT_COLS_CONFIG:
-            df = df.with_columns(pl.col(col).cast(pl.String).alias(col))
-            continue
-
-        func_name = globals()["format_" + FORMAT_COLS_CONFIG[col]]
-        df = func_name(df, col)
-        continue
+        df = format_column(df, col)
 
     return df
 
