@@ -54,8 +54,8 @@ class HomePage:
         if not feed_ids:
             return [], feed_data
 
-        feed_data = self.app.data.formatted_feeds_home_page_table_data.copy()
-        feed_data = feed_data[feed_data["contract"].isin(feed_ids)]
+        feed_data = self.app.data.formatted_feeds_home_page_table_data.clone()
+        feed_data = feed_data.filter(feed_data["contract"].is_in(feed_ids))
 
         return list(range(len(feed_ids))), feed_data
 
@@ -74,7 +74,7 @@ class HomePage:
                     self.get_table(
                         table_id="predictoors_table",
                         columns=predictoor_cols,
-                        data=predictoor_data.to_dict("records"),
+                        data=predictoor_data.to_dicts(),
                     ),
                     id="predictoors_container",
                 ),
@@ -82,7 +82,7 @@ class HomePage:
                     self.get_table(
                         table_id="feeds_table",
                         columns=feed_cols,
-                        data=feed_data.to_dict("records"),
+                        data=feed_data.to_dicts(),
                     ),
                     id="feeds_container",
                     style={

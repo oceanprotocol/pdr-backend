@@ -100,7 +100,7 @@ class PredictoorsPage(TabularPage):
                     columns=PREDICTOORS_TABLE_COLS,
                     hidden_columns=["full_addr"],
                     row_selectable="single",
-                    data=self.app.data.predictoors_table_data.to_dict("records"),
+                    data=self.app.data.predictoors_table_data.to_dicts(),
                     sort_action="custom",
                     sort_mode="single",
                 ),

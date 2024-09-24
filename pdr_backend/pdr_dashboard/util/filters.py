@@ -183,7 +183,7 @@ def _denumerize(n):
 
 
 def check_conditions(df, conditions):
-    df = df.copy()
+    df = df.clone()
 
     for condition in conditions:
         df = check_condition(df, *condition)
@@ -192,33 +192,33 @@ def check_conditions(df, conditions):
 
 
 def check_condition(df, condition_type, field, *values):
-    df = df.copy()
+    df = df.clone()
 
     if field and field.startswith("p_"):
         field = field[2:]
 
     if condition_type == "filter" and values[0]:
-        df = df[df[field].isin(values[0])]
+        df = df.filter(df[field].is_in(values[0]))
 
     if condition_type == "range":
         if values[0]:
-            df = df[df[field] >= _float_repr(values[0])]
+            df = df.filter(df[field] >= _float_repr(values[0]))
 
         if values[1]:
-            df = df[df[field] <= _float_repr(values[1])]
+            df = df.filter(df[field] <= _float_repr(values[1]))
 
     if condition_type == "search" and values[0]:
-        df = df[searchable_df(df, values[0])]
+        df = df.filter(searchable_df(df, values[0]))
 
     return df
 
 
 def searchable_df(df, value):
     if "base_token" not in df.columns:
-        return df["addr"].str.contains(value, case=False, na=False)
+        return df["addr"].str.contains("(?i)" + value)
 
     return (
-        df["addr"].str.contains(value, case=False, na=False)
-        | df["base_token"].str.contains(value, case=False, na=False)
-        | df["quote_token"].str.contains(value, case=False, na=False)
+        df["addr"].str.contains("(?i)" + value)
+        | df["base_token"].str.contains("(?i)" + value)
+        | df["quote_token"].str.contains("(?i)" + value)
     )

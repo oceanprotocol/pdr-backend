@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 import dash_bootstrap_components as dbc
-import pandas
+import polars as pl
 from dash import html
 
 from pdr_backend.cli.arg_feeds import ArgFeed
@@ -85,9 +85,9 @@ class ModalContent:
 
         if not selected_row:
             figures_args: List[List] = (
-                [pandas.DataFrame(), pandas.DataFrame()]
+                [pl.DataFrame(), pl.DataFrame()]
                 if self.modal_id == "feeds_modal"
-                else [pandas.DataFrame()]
+                else [pl.DataFrame()]
             )
             self.figures = figures_func(*figures_args).get_figures()
             return

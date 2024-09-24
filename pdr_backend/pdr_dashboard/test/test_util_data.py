@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
 import dash
-import pandas
+import polars as pl
 
 from pdr_backend.pdr_dashboard.util.data import select_or_clear_all_by_table
 
@@ -44,7 +44,7 @@ def test_unrelated_trigger(sample_table_rows):
 
 def test_get_predictoors_data_from_payouts(_sample_app):
     db_mgr = _sample_app.data
-    db_mgr.predictoors_data = pandas.DataFrame(
+    db_mgr.predictoors_data = pl.DataFrame(
         [
             {
                 "user": "0x02e9d2eede4c5347e55346860c8a8988117bde9e",
@@ -63,12 +63,12 @@ def test_get_predictoors_data_from_payouts(_sample_app):
 
     result = db_mgr.formatted_predictoors_home_page_table_data
 
-    assert isinstance(result, pandas.DataFrame)
+    assert isinstance(result, pl.DataFrame)
     assert len(result) == 2
 
-    test_row = result[
+    test_row = result.filter(
         result["full_addr"] == "0x02e9d2eede4c5347e55346860c8a8988117bde9e"
-    ].to_dict(orient="records")[0]
+    ).to_dicts()[0]
 
     assert test_row["addr"] == "0x02e...bde9e"
     assert test_row["total_profit"] == "0"

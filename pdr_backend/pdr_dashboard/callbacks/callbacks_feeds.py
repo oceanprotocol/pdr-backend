@@ -30,7 +30,7 @@ def get_callbacks_feeds(app):
             for key, value in app.data.feeds_metrics_data.items()
         ]
 
-        return app.data.feeds_table_data.to_dict("records"), metrics_children_data
+        return app.data.feeds_table_data.to_dicts(), metrics_children_data
 
     @app.callback(
         Output("feeds_page_table", "data"),
@@ -97,12 +97,10 @@ def get_callbacks_feeds(app):
 
         if sort_by:
             sort_col = sort_by[0]["column_id"]
-            ascending = sort_by[0]["direction"] == "asc"
-            new_table_data = new_table_data.sort_values(
-                by=sort_col, ascending=ascending
-            )
+            descending = sort_by[0]["direction"] == "desc"
+            new_table_data = new_table_data.sort(by=sort_col, descending=descending)
 
-        return format_df(new_table_data).to_dict("records")
+        return format_df(new_table_data).to_dicts()
 
     @app.callback(
         Output("sales_dropdown", "label"),
