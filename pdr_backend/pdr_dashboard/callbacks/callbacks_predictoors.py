@@ -65,6 +65,7 @@ def get_callbacks_predictoors(app):
         State("net_income_max", "value"),
         prevent_initial_call=True,
     )
+    # pylint: disable=too-many-positional-arguments
     def filter_table(
         _n_clicks_apr,
         _n_clicks_p_avg_accuracy,
