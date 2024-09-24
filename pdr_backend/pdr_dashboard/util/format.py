@@ -102,7 +102,7 @@ def format_value(value: Union[int, float, str], value_id: str) -> str:
 
 
 @enforce_types
-def format_column(df, col):
+def format_column(df: pl.DataFrame, col: str):
     if col not in FORMAT_COLS_CONFIG:
         return df.with_columns(pl.col(col).cast(pl.String).alias(col))
 
@@ -111,9 +111,7 @@ def format_column(df, col):
 
 
 @enforce_types
-def format_df(
-    df,
-) -> list[dict[str, str]]:
+def format_df(df: pl.DataFrame) -> pl.DataFrame:
     """
     Format table rows.
     Args:
@@ -136,9 +134,8 @@ def format_df(
     return df
 
 
-# TODO: typing
 @enforce_types
-def format_eth_address(df, col):
+def format_eth_address(df: pl.DataFrame, col: str) -> pl.DataFrame:
     return df.with_columns(
         pl.when(pl.col(col).str.len_chars() > 0)
         .then(pl.col(col).str.slice(0, 5) + "..." + pl.col(col).str.slice(-5))
@@ -148,14 +145,14 @@ def format_eth_address(df, col):
 
 
 @enforce_types
-def format_percentage(df, col):
+def format_percentage(df: pl.DataFrame, col: str) -> pl.DataFrame:
     return df.with_columns(
         (pl.col(col).round(2).cast(pl.String) + pl.lit("%")).alias(col)
     )
 
 
 @enforce_types
-def format_sales_info_data(df) -> str:
+def format_sales_info_data(df: pl.DataFrame) -> pl.DataFrame:
     if df.is_empty():
         return df.with_columns(pl.col("sales_str").alias("sales_str"))
 
@@ -189,7 +186,9 @@ def format_sales_info_data(df) -> str:
 
 
 @enforce_types
-def format_currency(df, col, base=None, suffix: str = ""):
+def format_currency(
+    df: pl.DataFrame, col: str, base=None, suffix: str = ""
+) -> pl.DataFrame:
     """
     Format Ocean amount.
     Args:
@@ -204,7 +203,7 @@ def format_currency(df, col, base=None, suffix: str = ""):
 
 
 @enforce_types
-def format_currency_conditional(df, col) -> str:
+def format_currency_conditional(df: pl.DataFrame, col: str) -> pl.DataFrame:
     base = (
         pl.when(pl.col(col).is_in([-1000, 1000]))
         .then(pl.col(col).round(2).cast(pl.String))

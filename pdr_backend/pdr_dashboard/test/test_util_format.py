@@ -1,7 +1,6 @@
 import polars as pl
 from pdr_backend.pdr_dashboard.util.format import (
     format_approximate_currency_with_decimal_val,
-    format_currency,
     format_currency_val,
     format_eth_address,
     format_percentage,
