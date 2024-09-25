@@ -111,9 +111,8 @@ class AppDataManager:
             # Fetch and return results
             if scalar:
                 resp = duckdb.execute(query).fetchone()
-                if resp is None:
-                    return None
-                return resp[0] if len(resp) == 1 else resp
+
+                return resp[0] if resp and len(resp) == 1 else resp
 
             # For non-scalar queries, fetch the result as a DataFrame and return as pl.DataFrame
             return duckdb.execute(query).pl()

@@ -50,6 +50,7 @@ def get_date_period_text_for_selected_predictoors(payouts: pl.DataFrame):
 def get_date_period_text_header(start_date: str, end_date: str):
     if not start_date or not end_date:
         return "there is no data available"
+
     date_period_text = f"""
         {datetime.fromtimestamp(float(start_date)).strftime('%d-%m-%y')}
         -> {datetime.fromtimestamp(float(end_date)).strftime('%d-%m-%y')}
