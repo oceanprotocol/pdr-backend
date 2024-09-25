@@ -1,8 +1,8 @@
 import logging
-from datetime import datetime, timedelta, timezone
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union
+from datetime import datetime, timedelta, timezone
+from typing import Any, List, Optional, Tuple, Union
 
 import duckdb
 import polars as pl
@@ -26,7 +26,7 @@ from pdr_backend.pdr_dashboard.util.prices import (
 )
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.util.constants_opf_addrs import get_opf_addresses
-from pdr_backend.util.time_types import UnixTimeMs
+from pdr_backend.util.time_types import UnixTimeMs, UnixTimeS
 
 logger = logging.getLogger("predictoor_dashboard_utils")
 
@@ -200,7 +200,7 @@ class AppDataManager:
         return df
 
     @enforce_types
-    def _init_feed_payouts_stats(self):
+    def _init_feed_payouts_stats(self) -> pl.DataFrame:
         query = f"""
                 SELECT
                     p.contract,
@@ -229,7 +229,7 @@ class AppDataManager:
         return df
 
     @enforce_types
-    def _init_predictoor_payouts_stats(self):
+    def _init_predictoor_payouts_stats(self) -> pl.DataFrame:
 
         query = f"""
             SELECT
@@ -280,7 +280,7 @@ class AppDataManager:
         return df
 
     @enforce_types
-    def _init_feed_subscription_stats(self):
+    def _init_feed_subscription_stats(self) -> pl.DataFrame:
         opf_addresses = get_opf_addresses(self.network_name)
 
         query = f"""
@@ -354,7 +354,7 @@ class AppDataManager:
         return df
 
     @enforce_types
-    def feed_daily_subscriptions_by_feed_id(self, feed_id: str):
+    def feed_daily_subscriptions_by_feed_id(self, feed_id: str) -> pl.DataFrame:
         query = f"""
             WITH date_counts AS (
                 SELECT
@@ -379,9 +379,10 @@ class AppDataManager:
 
         return self._query_db(query)
 
+    @enforce_types
     def feed_ids_based_on_predictoors(
-        self, predictoor_addrs: Optional[List[str]] = None
-    ):
+        self, predictoor_addrs: Optional[List] = None
+    ) -> List[str]:
         if not predictoor_addrs and not self.favourite_addresses:
             return []
 
@@ -407,10 +408,11 @@ class AppDataManager:
         # Execute the query
         return self._query_db(query, scalar=True)
 
+    @enforce_types
     def payouts_from_bronze_predictions(
         self,
-        feed_addrs: Union[List[str], None],
-        predictoor_addrs: Union[List[str], None],
+        feed_addrs: Optional[List],
+        predictoor_addrs: Optional[List],
     ) -> List[dict]:
         """
         Get predictions data for the given feed and
@@ -464,7 +466,7 @@ class AppDataManager:
         return result
 
     @enforce_types
-    def feeds_metrics(self) -> dict[str, Any]:
+    def feeds_metrics(self) -> dict[str, Union[int, float]]:
         query_feeds = f"""
             SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
             FROM {tbl_parquet_path(self.lake_dir, Prediction)}
@@ -511,7 +513,7 @@ class AppDataManager:
         }
 
     @enforce_types
-    def predictoors_metrics(self) -> dict[str, Any]:
+    def predictoors_metrics(self) -> dict[str, Union[int, float]]:
         query_predictions = f"""
             SELECT COUNT(DISTINCT(user))
             FROM {tbl_parquet_path(self.lake_dir, Prediction)}
@@ -550,7 +552,8 @@ class AppDataManager:
             "Gross Income": tot_gross_income,
         }
 
-    def get_first_and_last_slot_timestamp(self):
+    @enforce_types
+    def get_first_and_last_slot_timestamp(self) -> Tuple[UnixTimeS, UnixTimeS]:
         first_timestamp, last_timestamp = self._query_db(
             f"""
                 SELECT
@@ -563,9 +566,13 @@ class AppDataManager:
             cache_file_name="first_and_last_slot_timestamp",
             periodical=False,
         )
-        return first_timestamp / 1000, last_timestamp / 1000
+        return (
+            UnixTimeMs(first_timestamp).to_seconds(),
+            UnixTimeMs(last_timestamp).to_seconds(),
+        )
 
-    def refresh_feeds_data(self):
+    @enforce_types
+    def refresh_feeds_data(self) -> None:
         self.feeds_metrics_data = self.feeds_metrics()
         self.feeds_payout_stats = self._init_feed_payouts_stats()
         self.feeds_subscriptions = self._init_feed_subscription_stats()
@@ -575,7 +582,8 @@ class AppDataManager:
             self._formatted_data_for_feeds_table
         )
 
-    def refresh_predictoors_data(self):
+    @enforce_types
+    def refresh_predictoors_data(self) -> None:
         self.predictoors_metrics_data = self.predictoors_metrics()
         self.predictoors_data = self._init_predictoor_payouts_stats()
 
@@ -586,6 +594,7 @@ class AppDataManager:
         )
 
     @property
+    @enforce_types
     def _formatted_data_for_feeds_table(
         self,
     ) -> Tuple[pl.DataFrame, pl.DataFrame]:
@@ -617,6 +626,7 @@ class AppDataManager:
         return formatted_data, df
 
     @property
+    @enforce_types
     def _formatted_data_for_predictoors_table(
         self,
     ) -> Tuple[pl.DataFrame, pl.DataFrame]:
@@ -645,13 +655,14 @@ class AppDataManager:
 
         return formatted_data, df
 
+    @enforce_types
     def filter_for_feeds_table(
         self,
-        predictoor_feeds_only,
-        predictoors_addrs,
-        search_value,
-        selected_feeds_addrs,
-    ):
+        predictoor_feeds_only: bool,
+        predictoors_addrs: List[str],
+        search_value: Optional[str],
+        selected_feeds_addrs: List[str],
+    ) -> List[dict]:
         filtered_data = self.formatted_feeds_home_page_table_data.clone()
 
         # filter feeds by payouts from selected predictoors
@@ -681,7 +692,7 @@ class AppDataManager:
 
     @property
     @enforce_types
-    def formatted_predictoors_home_page_table_data(self) -> List[Dict[str, Any]]:
+    def formatted_predictoors_home_page_table_data(self) -> pl.DataFrame:
         """
         Process the user payouts stats data.
         Args:
@@ -704,7 +715,7 @@ class AppDataManager:
 
     @property
     @enforce_types
-    def formatted_feeds_home_page_table_data(self):
+    def formatted_feeds_home_page_table_data(self) -> pl.DataFrame:
         df = self.feeds_data.clone()
         df = df.join(self.feeds_payout_stats, on="contract")
         df = df.join(self.feeds_subscriptions, on="contract")
@@ -719,7 +730,8 @@ class AppDataManager:
         return formatted_data
 
     @property
-    def homepage_feeds_cols(self):
+    @enforce_types
+    def homepage_feeds_cols(self) -> Tuple[Tuple, pl.DataFrame]:
         data = self.formatted_feeds_home_page_table_data
 
         columns = FEEDS_HOME_PAGE_TABLE_COLS
@@ -728,7 +740,8 @@ class AppDataManager:
         return (columns, hidden_columns), data
 
     @property
-    def homepage_predictoors_cols(self):
+    @enforce_types
+    def homepage_predictoors_cols(self) -> Tuple[Tuple, pl.DataFrame]:
         data = self.formatted_predictoors_home_page_table_data
 
         if self.favourite_addresses:

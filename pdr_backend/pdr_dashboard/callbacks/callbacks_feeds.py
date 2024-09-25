@@ -180,9 +180,9 @@ def get_callbacks_feeds(app):
         ctx = dash.callback_context
         return toggle_modal_helper(
             ctx,
-            selected_rows,
-            is_open_input,
             "feeds_modal",
+            bool(is_open_input),
+            selected_rows,
         )
 
     @app.callback(

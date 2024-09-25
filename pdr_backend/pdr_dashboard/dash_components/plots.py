@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from itertools import product
 from typing import List, Union
 
-import polars as pl
 import plotly.graph_objects as go
+import polars as pl
 from enforce_typing import enforce_types
 from statsmodels.stats.proportion import proportion_confint
 

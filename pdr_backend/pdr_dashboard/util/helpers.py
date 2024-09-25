@@ -1,12 +1,16 @@
+from typing import List, Optional, Tuple
+
 import dash
+from enforce_typing import enforce_types
 
 
+@enforce_types
 def toggle_modal_helper(
-    ctx,
-    selected_rows,
-    is_open_input,
-    modal_id=None,
-):
+    ctx: dash._callback_context.CallbackContext,
+    modal_id: str,
+    is_open_input: bool,
+    selected_rows: Optional[List],
+) -> Tuple[bool, List[int]]:
     triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
     modal_type = modal_id.split("_")[0]

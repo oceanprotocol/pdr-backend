@@ -1,5 +1,6 @@
-from typing import Optional
+from typing import Any, List, Optional, Tuple
 
+import polars as pl
 from dash import callback_context
 from enforce_typing import enforce_types
 
@@ -23,7 +24,8 @@ def filter_table_by_range(
     return f"{label_text} {min_val}-{max_val}"
 
 
-def _float_repr(value):
+@enforce_types
+def _float_repr(value) -> float:
     try:
         return float(value)
     except ValueError:
@@ -182,7 +184,10 @@ def _denumerize(n):
         return "err"
 
 
-def check_conditions(df, conditions):
+@enforce_types
+def check_conditions(
+    df: pl.DataFrame, conditions: List[Tuple[str, str, Any]]
+) -> pl.DataFrame:
     df = df.clone()
 
     for condition in conditions:
@@ -191,16 +196,22 @@ def check_conditions(df, conditions):
     return df
 
 
-def check_condition(df, condition_type, field, *values):
+@enforce_types
+def check_condition(
+    df: pl.DataFrame, condition_type: str, field: Optional[str], *values
+) -> pl.DataFrame:
     df = df.clone()
 
     if field and field.startswith("p_"):
         field = field[2:]
 
     if condition_type == "filter" and values[0]:
+        assert field is not None, "Field must be provided for filter condition"
         df = df.filter(df[field].is_in(values[0]))
 
     if condition_type == "range":
+        assert field is not None, "Field must be provided for range condition"
+
         if values[0]:
             df = df.filter(df[field] >= _float_repr(values[0]))
 
@@ -208,12 +219,13 @@ def check_condition(df, condition_type, field, *values):
             df = df.filter(df[field] <= _float_repr(values[1]))
 
     if condition_type == "search" and values[0]:
-        df = df.filter(searchable_df(df, values[0]))
+        df = df.filter(search_df(df, values[0]))
 
     return df
 
 
-def searchable_df(df, value):
+@enforce_types
+def search_df(df: pl.DataFrame, value: str) -> pl.Series:
     if "base_token" not in df.columns:
         return df["addr"].str.contains("(?i)" + value)
 

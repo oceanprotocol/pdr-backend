@@ -1,12 +1,12 @@
+import time
 from unittest.mock import patch
 
-import time
 import polars as pl
 from enforce_typing import enforce_types
 
+from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
 from pdr_backend.lake.subscription import Subscription
 from pdr_backend.util.time_types import UnixTimeMs
-from pdr_backend.lake.duckdb_data_store import tbl_parquet_path
 
 # Define necessary global variables for the tests
 test_query = "SELECT * FROM test_table"
