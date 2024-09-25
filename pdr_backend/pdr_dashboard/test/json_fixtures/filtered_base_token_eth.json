@@ -7,11 +7,11 @@
     "Source": "Binance",
     "Timeframe": "1h",
     "Accuracy": "0.0%",
-    "Avg Stake Per Epoch (Ocean)": "0.0",
+    "Avg Stake Per Epoch (Ocean)": "0",
     "Volume (Ocean)": "0",
-    "Price (Ocean)": "0.0",
+    "Price (Ocean)": "0",
     "Sales": "107 (107 DF)",
-    "Sales Revenue (Ocean)": "0.0"
+    "Sales Revenue (Ocean)": "0"
   },
   {
     "": "",
@@ -23,8 +23,8 @@
     "Accuracy": "44.73%",
     "Avg Stake Per Epoch (Ocean)": "161.43",
     "Volume (Ocean)": "34.87K",
-    "Price (Ocean)": "0.0",
+    "Price (Ocean)": "0",
     "Sales": "107 (107 DF)",
-    "Sales Revenue (Ocean)": "0.0"
+    "Sales Revenue (Ocean)": "0"
   }
 ]

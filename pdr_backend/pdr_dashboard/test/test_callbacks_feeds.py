@@ -279,5 +279,5 @@ def test_sort_table(_sample_app, dash_duo):
     _verify_table_data_order(
         table,
         "sorted_feeds_table_asc_by_avg_stake.json",
-        lambda x: x["Avg Stake Per Epoch (Ocean)"] == "0.0",
+        lambda x: x["Avg Stake Per Epoch (Ocean)"] == "0",
     )
