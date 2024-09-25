@@ -122,6 +122,7 @@ def test_create_figure():
         "title": "title",
         "margin": {"l": 20, "r": 0, "t": 50, "b": 0},
         "showlegend": True,
+        "paper_bgcolor": "#f5f5f5",
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
