@@ -52,21 +52,13 @@ PREDICTOORS_TABLE_COLS = [
     {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
 ]
 
-FORMAT_CONFIG = {
-    "feeds_page_Accuracy_metric": "percentage",
-    "accuracy_metric": "percentage",
-    "feeds_page_Volume_metric": "currency",
-    "feeds_page_Revenue_metric": "currency",
-    "feeds_page_Sales_metric": "currency_without_decimal",
-    "profit_metric": "currency_without_decimal_with_suffix",
-    "stake_metric": "currency_without_decimal_with_suffix",
-    "costs_metric": "approximate_currency_with_decimal",
+FORMAT_COLS_CONFIG = {
     "addr": "eth_address",
     "user": "eth_address",
     "avg_accuracy": "percentage",
     "avg_stake": "currency_conditional",
-    "total_profit": "currency_without_decimal",
-    "volume": "currency_without_decimal",
+    "total_profit": "currency",
+    "volume": "currency",
     "total_stake": "currency_conditional",
     "gross_income": "currency_conditional",
     "stake_loss": "currency_conditional",
@@ -75,6 +67,18 @@ FORMAT_CONFIG = {
     "sales_revenue": "currency_conditional",
     "apr": "percentage",
     "accuracy": "percentage",
+    "price": "currency_conditional",
+}
+
+FORMAT_VALUES_CONFIG = {
+    "feeds_page_Accuracy_metric": "percentage",
+    "accuracy_metric": "percentage",
+    "feeds_page_Volume_metric": "currency",
+    "feeds_page_Revenue_metric": "currency",
+    "feeds_page_Sales_metric": "currency_without_decimal",
+    "profit_metric": "currency_without_decimal_with_suffix",
+    "stake_metric": "currency_without_decimal_with_suffix",
+    "costs_metric": "approximate_currency_with_decimal",
     "predictoors_page_accuracy_metric": "percentage",
     "predictoors_page_staked_metric": "currency",
     "predictoors_page_gross_income_metric": "currency",
@@ -91,15 +95,23 @@ def format_value(value: Union[int, float, str], value_id: str) -> str:
     Returns:
         str: Formatted value.
     """
-    if value_id in FORMAT_CONFIG:
-        return globals()["format_" + FORMAT_CONFIG[value_id]](value)
-    return str(value)
+    if value_id not in FORMAT_VALUES_CONFIG:
+        return str(value)
+
+    return globals()["format_" + FORMAT_VALUES_CONFIG[value_id] + "_val"](value)
 
 
 @enforce_types
-def format_df(
-    df,
-) -> list[dict[str, str]]:
+def format_column(df: pl.DataFrame, col: str):
+    if col not in FORMAT_COLS_CONFIG:
+        return df.with_columns(pl.col(col).cast(pl.String).alias(col))
+
+    func_name = globals()["format_" + FORMAT_COLS_CONFIG[col]]
+    return func_name(df, col)
+
+
+@enforce_types
+def format_df(df: pl.DataFrame) -> pl.DataFrame:
     """
     Format table rows.
     Args:
@@ -111,74 +123,98 @@ def format_df(
     columns = df.columns
 
     if "sales" in columns and "df_buy_count" in columns and "ws_buy_count" in columns:
-        if df.is_empty():
-            df = df.with_columns(pl.col("sales_str").alias("sales_str"))
-        else:
-            df = df.with_columns(
-                sales_str=pl.struct(
-                    ["sales", "df_buy_count", "ws_buy_count"]
-                ).map_elements(
-                    lambda x: format_sales_info_data(
-                        x["sales"], x["df_buy_count"], x["ws_buy_count"]
-                    ),
-                    return_dtype=pl.String,
-                )
-            )
+        df = format_sales_info_data(df)
 
     for col in columns:
         if col == "sales_str":
             continue
 
-        df = df.with_columns(
-            # pylint: disable=cell-var-from-loop
-            pl.col(col)
-            .map_elements(lambda x: format_value(x, col), return_dtype=pl.String)
-            .alias(col)
-        )
+        df = format_column(df, col)
 
     return df
 
 
 @enforce_types
-def format_sales_info_data(total, df_buy, ws_buy) -> str:
-    total_str = format_currency(total, suffix="", show_decimal=False)
-
-    df_buy_str = (
-        f"{format_currency(df_buy, suffix='', show_decimal=False)} DF"
-        if df_buy > 0
-        else ""
+def format_eth_address(df: pl.DataFrame, col: str) -> pl.DataFrame:
+    return df.with_columns(
+        pl.when(pl.col(col).str.len_chars() > 0)
+        .then(pl.col(col).str.slice(0, 5) + "..." + pl.col(col).str.slice(-5))
+        .otherwise(pl.lit("No address"))
+        .alias(col)
     )
-    ws_buy_str = (
-        f"{format_currency(ws_buy, suffix='', show_decimal=False)} WS"
-        if ws_buy > 0
-        else ""
-    )
-    sales_info = ""
-
-    if df_buy_str or ws_buy_str:
-        sales_info = ", ".join(filter(None, [df_buy_str, ws_buy_str]))
-        sales_info = f" ({sales_info})"
-
-    return total_str + sales_info
 
 
 @enforce_types
-def format_eth_address(address: str) -> str:
-    """
-    Shorten ethereum address.
-    Args:
-        address (str): Address.
-    Returns:
-        str: Formatted address.
-    """
-    if not address:
-        return "No address"
+def format_percentage(df: pl.DataFrame, col: str) -> pl.DataFrame:
+    return df.with_columns(
+        (pl.col(col).round(2).cast(pl.String) + pl.lit("%")).alias(col)
+    )
 
-    return f"{address[:5]}...{address[-5:]}"
+
+@enforce_types
+def format_sales_info_data(df: pl.DataFrame) -> pl.DataFrame:
+    if df.is_empty():
+        return df.with_columns(pl.col("sales_str").alias("sales_str"))
+
+    total = format_currency(df, "sales")["sales"]
+    df_buy = format_currency(df, "df_buy_count", suffix=" DF")["df_buy_count"]
+    ws_buy = format_currency(df, "ws_buy_count", suffix=" WS")["ws_buy_count"]
+
+    df2 = df.with_columns(
+        pl.when(pl.col("df_buy_count") > 0)
+        .then(df_buy)
+        .otherwise(pl.lit(""))
+        .alias("df_buy_str"),
+        pl.when(pl.col("ws_buy_count") > 0)
+        .then(ws_buy)
+        .otherwise(pl.lit(""))
+        .alias("ws_buy_str"),
+    )
+
+    df2 = df2.with_columns(
+        (
+            total
+            + pl.lit(" (")
+            + (pl.col("df_buy_str") + ", " + pl.col("ws_buy_str"))
+            .str.strip_chars_start(", ")
+            .str.strip_chars_end(", ")
+            + pl.lit(")")
+        ).alias("sales_info")
+    )
+
+    return df.with_columns(df2["sales_info"].alias("sales_str"))
 
 
 @enforce_types
 def format_currency(
+    df: pl.DataFrame, col: str, base=None, suffix: str = ""
+) -> pl.DataFrame:
+    """
+    Format Ocean amount.
+    Args:
+        amount (float): Ocean amount.
+    Returns:
+        str: Formatted Ocean amount.
+    """
+    if base is None:
+        base = pl.col(col).map_elements(numerize.numerize, return_dtype=pl.String)
+
+    return df.with_columns((base + pl.lit(suffix)).alias(col))
+
+
+@enforce_types
+def format_currency_conditional(df: pl.DataFrame, col: str) -> pl.DataFrame:
+    base = (
+        pl.when(pl.col(col).is_in([-1000, 1000]))
+        .then(pl.col(col).round(2).cast(pl.String))
+        .otherwise(pl.col(col).map_elements(numerize.numerize, return_dtype=pl.String))
+    )
+
+    return format_currency(df, col, base=base)
+
+
+@enforce_types
+def format_currency_val(
     amount: Union[float, int], suffix: str = " OCEAN", show_decimal: bool = False
 ) -> str:
     """
@@ -195,7 +231,23 @@ def format_currency(
 
 
 @enforce_types
-def format_percentage(accuracy: Union[float, int]) -> str:
+def format_currency_without_decimal_val(amount: Union[float, int]) -> str:
+    return format_currency_val(amount, suffix="", show_decimal=False)
+
+
+@enforce_types
+def format_currency_without_decimal_with_suffix_val(amount: Union[float, int]) -> str:
+    return format_currency_val(amount, suffix=" OCEAN", show_decimal=False)
+
+
+@enforce_types
+def format_approximate_currency_with_decimal_val(value: Union[float, int]) -> str:
+    formatted_value = format_currency_val(value, suffix="", show_decimal=True)
+    return f"~{formatted_value}"
+
+
+@enforce_types
+def format_percentage_val(accuracy: Union[float, int]) -> str:
     """
     Format accuracy.
     Args:
@@ -204,38 +256,3 @@ def format_percentage(accuracy: Union[float, int]) -> str:
         str: Formatted accuracy.
     """
     return f"{round(float(accuracy), 2)}%"
-
-
-@enforce_types
-def format_currency_conditional(amount: Union[float, int]) -> str:
-    show_decimal = False
-    if -1000 < amount < 1000:
-        show_decimal = True
-
-    return format_currency(amount, suffix="", show_decimal=show_decimal)
-
-
-@enforce_types
-def format_currency_without_decimal(amount: Union[float, int]) -> str:
-    return format_currency(amount, suffix="", show_decimal=False)
-
-
-@enforce_types
-def format_currency_without_decimal_with_suffix(amount: Union[float, int]) -> str:
-    return format_currency(amount, suffix=" OCEAN", show_decimal=False)
-
-
-@enforce_types
-def format_currency_with_decimal(value: Union[float, int]) -> str:
-    return format_currency(value, suffix="", show_decimal=True)
-
-
-@enforce_types
-def format_currency_with_decimal_and_suffix(value: Union[float, int]) -> str:
-    return format_currency(value, suffix=" OCEAN", show_decimal=True)
-
-
-@enforce_types
-def format_approximate_currency_with_decimal(value: Union[float, int]) -> str:
-    formatted_value = format_currency(value, suffix="", show_decimal=True)
-    return f"~{formatted_value}"
