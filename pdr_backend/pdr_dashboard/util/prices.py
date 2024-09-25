@@ -15,7 +15,7 @@ logger = logging.getLogger("predictoor_dashboard_utils")
 
 @enforce_types
 def calculate_tx_gas_fee_cost_in_OCEAN(
-    web3_pp: Web3PP, feed_contract_addr: str, prices: Optional[Dict[str, float]]
+    web3_pp: Web3PP, feed_contract_addr: str, prices: Optional[Dict]
 ) -> float:
     if not prices:
         return 0.0
@@ -63,7 +63,7 @@ def _get_from_exchange(exchange: str, current_date_ms: UnixTimeMs) -> Tuple:
 
 
 def fetch_token_prices() -> Optional[Dict[str, float]]:
-    current_date_ms = UnixTimeMs.from_dt(datetime.now()) - 300000
+    current_date_ms = UnixTimeMs(UnixTimeMs.from_dt(datetime.now()) - 300000)
     rose_usdt, fet_usdt = _get_from_exchange("binance", current_date_ms)
 
     if rose_usdt and fet_usdt:
