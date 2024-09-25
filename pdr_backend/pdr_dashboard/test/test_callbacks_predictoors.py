@@ -206,7 +206,7 @@ def test_sort_table(_sample_app, dash_duo):
     _verify_table_data_order(
         table,
         "sorted_predictoors_table_asc_by_stake.json",
-        lambda x: x["Staked (Ocean)"] == "0.0",
+        lambda x: x["Staked (Ocean)"] == "0",
     )
 
     # Click again to sort descending
@@ -217,5 +217,5 @@ def test_sort_table(_sample_app, dash_duo):
     _verify_table_data_order(
         table,
         "sorted_predictoors_table_desc_by_stake.json",
-        lambda x: x["Staked (Ocean)"] == "0.0",
+        lambda x: x["Staked (Ocean)"] == "0",
     )
