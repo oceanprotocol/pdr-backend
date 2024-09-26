@@ -3,9 +3,12 @@ from pathlib import Path
 
 import dash_bootstrap_components as dbc
 import yaml
-from dash import dcc, html
+from dash import dcc, html, dash_table
 
-from pdr_backend.pdr_dashboard.util.format import format_value
+from pdr_backend.pdr_dashboard.util.format import (
+    format_value,
+    FEEDS_TABLE_COLS,
+)
 
 NAV_ITEMS = [
     {"text": "Home", "location": "/"},
@@ -85,9 +88,10 @@ def get_metric(label, value, value_id):
                 format_value(value if value else 0, value_id),
                 id=value_id,
                 style={"fontWeight": "bold"},
+                className="metric_value",
             ),
         ],
-        style={"display": "flex", "flexDirection": "column", "font-size": "20px"},
+        className="metric_unit",
     )
 
 
@@ -181,4 +185,55 @@ def get_available_data_area_components():
             get_period_selection_radio_items("general-lake"),
         ],
         style={"display": "flex", "justifyContent": "center", "alignItems": "center"},
+    )
+
+
+def skeleton_loader():
+    return html.Div(
+        [
+            html.Div(
+                className="skeleton-row",
+                style={
+                    "height": "40px",
+                    "marginBottom": "10px",
+                    "background": "#e0e0e0",
+                },
+            ),
+            html.Div(
+                className="skeleton-row",
+                style={
+                    "height": "40px",
+                    "marginBottom": "10px",
+                    "background": "#e0e0e0",
+                },
+            ),
+            html.Div(
+                className="skeleton-row",
+                style={
+                    "height": "40px",
+                    "marginBottom": "10px",
+                    "background": "#e0e0e0",
+                },
+            ),
+        ],
+        style={"width": "100%", "height": "100%", "padding": "10px"},
+    )
+
+
+def table_for_feeds_page(table_id: str, data):
+    return (
+        dash_table.DataTable(
+            id=table_id,
+            columns=FEEDS_TABLE_COLS,
+            hidden_columns=[
+                "full_addr",
+                "df_buy_count",
+                "ws_buy_count",
+                "sales",
+            ],
+            row_selectable="single",
+            data=data,
+            sort_action="custom",
+            sort_mode="single",
+        ),
     )

@@ -21,8 +21,12 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
     if not debug_mode:
         webbrowser.open(f"http://127.0.0.1:{port}/")
 
-    app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-    app.config["suppress_callback_exceptions"] = True
+    print("Starting Dash app")
+    app = Dash(
+        __name__,
+        external_stylesheets=[dbc.themes.BOOTSTRAP],
+        suppress_callback_exceptions=True,
+    )
 
     #    try:
     setup_app(app, ppss)

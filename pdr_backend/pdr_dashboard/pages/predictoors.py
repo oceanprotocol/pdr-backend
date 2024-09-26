@@ -94,7 +94,8 @@ class PredictoorsPage(TabularPage):
 
     def get_predictoor_table_area(self):
         return html.Div(
-            [
+            id="predictoors_page_table_area",
+            children=[
                 dash_table.DataTable(
                     id="predictoors_page_table",
                     columns=PREDICTOORS_TABLE_COLS,
@@ -103,6 +104,9 @@ class PredictoorsPage(TabularPage):
                     data=self.app.data.predictoors_table_data.to_dicts(),
                     sort_action="custom",
                     sort_mode="single",
+                ),
+                html.Div(
+                    id="predictoors_page_table_control",
                 ),
             ],
             style={"width": "100%", "overflow": "scroll"},

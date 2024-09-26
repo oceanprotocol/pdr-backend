@@ -93,15 +93,24 @@ class FeedsPage(TabularPage):
     def get_metrics_row(self):
         return html.Div(
             children=[
-                get_metric(
-                    label=key,
-                    value=value,
-                    value_id=f"feeds_page_{key}_metric",
-                )
-                for key, value in self.app.data.feeds_metrics_data.items()
+                html.Div(
+                    children=[
+                        get_metric(
+                            label=key,
+                            value=value,
+                            value_id=f"feeds_page_{key}_metric",
+                        )
+                        for key, value in self.app.data.feeds_metrics_data.items()
+                    ],
+                    className="metrics_row",
+                    id="feeds_page_metrics_row",
+                ),
+                html.Div(
+                    id="feeds_page_metrics_row_control",
+                ),
             ],
-            className="metrics_row",
-            id="feeds_page_metrics_row",
+            className="metrics_row_wrapper",
+            id="feeds_page_metrics_row_wrapper",
         )
 
     def get_search_bar_row(self):
@@ -123,7 +132,8 @@ class FeedsPage(TabularPage):
 
     def get_feeds_table_area(self):
         return html.Div(
-            [
+            id="feeds_page_table_area",
+            children=[
                 dash_table.DataTable(
                     id="feeds_page_table",
                     columns=FEEDS_TABLE_COLS,
@@ -137,6 +147,9 @@ class FeedsPage(TabularPage):
                     data=self.app.data.feeds_table_data.to_dicts(),
                     sort_action="custom",
                     sort_mode="single",
+                ),
+                html.Div(
+                    id="feeds_page_table_control",
                 ),
             ],
             style={"width": "100%", "overflow": "scroll"},

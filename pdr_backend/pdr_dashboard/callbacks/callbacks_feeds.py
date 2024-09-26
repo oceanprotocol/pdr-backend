@@ -1,8 +1,7 @@
 import dash
-from dash import Input, Output, State
+from dash import Input, Output, State, html
 
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
-from pdr_backend.pdr_dashboard.pages.feeds import get_metric
 from pdr_backend.pdr_dashboard.util.filters import (
     check_conditions,
     filter_table_by_range,
@@ -10,14 +9,15 @@ from pdr_backend.pdr_dashboard.util.filters import (
 from pdr_backend.pdr_dashboard.util.format import format_df
 from pdr_backend.pdr_dashboard.util.helpers import (
     toggle_modal_helper,
-    with_loading,
 )
+from pdr_backend.pdr_dashboard.dash_components.view_elements import get_metric
 
 
 def get_callbacks_feeds(app):
     @app.callback(
         Output("feeds_page_table", "data", allow_duplicate=True),
         Output("feeds_page_metrics_row", "children"),
+        Output("feeds_page_table_control", "children"),
         [Input("start-date", "data")],
         prevent_initial_call=True,
     )
@@ -33,7 +33,7 @@ def get_callbacks_feeds(app):
             for key, value in app.data.feeds_metrics_data.items()
         ]
 
-        return app.data.feeds_table_data.to_dicts(), metrics_children_data
+        return (app.data.feeds_table_data.to_dicts(), metrics_children_data, html.Div())
 
     @app.callback(
         Output("feeds_page_table", "data"),
