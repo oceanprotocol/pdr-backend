@@ -192,8 +192,6 @@ def check_conditions(df, conditions):
 
 
 def check_condition(df, condition_type, field, *values):
-    df = df.clone()
-
     if field and field.startswith("p_"):
         field = field[2:]
 
