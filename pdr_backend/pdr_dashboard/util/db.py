@@ -566,7 +566,7 @@ class AppDataManager:
 
         if search_value:
             filtered_data = filtered_data.filter(
-                filtered_data["pair"].str.contains(search_value)
+                filtered_data["pair"].str.contains("(?i)" + search_value)
             )
 
         filtered_data = filtered_data.filter(

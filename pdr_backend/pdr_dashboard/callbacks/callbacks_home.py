@@ -138,7 +138,7 @@ def get_callbacks_home(app):
         filtered_data = formatted_predictoors_data.clone()
         if search_value:
             filtered_data = filtered_data.filter(
-                filtered_data["full_addr"].str.contains(search_value)
+                filtered_data["full_addr"].str.contains("(?i)" + search_value)
             )
 
         filtered_data = filtered_data.filter(
