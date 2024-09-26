@@ -193,8 +193,10 @@ def get_callbacks_home(app):
             predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
         )
 
-        if len(stored_predictoors_addrs) > 0 and sorted(predictoors_addrs) == sorted(
+        if (
             stored_predictoors_addrs
+            and len(stored_predictoors_addrs) > 0
+            and sorted(predictoors_addrs) == sorted(stored_predictoors_addrs)
         ):
             selected_feeds = list(range(len(filtered_data)))
 
