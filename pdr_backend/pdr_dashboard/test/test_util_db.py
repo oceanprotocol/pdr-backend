@@ -14,10 +14,10 @@ cache_file_name = "test_query"
 
 
 @enforce_types
-@patch("pdr_backend.pdr_dashboard.util.db.duckdb.execute")
+@patch("pdr_backend.pdr_dashboard.util.duckdb_file_reader.duckdb.execute")
 def test_query_db(mock_duckdb_execute, _sample_app):
     db_mgr = _sample_app.data
-    db_mgr._query_db(test_query)
+    db_mgr.file_reader._query_db(test_query)
 
     # Assert that duckdb.execute was called once with the correct query
     mock_duckdb_execute.assert_called_once_with(test_query)
@@ -42,10 +42,12 @@ def test_get_payouts(
     db_mgr = _sample_app.data
 
     db_mgr.start_date = UnixTimeMs(1704152700000).to_dt()
+    db_mgr.file_reader.start_date = UnixTimeMs(1704152700000).to_dt()
     result = db_mgr.payouts_from_bronze_predictions([], [])
     assert len(result) == 2369
 
     db_mgr.start_date = UnixTimeMs(1721952002000).to_dt()
+    db_mgr.file_reader.start_date = UnixTimeMs(1721952002000).to_dt()
     result = db_mgr.payouts_from_bronze_predictions(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
@@ -55,6 +57,7 @@ def test_get_payouts(
 
     # start date after all payouts should return an empty list
     db_mgr.start_date = UnixTimeMs(1759154000000).to_dt()
+    db_mgr.file_reader.start_date = UnixTimeMs(1759154000000).to_dt()
     result = db_mgr.payouts_from_bronze_predictions(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
@@ -63,6 +66,7 @@ def test_get_payouts(
 
     # start date 0 should not filter on start date
     db_mgr.start_date = 0
+    db_mgr.file_reader.start_date = 0
     result = db_mgr.payouts_from_bronze_predictions(
         ["0x18f54cc21b7a2fdd011bea06bba7801b280e3151"],
         ["0x43584049fe6127ea6745d8ba42274e911f2a2d5c"],
@@ -90,6 +94,7 @@ def test_get_user_payouts_stats(
 
     # test filtering by start date
     db_mgr.start_date = UnixTimeMs(1721957490000).to_dt()
+    db_mgr.file_reader.start_date = UnixTimeMs(1721957490000).to_dt()
     result = db_mgr._init_predictoor_payouts_stats()
 
     assert isinstance(result, pl.DataFrame)
@@ -102,7 +107,7 @@ def test_get_feed_daily_subscriptions_by_feed_id(_sample_app):
     feed_id = "0x18f54cc21b7a2fdd011bea06bba7801b280e3151"
 
     result = db_mgr.feed_daily_subscriptions_by_feed_id(feed_id)
-    all_subscriptions = db_mgr._query_db(
+    all_subscriptions = db_mgr.file_reader._query_db(
         f"SELECT * FROM {tbl_parquet_path(db_mgr.lake_dir, Subscription)}"
     )
 
@@ -152,7 +157,9 @@ def test_cache_exists_recent_file(
     mock_duckdb_execute.return_value.fetchone.return_value = (42,)
 
     # Call the function
-    result = db_mgr._check_cache_query_data(test_query, cache_file_name, scalar=True)
+    result = db_mgr.file_reader._check_cache_query_data(
+        test_query, cache_file_name, scalar=True
+    )
 
     # Check that no new query was executed, and cached data was used
     mock_duckdb_execute.assert_called_with(
@@ -175,7 +182,9 @@ def test_cache_does_not_exist(
     mock_duckdb_execute.return_value.fetchone.return_value = (55,)
 
     # Call the function
-    result = db_mgr._check_cache_query_data(test_query, cache_file_name, scalar=True)
+    result = db_mgr.file_reader._check_cache_query_data(
+        test_query, cache_file_name, scalar=True
+    )
 
     file_path = f"{db_mgr.lake_dir}/exports/cache/test_query.parquet"
     # Check that the query was executed and cached
@@ -200,7 +209,9 @@ def test_non_scalar_query(
     mock_duckdb_execute.return_value.pl.return_value = mock_df
 
     # Call the function
-    result = db_mgr._check_cache_query_data(test_query, cache_file_name, scalar=False)
+    result = db_mgr.file_reader._check_cache_query_data(
+        test_query, cache_file_name, scalar=False
+    )
 
     # Check that the result is returned as a polars DataFrame
     assert isinstance(result, pl.DataFrame)
@@ -224,7 +235,9 @@ def test_cache_not_used_for_scalar(
 
     scalar_query = "SELECT count(*) FROM test_table"
     # Call the function
-    result = db_mgr._check_cache_query_data(scalar_query, cache_file_name, scalar=True)
+    result = db_mgr.file_reader._check_cache_query_data(
+        scalar_query, cache_file_name, scalar=True
+    )
 
     # Check if scalar result is returned
     assert result == 10

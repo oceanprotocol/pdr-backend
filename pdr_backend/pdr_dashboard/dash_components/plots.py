@@ -442,6 +442,7 @@ def create_figure(
         margin={"l": 20, "r": 0, "t": 50, "b": 0},
         showlegend=show_legend,
         legend=legend_config,
+        paper_bgcolor="#f5f5f5",
         barmode="stack",
         yaxis={"range": yaxis_range if yaxis_range else None, "title": yaxis_title},
         xaxis=(
