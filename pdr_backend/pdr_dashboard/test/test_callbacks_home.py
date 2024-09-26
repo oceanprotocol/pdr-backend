@@ -19,6 +19,7 @@ def test_feeds_search_input(_sample_app, dash_duo):
 
     app = _sample_app
     start_server_and_wait(dash_duo, app)
+    _unselect_defaults(dash_duo)
 
     _input_action(dash_duo, "#search-input-Feeds", "#feeds_table", "OCEAN", 1)
     _input_action(dash_duo, "#search-input-Feeds", "#feeds_table", "BTC", 3)
@@ -34,6 +35,7 @@ def test_predictoors_search_input(_sample_app, dash_duo):
 
     app = _sample_app
     start_server_and_wait(dash_duo, app)
+    _unselect_defaults(dash_duo)
 
     _input_action(
         dash_duo, "#search-input-Predictoors", "#predictoors_table", "0xaaa", 1
@@ -42,6 +44,14 @@ def test_predictoors_search_input(_sample_app, dash_duo):
     _input_action(
         dash_duo, "#search-input-Predictoors", "#predictoors_table", "0x768", 2
     )
+
+
+def _unselect_defaults(dash_duo):
+    # un-select the first row
+    dash_duo.find_element("#predictoors_table tbody tr:nth-child(2) input").click()
+    dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
+
+    time.sleep(2)
 
 
 def _feed_count(dash_duo):
@@ -101,7 +111,8 @@ def test_checkbox_selection(_sample_app, dash_duo):
     app = _sample_app
     start_server_and_wait(dash_duo, app)
 
-    time.sleep(2)
+    _unselect_defaults(dash_duo)
+
     # click on the checkbox in the second row of the "Feeds" table
     dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
 
@@ -120,6 +131,7 @@ def test_timeframe_metrics(_sample_app, dash_duo):
 
     app = _sample_app
     start_server_and_wait(dash_duo, app)
+    _unselect_defaults(dash_duo)
 
     dash_duo.find_element("#predictoors_table tbody tr:nth-child(3) input").click()
     time.sleep(2)
@@ -154,6 +166,7 @@ def test_predictoors_feed_only_switch(_sample_app, dash_duo):
 
     app = _sample_app
     start_server_and_wait(dash_duo, app)
+    _unselect_defaults(dash_duo)
 
     dash_duo.find_element("#predictoors_table tbody tr:nth-child(3) input").click()
     time.sleep(2)
