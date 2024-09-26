@@ -309,8 +309,10 @@ class HomePage:
                     html.H2("Configure Favourite Predictoor Addresses"),
                     html.P(
                         """Add predictoor addresses to be saved 
-                        and automatically selected when the app opens. Enter one address per line."""
+                        and automatically selected when the app opens.""",
+                        style={"marginBottom": 0}
                     ),
+                    html.P("Enter one address per line."),
                     dcc.Textarea(
                         id="predictoor_addrs",
                         placeholder="Predictoor addrs...",
