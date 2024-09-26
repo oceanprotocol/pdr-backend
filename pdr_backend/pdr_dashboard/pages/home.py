@@ -22,7 +22,12 @@ class HomePage:
 
     def get_main_container(self):
         return html.Div(
-            [self.get_input_column(), self.get_graphs_column()],
+            [
+                self.get_input_column(),
+                self.get_graphs_column(),
+                self.getPredictoorsConfigModal(),
+                dcc.Store(id="predictoor-addrs-local-store", storage_type="local"),
+            ],
             className="main-container",
         )
 
@@ -245,6 +250,16 @@ class HomePage:
                         ),
                         html.Div(
                             [
+                                (
+                                    html.Button(
+                                        "Configure",
+                                        id="configure_predictoors",
+                                        n_clicks=0,
+                                        className="button-select-all",
+                                    )
+                                    if table_id == "predictoors_table"
+                                    else None
+                                ),
                                 html.Button(
                                     "Select All",
                                     id=f"select-all-{table_id}",
@@ -281,4 +296,41 @@ class HomePage:
                     fill_width=True,
                 ),
             ],
+        )
+
+    def getPredictoorsConfigModal(self):
+        return dbc.Modal(
+            html.Div(
+                [
+                    html.H2("Configure Favourite Predictoor Addresses"),
+                    html.P(
+                        """Add predictoor addresses to be saved 
+                        and automatically selected when the app opens. Enter one address per line."""
+                    ),
+                    dcc.Textarea(
+                        id="predictoor_addrs",
+                        placeholder="Predictoor addrs...",
+                        value="",
+                        style={"margin": "10px", "width": "100%", "height": 200},
+                    ),
+                    html.Button(
+                        "Save",
+                        id="save_predictoors",
+                        className="clear-filters-button",
+                        style={
+                            "width": "100px",
+                            "hight": "100%",
+                            "padding": "5px",
+                        },
+                    ),
+                ],
+                style={
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "widht": "100%",
+                },
+            ),
+            id="predictoor_config_modal",
         )

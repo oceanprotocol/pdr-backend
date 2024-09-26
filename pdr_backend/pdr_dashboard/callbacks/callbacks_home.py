@@ -31,6 +31,7 @@ def get_callbacks_home(app):
             State("feeds_table", "data"),
             State("predictoors_table", "selected_rows"),
             State("predictoors_table", "data"),
+            State("predictoor-addrs-local-store", "data")
         ],
     )
     def get_display_data_from_db(
@@ -38,6 +39,7 @@ def get_callbacks_home(app):
         feeds_table,
         predictoors_table_selected_rows,
         predictoors_table,
+        local_storage_predictoor_addrs
     ):
         # feeds_table_selected_rows is a list of ints
         # feeds_data is a list of dicts
@@ -52,6 +54,7 @@ def get_callbacks_home(app):
             predictoors_table[i]["full_addr"] for i in predictoors_table_selected_rows
         ]
 
+
         if len(selected_feeds) == 0 or len(selected_predictoors_addrs) == 0:
             payouts = pl.DataFrame()
         else:
@@ -59,6 +62,7 @@ def get_callbacks_home(app):
                 selected_feeds_addrs,
                 selected_predictoors_addrs,
             )
+            print(len(payouts))
 
         # get figures
         figs_metrics = get_figures_and_metrics(
@@ -93,7 +97,7 @@ def get_callbacks_home(app):
             Input("general-lake-date-period-radio-items", "value"),
         ],
         [
-            State("predictoors_table", "data"),
+            State("predictoors_table", "data")
         ],
         prevent_initial_call=True,
     )
@@ -102,7 +106,7 @@ def get_callbacks_home(app):
         selected_rows,
         show_favourite_addresses,
         date_period,
-        predictoors_table,
+        predictoors_table
     ):
         if (
             "general-lake-date-period-radio-items"
@@ -225,3 +229,41 @@ def get_callbacks_home(app):
 
         ctx = dash.callback_context
         return select_or_clear_all_by_table(ctx, "predictoors_table", rows)
+
+    @app.callback(
+        [
+            Output("predictoor_config_modal", "is_open"),
+            Output("predictoor_addrs", "value"),
+        ],
+        [
+            Input("configure_predictoors", "n_clicks"),
+            Input("predictoor-addrs-local-store", "data"),
+        ],
+        prevent_initial_call=True,
+    )
+    def open_predictoors_config_modal(n_clicks, predictoor_addrs):
+        """
+        Select or clear all rows in the feeds table.
+        """
+        if len(predictoor_addrs) > 0:
+            predictoor_addrs = "\n".join(predictoor_addrs)
+        else:
+            predictoor_addrs = ""
+        if n_clicks <= 0:
+            return [dash.no_update, predictoor_addrs]
+
+        return [True, predictoor_addrs]
+
+    @app.callback(
+        Output("predictoor-addrs-local-store", "data"),
+        Input("save_predictoors", "n_clicks"),
+        State("predictoor_addrs", "value"),
+    )
+    def save_predictoors_to_browser_storage(_, value):
+        if not value:
+            return dash.no_update
+        addresses = value.split("\n")
+        addresses = [
+            addr.strip() for addr in addresses if addr.strip()
+        ]  # Remove empty lines
+        return addresses
