@@ -1,48 +1,60 @@
 import logging
-from typing import Union, Optional, Any
-from datetime import datetime, timezone
 import os
 import time
+from datetime import datetime, timezone
+from typing import Any, Optional, Union
+
+import duckdb
 import polars as pl
 from enforce_typing import enforce_types
-import duckdb
 
 logger = logging.getLogger("duckDB_file_reader")
 
 
 class DuckDBFileReader:
-    def __init__(self, files_dir, seconds_between_caches):
+    def __init__(self, files_dir: str, seconds_between_caches: int):
         self.files_dir = files_dir
         self.seconds_between_caches = seconds_between_caches
         self.start_date: Optional[datetime] = None
 
-    def set_start_date(self, start_dt: Optional[datetime]):
+    @enforce_types
+    def set_start_date(self, start_dt: Optional[datetime]) -> None:
         self.start_date = start_dt
 
+    @enforce_types
     def _is_cache_valid(
         self, cache_file_path: str, seconds_between_caches: int
     ) -> bool:
         """Checks if the cache file exists and is within the valid time limit."""
-        if os.path.exists(cache_file_path):
-            file_age = time.time() - os.path.getmtime(cache_file_path)
-            return file_age < seconds_between_caches
-        return False
+        if not os.path.exists(cache_file_path):
+            return False
 
-    def _run_query_and_cache(self, cache_file_path: str, query: str):
+        file_age = time.time() - os.path.getmtime(cache_file_path)
+        return file_age < seconds_between_caches
+
+    @enforce_types
+    def _run_query_and_cache(self, cache_file_path: str, query: str) -> None:
         """Runs the query and caches the result in a parquet file."""
         duckdb.execute(f"COPY ({query}) TO '{cache_file_path}' (FORMAT 'parquet')")
 
-    def _fetch_query_result(self, query: str, scalar: bool):
+    @enforce_types
+    def _fetch_query_result(self, query: str, scalar: bool) -> Union[Any, pl.DataFrame]:
         """Fetches the query result, either from cache or the database."""
-        if scalar:
-            result = duckdb.execute(query).fetchone()
-            return result[0] if result and len(result) == 1 else result
-        return duckdb.execute(query).pl()
+        if not scalar:
+            return duckdb.execute(query).pl()
+
+        return self._fetch_scalar(query)
+
+    @enforce_types
+    def _fetch_scalar(self, query: str) -> Any:
+        """Fetches a scalar value from the database."""
+        result = duckdb.execute(query).fetchone()
+        return result[0] if result and len(result) == 1 else result
 
     @enforce_types
     def _check_cache_query_data(
         self, query: str, cache_file_name: str, scalar: bool
-    ) -> Union[Any, pl.DataFrame, None]:
+    ) -> Union[Any, pl.DataFrame]:
         """
         Executes a query and caches the result in a parquet file for up to an hour.
         If a cached file exists and is less than an hour old, the cached result is used.
@@ -61,6 +73,7 @@ class DuckDBFileReader:
         cache_file_path = os.path.join(cache_file_dir, f"{cache_file_name}.parquet")
 
         os.makedirs(cache_file_dir, exist_ok=True)
+
         # If the cache is valid, use it; otherwise, re-run the query and cache the results
         if self._is_cache_valid(cache_file_path, self.seconds_between_caches):
             query = f"SELECT * FROM '{cache_file_path}'"
@@ -90,6 +103,7 @@ class DuckDBFileReader:
                         else 0
                     )
                     cache_file_name = f"{cache_file_name}_{period_days}_days"
+
                 cache_data = self._check_cache_query_data(
                     query, cache_file_name, scalar
                 )
@@ -97,8 +111,7 @@ class DuckDBFileReader:
 
             # If scalar, fetch a single result
             if scalar:
-                result = duckdb.execute(query).fetchone()
-                return result[0] if result and len(result) == 1 else result
+                return self._fetch_scalar(query)
 
             return duckdb.execute(query).pl()
         except Exception as e:

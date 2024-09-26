@@ -34,6 +34,21 @@ class UnixTimeS(int):
     def from_dt(from_dt: datetime) -> "UnixTimeS":
         return UnixTimeS(int(from_dt.timestamp()))
 
+    @enforce_types
+    def to_dt(self) -> datetime:
+        # precondition
+        assert int(self) >= 0, self
+
+        # main work
+        dt = datetime.fromtimestamp(int(self), timezone.utc)
+        dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
+
+        # postcondition
+        ut2 = int(dt.timestamp())
+        assert ut2 == self, (self, ut2)
+
+        return dt
+
 
 class UnixTimeMs(int):
     @enforce_types
@@ -99,7 +114,6 @@ class UnixTimeMs(int):
         dt = dt.replace(tzinfo=timezone.utc)  # tack on timezone
         return UnixTimeMs.from_dt(dt)
 
-    @enforce_types
     @enforce_types
     def to_dt(self) -> datetime:
         # precondition

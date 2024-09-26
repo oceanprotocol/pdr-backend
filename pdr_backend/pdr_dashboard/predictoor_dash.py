@@ -28,9 +28,7 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
         suppress_callback_exceptions=True,
     )
 
-    #    try:
     setup_app(app, ppss)
-
     app.run(debug=debug_mode, port=port)
 
 

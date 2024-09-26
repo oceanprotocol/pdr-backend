@@ -30,16 +30,6 @@ def get_information_text(tooltip_id: str):
     return tooltips.get(tooltip_id, "")
 
 
-def get_date_period_selection_component():
-    component_id = "available_data_period_text"
-    return html.Div(
-        [
-            get_period_selection_radio_items("home-page"),
-            html.Span("there is no data available", id=component_id),
-        ]
-    )
-
-
 def get_period_selection_radio_items(component_id: str):
     return dcc.RadioItems(
         className="date-period-radio-items",
