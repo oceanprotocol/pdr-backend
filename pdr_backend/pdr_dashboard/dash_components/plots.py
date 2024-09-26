@@ -332,7 +332,7 @@ class ProcessedPayouts:
 
 
 def process_payouts(
-    payouts: pl.DataFrame, tx_fee_cost, calculate_confint: bool = False
+    pf: pl.DataFrame, tx_fee_cost, calculate_confint: bool = False
 ) -> ProcessedPayouts:
     """
     Process payouts data for a given predictor and feed.
@@ -345,10 +345,7 @@ def process_payouts(
     """
     processed = ProcessedPayouts()
 
-    p = payouts.clone()
-    processed.predictions = len(payouts)
-
-    p = p.with_columns(
+    pf = pf.with_columns(
         pl.lit(1).alias("predictions_crt"),
         (pl.col("payout").clip(lower_bound=0) - pl.col("stake")).alias("profit_change"),
         pl.when(pl.col("payout") > 0).then(1).otherwise(0).alias("correct_prediction"),
@@ -357,16 +354,16 @@ def process_payouts(
         .map_elements(lambda x: UnixTimeS(x).to_milliseconds(), pl.Int64)
         .alias("slot_in_unixts"),
     )
-    p = p.with_columns(
+    pf = pf.with_columns(
         pl.col("predictions_crt").cum_sum().alias("predictions_crt"),
         pl.col("correct_prediction").cum_sum().alias("correct_predictions_crt"),
     )
-    processed.tx_cost = tx_fee_cost * len(payouts)
+    processed.tx_cost = tx_fee_cost * len(pf)
 
-    processed.correct_predictions = p["correct_prediction"].sum()
+    processed.correct_predictions = pf["correct_prediction"].sum()
 
     if calculate_confint:
-        df = p.with_columns(
+        df = pf.with_columns(
             pl.struct(["correct_predictions_crt", "predictions_crt"])
             .map_elements(
                 lambda x: proportion_confint(
@@ -387,17 +384,17 @@ def process_payouts(
         processed.acc_l = df["acc_l"]
         processed.acc_u = df["acc_u"]
 
-    p = p.with_columns(
+    pf = pf.with_columns(
         ((pl.col("correct_predictions_crt") / pl.col("predictions_crt")) * 100).alias(
             "accuracies"
         )
     )
 
-    processed.slot_in_unixts = p["slot_in_unixts"]
-    processed.accuracies = p["accuracies"]
-    processed.profits = p["profit_change"].cum_sum()
-    processed.stakes = p["stake"]
-    processed.tx_costs = pl.Series([tx_fee_cost for i in range(len(payouts))])
+    processed.slot_in_unixts = pf["slot_in_unixts"]
+    processed.accuracies = pf["accuracies"]
+    processed.profits = pf["profit_change"].cum_sum()
+    processed.stakes = pf["stake"]
+    processed.tx_costs = pl.Series([tx_fee_cost for i in range(len(pf))])
 
     return processed
 
@@ -495,7 +492,7 @@ def get_figures_and_metrics(
         show_confidence_interval = len(predictors) == 1 and len(feeds) == 1
 
         processed_data = process_payouts(
-            payouts=filtered_payouts,
+            pf=filtered_payouts,
             tx_fee_cost=fee_cost,
             calculate_confint=show_confidence_interval,
         )

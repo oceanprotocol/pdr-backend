@@ -599,9 +599,7 @@ class AppDataManager:
 
         cols = [col["id"] for col in PREDICTOORS_HOME_PAGE_TABLE_COLS]
 
-        formatted_data = df.clone()
-        formatted_data = formatted_data[cols]
-        return format_df(formatted_data)
+        return format_df(df[cols])
 
     @property
     @enforce_types
@@ -612,12 +610,8 @@ class AppDataManager:
         df = df.fill_nan(0)
 
         columns = [col["id"] for col in FEEDS_HOME_PAGE_TABLE_COLS]
-        df = df[columns]
 
-        formatted_data = df.clone()
-        formatted_data = format_df(formatted_data)
-
-        return formatted_data
+        return format_df(df[columns])
 
     @property
     @enforce_types
@@ -632,12 +626,11 @@ class AppDataManager:
     @property
     @enforce_types
     def homepage_predictoors_cols(self) -> Tuple[Tuple, pl.DataFrame]:
-        data = self.formatted_predictoors_home_page_table_data
+        data = self.formatted_predictoors_home_page_table_data.clone()
 
         if self.favourite_addresses:
-            df = data.clone()
-            df1 = df.filter(df["full_addr"].is_in(self.favourite_addresses))
-            df2 = df.filter(~df["full_addr"].is_in(self.favourite_addresses))
+            df1 = data.filter(data["full_addr"].is_in(self.favourite_addresses))
+            df2 = data.filter(~data["full_addr"].is_in(self.favourite_addresses))
             data = pl.concat([df1, df2])
 
         columns = PREDICTOORS_HOME_PAGE_TABLE_COLS

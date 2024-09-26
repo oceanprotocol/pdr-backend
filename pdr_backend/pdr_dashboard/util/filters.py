@@ -200,8 +200,6 @@ def check_conditions(
 def check_condition(
     df: pl.DataFrame, condition_type: str, field: Optional[str], *values
 ) -> pl.DataFrame:
-    df = df.clone()
-
     if field and field.startswith("p_"):
         field = field[2:]
 
