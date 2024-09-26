@@ -310,14 +310,14 @@ class HomePage:
                     html.P(
                         """Add predictoor addresses to be saved 
                         and automatically selected when the app opens.""",
-                        style={"marginBottom": 0}
+                        style={"marginBottom": 0},
                     ),
                     html.P("Enter one address per line."),
                     dcc.Textarea(
                         id="predictoor_addrs",
                         placeholder="Predictoor addrs...",
                         value="",
-                        style={"margin": "10px", "width": "100%", "height": 200},
+                        style={"margin": "10px", "width": "60%", "height": 200},
                     ),
                     html.Button(
                         "Save",
