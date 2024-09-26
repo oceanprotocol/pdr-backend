@@ -35,11 +35,11 @@ class HomePage:
             id="graphs_container",
             style={
                 "height": "100%",
-                "width": "70%",
+                "width": "65%",
                 "display": "flex",
                 "flexDirection": "column",
                 "justifyContent": "start",
-                "paddingLeft": "50px",
+                "paddingLeft": "80px",
             },
         )
 
@@ -96,7 +96,7 @@ class HomePage:
             ],
             style={
                 "height": "100%",
-                "width": "30%",
+                "width": "35%",
                 "display": "flex",
                 "flexDirection": "column",
                 "justifyContent": "space-between",
@@ -150,13 +150,17 @@ class HomePage:
         return html.Div(
             [
                 html.Span(
-                    "available data for selected predictoors",
-                    style={"lineHeight": "1", "margin": "5px 0"},
+                    "selected predictoors data range",
+                    style={
+                        "lineHeight": "1",
+                        "marginTop": "5px",
+                        "marginBottom": "12px",
+                    },
                 ),
                 html.Span(
                     "there is no data available",
                     id="available_data_period_text",
-                    style={"fontWeight": "bold", "fontSize": "34px", "lineHeight": "1"},
+                    style={"fontWeight": "bold", "fontSize": "20px", "lineHeight": "1"},
                 ),
             ],
             style={"display": "flex", "flexDirection": "column"},
@@ -277,7 +281,7 @@ class HomePage:
                         "height": "30vh",
                         "width": "100%",
                         "overflow": "auto",
-                        "paddingTop": "5px",
+                        "marginTop": "5px",
                     },
                     fill_width=True,
                 ),
