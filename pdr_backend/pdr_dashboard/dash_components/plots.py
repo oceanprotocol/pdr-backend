@@ -344,6 +344,7 @@ def process_payouts(
         tuple: Tuple of slots, accuracies, profits, stakes.
     """
     processed = ProcessedPayouts()
+    processed.predictions = len(pf)
 
     pf = pf.with_columns(
         pl.lit(1).alias("predictions_crt"),
