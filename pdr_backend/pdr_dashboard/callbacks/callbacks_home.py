@@ -286,7 +286,11 @@ def get_callbacks_home(app):
         saved_predictoor_addrs,
     ):
         return (
-            [True, dash.no_update, dash.no_update]
-            if len(saved_predictoor_addrs) > 0
+            [
+                True if len(saved_predictoor_addrs) > 0 else dash.no_update,
+                dash.no_update,
+                dash.no_update,
+            ]
+            if len(saved_predictoor_addrs) > 0 or app.data.favourite_addresses
             else [False, [], []]
         )
