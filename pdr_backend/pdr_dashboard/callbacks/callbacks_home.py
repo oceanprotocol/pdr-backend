@@ -5,11 +5,11 @@ from dash import Input, Output, State
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_graph
-from pdr_backend.pdr_dashboard.util.data import (
+from pdr_backend.pdr_dashboard.util.format import format_value
+from pdr_backend.pdr_dashboard.util.helpers import (
     get_date_period_text_for_selected_predictoors,
     select_or_clear_all_by_table,
 )
-from pdr_backend.pdr_dashboard.util.format import format_value
 
 
 # pylint: disable=too-many-statements
@@ -112,9 +112,8 @@ def get_callbacks_home(app):
             app.data.refresh_predictoors_data()
             app.data.refresh_feeds_data()
 
-        formatted_predictoors_data = (
-            app.data.formatted_predictoors_home_page_table_data.clone()
-        )
+        formatted_predictoors_data = app.data.formatted_predictoors_home_page_table_data
+
         selected_predictoors_addrs = [
             predictoors_table[i]["full_addr"] for i in selected_rows
         ]
@@ -139,7 +138,7 @@ def get_callbacks_home(app):
         filtered_data = formatted_predictoors_data.clone()
         if search_value:
             filtered_data = filtered_data.filter(
-                filtered_data["full_addr"].str.contains(search_value)
+                filtered_data["full_addr"].str.contains("(?i)" + search_value)
             )
 
         filtered_data = filtered_data.filter(

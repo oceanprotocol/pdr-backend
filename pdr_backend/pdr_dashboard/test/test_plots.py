@@ -31,7 +31,7 @@ def test_process_payouts(_sample_app):
     tx_fee_cost = 0.2
 
     result = process_payouts(
-        payouts=filtered_payouts, tx_fee_cost=tx_fee_cost, calculate_confint=True
+        pf=filtered_payouts, tx_fee_cost=tx_fee_cost, calculate_confint=True
     )
 
     filtered_payouts = filtered_payouts.to_dicts()
