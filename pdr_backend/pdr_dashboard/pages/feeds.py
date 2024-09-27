@@ -93,24 +93,15 @@ class FeedsPage(TabularPage):
     def get_metrics_row(self):
         return html.Div(
             children=[
-                html.Div(
-                    children=[
-                        get_metric(
-                            label=key,
-                            value=value,
-                            value_id=f"feeds_page_{key}_metric",
-                        )
-                        for key, value in self.app.data.feeds_metrics_data.items()
-                    ],
-                    className="metrics_row",
-                    id="feeds_page_metrics_row",
-                ),
-                html.Div(
-                    id="feeds_page_metrics_row_control",
-                ),
+                get_metric(
+                    label=key,
+                    value=value,
+                    value_id=f"feeds_page_{key}_metric",
+                )
+                for key, value in self.app.data.feeds_metrics_data.items()
             ],
-            className="metrics_row_wrapper",
-            id="feeds_page_metrics_row_wrapper",
+            className="metrics_row",
+            id="feeds_page_metrics_row",
         )
 
     def get_search_bar_row(self):

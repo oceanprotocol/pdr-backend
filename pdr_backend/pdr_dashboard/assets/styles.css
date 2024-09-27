@@ -159,11 +159,12 @@ body {
     font-size: 20px;
 }
 
-#feeds_page_metrics_row_wrapper:has(> *[data-dash-is-loading="true"]) .metric_value {
+#feeds_page_metrics_row[data-dash-is-loading="true"] .metric_value,
+#predictoors_page_metrics_row[data-dash-is-loading="true"] .metric_value {
     position: relative;
     display: block;
     background-color: #f0f0f0;
-    color: transparent; /* Hides the text */
+    color: transparent !important; /* Hides the text */
     overflow: hidden;
     border-color: transparent !important;
     border-radius: 5px;
@@ -172,7 +173,8 @@ body {
     cursor: progress;
 }
 
-#feeds_page_metrics_row_wrapper:has(> *[data-dash-is-loading="true"]) .metric_value::after {
+#feeds_page_metrics_row[data-dash-is-loading="true"] .metric_value::after,
+#predictoors_page_metrics_row[data-dash-is-loading="true"] .metric_value::after {
     content: "";
     display: block;
     position: relative;
