@@ -10,7 +10,6 @@ from pdr_backend.pdr_dashboard.util.helpers import (
     get_date_period_text_for_selected_predictoors,
     select_or_clear_all_by_table,
 )
-from pdr_backend.pdr_dashboard.util.format import format_value
 from pdr_backend.pdr_dashboard.util.helpers import with_loading
 
 

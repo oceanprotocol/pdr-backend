@@ -6,10 +6,10 @@ import dash
 import polars as pl
 from enforce_typing import enforce_types
 
-from pdr_backend.util.time_types import UnixTimeS
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
+from pdr_backend.util.time_types import UnixTimeS
 
 @enforce_types
 def toggle_modal_helper(

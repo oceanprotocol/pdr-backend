@@ -48,8 +48,8 @@ def test_predictoors_search_input(_sample_app, dash_duo):
 
 def _unselect_defaults(dash_duo):
     # un-select the first row
-    dash_duo.find_element("#predictoors_table tbody tr:nth-child(2) input").click()
     dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
+    dash_duo.find_element("#predictoors_table tbody tr:nth-child(2) input").click()
 
     time.sleep(2)
 
@@ -134,10 +134,10 @@ def test_timeframe_metrics(_sample_app, dash_duo):
     _unselect_defaults(dash_duo)
 
     dash_duo.find_element("#predictoors_table tbody tr:nth-child(3) input").click()
-    time.sleep(2)
+    time.sleep(3)
 
     dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
-    time.sleep(2)
+    time.sleep(3)
 
     table_profit = dash_duo.find_element(
         "#predictoors_table tbody tr:nth-child(2) td:nth-child(3)"
