@@ -173,3 +173,12 @@ def get_available_data_area_components():
         ],
         style={"display": "flex", "justifyContent": "center", "alignItems": "center"},
     )
+
+
+def div_with_loading(div_id: str, style=None):
+    return dcc.Loading(
+        id=f"loading_{div_id}",
+        type="default",
+        children=html.Div(id=div_id, style=style),
+        custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
+    )

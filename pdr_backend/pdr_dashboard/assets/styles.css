@@ -160,7 +160,8 @@ body {
 }
 
 #feeds_page_metrics_row[data-dash-is-loading="true"] .metric_value,
-#predictoors_page_metrics_row[data-dash-is-loading="true"] .metric_value {
+#predictoors_page_metrics_row[data-dash-is-loading="true"] .metric_value,
+#metrics_container *[data-dash-is-loading="true"] {
     position: relative;
     display: block;
     background-color: #f0f0f0;
@@ -174,7 +175,8 @@ body {
 }
 
 #feeds_page_metrics_row[data-dash-is-loading="true"] .metric_value::after,
-#predictoors_page_metrics_row[data-dash-is-loading="true"] .metric_value::after {
+#predictoors_page_metrics_row[data-dash-is-loading="true"] .metric_value::after,
+#metrics_container *[data-dash-is-loading="true"]::after {
     content: "";
     display: block;
     position: relative;

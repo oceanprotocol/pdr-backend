@@ -33,6 +33,7 @@ def get_callbacks_home(app):
             State("predictoors_table", "selected_rows"),
             State("predictoors_table", "data"),
         ],
+        prevent_initial_call=True,
     )
     @with_loading("loading-home-figures")
     def get_display_data_from_db(

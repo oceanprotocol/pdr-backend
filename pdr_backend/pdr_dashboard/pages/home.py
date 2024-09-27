@@ -4,6 +4,7 @@ from dash import dash_table, dcc, html
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_tooltip_and_button,
+    div_with_loading,
 )
 
 
@@ -106,12 +107,18 @@ class HomePage:
     def get_graphs_column_plots_row(self):
         return html.Div(
             [
-                html.Div(id="accuracy_chart"),
-                html.Div(id="profit_chart"),
+                div_with_loading(div_id="accuracy_chart"),
+                div_with_loading(div_id="profit_chart"),
                 html.Div(
                     [
-                        html.Div(id="cost_chart", style={"width": "48%"}),
-                        html.Div(id="stake_chart", style={"width": "48%"}),
+                        html.Div(
+                            style={"width": "48%"},
+                            children=div_with_loading(div_id="cost_chart"),
+                        ),
+                        html.Div(
+                            style={"width": "48%"},
+                            children=div_with_loading(div_id="stake_chart"),
+                        ),
                     ],
                     style={
                         "width": "100%",
