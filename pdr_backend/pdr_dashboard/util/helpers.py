@@ -11,6 +11,7 @@ from dash import dcc, html
 
 from pdr_backend.util.time_types import UnixTimeS
 
+
 @enforce_types
 def toggle_modal_helper(
     ctx: dash._callback_context.CallbackContext,
