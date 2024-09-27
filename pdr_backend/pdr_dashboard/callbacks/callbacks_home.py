@@ -153,7 +153,7 @@ def get_callbacks_home(app):
         )
 
         filtered_data = pl.concat([selected_predictoors, filtered_data])
-        selected_predictoor_indices = list(range(len(selected_predictoors_addrs)))
+        selected_predictoor_indices = list(range(len(selected_predictoors)))
 
         return (filtered_data.to_dicts(), selected_predictoor_indices)
 
@@ -253,7 +253,7 @@ def get_callbacks_home(app):
         """
         Select or clear all rows in the feeds table.
         """
-        if len(predictoor_addrs) > 0:
+        if predictoor_addrs and len(predictoor_addrs) > 0:
             predictoor_addrs = "\n".join(predictoor_addrs)
         else:
             predictoor_addrs = ""

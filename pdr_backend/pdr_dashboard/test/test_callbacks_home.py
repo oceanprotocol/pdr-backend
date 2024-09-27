@@ -1,5 +1,7 @@
 import time
-
+import platform
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
 from pdr_backend.pdr_dashboard.test.resources import (
     _input_action,
     start_server_and_wait,
@@ -184,3 +186,72 @@ def test_navigation(_sample_app, dash_duo):
     # Navigate to Home
     dash_duo.wait_for_element("#navbar-container a[href='/']").click()
     dash_duo.wait_for_element_by_id("plots_container", timeout=10)
+
+
+def test_configure_predictoor_addresses(_sample_app, dash_duo):
+    app = _sample_app
+    start_server_and_wait(dash_duo, app)
+    predictoor_addrs = "0x35842372c513f8f217b968adc57a9296ba573d5c"
+
+    # Clear selected predictoors
+    dash_duo.find_element("#clear-all-predictoors_table").click()
+    dash_duo.find_element("#clear-all-feeds_table").click()
+    _, p_sel = _predictoor_count(dash_duo)
+    _, f_sel = _feed_count(dash_duo)
+    assert len(p_sel) == 0
+    assert len(f_sel) == 0
+
+    # Open config modal and save predictoor addrs
+    dash_duo.find_element("#configure_predictoors").click()
+    search_input = dash_duo.find_element("#predictoor_addrs")
+    search_input.clear()
+    search_input.send_keys(predictoor_addrs + Keys.ENTER)
+    dash_duo.find_element("#save_predictoors").click()
+
+    # Check that tables were updated based on the saved predictoor addrs
+    _, p_sel = _predictoor_count(dash_duo)
+    _, f_sel = _feed_count(dash_duo)
+    assert len(p_sel) == 1
+    assert len(f_sel) > 0
+
+    # Find selected predictoors and check that is the one specified inside the input
+    first_selected_row = p_sel[0].find_element(by=By.XPATH, value="./ancestor::tr")
+    first_row_second_col_value = first_selected_row.find_element(
+        by=By.XPATH, value="./td[2]"
+    ).text
+    assert first_row_second_col_value[:5] == predictoor_addrs[:5]
+
+    # Refresh the page
+    dash_duo.driver.refresh()
+
+    # Wait for the page to reload
+    dash_duo.wait_for_page()
+
+    _, p_sel = _predictoor_count(dash_duo)
+    _, f_sel = _feed_count(dash_duo)
+    assert len(p_sel) == 1
+    assert len(f_sel) > 0
+
+    # Find selected predictoors and check that is the one specified inside the input
+    first_selected_row = p_sel[0].find_element(by=By.XPATH, value="./ancestor::tr")
+    first_row_second_col_value = first_selected_row.find_element(
+        by=By.XPATH, value="./td[2]"
+    ).text
+    assert first_row_second_col_value[:5] == predictoor_addrs[:5]
+
+    # open config modal by button click
+    dash_duo.find_element("#configure_predictoors").click()
+
+    search_input = dash_duo.find_element("#predictoor_addrs")
+    select_all_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
+    search_input.send_keys(select_all_key + "a")
+    search_input.send_keys(Keys.DELETE)
+
+    dash_duo.find_element("#save_predictoors").click()
+    dash_duo.find_element("#predictoor_config_modal").click()
+    dash_duo.find_element(".modal").click()
+
+    _, p_sel = _predictoor_count(dash_duo)
+    _, f_sel = _feed_count(dash_duo)
+    assert len(p_sel) == 0
+    assert len(f_sel) == 0
