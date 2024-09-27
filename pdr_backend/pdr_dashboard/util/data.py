@@ -52,6 +52,6 @@ def get_date_period_text_header(start_date: str, end_date: str):
         return "there is no data available"
     date_period_text = f"""
         {datetime.fromtimestamp(float(start_date)).strftime('%d-%m-%y')}
-        -> {datetime.fromtimestamp(float(end_date)).strftime('%d-%m-%y')}
+        -> {datetime.fromtimestamp(float(end_date)).strftime('%d-%m-%y (%H:%M)')}
     """
     return date_period_text
