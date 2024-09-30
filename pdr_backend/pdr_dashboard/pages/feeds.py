@@ -1,4 +1,4 @@
-from dash import dash_table, dcc, html
+from dash import dash_table, html
 
 from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
@@ -19,7 +19,6 @@ class FeedsPage(TabularPage):
     def layout(self):
         return html.Div(
             [
-                dcc.Store(id="user-payout-stats"),
                 self.get_metrics_row(),
                 self.get_search_bar_row(),
                 self.get_main_container(),

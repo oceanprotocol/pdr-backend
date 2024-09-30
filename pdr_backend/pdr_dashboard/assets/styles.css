@@ -132,7 +132,7 @@ body {
 #feeds_page_table_area:has(> *[data-dash-is-loading="true"]) > #feeds_page_table table td,
 #predictoors_page_table_area:has(> *[data-dash-is-loading="true"]) > #predictoors_page_table table td {
     position: relative;
-    background-color: #f0f0f0;
+    background-color: #ccc;
     color: transparent; /* Hides the text */
     overflow: hidden;
     border-color: transparent !important;
@@ -164,7 +164,7 @@ body {
 #metrics_container *[data-dash-is-loading="true"] {
     position: relative;
     display: block;
-    background-color: #f0f0f0;
+    background-color: #ccc;
     color: transparent !important; /* Hides the text */
     overflow: hidden;
     border-color: transparent !important;
@@ -197,10 +197,28 @@ body {
     margin-right: 50px;
     border-radius: 5px;
     height: 300px;
-    background-color: #f0f0f0;
+    background-color: #ccc;
     overflow: hidden;
 }
 
+.modal-dialog[data-dash-is-loading="true"] .modal-graph-item {
+    display: block;
+    overflow: hidden;
+    background-color: #ccc;
+    border-radius: 5px;
+    cursor: progress !important;
+}
+
+.modal-dialog[data-dash-is-loading="true"] .modal-graph-item .dash-graph,
+.modal-dialog[data-dash-is-loading="true"] .modal-graph-item .dash-graph svg,
+.modal-dialog[data-dash-is-loading="true"] .modal-graph-item .dash-graph .plot-container,
+.modal-dialog[data-dash-is-loading="true"] .modal-graph-item .dash-graph .plot-container .nsewdrag, 
+.modal-dialog[data-dash-is-loading="true"] .modal-graph-item .dash-graph .plot-container .drag {
+    visibility: hidden;
+    cursor: progress !important;
+}
+
+.modal-dialog[data-dash-is-loading="true"] .modal-graph-item::after,
 #table_spinner::after {
     content: "";
     display: block;
@@ -209,6 +227,14 @@ body {
     height: 100%;
     background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
     animation: shimmer 2s infinite;
+}
+
+.modal-dialog[data-dash-is-loading="true"] .modal-graph-item::after {
+    top: -235px;
+}
+
+.modal-dialog[data-dash-is-loading="true"] .modal-graph-item .dash-graph {
+    visibility: hidden;
 }
 
 @keyframes shimmer {
