@@ -182,3 +182,7 @@ def div_with_loading(div_id: str, style=None):
         children=html.Div(id=div_id, style=style),
         custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
     )
+
+
+def table_initial_spinner():
+    return html.Div(id="table_spinner")

@@ -1,5 +1,6 @@
 import dash
 from dash import Input, Output, State, html
+import time
 
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
 from pdr_backend.pdr_dashboard.util.filters import (
@@ -15,13 +16,13 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import get_metric
 
 def get_callbacks_feeds(app):
     @app.callback(
-        Output("feeds_page_table", "data", allow_duplicate=True),
+        Output("feeds_page_table", "data"),
         Output("feeds_page_metrics_row", "children"),
         Output("feeds_page_table_control", "children"),
         [Input("start-date", "data")],
-        prevent_initial_call=True,
     )
     def update_page_data(_start_date):
+        time.sleep(5)
         app.data.refresh_feeds_data()
 
         metrics_children_data = [
@@ -36,7 +37,7 @@ def get_callbacks_feeds(app):
         return (app.data.feeds_table_data.to_dicts(), metrics_children_data, html.Div())
 
     @app.callback(
-        Output("feeds_page_table", "data"),
+        Output("feeds_page_table", "data", allow_duplicate=True),
         [
             Input("base_token", "value"),
             Input("quote_token", "value"),

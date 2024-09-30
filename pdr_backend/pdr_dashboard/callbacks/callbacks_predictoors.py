@@ -1,5 +1,6 @@
 import dash
 from dash import Input, Output, State, html
+import time
 
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
 from pdr_backend.pdr_dashboard.pages.predictoors import get_metric, key_id_name
@@ -15,13 +16,14 @@ from pdr_backend.pdr_dashboard.util.helpers import (
 
 def get_callbacks_predictoors(app):
     @app.callback(
-        Output("predictoors_page_table", "data", allow_duplicate=True),
+        Output("predictoors_page_table", "data"),
         Output("predictoors_page_metrics_row", "children"),
         Output("predictoors_page_table_control", "children"),
         [Input("start-date", "data")],
-        prevent_initial_call=True,
     )
     def update_page_data(_start_date):
+        time.sleep(5)
+
         app.data.refresh_predictoors_data()
         stats = app.data.predictoors_metrics()
 
@@ -41,7 +43,7 @@ def get_callbacks_predictoors(app):
         )
 
     @app.callback(
-        Output("predictoors_page_table", "data"),
+        Output("predictoors_page_table", "data", allow_duplicate=True),
         [
             Input("apr_button", "n_clicks"),
             Input("p_avg_accuracy_button", "n_clicks"),

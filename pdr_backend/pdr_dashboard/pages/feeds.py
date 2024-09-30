@@ -5,6 +5,7 @@ from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_search_bar,
+    table_initial_spinner,
 )
 from pdr_backend.pdr_dashboard.pages.common import Filter, TabularPage
 from pdr_backend.pdr_dashboard.util.format import FEEDS_TABLE_COLS
@@ -135,12 +136,15 @@ class FeedsPage(TabularPage):
                         "sales",
                     ],
                     row_selectable="single",
-                    data=self.app.data.feeds_table_data.to_dicts(),
+                    data=[],
                     sort_action="custom",
                     sort_mode="single",
                 ),
                 html.Div(
                     id="feeds_page_table_control",
+                    children=[
+                        table_initial_spinner(),
+                    ],
                 ),
             ],
             style={"width": "100%", "overflow": "scroll"},

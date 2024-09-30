@@ -4,6 +4,7 @@ from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_search_bar,
+    table_initial_spinner,
 )
 from pdr_backend.pdr_dashboard.pages.common import TabularPage
 from pdr_backend.pdr_dashboard.util.format import PREDICTOORS_TABLE_COLS
@@ -101,12 +102,15 @@ class PredictoorsPage(TabularPage):
                     columns=PREDICTOORS_TABLE_COLS,
                     hidden_columns=["full_addr"],
                     row_selectable="single",
-                    data=self.app.data.predictoors_table_data.to_dicts(),
+                    data=[],
                     sort_action="custom",
                     sort_mode="single",
                 ),
                 html.Div(
                     id="predictoors_page_table_control",
+                    children=[
+                        table_initial_spinner(),
+                    ],
                 ),
             ],
             style={"width": "100%", "overflow": "scroll"},
