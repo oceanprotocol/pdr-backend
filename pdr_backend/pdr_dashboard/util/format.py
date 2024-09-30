@@ -1,6 +1,6 @@
 from typing import Union
-import polars as pl
 
+import polars as pl
 from enforce_typing import enforce_types
 from numerize import numerize
 
@@ -86,31 +86,6 @@ FORMAT_VALUES_CONFIG = {
 
 
 @enforce_types
-def format_value(value: Union[int, float, str], value_id: str) -> str:
-    """
-    Format value.
-    Args:
-        value (Union[int, float]): Value.
-        value_id (str): Value id.
-    Returns:
-        str: Formatted value.
-    """
-    if value_id not in FORMAT_VALUES_CONFIG:
-        return str(value)
-
-    return globals()["format_" + FORMAT_VALUES_CONFIG[value_id] + "_val"](value)
-
-
-@enforce_types
-def format_column(df: pl.DataFrame, col: str):
-    if col not in FORMAT_COLS_CONFIG:
-        return df.with_columns(pl.col(col).cast(pl.String).alias(col))
-
-    func_name = globals()["format_" + FORMAT_COLS_CONFIG[col]]
-    return func_name(df, col)
-
-
-@enforce_types
 def format_df(df: pl.DataFrame) -> pl.DataFrame:
     """
     Format table rows.
@@ -135,20 +110,12 @@ def format_df(df: pl.DataFrame) -> pl.DataFrame:
 
 
 @enforce_types
-def format_eth_address(df: pl.DataFrame, col: str) -> pl.DataFrame:
-    return df.with_columns(
-        pl.when(pl.col(col).str.len_chars() > 0)
-        .then(pl.col(col).str.slice(0, 5) + "..." + pl.col(col).str.slice(-5))
-        .otherwise(pl.lit("No address"))
-        .alias(col)
-    )
+def format_column(df: pl.DataFrame, col: str):
+    if col not in FORMAT_COLS_CONFIG:
+        return df.with_columns(pl.col(col).cast(pl.String).alias(col))
 
-
-@enforce_types
-def format_percentage(df: pl.DataFrame, col: str) -> pl.DataFrame:
-    return df.with_columns(
-        (pl.col(col).round(2).cast(pl.String) + pl.lit("%")).alias(col)
-    )
+    func_name = globals()["format_" + FORMAT_COLS_CONFIG[col]]
+    return func_name(df, col)
 
 
 @enforce_types
@@ -186,16 +153,26 @@ def format_sales_info_data(df: pl.DataFrame) -> pl.DataFrame:
 
 
 @enforce_types
+def format_eth_address(df: pl.DataFrame, col: str) -> pl.DataFrame:
+    return df.with_columns(
+        pl.when(pl.col(col).str.len_chars() > 0)
+        .then(pl.col(col).str.slice(0, 5) + "..." + pl.col(col).str.slice(-5))
+        .otherwise(pl.lit("No address"))
+        .alias(col)
+    )
+
+
+@enforce_types
+def format_percentage(df: pl.DataFrame, col: str) -> pl.DataFrame:
+    return df.with_columns(
+        (pl.col(col).round(2).cast(pl.String) + pl.lit("%")).alias(col)
+    )
+
+
+@enforce_types
 def format_currency(
     df: pl.DataFrame, col: str, base=None, suffix: str = ""
 ) -> pl.DataFrame:
-    """
-    Format Ocean amount.
-    Args:
-        amount (float): Ocean amount.
-    Returns:
-        str: Formatted Ocean amount.
-    """
     if base is None:
         base = pl.col(col).map_elements(numerize.numerize, return_dtype=pl.String)
 
@@ -211,6 +188,23 @@ def format_currency_conditional(df: pl.DataFrame, col: str) -> pl.DataFrame:
     )
 
     return format_currency(df, col, base=base)
+
+
+# Value formatting functions
+@enforce_types
+def format_value(value: Union[int, float, str], value_id: str) -> str:
+    """
+    Format value.
+    Args:
+        value (Union[int, float]): Value.
+        value_id (str): Value id.
+    Returns:
+        str: Formatted value.
+    """
+    if value_id not in FORMAT_VALUES_CONFIG:
+        return str(value)
+
+    return globals()["format_" + FORMAT_VALUES_CONFIG[value_id] + "_val"](value)
 
 
 @enforce_types

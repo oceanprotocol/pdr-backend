@@ -7,7 +7,7 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
 from pdr_backend.pdr_dashboard.pages.feeds import FeedsPage
 from pdr_backend.pdr_dashboard.pages.home import HomePage
 from pdr_backend.pdr_dashboard.pages.predictoors import PredictoorsPage
-from pdr_backend.pdr_dashboard.util.data import get_date_period_text_header
+from pdr_backend.pdr_dashboard.util.helpers import get_date_period_text_header
 
 
 def get_callbacks_common(app):

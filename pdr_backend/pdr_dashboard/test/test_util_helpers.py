@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import dash
 import polars as pl
 
-from pdr_backend.pdr_dashboard.util.data import select_or_clear_all_by_table
+from pdr_backend.pdr_dashboard.util.helpers import select_or_clear_all_by_table
 
 
 def test_select_all(sample_table_rows):
