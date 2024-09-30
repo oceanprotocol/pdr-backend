@@ -1,4 +1,3 @@
-import polars as pl
 from dash import dash_table, dcc, html
 
 from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
