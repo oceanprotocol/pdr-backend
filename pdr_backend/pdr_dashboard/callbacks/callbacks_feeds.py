@@ -1,6 +1,5 @@
 import dash
 from dash import Input, Output, State, html
-import time
 
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
 from pdr_backend.pdr_dashboard.util.filters import (
@@ -22,7 +21,6 @@ def get_callbacks_feeds(app):
         [Input("start-date", "data")],
     )
     def update_page_data(_start_date):
-        time.sleep(5)
         app.data.refresh_feeds_data()
 
         metrics_children_data = [
