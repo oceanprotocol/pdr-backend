@@ -7,41 +7,15 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_search_bar,
     table_initial_spinner,
 )
-from pdr_backend.pdr_dashboard.pages.common import Filter, TabularPage
+from pdr_backend.pdr_dashboard.pages.common import TabularPage
 from pdr_backend.pdr_dashboard.util.format import FEEDS_TABLE_COLS
-
-filters = [
-    {"name": "base_token", "placeholder": "Base Token", "options": []},
-    {"name": "quote_token", "placeholder": "Quote Token", "options": []},
-    {"name": "source", "placeholder": "Source", "options": []},
-    {"name": "timeframe", "placeholder": "Timeframe", "options": []},
-]
-
-filters_objects = [Filter(**item) for item in filters]
+from pdr_backend.pdr_dashboard.util.helpers import get_empty_feeds_filters
 
 
 class FeedsPage(TabularPage):
     def __init__(self, app):
         self.app = app
-        self.app.data.refresh_feeds_data()
-
-        df = app.data.feeds_data.clone()
-        df = df.with_columns(
-            pl.col("pair")
-            .str.split_exact("/", 1)
-            .map_elements(lambda x: x["field_0"], return_dtype=pl.String)
-            .alias("base_token"),
-            pl.col("pair")
-            .str.split_exact("/", 1)
-            .map_elements(lambda x: x["field_1"], return_dtype=pl.String)
-            .alias("quote_token"),
-            pl.col("source").str.to_titlecase().alias("source"),
-        )
-
-        filters_objects[0].options = df["base_token"].unique().to_list()
-        filters_objects[1].options = df["quote_token"].unique().to_list()
-        filters_objects[2].options = df["source"].unique().to_list()
-        filters_objects[3].options = df["timeframe"].unique().to_list()
+        self.initial_filters = get_empty_feeds_filters()
 
     def layout(self):
         return html.Div(
@@ -61,7 +35,7 @@ class FeedsPage(TabularPage):
         return html.Div(
             [
                 self.get_multiselect_dropdown(filter_obj)
-                for filter_obj in filters_objects
+                for filter_obj in self.initial_filters
             ]
             + [
                 self.get_input_filter("Accuracy"),
@@ -96,10 +70,10 @@ class FeedsPage(TabularPage):
             children=[
                 get_metric(
                     label=key,
-                    value=value,
+                    value="",
                     value_id=f"feeds_page_{key}_metric",
                 )
-                for key, value in self.app.data.feeds_metrics_data.items()
+                for key in ["Feeds", "Accuracy", "Volume", "Sales", "Revenue"]
             ],
             className="metrics_row",
             id="feeds_page_metrics_row",

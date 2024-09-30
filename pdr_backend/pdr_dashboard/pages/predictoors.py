@@ -13,7 +13,6 @@ from pdr_backend.pdr_dashboard.util.format import PREDICTOORS_TABLE_COLS
 class PredictoorsPage(TabularPage):
     def __init__(self, app):
         self.app = app
-        self.app.data.refresh_predictoors_data()
 
     def layout(self):
         return html.Div(
@@ -67,10 +66,10 @@ class PredictoorsPage(TabularPage):
             children=[
                 get_metric(
                     label=key,
-                    value=value,
+                    value="",
                     value_id=key_id_name(key),
                 )
-                for key, value in self.app.data.predictoors_metrics_data.items()
+                for key in ["Predictoors", "Accuracy(avg)", "Staked", "Gross Income"]
             ],
             className="metrics_row",
             id="predictoors_page_metrics_row",

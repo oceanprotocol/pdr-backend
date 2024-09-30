@@ -9,6 +9,7 @@ from pdr_backend.pdr_dashboard.util.filters import (
 from pdr_backend.pdr_dashboard.util.format import format_df
 from pdr_backend.pdr_dashboard.util.helpers import (
     toggle_modal_helper,
+    produce_feeds_filter_options,
 )
 from pdr_backend.pdr_dashboard.dash_components.view_elements import get_metric
 
@@ -18,10 +19,16 @@ def get_callbacks_feeds(app):
         Output("feeds_page_table", "data"),
         Output("feeds_page_metrics_row", "children"),
         Output("feeds_page_table_control", "children"),
+        Output("base_token", "options"),
+        Output("quote_token", "options"),
+        Output("source", "options"),
+        Output("timeframe", "options"),
         [Input("start-date", "data")],
     )
     def update_page_data(_start_date):
         app.data.refresh_feeds_data()
+
+        filter_options = produce_feeds_filter_options(app.data.feeds_data.clone())
 
         metrics_children_data = [
             get_metric(
@@ -32,7 +39,15 @@ def get_callbacks_feeds(app):
             for key, value in app.data.feeds_metrics_data.items()
         ]
 
-        return (app.data.feeds_table_data.to_dicts(), metrics_children_data, html.Div())
+        return (
+            app.data.feeds_table_data.to_dicts(),
+            metrics_children_data,
+            html.Div(),
+            filter_options[0],
+            filter_options[1],
+            filter_options[2],
+            filter_options[3],
+        )
 
     @app.callback(
         Output("feeds_page_table", "data", allow_duplicate=True),

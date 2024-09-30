@@ -10,6 +10,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 from pdr_backend.util.time_types import UnixTimeS
+from pdr_backend.pdr_dashboard.pages.common import Filter
 
 
 @enforce_types
@@ -142,3 +143,38 @@ def get_date_period_text_for_selected_predictoors(payouts: pl.DataFrame) -> str:
 @enforce_types
 def get_date_period_text_header(start_date: UnixTimeS, end_date: UnixTimeS) -> str:
     return _format_date_text(start_date.to_dt(), end_date.to_dt())
+
+
+def get_empty_feeds_filters() -> List[Filter]:
+    filters = [
+        {"name": "base_token", "placeholder": "Base Token", "options": []},
+        {"name": "quote_token", "placeholder": "Quote Token", "options": []},
+        {"name": "source", "placeholder": "Source", "options": []},
+        {"name": "timeframe", "placeholder": "Timeframe", "options": []},
+    ]
+
+    return [Filter(**item) for item in filters]
+
+
+@enforce_types
+def produce_feeds_filter_options(
+    df: pl.DataFrame,
+) -> Tuple[List[str], List[str], List[str], List[str]]:
+    df = df.with_columns(
+        pl.col("pair")
+        .str.split_exact("/", 1)
+        .map_elements(lambda x: x["field_0"], return_dtype=pl.String)
+        .alias("base_token"),
+        pl.col("pair")
+        .str.split_exact("/", 1)
+        .map_elements(lambda x: x["field_1"], return_dtype=pl.String)
+        .alias("quote_token"),
+        pl.col("source").str.to_titlecase().alias("source"),
+    )
+
+    return (
+        df["base_token"].unique().to_list(),
+        df["quote_token"].unique().to_list(),
+        df["source"].unique().to_list(),
+        df["timeframe"].unique().to_list(),
+    )
