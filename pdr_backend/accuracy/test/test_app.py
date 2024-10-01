@@ -14,13 +14,14 @@ from pdr_backend.accuracy.app import (
     aggregate_statistics,
     calculate_statistics_for_all_assets,
 )
-from pdr_backend.subgraph.legacy.subgraph_slot import PredictSlot
+from pdr_backend.subgraph.legacy.subgraph_slot import PredictSlot, PredictSlotStatus
 from pdr_backend.util.time_types import UnixTimeS
 
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(
     ID="0xAsset-12345",
     slot="12345",
+    status=PredictSlotStatus.CANCELED,
     trueValues=[{"ID": "1", "trueValue": True}],
     roundSumStakesUp=150.0,
     roundSumStakes=100.0,

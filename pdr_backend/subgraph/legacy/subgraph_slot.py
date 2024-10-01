@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 from dataclasses import dataclass
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
+from enum import Enum
 
 from enforce_typing import enforce_types
 
@@ -12,10 +13,17 @@ from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.util.time_types import UnixTimeS
 
 
+class PredictSlotStatus(Enum):
+    PENDING = "Pending"
+    CANCELED = "Canceled"
+    PAYING = "Paying"
+
+
 @dataclass
 class PredictSlot:
     ID: str
     slot: str
+    status: PredictSlotStatus
     trueValues: List[Dict[str, Any]]
     roundSumStakesUp: float
     roundSumStakes: float
@@ -28,7 +36,6 @@ def get_predict_slots_query(
     last_slot: UnixTimeS,
     first: int,
     skip: int,
-    status_to_filter_out: Union[str, None] = "",
 ) -> str:
     """
     Constructs a GraphQL query string to fetch prediction slot data for
@@ -55,24 +62,19 @@ def get_predict_slots_query(
                 slot_lte: {initial_slot}
                 slot_gte: {last_slot}
                 predictContract_in: {asset_ids_str}
-        """
-
-    if status_to_filter_out:
-        query += f"status_not: {status_to_filter_out}"
-
-    query += """
-            }
-                ) {
+            }}
+                ) {{
                 id
                 slot
-                trueValues {
+                status
+                trueValues {{
                     id
                     trueValue
-                }
+                }}
                 roundSumStakesUp
                 roundSumStakes
-                }
-            }
+                }}
+            }}
         """
 
     return query
@@ -86,7 +88,6 @@ def get_slots(
     skip: int,
     slots: List[PredictSlot],
     network: str = "mainnet",
-    status_to_filter_out: Union[str, None] = None,
 ) -> List[PredictSlot]:
     """
     Retrieves slots information for given addresses and a specified time range from a subgraph.
@@ -108,12 +109,7 @@ def get_slots(
     records_per_page = 1000
 
     query = get_predict_slots_query(
-        addresses,
-        end_ts_param,
-        start_ts_param,
-        records_per_page,
-        skip,
-        status_to_filter_out,
+        addresses, end_ts_param, start_ts_param, records_per_page, skip
     )
 
     result = query_subgraph(
@@ -132,6 +128,7 @@ def get_slots(
             **{
                 "ID": slot["id"],
                 "slot": slot["slot"],
+                "status": slot["status"],
                 "trueValues": slot["trueValues"],
                 "roundSumStakesUp": float(slot["roundSumStakesUp"]),
                 "roundSumStakes": float(slot["roundSumStakes"]),
@@ -149,7 +146,6 @@ def get_slots(
             skip + records_per_page,
             slots,
             network,
-            status_to_filter_out,
         )
     return slots
 
@@ -160,7 +156,6 @@ def fetch_slots_for_all_assets(
     start_ts_param: UnixTimeS,
     end_ts_param: UnixTimeS,
     network: str = "mainnet",
-    status_to_filter_out: Union[str, None] = None,
 ) -> Dict[str, List[PredictSlot]]:
     """
     Fetches slots for all provided asset IDs within a given time range and organizes them by asset.
@@ -176,9 +171,7 @@ def fetch_slots_for_all_assets(
         containing slot information.
     """
 
-    all_slots = get_slots(
-        asset_ids, end_ts_param, start_ts_param, 0, [], network, status_to_filter_out
-    )
+    all_slots = get_slots(asset_ids, end_ts_param, start_ts_param, 0, [], network)
 
     slots_by_asset: Dict[str, List[PredictSlot]] = {}
     for slot in all_slots:
