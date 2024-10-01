@@ -505,11 +505,7 @@ def get_figures_and_metrics(
         figs_metrics.total_profit += (
             processed_data.profits[-1] if not processed_data.profits.is_empty() else 0.0
         )
-        figs_metrics.total_cost += (
-            processed_data.tx_costs[-1]
-            if not processed_data.tx_costs.is_empty()
-            else 0.0
-        )
+        figs_metrics.total_cost += processed_data.tx_cost
 
         short_name = f"{predictor[:5]} - {feed.str_without_exchange()}"
 

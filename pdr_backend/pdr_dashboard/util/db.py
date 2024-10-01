@@ -524,7 +524,7 @@ class AppDataManager:
         df = df.with_columns(
             pl.col("user").alias("full_addr"),
             pl.col("user").alias("addr"),
-            pl.col("stake_count").mul(self.fee_cost).alias("tx_costs_(OCEAN)"),
+            pl.col("stake_count").mul(2 * self.fee_cost).alias("tx_costs_(OCEAN)"),
         )
         df = df.fill_null(0)
         df = df.with_columns(
