@@ -181,7 +181,7 @@ def calculate_statistics_for_all_assets(
         calculated statistics such as average accuracy and total staked amounts.
     """
     slots_by_asset = fetch_slots_for_all_assets(
-        asset_ids, start_ts_param, end_ts_param, network
+        asset_ids, start_ts_param, end_ts_param, network, "Canceled"
     )
 
     overall_stats = {}
