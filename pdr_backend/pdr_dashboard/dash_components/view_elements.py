@@ -72,7 +72,7 @@ def get_metric(label, value, value_id):
                 },
             ),
             dcc.Loading(
-                id="loading",
+                className="loading",
                 type="default",
                 children=html.Span(
                     format_value(value if value else 0, value_id),
