@@ -66,6 +66,9 @@ These are due to the nature of the pytest tests and are not expected to be resol
 If you upgrade selenium or dash[testing], you should check if these warnings are still present and remove the ignore statement in `pytest.ini` if they are not.
 
 #### Warnings related to plotly
+- `ignore:.*setDaemon\(\) is deprecated, set the daemon attribute instead.*:DeprecationWarning` -> due to usage of `kaleido` and `plotly`
+
+If you upgrade plotly, you should check if these warnings are still present and remove the ignore statement in `pytest.ini` if they are not.
 
 #### Warnings related to stopit
 - `ignore:.*pkg_resources is deprecated as an API.*:DeprecationWarning` -> due to usage of `stopit`, which is an older library and relies on older versions of `pkg_resources`.
