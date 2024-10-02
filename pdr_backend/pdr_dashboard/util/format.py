@@ -237,7 +237,7 @@ def format_currency_without_decimal_with_suffix_val(amount: Union[float, int]) -
 @enforce_types
 def format_approximate_currency_with_decimal_val(value: Union[float, int]) -> str:
     formatted_value = format_currency_val(value, suffix="", show_decimal=True)
-    return f"~{formatted_value}"
+    return f"~{formatted_value} OCEAN"
 
 
 @enforce_types
