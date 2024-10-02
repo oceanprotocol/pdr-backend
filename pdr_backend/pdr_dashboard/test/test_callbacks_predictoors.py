@@ -46,7 +46,7 @@ def test_predictoors_table(_sample_app, dash_duo):
         "Gross Income (Ocean)",
         "Stake Loss (Ocean)",
         "Tx Costs (Ocean)",
-        "Net Income (Ocean)",
+        "Profit (Ocean)",
     ]
     assert header_texts == expected_headers
 

@@ -533,7 +533,7 @@ class AppDataManager:
                 lambda x: x["total_profit"] - x["tx_costs_(OCEAN)"],
                 return_dtype=pl.Float64,
             )
-            .alias("net_income_(OCEAN)")
+            .alias("profit_(OCEAN)")
         )
 
         columns = [col["id"] for col in PREDICTOORS_TABLE_COLS]
