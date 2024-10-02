@@ -70,9 +70,11 @@ def test_format_percentage():
 def test_format_approximate_currency_with_decimal():
     assert (
         format_approximate_currency_with_decimal_val(1234567890.1234567890)
-        == "~1234567890.12"
+        == "~1234567890.12 OCEAN"
     )
-    assert format_approximate_currency_with_decimal_val(1234567890) == "~1234567890"
+    assert (
+        format_approximate_currency_with_decimal_val(1234567890) == "~1234567890 OCEAN"
+    )
 
 
 def test_format_value():
@@ -82,7 +84,7 @@ def test_format_value():
     assert format_value(12, "feeds_page_Revenue_metric") == "12 OCEAN"
     assert format_value(9876.12, "profit_metric") == "9.88K OCEAN"
     assert format_value(9876.12, "stake_metric") == "9.88K OCEAN"
-    assert format_value(9876, "costs_metric") == "~9876"
+    assert format_value(9876, "costs_metric") == "~9876 OCEAN"
     assert format_value(12, "unknown") == "12"
 
 
