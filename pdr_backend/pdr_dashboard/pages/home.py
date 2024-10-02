@@ -149,7 +149,7 @@ class HomePage:
         return html.Div(
             [
                 html.Span(
-                    "selected predictoors data range",
+                    "Selected predictoors data range",
                     style={
                         "lineHeight": "1",
                         "marginTop": "5px",
