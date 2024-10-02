@@ -68,7 +68,6 @@ class FeedsPage(TabularPage):
             children=[
                 get_metric(
                     label=key,
-                    value="",
                     value_id=f"feeds_page_{key}_metric",
                 )
                 for key in ["Feeds", "Accuracy", "Volume", "Sales", "Revenue"]

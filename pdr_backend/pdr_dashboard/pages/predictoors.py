@@ -66,7 +66,6 @@ class PredictoorsPage(TabularPage):
             children=[
                 get_metric(
                     label=key,
-                    value="",
                     value_id=key_id_name(key),
                 )
                 for key in ["Predictoors", "Accuracy(avg)", "Staked", "Gross Income"]
