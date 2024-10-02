@@ -5,8 +5,6 @@ import dash_bootstrap_components as dbc
 import yaml
 from dash import dcc, html
 
-from pdr_backend.pdr_dashboard.util.format import format_value
-
 NAV_ITEMS = [
     {"text": "Home", "location": "/"},
     {"text": "Feeds", "location": "/feeds"},
@@ -57,7 +55,7 @@ def get_tooltip_and_button(value_id: str):
     )
 
 
-def get_metric(label, value, value_id):
+def get_metric(label, value_id):
     return html.Div(
         [
             html.Span(

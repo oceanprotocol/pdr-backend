@@ -1,7 +1,6 @@
 import dash
 import polars as pl
 from dash import Input, Output, State, html
-import time
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
@@ -11,7 +10,6 @@ from pdr_backend.pdr_dashboard.util.helpers import (
     get_date_period_text_for_selected_predictoors,
     select_or_clear_all_by_table,
     check_data_loaded,
-    with_loading,
     get_feeds_for_favourite_predictoors,
 )
 

@@ -4,7 +4,6 @@ from dash import dash_table, dcc, html
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_tooltip_and_button,
-    div_with_loading,
     table_initial_spinner,
 )
 
@@ -202,14 +201,12 @@ class HomePage:
             length = 0
 
             toggle_switch = self.get_predictoors_switch()
-            selected_rows = []
         else:
             table_name = "Feeds"
             searchable_field = "pair"
             length = 0
 
             toggle_switch = self.get_feeds_switch()
-            selected_rows = []
 
         return html.Div(
             [

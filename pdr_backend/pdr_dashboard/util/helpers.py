@@ -196,8 +196,8 @@ def check_data_loaded(
                     return tuple(
                         dash.no_update for _ in range(output_count)
                     )  # multiple outputs
-                else:
-                    return dash.no_update  # single output
+
+                return dash.no_update  # single output
             return func(*args, **kwargs)
 
         return wrapper

@@ -66,7 +66,7 @@ def get_callbacks_common(app):
     @check_data_loaded(output_count=1, alternative_output="")
     def display_available_data(
         _,
-        is_initial_data_loaded,
+        _is_initial_data_loaded,
     ):
         return get_date_period_text_header(
             app.data.min_timestamp, app.data.max_timestamp

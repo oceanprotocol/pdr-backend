@@ -2,7 +2,7 @@ import dash
 from dash import Input, Output, State, html
 
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
-from pdr_backend.pdr_dashboard.pages.predictoors import get_metric, key_id_name
+from pdr_backend.pdr_dashboard.pages.predictoors import key_id_name
 from pdr_backend.pdr_dashboard.util.filters import (
     check_conditions,
     filter_table_by_range,
