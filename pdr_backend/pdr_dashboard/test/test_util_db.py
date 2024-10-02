@@ -1,4 +1,5 @@
 import time
+from datetime import UTC, datetime
 from unittest.mock import patch
 
 import polars as pl
@@ -241,3 +242,21 @@ def test_cache_not_used_for_scalar(
 
     # Check if scalar result is returned
     assert result == 10
+
+
+def test_predictoor_filter_integration(_sample_app):
+    """
+    Test that setting a certain start date filters out predictoors that haven't
+    added predictions in that time. Since the cutoff date for this test is very
+    finely tuned, it can not be tested through callbacks in set_period_start_date.
+    """
+    app = _sample_app
+    dt1 = datetime(2024, 7, 25, 2, 4, tzinfo=UTC)
+    app.data.start_date = dt1
+    app.data.file_reader.set_start_date(dt1)
+    assert len(app.data._init_predictoor_payouts_stats()) == 57
+
+    dt2 = datetime(2024, 7, 26, 1, 56, 28, tzinfo=UTC)
+    app.data.start_date = dt2
+    app.data.file_reader.set_start_date(dt2)
+    assert len(app.data._init_predictoor_payouts_stats()) == 32
