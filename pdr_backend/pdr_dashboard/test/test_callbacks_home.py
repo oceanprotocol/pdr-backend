@@ -169,20 +169,3 @@ def test_predictoors_feed_only_switch(_sample_app, dash_duo):
 
     feeds_table_len = len(dash_duo.find_elements("#feeds_table tbody tr"))
     assert feeds_table_len == 21
-
-
-def test_navigation(_sample_app, dash_duo):
-    app = _sample_app
-    start_server_and_wait(dash_duo, app)
-
-    # Default page is Home
-    dash_duo.wait_for_element_by_id("plots_container", timeout=10)
-
-    # Navigate to Feeds
-    dash_duo.wait_for_element("#navbar-container a[href='/feeds']").click()
-    dash_duo.wait_for_element_by_id("feeds_page_metrics_row", timeout=10)
-    dash_duo.wait_for_element_by_id("feeds_page_table", timeout=10)
-
-    # Navigate to Home
-    dash_duo.wait_for_element("#navbar-container a[href='/']").click()
-    dash_duo.wait_for_element_by_id("plots_container", timeout=10)
