@@ -37,7 +37,7 @@ def get_period_selection_radio_items(component_id: str):
             {"label": "1M", "value": "30"},
             {"label": "ALL", "value": "0"},
         ],
-        value="7",  # default selected value
+        value="30",  # default selected value
         labelStyle={"display": "inline-block", "margin-right": "10px"},
     )
 
@@ -72,9 +72,8 @@ def get_metric(label, value, value_id):
                 },
             ),
             html.Span(
-                format_value(value if value else 0, value_id),
                 id=value_id,
-                style={"fontWeight": "bold"},
+                children=html.Div(className="initial_metric"),
                 className="metric_value",
             ),
         ],
@@ -86,6 +85,7 @@ def get_layout():
     return html.Div(
         [
             dcc.Location(id="url", refresh=False),
+            dcc.Store(id="is-initial-data-loaded"),
             dcc.Store(id="start-date"),
             get_header(),
             html.Div(id="page-content"),

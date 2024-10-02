@@ -178,3 +178,40 @@ def produce_feeds_filter_options(
         df["source"].unique().to_list(),
         df["timeframe"].unique().to_list(),
     )
+
+
+def check_data_loaded(
+    output_count=1,
+    alternative_output: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
+):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            is_initial_data_loaded = args[-1]  # assuming the last argument is the state
+            if not is_initial_data_loaded or not is_initial_data_loaded["loaded"]:
+                if alternative_output:
+                    return alternative_output
+
+                if output_count > 1:
+                    return tuple(
+                        dash.no_update for _ in range(output_count)
+                    )  # multiple outputs
+                else:
+                    return dash.no_update  # single output
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def get_feeds_for_favourite_predictoors(app, feed_data, predictoor_addrs):
+    feed_ids = app.data.feed_ids_based_on_predictoors(predictoor_addrs)
+
+    if not feed_ids:
+        return [], feed_data
+
+    feed_data = app.data.formatted_feeds_home_page_table_data.clone()
+    feed_data = feed_data.filter(feed_data["contract"].is_in(feed_ids))
+
+    return list(range(len(feed_ids))), feed_data

@@ -35,8 +35,12 @@ class AppDataManager:
         self.network_name = ppss.web3_pp.network
         self.start_date: Optional[datetime] = None
         self.lake_dir = ppss.lake_ss.lake_dir
+        self.ppss = ppss
+
+    def initial_process(self) -> None:
         self.file_reader = DuckDBFileReader(
-            ppss.lake_ss.lake_dir, ppss.lake_ss.seconds_between_parquet_exports
+            self.ppss.lake_ss.lake_dir,
+            self.ppss.lake_ss.seconds_between_parquet_exports,
         )
 
         self.min_timestamp, self.max_timestamp = (
@@ -45,7 +49,7 @@ class AppDataManager:
 
         # fetch token prices
         self.fee_cost = calculate_tx_gas_fee_cost_in_OCEAN(
-            ppss.web3_pp,
+            self.ppss.web3_pp,
             "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
             fetch_token_prices(),
         )
@@ -57,7 +61,9 @@ class AppDataManager:
 
         valid_addresses = list(self.predictoors_data["user"].str.to_lowercase())
         self.favourite_addresses = [
-            addr for addr in ppss.predictoor_ss.my_addresses if addr in valid_addresses
+            addr
+            for addr in self.ppss.predictoor_ss.my_addresses
+            if addr in valid_addresses
         ]
 
     @property
