@@ -37,7 +37,7 @@ class PredictoorsPage(TabularPage):
                 self.get_input_filter("Gross Income"),
                 self.get_input_filter("Stake Loss"),
                 self.get_input_filter("Tx Costs"),
-                self.get_input_filter("Net Income"),
+                self.get_input_filter("Profit"),
             ],
             className="filters-container",
         )

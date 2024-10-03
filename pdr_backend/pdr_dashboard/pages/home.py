@@ -36,7 +36,7 @@ class HomePage:
             [
                 self.get_graphs_column_metrics_row(),
                 dcc.Loading(
-                    id="loading",
+                    className="loading",
                     type="default",
                     children=self.get_graphs_column_plots_row(),
                     custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
@@ -154,17 +154,19 @@ class HomePage:
         return html.Div(
             [
                 html.Span(
-                    "selected predictoors data range",
+                    "Selected predictoors data range",
                     style={
                         "lineHeight": "1",
                         "marginTop": "5px",
-                        "marginBottom": "12px",
+                        "marginBottom": "6px",
+                        "width": "160px",
+                        "fontSize": "14px",
                     },
                 ),
                 html.Span(
                     "there is no data available",
                     id="available_data_period_text",
-                    style={"fontWeight": "bold", "fontSize": "20px", "lineHeight": "1"},
+                    style={"fontWeight": "bold", "fontSize": "16px", "lineHeight": "1"},
                 ),
             ],
             style={"display": "flex", "flexDirection": "column"},

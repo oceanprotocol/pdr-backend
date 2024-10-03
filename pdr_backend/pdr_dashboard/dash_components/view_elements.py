@@ -72,7 +72,7 @@ def get_metric(label, value, value_id):
                 },
             ),
             dcc.Loading(
-                id="loading",
+                className="loading",
                 type="default",
                 children=html.Span(
                     format_value(value if value else 0, value_id),
@@ -156,7 +156,7 @@ def get_available_period_text_display():
     return html.Div(
         [
             html.Span(
-                "available lake data",
+                "Available lake data (updated every hour)",
                 style={"lineHeight": "1", "fontSize": "16px", "marginBottom": "4px"},
             ),
             html.Span(id="available-data-text", style={"lineHeight": "1"}),
