@@ -31,7 +31,7 @@ class HomePage:
             [
                 self.get_graphs_column_metrics_row(),
                 dcc.Loading(
-                    id="loading",
+                    className="loading",
                     type="default",
                     children=self.get_graphs_column_plots_row(),
                     custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
