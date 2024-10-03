@@ -21,8 +21,8 @@ def get_callbacks_common(app):
     )
     def initial_data_load(is_data_loaded):
         if not is_data_loaded or not is_data_loaded["loaded"]:
-            print("Initial data load")
-            app.data.initial_process()  # Call the initial process
+            if not app.data.is_initial_data_loaded:
+                app.data.initial_process()  # Call the initial process
             return {"loaded": True}
 
         return dash.no_update

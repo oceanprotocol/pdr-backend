@@ -36,8 +36,12 @@ class AppDataManager:
         self.start_date: Optional[datetime] = None
         self.lake_dir = ppss.lake_ss.lake_dir
         self.ppss = ppss
+        self.is_initial_data_loaded = False
 
     def initial_process(self) -> None:
+        # now
+        now = datetime.now(tz=timezone.utc)
+        # file reader
         self.file_reader = DuckDBFileReader(
             self.ppss.lake_ss.lake_dir,
             self.ppss.lake_ss.seconds_between_parquet_exports,
@@ -48,14 +52,11 @@ class AppDataManager:
         )
 
         # fetch token prices
-        self.fee_cost = calculate_tx_gas_fee_cost_in_OCEAN(
-            self.ppss.web3_pp,
-            "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
-            fetch_token_prices(),
-        )
+        self._fee_cost = None
 
         # initial data loaded from database
         self.feeds_data = self._init_feeds_data()
+
         self.refresh_feeds_data()
         self.refresh_predictoors_data()
 
@@ -65,6 +66,19 @@ class AppDataManager:
             for addr in self.ppss.predictoor_ss.my_addresses
             if addr in valid_addresses
         ]
+
+        self.is_initial_data_loaded = True
+
+    @property
+    def fee_cost(self) -> float:
+        if self._fee_cost is None:
+            self._fee_cost = calculate_tx_gas_fee_cost_in_OCEAN(
+                self.ppss.web3_pp,
+                "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+                fetch_token_prices(),
+            )
+
+        return self._fee_cost
 
     @property
     def start_date_ms(self) -> int:
