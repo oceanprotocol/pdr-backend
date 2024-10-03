@@ -153,13 +153,15 @@ class HomePage:
                     style={
                         "lineHeight": "1",
                         "marginTop": "5px",
-                        "marginBottom": "12px",
+                        "marginBottom": "6px",
+                        "width": "160px",
+                        "fontSize": "14px",
                     },
                 ),
                 html.Span(
                     "there is no data available",
                     id="available_data_period_text",
-                    style={"fontWeight": "bold", "fontSize": "20px", "lineHeight": "1"},
+                    style={"fontWeight": "bold", "fontSize": "16px", "lineHeight": "1"},
                 ),
             ],
             style={"display": "flex", "flexDirection": "column"},
