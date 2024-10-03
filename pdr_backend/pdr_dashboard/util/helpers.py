@@ -64,12 +64,17 @@ def select_or_clear_all_by_table(
 
 @enforce_types
 def _format_date_text(
-    start_date: Optional[datetime], end_date: Optional[datetime]
+    start_date: Optional[datetime],
+    end_date: Optional[datetime],
+    show_end_date_time: bool = False,
 ) -> str:
     if not start_date or not end_date:
         return "there is no data available"
 
-    return f"{start_date.strftime('%d-%m-%y')} -> {end_date.strftime('%d-%m-%y')}"
+    return f"""
+        {start_date.strftime('%d-%m-%y')} -> {end_date.strftime('%d-%m-%y')}
+        {end_date.strftime(' %H:%M') if show_end_date_time else ''}
+    """
 
 
 @enforce_types
@@ -85,4 +90,4 @@ def get_date_period_text_for_selected_predictoors(payouts: pl.DataFrame) -> str:
 
 @enforce_types
 def get_date_period_text_header(start_date: UnixTimeS, end_date: UnixTimeS) -> str:
-    return _format_date_text(start_date.to_dt(), end_date.to_dt())
+    return _format_date_text(start_date.to_dt(), end_date.to_dt(), True)

@@ -52,7 +52,7 @@ class FeedModalFigures(ModalFigures):
             },
             "predictions_fig": {
                 "title": "Predictions",
-                "yaxis_title": "Predictions",
+                "yaxis_title": "Nr of Predictions",
                 "show_legend": False,
             },
             "profits_fig": {
