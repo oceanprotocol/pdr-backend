@@ -4,6 +4,7 @@
 #
 from dataclasses import dataclass
 from typing import Any, Dict, List
+from enum import Enum
 
 from enforce_typing import enforce_types
 
@@ -12,10 +13,17 @@ from pdr_backend.util.networkutil import get_subgraph_url
 from pdr_backend.util.time_types import UnixTimeS
 
 
+class PredictSlotStatus(Enum):
+    PENDING = "Pending"
+    CANCELED = "Canceled"
+    PAYING = "Paying"
+
+
 @dataclass
 class PredictSlot:
     ID: str
     slot: str
+    status: PredictSlotStatus
     trueValues: List[Dict[str, Any]]
     roundSumStakesUp: float
     roundSumStakes: float
@@ -45,34 +53,31 @@ def get_predict_slots_query(
     """
     asset_ids_str = str(asset_ids).replace("[", "[").replace("]", "]").replace("'", '"')
 
-    return """
-        query {
+    query = f"""
+        query {{
             predictSlots (
-            first: %s
-            skip: %s
-            where: {
-                slot_lte: %s
-                slot_gte: %s
-                predictContract_in: %s
-            }
-            ) {
-            id
-            slot
-            trueValues {
+            first: {first}
+            skip: {skip}
+            where: {{
+                slot_lte: {initial_slot}
+                slot_gte: {last_slot}
+                predictContract_in: {asset_ids_str}
+            }}
+                ) {{
                 id
-                trueValue
-            }
-            roundSumStakesUp
-            roundSumStakes
-            }
-        }
-    """ % (
-        first,
-        skip,
-        initial_slot,
-        last_slot,
-        asset_ids_str,
-    )
+                slot
+                status
+                trueValues {{
+                    id
+                    trueValue
+                }}
+                roundSumStakesUp
+                roundSumStakes
+                }}
+            }}
+        """
+
+    return query
 
 
 @enforce_types
@@ -104,11 +109,7 @@ def get_slots(
     records_per_page = 1000
 
     query = get_predict_slots_query(
-        addresses,
-        end_ts_param,
-        start_ts_param,
-        records_per_page,
-        skip,
+        addresses, end_ts_param, start_ts_param, records_per_page, skip
     )
 
     result = query_subgraph(
@@ -127,6 +128,7 @@ def get_slots(
             **{
                 "ID": slot["id"],
                 "slot": slot["slot"],
+                "status": slot["status"],
                 "trueValues": slot["trueValues"],
                 "roundSumStakesUp": float(slot["roundSumStakesUp"]),
                 "roundSumStakes": float(slot["roundSumStakes"]),
