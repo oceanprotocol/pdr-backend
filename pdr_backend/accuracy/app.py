@@ -21,6 +21,7 @@ from pdr_backend.subgraph.legacy.subgraph_slot import (
 )
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.util.constants import WHITELIST_FEEDS_MAINNET
+from pdr_backend.subgraph.legacy.subgraph_slot import PredictSlotStatus
 
 app = Flask(__name__)
 JSON_FILE_PATH = "pdr_backend/accuracy/output/accuracy_data.json"
@@ -108,10 +109,18 @@ def process_single_slot(
     true_values: List[Dict[str, Any]] = slot.trueValues or []
     true_value: Optional[bool] = true_values[0]["trueValue"] if true_values else None
 
-    if len(true_values) > 0 and prediction_result == true_value:
+    if (
+        len(true_values) > 0
+        and prediction_result == true_value
+        and (slot.status != PredictSlotStatus.CANCELED)
+    ):
         correct_predictions_count += 1
 
-    if len(true_values) > 0 and true_value is not None:
+    if (
+        len(true_values) > 0
+        and true_value is not None
+        and (slot.status != PredictSlotStatus.CANCELED)
+    ):
         slots_evaluated += 1
 
     return staked_yesterday, staked_today, correct_predictions_count, slots_evaluated

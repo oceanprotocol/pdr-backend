@@ -14,13 +14,23 @@ from pdr_backend.accuracy.app import (
     aggregate_statistics,
     calculate_statistics_for_all_assets,
 )
-from pdr_backend.subgraph.legacy.subgraph_slot import PredictSlot
+from pdr_backend.subgraph.legacy.subgraph_slot import PredictSlot, PredictSlotStatus
 from pdr_backend.util.time_types import UnixTimeS
 
 # Sample data for tests
 SAMPLE_PREDICT_SLOT = PredictSlot(
     ID="0xAsset-12345",
     slot="12345",
+    status=PredictSlotStatus.PAYING,
+    trueValues=[{"ID": "1", "trueValue": True}],
+    roundSumStakesUp=150.0,
+    roundSumStakes=100.0,
+)
+
+SAMPLE_PREDICT_SLOT_CANCELED = PredictSlot(
+    ID="0xAsset-12345",
+    slot="12345",
+    status=PredictSlotStatus.CANCELED,
     trueValues=[{"ID": "1", "trueValue": True}],
     roundSumStakesUp=150.0,
     roundSumStakes=100.0,
@@ -65,11 +75,11 @@ def test_aggregate_statistics():
         total_correct_predictions,
         total_slots_evaluated,
     ) = aggregate_statistics(
-        slots=[SAMPLE_PREDICT_SLOT],
+        slots=[SAMPLE_PREDICT_SLOT, SAMPLE_PREDICT_SLOT_CANCELED],
         end_of_previous_day_timestamp=UnixTimeS(12340),
     )
     assert total_staked_yesterday == 0.0
-    assert total_staked_today == 100.0
+    assert total_staked_today == 200.0
     assert total_correct_predictions == 1
     assert total_slots_evaluated == 1
 
@@ -78,7 +88,9 @@ def test_aggregate_statistics():
 @patch("pdr_backend.accuracy.app.fetch_slots_for_all_assets")
 def test_calculate_statistics_for_all_assets(mock_fetch_slots):
     # Mocks
-    mock_fetch_slots.return_value = {"0xAsset": [SAMPLE_PREDICT_SLOT] * 1000}
+    mock_fetch_slots.return_value = {
+        "0xAsset": [SAMPLE_PREDICT_SLOT, SAMPLE_PREDICT_SLOT_CANCELED] * 500
+    }
     contracts_list: List[ContractIdAndSPE] = [
         {"ID": "0xAsset", "seconds_per_epoch": 300, "name": "TEST/USDT"}
     ]
