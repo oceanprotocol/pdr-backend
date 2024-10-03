@@ -436,11 +436,14 @@ class AppDataManager:
             )
         )
 
+        profit = tot_gross_income - (tot_stake * 2 * self.fee_cost if tot_stake else 0)
+
         return {
             "Predictoors": predictoors,
             "Accuracy(avg)": avg_accuracy,
             "Staked": tot_stake,
             "Gross Income": tot_gross_income,
+            "Profit": profit,
         }
 
     def get_first_and_last_slot_timestamp(self) -> Tuple[UnixTimeS, UnixTimeS]:
