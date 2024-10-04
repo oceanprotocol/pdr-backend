@@ -9,6 +9,14 @@ from pdr_backend.pdr_dashboard.dash_components.view_elements import (
 from pdr_backend.pdr_dashboard.pages.common import TabularPage
 from pdr_backend.pdr_dashboard.util.format import PREDICTOORS_TABLE_COLS
 
+PREDICTOORS_METRICS = [
+    "Predictoors",
+    "Accuracy(avg)",
+    "Staked",
+    "Gross Income",
+    "Clipped Payout",
+]
+
 
 class PredictoorsPage(TabularPage):
     def __init__(self, app):
@@ -68,13 +76,7 @@ class PredictoorsPage(TabularPage):
                     label=key,
                     value_id=key_id_name(key),
                 )
-                for key in [
-                    "Predictoors",
-                    "Accuracy(avg)",
-                    "Staked",
-                    "Gross Income",
-                    "Clipped Payout",
-                ]
+                for key in PREDICTOORS_METRICS
             ],
             className="metrics_row",
             id="predictoors_page_metrics_row",

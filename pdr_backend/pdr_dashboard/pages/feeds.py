@@ -10,6 +10,8 @@ from pdr_backend.pdr_dashboard.pages.common import TabularPage
 from pdr_backend.pdr_dashboard.util.format import FEEDS_TABLE_COLS
 from pdr_backend.pdr_dashboard.util.helpers import get_empty_feeds_filters
 
+FEEDS_METRICS = ["Feeds", "Accuracy", "Volume", "Sales", "Revenue"]
+
 
 class FeedsPage(TabularPage):
     def __init__(self, app):
@@ -70,7 +72,7 @@ class FeedsPage(TabularPage):
                     label=key,
                     value_id=f"feeds_page_{key}_metric",
                 )
-                for key in ["Feeds", "Accuracy", "Volume", "Sales", "Revenue"]
+                for key in FEEDS_METRICS
             ],
             className="metrics_row",
             id="feeds_page_metrics_row",

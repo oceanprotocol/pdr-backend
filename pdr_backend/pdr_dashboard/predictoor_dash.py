@@ -21,7 +21,6 @@ def predictoor_dash(ppss: PPSS, debug_mode: bool):
     if not debug_mode:
         webbrowser.open(f"http://127.0.0.1:{port}/")
 
-    print("Starting Dash app")
     app = Dash(
         __name__,
         external_stylesheets=[dbc.themes.BOOTSTRAP],

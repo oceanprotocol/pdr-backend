@@ -12,6 +12,13 @@ from dash import dcc, html
 from pdr_backend.util.time_types import UnixTimeS
 from pdr_backend.pdr_dashboard.pages.common import Filter
 
+EMPTY_FEEDS_FILTERS = [
+    {"name": "base_token", "placeholder": "Base Token", "options": []},
+    {"name": "quote_token", "placeholder": "Quote Token", "options": []},
+    {"name": "source", "placeholder": "Source", "options": []},
+    {"name": "timeframe", "placeholder": "Timeframe", "options": []},
+]
+
 
 @enforce_types
 def toggle_modal_helper(
@@ -151,14 +158,7 @@ def get_date_period_text_header(start_date: UnixTimeS, end_date: UnixTimeS) -> s
 
 
 def get_empty_feeds_filters() -> List[Filter]:
-    filters = [
-        {"name": "base_token", "placeholder": "Base Token", "options": []},
-        {"name": "quote_token", "placeholder": "Quote Token", "options": []},
-        {"name": "source", "placeholder": "Source", "options": []},
-        {"name": "timeframe", "placeholder": "Timeframe", "options": []},
-    ]
-
-    return [Filter(**item) for item in filters]
+    return [Filter(**item) for item in EMPTY_FEEDS_FILTERS]
 
 
 @enforce_types

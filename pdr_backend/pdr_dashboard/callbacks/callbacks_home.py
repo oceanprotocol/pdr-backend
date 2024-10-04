@@ -138,7 +138,6 @@ def get_callbacks_home(app):
     @app.callback(
         Output("predictoors_table", "data", allow_duplicate=True),
         Output("predictoors_table", "selected_rows", allow_duplicate=True),
-        Output("table-rows-count-predictoors_table", "children", allow_duplicate=True),
         [
             Input("search-input-Predictoors", "value"),
             Input("predictoors_table", "selected_rows"),
@@ -210,13 +209,11 @@ def get_callbacks_home(app):
         return (
             filtered_data.to_dicts(),
             selected_predictoor_indices,
-            f"({len(filtered_data)})",
         )
 
     @app.callback(
         Output("feeds_table", "data", allow_duplicate=True),
         Output("feeds_table", "selected_rows", allow_duplicate=True),
-        Output("table-rows-count-feeds_table", "children", allow_duplicate=True),
         [
             Input("search-input-Feeds", "value"),
             Input("toggle-switch-predictoor-feeds", "value"),
@@ -262,11 +259,19 @@ def get_callbacks_home(app):
 
         selected_feed_indices = list(range(len(selected_feeds)))
 
-        return (
-            filtered_data,
-            selected_feed_indices,
-            f"({len(filtered_data)})",
-        )
+        return (filtered_data, selected_feed_indices)
+
+    @app.callback(
+        Output("table-rows-count-feeds_table", "children", allow_duplicate=True),
+        Output("table-rows-count-predictoors_table", "children", allow_duplicate=True),
+        [
+            Input("feeds_table", "data"),
+            Input("predictoors_table", "data"),
+        ],
+        prevent_initial_call=True,
+    )
+    def update_table_rows_count(feeds_data, predictoors_data):
+        return f"({len(feeds_data)})", f"({len(predictoors_data)})"
 
     @app.callback(
         Output("feeds_table", "selected_rows", allow_duplicate=True),
