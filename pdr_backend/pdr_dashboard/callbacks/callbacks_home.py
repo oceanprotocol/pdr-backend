@@ -24,11 +24,13 @@ def get_callbacks_home(app):
         Output("is-initial-table-loaded", "data"),
         Output("home_page_table_control_predictoors_table", "children"),
         Output("home_page_table_control_feeds_table", "children"),
+        Output("table-rows-count-predictoors_table", "children"),
+        Output("table-rows-count-feeds_table", "children"),
         [
             Input("is-initial-data-loaded", "data"),
         ],
     )
-    @check_data_loaded(output_count=7)
+    @check_data_loaded(output_count=9)
     def get_initial_data(_):
         _, feed_data = app.data.homepage_feeds_cols
         _, predictoor_data = app.data.homepage_predictoors_cols
@@ -56,6 +58,8 @@ def get_callbacks_home(app):
             {"loaded": True},
             html.Div(),
             html.Div(),
+            f"({len(predictoors_data_arr)})",
+            f"({len(feeds_data_arr)})",
         )
 
     @app.callback(
@@ -134,6 +138,7 @@ def get_callbacks_home(app):
     @app.callback(
         Output("predictoors_table", "data", allow_duplicate=True),
         Output("predictoors_table", "selected_rows", allow_duplicate=True),
+        Output("table-rows-count-predictoors_table", "children", allow_duplicate=True),
         [
             Input("search-input-Predictoors", "value"),
             Input("predictoors_table", "selected_rows"),
@@ -199,11 +204,16 @@ def get_callbacks_home(app):
         filtered_data = pl.concat([selected_predictoors, filtered_data])
         selected_predictoor_indices = list(range(len(selected_predictoors_addrs)))
 
-        return (filtered_data.to_dicts(), selected_predictoor_indices)
+        return (
+            filtered_data.to_dicts(),
+            selected_predictoor_indices,
+            f"({len(filtered_data)})",
+        )
 
     @app.callback(
         Output("feeds_table", "data", allow_duplicate=True),
         Output("feeds_table", "selected_rows", allow_duplicate=True),
+        Output("table-rows-count-feeds_table", "children", allow_duplicate=True),
         [
             Input("search-input-Feeds", "value"),
             Input("toggle-switch-predictoor-feeds", "value"),
@@ -239,7 +249,11 @@ def get_callbacks_home(app):
 
         selected_feed_indices = list(range(len(selected_feeds)))
 
-        return filtered_data, selected_feed_indices
+        return (
+            filtered_data,
+            selected_feed_indices,
+            f"({len(filtered_data)})",
+        )
 
     @app.callback(
         Output("feeds_table", "selected_rows", allow_duplicate=True),

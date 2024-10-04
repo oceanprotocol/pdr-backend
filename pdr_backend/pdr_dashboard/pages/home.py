@@ -196,13 +196,11 @@ class HomePage:
         if table_id == "predictoors_table":
             table_name = "Predictoors"
             searchable_field = "user"
-            length = 0
 
             toggle_switch = self.get_predictoors_switch()
         else:
             table_name = "Feeds"
             searchable_field = "pair"
-            length = 0
 
             toggle_switch = self.get_feeds_switch()
 
@@ -218,7 +216,7 @@ class HomePage:
                                 ),
                                 html.Span(
                                     id=f"table-rows-count-{table_id}",
-                                    children=f"({length})",
+                                    children="(0)",
                                     style={
                                         "fontSize": "16px",
                                         "color": "gray",
