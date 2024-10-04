@@ -423,13 +423,13 @@ class AppDataManager:
                         CASE WHEN p.payout > p.stake
                         THEN p.payout - p.stake ELSE 0 END
                     ) AS tot_gross_income,
-                    SUM(CASE WHEN p.payout = 0 THEN p.stake ELSE 0 END) AS stake_loss,
+                    SUM(CASE WHEN p.payout > 0 THEN p.payout ELSE 0 END) AS clipped_payout
                 FROM
                     {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
             """
         if self.start_date_ms:
             query_predictoors_metrics += f" WHERE timestamp > {self.start_date_ms}"
-        predictoors, avg_accuracy, tot_stake, tot_gross_income, stake_loss = (
+        predictoors, avg_accuracy, tot_stake, tot_gross_income, clipped_payout = (
             self.file_reader._query_db(
                 query_predictoors_metrics,
                 scalar=True,
@@ -437,11 +437,7 @@ class AppDataManager:
             )
         )
 
-        profit = (
-            tot_gross_income
-            - (tot_stake * 2 * self.fee_cost if tot_stake else 0)
-            - (stake_loss if stake_loss else 0)
-        )
+        profit = (clipped_payout or 0) - (tot_stake or 0)
 
         return {
             "Predictoors": predictoors,
