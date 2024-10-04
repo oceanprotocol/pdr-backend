@@ -128,7 +128,7 @@ def get_slots(
             **{
                 "ID": slot["id"],
                 "slot": slot["slot"],
-                "status": slot["status"],
+                "status": PredictSlotStatus[slot["status"].upper()],
                 "trueValues": slot["trueValues"],
                 "roundSumStakesUp": float(slot["roundSumStakesUp"]),
                 "roundSumStakes": float(slot["roundSumStakes"]),
