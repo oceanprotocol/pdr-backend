@@ -192,10 +192,11 @@ def get_callbacks_home(app):
             predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
         )
 
-        if (
+        # if sorted(predictoors_addrs) == sorted(stored_predictoors_addrs)
+        # it means we are not on the initial page load, so we use
+        # the feeds selected by the user
+        if stored_predictoors_addrs and sorted(predictoors_addrs) == sorted(
             stored_predictoors_addrs
-            and len(stored_predictoors_addrs) > 0
-            and sorted(predictoors_addrs) == sorted(stored_predictoors_addrs)
         ):
             selected_feeds = list(range(len(filtered_data)))
 
@@ -252,14 +253,9 @@ def get_callbacks_home(app):
         """
         Select or clear all rows in the feeds table.
         """
-        if predictoor_addrs and len(predictoor_addrs) > 0:
-            predictoor_addrs = "\n".join(predictoor_addrs)
-        else:
-            predictoor_addrs = ""
-        if n_clicks <= 0:
-            return [dash.no_update, predictoor_addrs]
+        predictoor_addrs_str = "\n".join(predictoor_addrs) if predictoor_addrs else ""
 
-        return [True, predictoor_addrs]
+        return (bool(n_clicks > 0), predictoor_addrs_str)
 
     @app.callback(
         Output("predictoor-addrs-local-store", "data"),
@@ -286,12 +282,11 @@ def get_callbacks_home(app):
     def update_show_favourite_check_and_selected_predictoor_rows(
         saved_predictoor_addrs,
     ):
+        if not saved_predictoor_addrs and not app.data.favourite_addresses:
+            return (False, [], [])
+
         return (
-            [
-                True if len(saved_predictoor_addrs) > 0 else dash.no_update,
-                dash.no_update,
-                dash.no_update,
-            ]
-            if len(saved_predictoor_addrs) > 0 or app.data.favourite_addresses
-            else [False, [], []]
+            True if saved_predictoor_addrs else dash.no_update,
+            dash.no_update,
+            dash.no_update,
         )
