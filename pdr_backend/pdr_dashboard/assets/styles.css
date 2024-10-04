@@ -51,7 +51,7 @@ body {
   text-align: center;
 }
 
-#loading {
+.loading {
   height: calc(100vh - 105px);
   width: 100%;
 }
@@ -547,7 +547,7 @@ button:hover{
 .nav-link{
   padding: 0 !important;
   font-size: 28px;
-  font-weight: bold; 
+  font-weight: bold;
   margin-right: 20px;
 }
 

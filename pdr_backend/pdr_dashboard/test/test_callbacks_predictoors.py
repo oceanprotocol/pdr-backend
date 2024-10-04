@@ -46,14 +46,14 @@ def test_predictoors_table(_sample_app, dash_duo):
         "Gross Income (Ocean)",
         "Stake Loss (Ocean)",
         "Tx Costs (Ocean)",
-        "Net Income (Ocean)",
+        "Profit (Ocean)",
     ]
     assert header_texts == expected_headers
 
     _verify_table_data(table, "expected_predictoors_table_data.json")
 
 
-def test_feeds_page_metrics_row(_sample_app, dash_duo):
+def test_predictoors_page_metrics_row(_sample_app, dash_duo):
     app = _sample_app
     start_server_and_wait(dash_duo, app)
 
@@ -65,7 +65,7 @@ def test_feeds_page_metrics_row(_sample_app, dash_duo):
     # Validate metrics
     # select first level divs
     metrics = metrics_row.find_elements(By.XPATH, "./div")
-    assert len(metrics) == 4
+    assert len(metrics) == 5
 
     metric_texts = [_remove_tags(m.text) for m in metrics]
     expected_metrics = [
@@ -73,6 +73,7 @@ def test_feeds_page_metrics_row(_sample_app, dash_duo):
         "Accuracy(avg)",
         "Staked",
         "Gross Income",
+        "Profit",
     ]
 
     for i, metric in enumerate(expected_metrics):

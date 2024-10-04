@@ -21,13 +21,14 @@ def get_callbacks_predictoors(app):
         Output("predictoors_page_accuracy_metric", "children"),
         Output("predictoors_page_staked_metric", "children"),
         Output("predictoors_page_gross_income_metric", "children"),
+        Output("predictoors_page_clipped_payout_metric", "children"),
         Output("predictoors_page_table_control", "children"),
         [
             Input("start-date", "data"),
             Input("is-initial-data-loaded", "data"),
         ],
     )
-    @check_data_loaded(output_count=3)
+    @check_data_loaded(output_count=6)
     def update_page_data(
         _start_date,
         _,
@@ -55,7 +56,7 @@ def get_callbacks_predictoors(app):
             Input("staked_button", "n_clicks"),
             Input("tx_costs_button", "n_clicks"),
             Input("stake_loss_button", "n_clicks"),
-            Input("net_income_button", "n_clicks"),
+            Input("profit_button", "n_clicks"),
             Input("search-input-predictoors-table", "value"),
             Input("predictoors_page_table", "sort_by"),
         ],
@@ -73,8 +74,8 @@ def get_callbacks_predictoors(app):
         State("tx_costs_max", "value"),
         State("stake_loss_min", "value"),
         State("stake_loss_max", "value"),
-        State("net_income_min", "value"),
-        State("net_income_max", "value"),
+        State("profit_min", "value"),
+        State("profit_max", "value"),
         prevent_initial_call=True,
     )
     # pylint: disable=too-many-positional-arguments
@@ -86,7 +87,7 @@ def get_callbacks_predictoors(app):
         _n_clicks_staked,
         _n_clicks_tx_costs,
         _n_clicks_stake_loss,
-        _n_clicks_net_income,
+        _n_clicks_profit,
         search_input_value,
         sort_by,
         apr_min,
@@ -103,8 +104,8 @@ def get_callbacks_predictoors(app):
         tx_costs_max,
         stake_loss_min,
         stake_loss_max,
-        net_income_min,
-        net_income_max,
+        profit_min,
+        profit_max,
     ):
         """
         Filter table based on selected dropdown values.
@@ -118,7 +119,7 @@ def get_callbacks_predictoors(app):
             ("range", "total_stake", staked_min, staked_max),
             ("range", "tx_costs_(OCEAN)", tx_costs_min, tx_costs_max),
             ("range", "stake_loss", stake_loss_min, stake_loss_max),
-            ("range", "net_income_(OCEAN)", net_income_min, net_income_max),
+            ("range", "profit_(OCEAN)", profit_min, profit_max),
             ("search", None, search_input_value),
         ]
 
@@ -219,16 +220,16 @@ def get_callbacks_predictoors(app):
         return filter_table_by_range(min_val, max_val, "Stake Loss")
 
     @app.callback(
-        Output("net_income_dropdown", "label"),
-        State("net_income_min", "value"),
-        State("net_income_max", "value"),
-        Input("net_income_button", "n_clicks"),
+        Output("profit_dropdown", "label"),
+        State("profit_min", "value"),
+        State("profit_max", "value"),
+        Input("profit_button", "n_clicks"),
         Input("clear_predictoors_filters_button", "n_clicks"),
     )
-    def filter_table_by_net_income_range(
-        min_val, max_val, _n_clicks_net_income_btn, _n_clicks_filters_bnt
+    def filter_table_by_profit_range(
+        min_val, max_val, _n_clicks_profit_btn, _n_clicks_filters_bnt
     ):
-        return filter_table_by_range(min_val, max_val, "Net Income")
+        return filter_table_by_range(min_val, max_val, "Profit")
 
     @app.callback(
         Output("apr_min", "value"),
@@ -245,8 +246,8 @@ def get_callbacks_predictoors(app):
         Output("tx_costs_max", "value"),
         Output("stake_loss_min", "value"),
         Output("stake_loss_max", "value"),
-        Output("net_income_min", "value"),
-        Output("net_income_max", "value"),
+        Output("profit_min", "value"),
+        Output("profit_max", "value"),
         Output("search-input-predictoors-table", "value"),
         Input("clear_predictoors_filters_button", "n_clicks"),
     )

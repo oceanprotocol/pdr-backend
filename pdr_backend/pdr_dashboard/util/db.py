@@ -39,8 +39,6 @@ class AppDataManager:
         self.is_initial_data_loaded = False
 
     def initial_process(self) -> None:
-        # now
-        now = datetime.now(tz=timezone.utc)
         # file reader
         self.file_reader = DuckDBFileReader(
             self.ppss.lake_ss.lake_dir,
@@ -442,18 +440,33 @@ class AppDataManager:
                     SUM(
                         CASE WHEN p.payout > p.stake
                         THEN p.payout - p.stake ELSE 0 END
-                    ) AS tot_gross_income
+                    ) AS tot_gross_income,
+                    SUM(CASE WHEN p.payout > 0 THEN p.payout ELSE 0 END) AS clipped_payout,
+                    COUNT(p.ID) AS total_predictions
                 FROM
                     {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
             """
+
         if self.start_date_ms:
             query_predictoors_metrics += f" WHERE timestamp > {self.start_date_ms}"
-        predictoors, avg_accuracy, tot_stake, tot_gross_income = (
-            self.file_reader._query_db(
-                query_predictoors_metrics,
-                scalar=True,
-                cache_file_name="predictoor_metrics_predictoors",
-            )
+
+        (
+            predictoors,
+            avg_accuracy,
+            tot_stake,
+            tot_gross_income,
+            clipped_payout,
+            total_predictions,
+        ) = self.file_reader._query_db(
+            query_predictoors_metrics,
+            scalar=True,
+            cache_file_name="predictoor_metrics_predictoors",
+        )
+
+        profit = (
+            (clipped_payout or 0)
+            - (tot_stake or 0)
+            - (total_predictions or 0) * self.fee_cost * 2
         )
 
         return {
@@ -461,6 +474,7 @@ class AppDataManager:
             "Accuracy(avg)": avg_accuracy,
             "Staked": tot_stake,
             "Gross Income": tot_gross_income,
+            "Profit": profit,
         }
 
     def get_first_and_last_slot_timestamp(self) -> Tuple[UnixTimeS, UnixTimeS]:
@@ -553,7 +567,7 @@ class AppDataManager:
                 lambda x: x["total_profit"] - x["tx_costs_(OCEAN)"],
                 return_dtype=pl.Float64,
             )
-            .alias("net_income_(OCEAN)")
+            .alias("profit_(OCEAN)")
         )
 
         columns = [col["id"] for col in PREDICTOORS_TABLE_COLS]

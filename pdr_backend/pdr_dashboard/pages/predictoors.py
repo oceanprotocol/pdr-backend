@@ -37,7 +37,7 @@ class PredictoorsPage(TabularPage):
                 self.get_input_filter("Gross Income"),
                 self.get_input_filter("Stake Loss"),
                 self.get_input_filter("Tx Costs"),
-                self.get_input_filter("Net Income"),
+                self.get_input_filter("Profit"),
             ],
             className="filters-container",
         )
@@ -68,7 +68,13 @@ class PredictoorsPage(TabularPage):
                     label=key,
                     value_id=key_id_name(key),
                 )
-                for key in ["Predictoors", "Accuracy(avg)", "Staked", "Gross Income"]
+                for key in [
+                    "Predictoors",
+                    "Accuracy(avg)",
+                    "Staked",
+                    "Gross Income",
+                    "Clipped Payout",
+                ]
             ],
             className="metrics_row",
             id="predictoors_page_metrics_row",

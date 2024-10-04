@@ -49,7 +49,7 @@ PREDICTOORS_TABLE_COLS = [
     {"name": "Gross Income (Ocean)", "id": "gross_income"},
     {"name": "Stake Loss (Ocean)", "id": "stake_loss"},
     {"name": "Tx Costs (Ocean)", "id": "tx_costs_(OCEAN)"},
-    {"name": "Net Income (Ocean)", "id": "net_income_(OCEAN)"},
+    {"name": "Profit (Ocean)", "id": "profit_(OCEAN)"},
 ]
 
 FORMAT_COLS_CONFIG = {
@@ -63,7 +63,7 @@ FORMAT_COLS_CONFIG = {
     "gross_income": "currency_conditional",
     "stake_loss": "currency_conditional",
     "tx_costs_(OCEAN)": "currency_conditional",
-    "net_income_(OCEAN)": "currency_conditional",
+    "profit_(OCEAN)": "currency_conditional",
     "sales_revenue": "currency_conditional",
     "apr": "percentage",
     "accuracy": "percentage",
@@ -82,6 +82,7 @@ FORMAT_VALUES_CONFIG = {
     "predictoors_page_accuracy_metric": "percentage",
     "predictoors_page_staked_metric": "currency",
     "predictoors_page_gross_income_metric": "currency",
+    "predictoors_page_profit_metric": "currency",
 }
 
 
