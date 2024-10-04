@@ -85,16 +85,15 @@ def get_callbacks_home(app):
 
     @app.callback(
         Output("predictoors_table", "data", allow_duplicate=True),
-        Output("predictoors_table", "selected_rows"),
+        Output("predictoors_table", "selected_rows", allow_duplicate=True),
         [
             Input("search-input-Predictoors", "value"),
             Input("predictoors_table", "selected_rows"),
             Input("show-favourite-addresses", "value"),
             Input("general-lake-date-period-radio-items", "value"),
+            Input("predictoor-addrs-local-store", "data"),
         ],
-        [
-            State("predictoors_table", "data"),
-        ],
+        [State("predictoors_table", "data")],
         prevent_initial_call=True,
     )
     def update_predictoors_table_on_search(
@@ -102,6 +101,7 @@ def get_callbacks_home(app):
         selected_rows,
         show_favourite_addresses,
         date_period,
+        stored_predictoor_addrs,
         predictoors_table,
     ):
         if (
@@ -119,21 +119,24 @@ def get_callbacks_home(app):
         ]
 
         if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
-            custom_predictoors = formatted_predictoors_data.filter(
-                formatted_predictoors_data["full_addr"].is_in(
-                    app.data.favourite_addresses
-                )
-            )
-            custom_predictoors_addrs = list(custom_predictoors["full_addr"])
-
-            if show_favourite_addresses:
-                selected_predictoors_addrs += custom_predictoors_addrs
+            if len(stored_predictoor_addrs) > 0:
+                selected_predictoors_addrs = stored_predictoor_addrs
             else:
-                selected_predictoors_addrs = [
-                    predictoor_addr
-                    for predictoor_addr in selected_predictoors_addrs
-                    if predictoor_addr not in custom_predictoors_addrs
-                ]
+                custom_predictoors = formatted_predictoors_data.filter(
+                    formatted_predictoors_data["full_addr"].is_in(
+                        app.data.favourite_addresses
+                    )
+                )
+                custom_predictoors_addrs = list(custom_predictoors["full_addr"])
+
+                if show_favourite_addresses:
+                    selected_predictoors_addrs += custom_predictoors_addrs
+                else:
+                    selected_predictoors_addrs = [
+                        predictoor_addr
+                        for predictoor_addr in selected_predictoors_addrs
+                        if predictoor_addr not in custom_predictoors_addrs
+                    ]
 
         filtered_data = formatted_predictoors_data.clone()
         if search_value:
@@ -149,13 +152,13 @@ def get_callbacks_home(app):
         )
 
         filtered_data = pl.concat([selected_predictoors, filtered_data])
-        selected_predictoor_indices = list(range(len(selected_predictoors_addrs)))
+        selected_predictoor_indices = list(range(len(selected_predictoors)))
 
         return (filtered_data.to_dicts(), selected_predictoor_indices)
 
     @app.callback(
         Output("feeds_table", "data"),
-        Output("feeds_table", "selected_rows"),
+        Output("feeds_table", "selected_rows", allow_duplicate=True),
         [
             Input("search-input-Feeds", "value"),
             Input("toggle-switch-predictoor-feeds", "value"),
@@ -165,6 +168,7 @@ def get_callbacks_home(app):
         [
             State("feeds_table", "selected_rows"),
             State("feeds_table", "data"),
+            State("predictoor-addrs-local-store", "data"),
         ],
         prevent_initial_call=True,
     )
@@ -176,6 +180,7 @@ def get_callbacks_home(app):
         predictoors_table,
         selected_rows,
         feeds_table,
+        stored_predictoors_addrs,
     ):
         selected_feeds = [feeds_table[i]["contract"] for i in selected_rows]
         # Extract selected predictoor addresses
@@ -186,6 +191,14 @@ def get_callbacks_home(app):
         filtered_data = app.data.filter_for_feeds_table(
             predictoor_feeds_only, predictoors_addrs, search_value, selected_feeds
         )
+
+        # if sorted(predictoors_addrs) == sorted(stored_predictoors_addrs)
+        # it means we are not on the initial page load, so we use
+        # the feeds selected by the user
+        if stored_predictoors_addrs and sorted(predictoors_addrs) == sorted(
+            stored_predictoors_addrs
+        ):
+            selected_feeds = list(range(len(filtered_data)))
 
         selected_feed_indices = list(range(len(selected_feeds)))
 
@@ -224,3 +237,56 @@ def get_callbacks_home(app):
 
         ctx = dash.callback_context
         return select_or_clear_all_by_table(ctx, "predictoors_table", rows)
+
+    @app.callback(
+        [
+            Output("predictoor_config_modal", "is_open"),
+            Output("predictoor_addrs", "value"),
+        ],
+        [
+            Input("configure_predictoors", "n_clicks"),
+            Input("predictoor-addrs-local-store", "data"),
+        ],
+        prevent_initial_call=True,
+    )
+    def open_predictoors_config_modal(n_clicks, predictoor_addrs):
+        """
+        Select or clear all rows in the feeds table.
+        """
+        predictoor_addrs_str = "\n".join(predictoor_addrs) if predictoor_addrs else ""
+
+        return (bool(n_clicks > 0), predictoor_addrs_str)
+
+    @app.callback(
+        Output("predictoor-addrs-local-store", "data"),
+        Input("save_predictoors", "n_clicks"),
+        State("predictoor_addrs", "value"),
+    )
+    def save_predictoors_to_browser_storage(n_clicks, value):
+        if not value and not n_clicks:
+            return dash.no_update
+        addresses = value.split("\n")
+        addresses = [
+            addr.strip() for addr in addresses if addr.strip()
+        ]  # Remove empty lines
+
+        return addresses
+
+    @app.callback(
+        Output("show-favourite-addresses", "value"),
+        Output("predictoors_table", "selected_rows"),
+        Output("feeds_table", "selected_rows"),
+        Input("predictoor-addrs-local-store", "data"),
+        prevent_initial_call=True,
+    )
+    def update_show_favourite_check_and_selected_predictoor_rows(
+        saved_predictoor_addrs,
+    ):
+        if not saved_predictoor_addrs and not app.data.favourite_addresses:
+            return (False, [], [])
+
+        return (
+            True if saved_predictoor_addrs else dash.no_update,
+            dash.no_update,
+            dash.no_update,
+        )
