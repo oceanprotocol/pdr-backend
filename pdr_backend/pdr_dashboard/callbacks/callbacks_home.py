@@ -119,7 +119,7 @@ def get_callbacks_home(app):
         ]
 
         if "show-favourite-addresses.value" in dash.callback_context.triggered_prop_ids:
-            if len(stored_predictoor_addrs) > 0:
+            if stored_predictoor_addrs and len(stored_predictoor_addrs) > 0:
                 selected_predictoors_addrs = stored_predictoor_addrs
             else:
                 custom_predictoors = formatted_predictoors_data.filter(
