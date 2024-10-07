@@ -126,6 +126,7 @@ def test_timeframe_metrics(_sample_app, dash_duo):
     time.sleep(2)
 
     dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
+    time.sleep(2)
 
     table_profit = dash_duo.find_element(
         "#predictoors_table tbody tr:nth-child(2) td:nth-child(3)"
