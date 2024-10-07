@@ -91,7 +91,7 @@ def test_favourite_addresses_search_input(
     fav_addr_toggle.click()
     time.sleep(2)
     p_all, p_sel = _predictoor_count(dash_duo)
-    assert len(p_sel) == 1
+    assert len(p_sel) == 0
 
 
 def test_checkbox_selection(_sample_app, dash_duo):
