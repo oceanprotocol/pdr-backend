@@ -37,8 +37,13 @@ def get_callbacks_home(app):
         selected_predictoors = list(range(len(app.data.favourite_addresses)))
         selected_predictoors_addrs = app.data.favourite_addresses
         if len(selected_predictoors) == 0:
-            selected_predictoors = list([0])
-            selected_predictoors_addrs = [predictoor_data["full_addr"][0]]
+            max_profit_predictoor_index = app.data.predictoors_data[
+                "total_profit"
+            ].arg_max()
+            selected_predictoors = list([max_profit_predictoor_index])
+            selected_predictoors_addrs = [
+                app.data.predictoors_data[max_profit_predictoor_index, "user"]
+            ]
 
         selected_feeds, feed_data = app.data.get_feeds_for_favourite_predictoors(
             app,
