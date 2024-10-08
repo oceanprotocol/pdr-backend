@@ -250,5 +250,6 @@ def _prepare_sample_app(tmpdir, include_my_addresses=False):
         return_value={"ROSE": 0.05612, "OCEAN": 0.48521312000000005},
     ):
         setup_app_main(app, etl.ppss)
+        app.data._fee_cost = 1.0
 
     return app

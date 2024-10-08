@@ -208,15 +208,3 @@ def check_data_loaded(
         return wrapper
 
     return decorator
-
-
-def get_feeds_for_favourite_predictoors(app, feed_data, predictoor_addrs):
-    feed_ids = app.data.feed_ids_based_on_predictoors(predictoor_addrs)
-
-    if not feed_ids:
-        return [], feed_data
-
-    feed_data = app.data.formatted_feeds_home_page_table_data.clone()
-    feed_data = feed_data.filter(feed_data["contract"].is_in(feed_ids))
-
-    return list(range(len(feed_ids))), feed_data

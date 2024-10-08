@@ -169,6 +169,7 @@ def test_predictoors_searchbar(_sample_app, dash_duo):
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_predictoors_page(dash_duo)
+
     dash_duo.wait_for_element("#search-input-predictoors-table")
     table = dash_duo.find_element("#predictoors_page_table")
 

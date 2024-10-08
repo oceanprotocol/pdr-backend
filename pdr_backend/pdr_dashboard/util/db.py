@@ -37,20 +37,14 @@ class AppDataManager:
         self.lake_dir = ppss.lake_ss.lake_dir
         self.ppss = ppss
         self.is_initial_data_loaded = False
+        self._fee_cost = None
+        self._file_reader = None
 
     def initial_process(self) -> None:
         # file reader
-        self.file_reader = DuckDBFileReader(
-            self.ppss.lake_ss.lake_dir,
-            self.ppss.lake_ss.seconds_between_parquet_exports,
-        )
-
         self.min_timestamp, self.max_timestamp = (
             self.get_first_and_last_slot_timestamp()
         )
-
-        # fetch token prices
-        self._fee_cost = None
 
         # initial data loaded from database
         self.feeds_data = self._init_feeds_data()
@@ -66,6 +60,16 @@ class AppDataManager:
         ]
 
         self.is_initial_data_loaded = True
+
+    @property
+    def file_reader(self) -> DuckDBFileReader:
+        if self._file_reader is None:
+            self._file_reader = DuckDBFileReader(
+                self.ppss.lake_ss.lake_dir,
+                self.ppss.lake_ss.seconds_between_parquet_exports,
+            )
+
+        return self._file_reader
 
     @property
     def fee_cost(self) -> float:
@@ -671,3 +675,14 @@ class AppDataManager:
         hidden_columns = ["full_addr"]
 
         return (columns, hidden_columns), data
+
+    def get_feeds_for_favourite_predictoors(self, feed_data, predictoor_addrs):
+        feed_ids = self.feed_ids_based_on_predictoors(predictoor_addrs)
+
+        if not feed_ids:
+            return [], feed_data
+
+        feed_data = self.formatted_feeds_home_page_table_data.clone()
+        feed_data = feed_data.filter(feed_data["contract"].is_in(feed_ids))
+
+        return list(range(len(feed_ids))), feed_data

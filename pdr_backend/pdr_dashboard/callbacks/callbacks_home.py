@@ -10,7 +10,6 @@ from pdr_backend.pdr_dashboard.util.helpers import (
     get_date_period_text_for_selected_predictoors,
     select_or_clear_all_by_table,
     check_data_loaded,
-    get_feeds_for_favourite_predictoors,
 )
 
 
@@ -41,7 +40,7 @@ def get_callbacks_home(app):
             selected_predictoors = list([0])
             selected_predictoors_addrs = [predictoor_data["full_addr"][0]]
 
-        selected_feeds, feed_data = get_feeds_for_favourite_predictoors(
+        selected_feeds, feed_data = app.data.get_feeds_for_favourite_predictoors(
             app,
             feed_data,
             selected_predictoors_addrs,
