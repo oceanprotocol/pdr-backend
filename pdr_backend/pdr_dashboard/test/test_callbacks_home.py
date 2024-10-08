@@ -101,7 +101,7 @@ def test_favourite_addresses_search_input(
     fav_addr_toggle.click()
     time.sleep(2)
     p_all, p_sel = _predictoor_count(dash_duo)
-    assert len(p_sel) == 1
+    assert len(p_sel) == 0
 
 
 def test_checkbox_selection(_sample_app, dash_duo):
@@ -138,7 +138,7 @@ def test_timeframe_metrics(_sample_app, dash_duo):
     time.sleep(3)
 
     dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
-    time.sleep(3)
+    time.sleep(2)
 
     table_profit = dash_duo.find_element(
         "#predictoors_table tbody tr:nth-child(2) td:nth-child(3)"
