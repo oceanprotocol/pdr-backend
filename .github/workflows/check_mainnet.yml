@@ -16,6 +16,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      - name: Check if current time is between 00:00 and 01:00
+        run: |
+          current_hour=$(date -u +"%H")
+          if [ "$current_hour" -ge 0 ] && [ "$current_hour" -lt 1 ]; then
+            echo "Current time is between 00:00 and 01:00, exiting..."
+            exit 0
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
