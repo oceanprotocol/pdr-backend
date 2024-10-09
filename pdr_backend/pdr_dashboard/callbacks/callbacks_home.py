@@ -164,7 +164,7 @@ def get_callbacks_home(app):
             app.data.refresh_predictoors_data()
             app.data.refresh_feeds_data()
 
-        formatted_predictoors_data = app.data.formatted_predictoors_home_page_table_data
+        formatted_predictoors_data = app.data.formatted_predictoors_home_page_table_data.clone()
 
         selected_predictoors_addrs = [
             predictoors_table[i]["full_addr"] for i in selected_rows
