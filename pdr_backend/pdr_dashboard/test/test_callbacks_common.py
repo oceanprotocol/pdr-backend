@@ -4,8 +4,8 @@ from datetime import UTC, datetime
 from pdr_backend.pdr_dashboard.test.resources import start_server_and_wait
 
 
-def test_navigation(_sample_app, dash_duo):
-    app = _sample_app
+def test_navigation(_sample_app_with_favourite_addresses, dash_duo):
+    app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
     # Default page is Home
@@ -21,8 +21,8 @@ def test_navigation(_sample_app, dash_duo):
     dash_duo.wait_for_element_by_id("plots_container", timeout=10)
 
 
-def test_set_period_start_date(_sample_app, dash_duo):
-    app = _sample_app
+def test_set_period_start_date(_sample_app_with_favourite_addresses, dash_duo):
+    app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
     # Default page is Home
