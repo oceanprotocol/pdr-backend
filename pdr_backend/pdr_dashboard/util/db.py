@@ -31,6 +31,21 @@ logger = logging.getLogger("dashboard_db")
 
 # pylint: disable=too-many-instance-attributes
 class AppDataManager:
+    _file_reader: Optional[DuckDBFileReader] = None
+    favourite_addresses: Optional[List[str]] = None
+    min_timestamp: Optional[UnixTimeS] = None
+    max_timestamp: Optional[UnixTimeS] = None
+    feeds_data: Optional[pl.DataFrame] = None
+    feeds_metrics_data: Optional[dict[str, Union[int, float]]] = None
+    feeds_payout_stats: Optional[pl.DataFrame] = None
+    feeds_subscriptions: Optional[pl.DataFrame] = None
+    feeds_table_data: Optional[pl.DataFrame] = None
+    raw_feeds_data: Optional[pl.DataFrame] = None
+    predictoors_metrics_data: Optional[dict[str, Union[int, float]]] = None
+    predictoors_data: Optional[pl.DataFrame] = None
+    predictoors_table_data: Optional[pl.DataFrame] = None
+    raw_predictoors_data: Optional[pl.DataFrame] = None
+
     def __init__(self, ppss: PPSS):
         self.network_name = ppss.web3_pp.network
         self.start_date: Optional[datetime] = None
@@ -39,6 +54,10 @@ class AppDataManager:
         self.is_initial_data_loaded = False
         self._fee_cost = None
         self._file_reader = None
+        self.min_timestamp = None
+        self.max_timestamp = None
+        self.feeds_data = None
+        self.favourite_addresses = None
 
     def initial_process(self) -> None:
         # file reader
@@ -65,8 +84,8 @@ class AppDataManager:
     def file_reader(self) -> DuckDBFileReader:
         if self._file_reader is None:
             self._file_reader = DuckDBFileReader(
-                self.ppss.lake_ss.lake_dir,
-                self.ppss.lake_ss.seconds_between_parquet_exports,
+                self.ppss.lake_ss.lake_dir or "",
+                self.ppss.lake_ss.seconds_between_parquet_exports or 0,
             )
 
         return self._file_reader

@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import time
@@ -16,6 +17,8 @@ from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.test.resources import create_sample_etl, create_sample_raw_data
 from pdr_backend.pdr_dashboard.predictoor_dash import setup_app as setup_app_main
 from pdr_backend.ppss.ppss import mock_ppss
+
+logger = logging.getLogger(__name__)
 
 
 def _prepare_test_db(tmpdir, sample_data, table_name, my_addresses=None):
@@ -97,17 +100,19 @@ def start_server_and_wait(dash_duo, app):
     radio_items = dash_duo.find_element("#general-lake-date-period-radio-items")
     radio_items.find_element(By.XPATH, "//label[4]").click()
 
-    time.sleep(1)
+    time.sleep(3)
 
 
 def _navigate_to_feeds_page(dash_duo):
     dash_duo.wait_for_element("#feeds")
     dash_duo.find_element("#feeds").click()
+    time.sleep(3)
 
 
 def _navigate_to_predictoors_page(dash_duo):
     dash_duo.wait_for_element("#predictoors")
     dash_duo.find_element("#predictoors").click()
+    time.sleep(3)
 
 
 def _remove_tags(text):

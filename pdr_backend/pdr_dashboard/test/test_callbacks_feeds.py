@@ -69,7 +69,6 @@ def test_feeds_table(_sample_app, dash_duo):
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_feeds_page(dash_duo)
-
     dash_duo.wait_for_element("#feeds_page_table table")
 
     table = dash_duo.find_element("#feeds_page_table table")

@@ -23,19 +23,18 @@ def get_callbacks_home(app):
         Output("is-initial-table-loaded", "data"),
         Output("home_page_table_control_predictoors_table", "children"),
         Output("home_page_table_control_feeds_table", "children"),
-        Output("table-rows-count-predictoors_table", "children"),
-        Output("table-rows-count-feeds_table", "children"),
         [
             Input("is-initial-data-loaded", "data"),
         ],
     )
-    @check_data_loaded(output_count=9)
+    @check_data_loaded(output_count=7)
     def get_initial_data(_):
         _, feed_data = app.data.homepage_feeds_cols
         _, predictoor_data = app.data.homepage_predictoors_cols
 
         selected_predictoors = list(range(len(app.data.favourite_addresses)))
         selected_predictoors_addrs = app.data.favourite_addresses
+
         if len(selected_predictoors) == 0:
             max_profit_predictoor_index = app.data.predictoors_data[
                 "total_profit"
@@ -46,7 +45,6 @@ def get_callbacks_home(app):
             ]
 
         selected_feeds, feed_data = app.data.get_feeds_for_favourite_predictoors(
-            app,
             feed_data,
             selected_predictoors_addrs,
         )
@@ -62,8 +60,6 @@ def get_callbacks_home(app):
             {"loaded": True},
             html.Div(),
             html.Div(),
-            f"({len(predictoors_data_arr)})",
-            f"({len(feeds_data_arr)})",
         )
 
     @app.callback(
@@ -266,8 +262,8 @@ def get_callbacks_home(app):
         return (filtered_data, selected_feed_indices)
 
     @app.callback(
-        Output("table-rows-count-feeds_table", "children", allow_duplicate=True),
-        Output("table-rows-count-predictoors_table", "children", allow_duplicate=True),
+        Output("table-rows-count-feeds_table", "children"),
+        Output("table-rows-count-predictoors_table", "children"),
         [
             Input("feeds_table", "data"),
             Input("predictoors_table", "data"),
