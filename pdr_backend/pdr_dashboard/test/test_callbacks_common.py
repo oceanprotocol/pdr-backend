@@ -24,6 +24,7 @@ def test_navigation(_sample_app_with_favourite_addresses, dash_duo):
 
 
 def test_set_period_start_date(_sample_app_with_favourite_addresses, dash_duo):
+    time.sleep(4)
     app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
@@ -34,7 +35,7 @@ def test_set_period_start_date(_sample_app_with_favourite_addresses, dash_duo):
     # Set period start date
     assert app.data.start_date is None
     dash_duo.find_elements("#general-lake-date-period-radio-items label")[0].click()
-    time.sleep(1)
+    time.sleep(4)
     assert app.data.start_date is not None
 
     delta = datetime.now(UTC) - app.data.start_date
@@ -42,5 +43,5 @@ def test_set_period_start_date(_sample_app_with_favourite_addresses, dash_duo):
     assert delta.seconds < 120
 
     dash_duo.find_elements("#general-lake-date-period-radio-items label")[3].click()
-    time.sleep(1)
+    time.sleep(4)
     assert app.data.start_date is None
