@@ -5,6 +5,7 @@ from pdr_backend.pdr_dashboard.test.resources import start_server_and_wait
 
 
 def test_navigation(_sample_app_with_favourite_addresses, dash_duo):
+    time.sleep(4)
     app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
@@ -14,6 +15,8 @@ def test_navigation(_sample_app_with_favourite_addresses, dash_duo):
 
     # Navigate to Feeds
     dash_duo.wait_for_element("#navbar-container a[href='/feeds']").click()
+    time.sleep(4)
+
     dash_duo.wait_for_element_by_id("feeds_page_metrics_row", timeout=10)
     dash_duo.wait_for_element_by_id("feeds_page_table", timeout=10)
 
