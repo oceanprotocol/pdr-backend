@@ -10,6 +10,7 @@ from enforce_typing import enforce_types
 
 logger = logging.getLogger("duckDB_file_reader")
 
+
 class DuckDBFileReader:
     def __init__(self, files_dir: str, seconds_between_caches: int):
         self.files_dir = files_dir
@@ -34,27 +35,20 @@ class DuckDBFileReader:
     @enforce_types
     def _run_query_and_cache(self, cache_file_path: str, query: str) -> None:
         """Runs the query and caches the result in a parquet file."""
-        con = duckdb.connect()  # Open connection
-        try:
-            con.execute(f"COPY ({query}) TO '{cache_file_path}' (FORMAT 'parquet')")
-        finally:
-            con.close()  # Ensure connection is closed
+        duckdb.execute(f"COPY ({query}) TO '{cache_file_path}' (FORMAT 'parquet')")
 
     @enforce_types
     def _fetch_query_result(self, query: str, scalar: bool) -> Union[Any, pl.DataFrame]:
         """Fetches the query result, either from cache or the database."""
-        con = duckdb.connect()  # Open connection
-        try:
-            if not scalar:
-                return con.execute(query).pl()
-            return self._fetch_scalar(query, con)
-        finally:
-            con.close()  # Ensure connection is closed
+        if not scalar:
+            return duckdb.execute(query).pl()
+
+        return self._fetch_scalar(query)
 
     @enforce_types
-    def _fetch_scalar(self, query: str, con) -> Any:
+    def _fetch_scalar(self, query: str) -> Any:
         """Fetches a scalar value from the database."""
-        result = con.execute(query).fetchone()
+        result = duckdb.execute(query).fetchone()
         return result[0] if result and len(result) == 1 else result
 
     @enforce_types
@@ -115,15 +109,11 @@ class DuckDBFileReader:
                 )
                 return cache_data
 
-            con = duckdb.connect()  # Open connection
             # If scalar, fetch a single result
             if scalar:
-                return self._fetch_scalar(query, con)
+                return self._fetch_scalar(query)
 
-            try:
-                return con.execute(query).pl()
-            finally:
-                con.close()  # Ensure connection is closed
+            return duckdb.execute(query).pl()
         except Exception as e:
             logger.error("Error querying the database: %s", e)
             return pl.DataFrame()
