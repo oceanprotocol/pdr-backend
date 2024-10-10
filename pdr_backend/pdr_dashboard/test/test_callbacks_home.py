@@ -88,6 +88,7 @@ def test_favourite_addresses_search_input(
     app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
+    time.sleep(4)
     fav_addr_toggle = dash_duo.find_element("#show-favourite-addresses")
     all_feeds_toggle = dash_duo.find_element("#toggle-switch-predictoor-feeds")
 
@@ -102,14 +103,16 @@ def test_favourite_addresses_search_input(
 
     # click on all feeds toggle to show all feeds
     all_feeds_toggle.click()
-    time.sleep(2)
+    time.sleep(4)
+
     f_all, f_sel = _feed_count(dash_duo)
     assert len(f_all) == 20
     assert len(f_sel) == 1
 
     # click on fav addr toggle to show all predictoors
     fav_addr_toggle.click()
-    time.sleep(2)
+    time.sleep(4)
+
     p_all, p_sel = _predictoor_count(dash_duo)
     assert len(p_sel) == 1
 
@@ -180,7 +183,7 @@ def test_predictoors_feed_only_switch(_sample_app_with_favourite_addresses, dash
     _unselect_defaults(dash_duo)
 
     dash_duo.find_element("#predictoors_table tbody tr:nth-child(3) input").click()
-    time.sleep(2)
+    time.sleep(4)
 
     feeds_table_len = len(dash_duo.find_elements("#feeds_table tbody tr"))
     assert feeds_table_len == 2
@@ -189,7 +192,7 @@ def test_predictoors_feed_only_switch(_sample_app_with_favourite_addresses, dash
     toggle_switch = dash_duo.find_element("#toggle-switch-predictoor-feeds")
     dash_duo.driver.execute_script("arguments[0].scrollIntoView(true);", toggle_switch)
     dash_duo.driver.execute_script("arguments[0].click();", toggle_switch)
-    time.sleep(2)
+    time.sleep(4)
 
     feeds_table_len = len(dash_duo.find_elements("#feeds_table tbody tr"))
     assert feeds_table_len == 21
@@ -220,7 +223,7 @@ def test_configure_predictoor_addresses(_sample_app_with_favourite_addresses, da
     # Clear selected predictoors
     dash_duo.find_element("#clear-all-predictoors_table").click()
     dash_duo.find_element("#clear-all-feeds_table").click()
-    time.sleep(2)
+    time.sleep(4)
     _, p_sel = _predictoor_count(dash_duo)
     _, f_sel = _feed_count(dash_duo)
     assert len(p_sel) == 0
@@ -233,7 +236,7 @@ def test_configure_predictoor_addresses(_sample_app_with_favourite_addresses, da
     search_input.send_keys(predictoor_addrs + Keys.ENTER)
     dash_duo.find_element("#save_predictoors").click()
 
-    time.sleep(2)
+    time.sleep(4)
     # Check that tables were updated based on the saved predictoor addrs
     _, p_sel = _predictoor_count(dash_duo)
     _, f_sel = _feed_count(dash_duo)
@@ -253,7 +256,7 @@ def test_configure_predictoor_addresses(_sample_app_with_favourite_addresses, da
     # Wait for the page to reload
     dash_duo.wait_for_page()
 
-    time.sleep(2)
+    time.sleep(4)
     _, p_sel = _predictoor_count(dash_duo)
     _, f_sel = _feed_count(dash_duo)
     assert len(p_sel) == 1
