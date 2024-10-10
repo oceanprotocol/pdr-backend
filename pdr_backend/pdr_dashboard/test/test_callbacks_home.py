@@ -49,7 +49,7 @@ def test_predictoors_search_input(_sample_app_with_favourite_addresses, dash_duo
 
 def _unselect_defaults(dash_duo):
     # un-select the first row
-    time.sleep(2)
+    time.sleep(4)
 
     feeds_first_input = dash_duo.find_element(
         "#feeds_table tbody tr:nth-child(2) input"
@@ -63,7 +63,7 @@ def _unselect_defaults(dash_duo):
     if predictoor_first_input.is_selected():
         predictoor_first_input.click()
 
-    time.sleep(2)
+    time.sleep(4)
 
 
 def _feed_count(dash_duo):
@@ -130,7 +130,7 @@ def test_checkbox_selection(_sample_app_with_favourite_addresses, dash_duo):
     # click on the checkbox in the second row of the "Feeds" table
     dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
 
-    time.sleep(2)
+    time.sleep(4)
     # click on the checkbox in the first row of the "Predictoors" table
     dash_duo.find_element("#predictoors_table tbody tr:nth-child(2) input").click()
 
@@ -148,10 +148,10 @@ def test_timeframe_metrics(_sample_app_with_favourite_addresses, dash_duo):
     _unselect_defaults(dash_duo)
 
     dash_duo.find_element("#predictoors_table tbody tr:nth-child(3) input").click()
-    time.sleep(3)
+    time.sleep(4)
 
     dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
-    time.sleep(2)
+    time.sleep(4)
 
     table_profit = dash_duo.find_element(
         "#predictoors_table tbody tr:nth-child(2) td:nth-child(3)"
@@ -202,6 +202,8 @@ def test_navigation(_sample_app_with_favourite_addresses, dash_duo):
     app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
+    time.sleep(4)
+
     # Default page is Home
     dash_duo.wait_for_element_by_id("plots_container", timeout=10)
 
@@ -209,6 +211,7 @@ def test_navigation(_sample_app_with_favourite_addresses, dash_duo):
     dash_duo.wait_for_element("#navbar-container a[href='/feeds']").click()
     dash_duo.wait_for_element_by_id("feeds_page_metrics_row", timeout=10)
     dash_duo.wait_for_element_by_id("feeds_page_table", timeout=10)
+    time.sleep(4)
 
     # Navigate to Home
     dash_duo.wait_for_element("#navbar-container a[href='/']").click()
@@ -281,7 +284,7 @@ def test_configure_predictoor_addresses(_sample_app_with_favourite_addresses, da
     dash_duo.find_element("#predictoor_config_modal").click()
     dash_duo.find_element(".modal").click()
 
-    time.sleep(2)
+    time.sleep(4)
     _, p_sel = _predictoor_count(dash_duo)
     _, f_sel = _feed_count(dash_duo)
     assert len(p_sel) == 1

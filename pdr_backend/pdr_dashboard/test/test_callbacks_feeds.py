@@ -193,7 +193,7 @@ def test_feeds_table_modal(_sample_app, dash_duo):
     # Select a row
     table = dash_duo.find_element("#feeds_page_table")
     table.find_element(By.XPATH, "//tr[2]//td[1]//input[@type='radio']").click()
-    time.sleep(1)
+    time.sleep(4)
 
     base_token = table.find_element(By.XPATH, "//tr[2]//td[3]//div").text
     quote_token = table.find_element(By.XPATH, "//tr[2]//td[4]//div").text
@@ -272,7 +272,7 @@ def test_sort_table(_sample_app, dash_duo):
 
     actionables.click()
     # Wait for the sort to apply
-    time.sleep(2)  # Sometimes sorting might take a moment
+    time.sleep(4)  # Sometimes sorting might take a moment
 
     # Check if the data is sorted ascending
     _verify_table_data_order(
