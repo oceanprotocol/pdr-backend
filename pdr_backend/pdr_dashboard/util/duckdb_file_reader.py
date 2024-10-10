@@ -41,7 +41,7 @@ class DuckDBFileReader:
     def _fetch_query_result(self, query: str, scalar: bool) -> Union[Any, pl.DataFrame]:
         """Fetches the query result, either from cache or the database."""
         if not scalar:
-            return duckdb.execute(query).pl()
+            return duckdb.execute(query).pl().clone()
 
         return self._fetch_scalar(query)
 
@@ -113,7 +113,7 @@ class DuckDBFileReader:
             if scalar:
                 return self._fetch_scalar(query)
 
-            return duckdb.execute(query).pl()
+            return duckdb.execute(query).pl().clone()
         except Exception as e:
             logger.error("Error querying the database: %s", e)
             return pl.DataFrame()
