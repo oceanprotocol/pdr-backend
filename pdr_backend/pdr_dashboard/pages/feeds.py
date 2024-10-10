@@ -1,51 +1,26 @@
-import polars as pl
-from dash import dash_table, dcc, html
+from dash import dash_table, html
 
 from pdr_backend.pdr_dashboard.dash_components.modal import get_modal
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_search_bar,
+    table_initial_spinner,
 )
-from pdr_backend.pdr_dashboard.pages.common import Filter, TabularPage
+from pdr_backend.pdr_dashboard.pages.common import TabularPage
 from pdr_backend.pdr_dashboard.util.format import FEEDS_TABLE_COLS
+from pdr_backend.pdr_dashboard.util.helpers import get_empty_feeds_filters
 
-filters = [
-    {"name": "base_token", "placeholder": "Base Token", "options": []},
-    {"name": "quote_token", "placeholder": "Quote Token", "options": []},
-    {"name": "source", "placeholder": "Source", "options": []},
-    {"name": "timeframe", "placeholder": "Timeframe", "options": []},
-]
-
-filters_objects = [Filter(**item) for item in filters]
+FEEDS_METRICS = ["Feeds", "Accuracy", "Volume", "Sales", "Revenue"]
 
 
 class FeedsPage(TabularPage):
     def __init__(self, app):
         self.app = app
-        self.app.data.refresh_feeds_data()
-
-        df = app.data.feeds_data.clone()
-        df = df.with_columns(
-            pl.col("pair")
-            .str.split_exact("/", 1)
-            .map_elements(lambda x: x["field_0"], return_dtype=pl.String)
-            .alias("base_token"),
-            pl.col("pair")
-            .str.split_exact("/", 1)
-            .map_elements(lambda x: x["field_1"], return_dtype=pl.String)
-            .alias("quote_token"),
-            pl.col("source").str.to_titlecase().alias("source"),
-        )
-
-        filters_objects[0].options = df["base_token"].unique().to_list()
-        filters_objects[1].options = df["quote_token"].unique().to_list()
-        filters_objects[2].options = df["source"].unique().to_list()
-        filters_objects[3].options = df["timeframe"].unique().to_list()
+        self.initial_filters = get_empty_feeds_filters()
 
     def layout(self):
         return html.Div(
             [
-                dcc.Store(id="user-payout-stats"),
                 self.get_metrics_row(),
                 self.get_search_bar_row(),
                 self.get_main_container(),
@@ -60,7 +35,7 @@ class FeedsPage(TabularPage):
         return html.Div(
             [
                 self.get_multiselect_dropdown(filter_obj)
-                for filter_obj in filters_objects
+                for filter_obj in self.initial_filters
             ]
             + [
                 self.get_input_filter("Accuracy"),
@@ -95,10 +70,9 @@ class FeedsPage(TabularPage):
             children=[
                 get_metric(
                     label=key,
-                    value=value,
                     value_id=f"feeds_page_{key}_metric",
                 )
-                for key, value in self.app.data.feeds_metrics_data.items()
+                for key in FEEDS_METRICS
             ],
             className="metrics_row",
             id="feeds_page_metrics_row",
@@ -123,7 +97,8 @@ class FeedsPage(TabularPage):
 
     def get_feeds_table_area(self):
         return html.Div(
-            [
+            id="feeds_page_table_area",
+            children=[
                 dash_table.DataTable(
                     id="feeds_page_table",
                     columns=FEEDS_TABLE_COLS,
@@ -134,9 +109,15 @@ class FeedsPage(TabularPage):
                         "sales",
                     ],
                     row_selectable="single",
-                    data=self.app.data.feeds_table_data.to_dicts(),
+                    data=[],
                     sort_action="custom",
                     sort_mode="single",
+                ),
+                html.Div(
+                    id="feeds_page_table_control",
+                    children=[
+                        table_initial_spinner(),
+                    ],
                 ),
             ],
             style={"width": "100%", "overflow": "scroll"},

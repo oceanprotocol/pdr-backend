@@ -132,7 +132,7 @@ def test_predictoors_table_modal(_sample_app, dash_duo):
     # Select a row
     table = dash_duo.find_element("#predictoors_page_table")
     table.find_element(By.XPATH, "//tr[2]//td[1]//input[@type='radio']").click()
-    time.sleep(1)
+    time.sleep(4)
 
     addr_short = table.find_element(By.XPATH, "//tr[2]//td[2]//div").text
 
@@ -169,6 +169,7 @@ def test_predictoors_searchbar(_sample_app, dash_duo):
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_predictoors_page(dash_duo)
+
     dash_duo.wait_for_element("#search-input-predictoors-table")
     table = dash_duo.find_element("#predictoors_page_table")
 
@@ -201,7 +202,7 @@ def test_sort_table(_sample_app, dash_duo):
     actionables.click()
 
     # Wait for the sort to apply
-    time.sleep(1)  # Sometimes sorting might take a moment
+    time.sleep(4)  # Sometimes sorting might take a moment
 
     # Check if the data is sorted ascending
     _verify_table_data_order(
@@ -212,7 +213,7 @@ def test_sort_table(_sample_app, dash_duo):
 
     # Click again to sort descending
     actionables.click()
-    time.sleep(1)  # Wait for the sort to apply
+    time.sleep(4)  # Wait for the sort to apply
 
     # Check if the data is sorted descending
     _verify_table_data_order(

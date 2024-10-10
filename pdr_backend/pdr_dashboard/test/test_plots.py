@@ -1,6 +1,5 @@
 import math
 from unittest.mock import patch
-
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
@@ -16,7 +15,6 @@ from pdr_backend.util.time_types import UnixTimeS
 
 @enforce_types
 def test_process_payouts(_sample_app):
-
     ## convert List[Payout] to List[dict]
     payouts = _sample_app.data.payouts_from_bronze_predictions(None, None)
 

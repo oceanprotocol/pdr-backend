@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import time
@@ -16,6 +17,8 @@ from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.test.resources import create_sample_etl, create_sample_raw_data
 from pdr_backend.pdr_dashboard.predictoor_dash import setup_app as setup_app_main
 from pdr_backend.ppss.ppss import mock_ppss
+
+logger = logging.getLogger(__name__)
 
 
 def _prepare_test_db(tmpdir, sample_data, table_name, my_addresses=None):
@@ -61,7 +64,7 @@ def _input_action(dash_duo, input_id, table_id, input_value, expected_rows):
     search_input = dash_duo.find_element(input_id)
     search_input.clear()
     search_input.send_keys(input_value + Keys.ENTER)
-    time.sleep(2)
+    time.sleep(4)
     assert len(dash_duo.find_elements(f"{table_id} tbody tr")) == expected_rows
 
 
@@ -73,7 +76,7 @@ def _select_dropdown_option(dash_duo, dropdown_id, option_text):
         if option.text == option_text:
             option.click()
             break
-    time.sleep(1)
+    time.sleep(4)
 
 
 def _assert_table_row_count(dash_duo, table_id, expected_count):
@@ -87,6 +90,7 @@ def start_server_and_wait(dash_duo, app):
     """
     Start the server and wait for the elements to be rendered.
     """
+    time.sleep(4)
     dash_duo.driver.set_window_size(1920, 1080)
     dash_duo.start_server(app)
     dash_duo.wait_for_element("#feeds_table")
@@ -94,15 +98,24 @@ def start_server_and_wait(dash_duo, app):
     dash_duo.wait_for_element("#feeds_table tbody tr")
     dash_duo.wait_for_element("#predictoors_table tbody tr")
 
+    radio_items = dash_duo.find_element("#general-lake-date-period-radio-items")
+    radio_items.find_element(By.XPATH, "//label[4]").click()
+
+    time.sleep(4)
+
 
 def _navigate_to_feeds_page(dash_duo):
+    time.sleep(4)
     dash_duo.wait_for_element("#feeds")
     dash_duo.find_element("#feeds").click()
+    time.sleep(4)
 
 
 def _navigate_to_predictoors_page(dash_duo):
+    time.sleep(4)
     dash_duo.wait_for_element("#predictoors")
     dash_duo.find_element("#predictoors").click()
+    time.sleep(4)
 
 
 def _remove_tags(text):
@@ -137,7 +150,7 @@ def _set_dropdown_and_verify_row_count(
     dash_duo, dropdown_id, option_text, expected_row_count
 ):
     _select_dropdown_option(dash_duo, dropdown_id, option_text)
-    time.sleep(1)
+    time.sleep(4)
     _assert_table_row_count(dash_duo, "#feeds_page_table", expected_row_count)
 
 
@@ -152,7 +165,7 @@ def _set_input_value_and_submit(
     input_field.send_keys(Keys.BACKSPACE * 2)
     input_field.send_keys(value + Keys.ENTER)
     dash_duo.find_element(submit_button_id).click()
-    time.sleep(1)
+    time.sleep(4)
 
 
 def _set_searchbar_value(dash_duo, search_input_id, value, table_id, expected_rows):
@@ -162,7 +175,7 @@ def _set_searchbar_value(dash_duo, search_input_id, value, table_id, expected_ro
     searchbar.send_keys(Keys.BACKSPACE * 10)
 
     searchbar.send_keys(value)
-    time.sleep(1)
+    time.sleep(4)
 
     table = dash_duo.find_element(table_id)
     rows = table.find_elements(By.XPATH, ".//tr")
@@ -245,5 +258,6 @@ def _prepare_sample_app(tmpdir, include_my_addresses=False):
         return_value={"ROSE": 0.05612, "OCEAN": 0.48521312000000005},
     ):
         setup_app_main(app, etl.ppss)
+        app.data._fee_cost = 1.0
 
     return app

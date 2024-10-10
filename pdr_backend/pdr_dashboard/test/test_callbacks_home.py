@@ -8,19 +8,19 @@ from pdr_backend.pdr_dashboard.test.resources import (
 )
 
 
-def test_get_input_data_from_db(_sample_app, dash_duo):
-    app = _sample_app
+def test_get_input_data_from_db(_sample_app_with_favourite_addresses, dash_duo):
+    app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
 
-def test_feeds_search_input(_sample_app, dash_duo):
+def test_feeds_search_input(_sample_app_with_favourite_addresses, dash_duo):
     """
     Test the search input in the "Feeds" table.
     The search input is used to filter the feeds by their name.
     """
-
-    app = _sample_app
+    app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
+    _unselect_defaults(dash_duo)
 
     _input_action(dash_duo, "#search-input-Feeds", "#feeds_table", "OCEAN", 1)
     _input_action(dash_duo, "#search-input-Feeds", "#feeds_table", "BTC", 3)
@@ -28,14 +28,15 @@ def test_feeds_search_input(_sample_app, dash_duo):
 
 
 # pylint: disable=too-many-statements
-def test_predictoors_search_input(_sample_app, dash_duo):
+def test_predictoors_search_input(_sample_app_with_favourite_addresses, dash_duo):
     """
     Test the search input in the "Predictoors" table.
     The search input is used to filter the predictoors by their name.
     """
 
-    app = _sample_app
+    app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
+    _unselect_defaults(dash_duo)
 
     _input_action(
         dash_duo, "#search-input-Predictoors", "#predictoors_table", "0xaaa", 1
@@ -44,6 +45,25 @@ def test_predictoors_search_input(_sample_app, dash_duo):
     _input_action(
         dash_duo, "#search-input-Predictoors", "#predictoors_table", "0x768", 2
     )
+
+
+def _unselect_defaults(dash_duo):
+    # un-select the first row
+    time.sleep(4)
+
+    feeds_first_input = dash_duo.find_element(
+        "#feeds_table tbody tr:nth-child(2) input"
+    )
+    if feeds_first_input.is_selected():
+        feeds_first_input.click()
+
+    predictoor_first_input = dash_duo.find_element(
+        "#predictoors_table tbody tr:nth-child(2) input"
+    )
+    if predictoor_first_input.is_selected():
+        predictoor_first_input.click()
+
+    time.sleep(4)
 
 
 def _feed_count(dash_duo):
@@ -68,6 +88,7 @@ def test_favourite_addresses_search_input(
     app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
+    time.sleep(4)
     fav_addr_toggle = dash_duo.find_element("#show-favourite-addresses")
     all_feeds_toggle = dash_duo.find_element("#toggle-switch-predictoor-feeds")
 
@@ -82,36 +103,39 @@ def test_favourite_addresses_search_input(
 
     # click on all feeds toggle to show all feeds
     all_feeds_toggle.click()
-    time.sleep(2)
+    time.sleep(4)
+
     f_all, f_sel = _feed_count(dash_duo)
     assert len(f_all) == 20
     assert len(f_sel) == 1
 
     # click on fav addr toggle to show all predictoors
     fav_addr_toggle.click()
-    time.sleep(2)
+    time.sleep(4)
+
     p_all, p_sel = _predictoor_count(dash_duo)
-    assert len(p_sel) == 0
+    assert len(p_sel) == 1
 
 
-def test_checkbox_selection(_sample_app, dash_duo):
+def test_checkbox_selection(_sample_app_with_favourite_addresses, dash_duo):
     """
     Test the selection of checkboxes in the "Feeds" and "Predictoors" tables.
     """
 
-    app = _sample_app
+    app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
-    time.sleep(2)
+    _unselect_defaults(dash_duo)
+
     # click on the checkbox in the second row of the "Feeds" table
     dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
 
-    time.sleep(2)
+    time.sleep(4)
     # click on the checkbox in the first row of the "Predictoors" table
     dash_duo.find_element("#predictoors_table tbody tr:nth-child(2) input").click()
 
 
-def test_timeframe_metrics(_sample_app, dash_duo):
+def test_timeframe_metrics(_sample_app_with_favourite_addresses, dash_duo):
     """
     Test the metrics that are displayed when a predictoor is selected.
     It takes the predictoor row from the table and compares with the top metrics.
@@ -119,14 +143,15 @@ def test_timeframe_metrics(_sample_app, dash_duo):
     The metrics are: Profit, Accuract, Stake
     """
 
-    app = _sample_app
+    app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
+    _unselect_defaults(dash_duo)
 
     dash_duo.find_element("#predictoors_table tbody tr:nth-child(3) input").click()
-    time.sleep(2)
+    time.sleep(4)
 
     dash_duo.find_element("#feeds_table tbody tr:nth-child(2) input").click()
-    time.sleep(2)
+    time.sleep(4)
 
     table_profit = dash_duo.find_element(
         "#predictoors_table tbody tr:nth-child(2) td:nth-child(3)"
@@ -147,17 +172,18 @@ def test_timeframe_metrics(_sample_app, dash_duo):
     assert table_stake + " OCEAN" == metric_stake
 
 
-def test_predictoors_feed_only_switch(_sample_app, dash_duo):
+def test_predictoors_feed_only_switch(_sample_app_with_favourite_addresses, dash_duo):
     """
     Test the switch that toggles between showing only the feeds that are
     associated with the selected predictoor and all feeds.
     """
 
-    app = _sample_app
+    app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
+    _unselect_defaults(dash_duo)
 
     dash_duo.find_element("#predictoors_table tbody tr:nth-child(3) input").click()
-    time.sleep(2)
+    time.sleep(4)
 
     feeds_table_len = len(dash_duo.find_elements("#feeds_table tbody tr"))
     assert feeds_table_len == 2
@@ -166,15 +192,17 @@ def test_predictoors_feed_only_switch(_sample_app, dash_duo):
     toggle_switch = dash_duo.find_element("#toggle-switch-predictoor-feeds")
     dash_duo.driver.execute_script("arguments[0].scrollIntoView(true);", toggle_switch)
     dash_duo.driver.execute_script("arguments[0].click();", toggle_switch)
-    time.sleep(2)
+    time.sleep(4)
 
     feeds_table_len = len(dash_duo.find_elements("#feeds_table tbody tr"))
     assert feeds_table_len == 21
 
 
-def test_navigation(_sample_app, dash_duo):
-    app = _sample_app
+def test_navigation(_sample_app_with_favourite_addresses, dash_duo):
+    app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
+
+    time.sleep(4)
 
     # Default page is Home
     dash_duo.wait_for_element_by_id("plots_container", timeout=10)
@@ -183,20 +211,22 @@ def test_navigation(_sample_app, dash_duo):
     dash_duo.wait_for_element("#navbar-container a[href='/feeds']").click()
     dash_duo.wait_for_element_by_id("feeds_page_metrics_row", timeout=10)
     dash_duo.wait_for_element_by_id("feeds_page_table", timeout=10)
+    time.sleep(4)
 
     # Navigate to Home
     dash_duo.wait_for_element("#navbar-container a[href='/']").click()
     dash_duo.wait_for_element_by_id("plots_container", timeout=10)
 
 
-def test_configure_predictoor_addresses(_sample_app, dash_duo):
-    app = _sample_app
+def test_configure_predictoor_addresses(_sample_app_with_favourite_addresses, dash_duo):
+    app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
-    predictoor_addrs = "0x35842372c513f8f217b968adc57a9296ba573d5c"
+    predictoor_addrs = "0x016790c9d93e1a0ef9df43646b0c35a0e3242f0a"
 
     # Clear selected predictoors
     dash_duo.find_element("#clear-all-predictoors_table").click()
     dash_duo.find_element("#clear-all-feeds_table").click()
+    time.sleep(4)
     _, p_sel = _predictoor_count(dash_duo)
     _, f_sel = _feed_count(dash_duo)
     assert len(p_sel) == 0
@@ -209,6 +239,7 @@ def test_configure_predictoor_addresses(_sample_app, dash_duo):
     search_input.send_keys(predictoor_addrs + Keys.ENTER)
     dash_duo.find_element("#save_predictoors").click()
 
+    time.sleep(4)
     # Check that tables were updated based on the saved predictoor addrs
     _, p_sel = _predictoor_count(dash_duo)
     _, f_sel = _feed_count(dash_duo)
@@ -228,6 +259,7 @@ def test_configure_predictoor_addresses(_sample_app, dash_duo):
     # Wait for the page to reload
     dash_duo.wait_for_page()
 
+    time.sleep(4)
     _, p_sel = _predictoor_count(dash_duo)
     _, f_sel = _feed_count(dash_duo)
     assert len(p_sel) == 1
@@ -252,7 +284,8 @@ def test_configure_predictoor_addresses(_sample_app, dash_duo):
     dash_duo.find_element("#predictoor_config_modal").click()
     dash_duo.find_element(".modal").click()
 
+    time.sleep(4)
     _, p_sel = _predictoor_count(dash_duo)
     _, f_sel = _feed_count(dash_duo)
-    assert len(p_sel) == 0
-    assert len(f_sel) == 0
+    assert len(p_sel) == 1
+    assert len(f_sel) == 1

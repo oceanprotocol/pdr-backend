@@ -31,34 +31,75 @@ logger = logging.getLogger("dashboard_db")
 
 # pylint: disable=too-many-instance-attributes
 class AppDataManager:
+    _file_reader: Optional[DuckDBFileReader] = None
+    favourite_addresses: Optional[List[str]] = None
+    min_timestamp: Optional[UnixTimeS] = None
+    max_timestamp: Optional[UnixTimeS] = None
+    feeds_data: Optional[pl.DataFrame] = None
+    feeds_metrics_data: Optional[dict[str, Union[int, float]]] = None
+    feeds_payout_stats: Optional[pl.DataFrame] = None
+    feeds_subscriptions: Optional[pl.DataFrame] = None
+    feeds_table_data: Optional[pl.DataFrame] = None
+    raw_feeds_data: Optional[pl.DataFrame] = None
+    predictoors_metrics_data: Optional[dict[str, Union[int, float]]] = None
+    predictoors_data: Optional[pl.DataFrame] = None
+    predictoors_table_data: Optional[pl.DataFrame] = None
+    raw_predictoors_data: Optional[pl.DataFrame] = None
+
     def __init__(self, ppss: PPSS):
         self.network_name = ppss.web3_pp.network
         self.start_date: Optional[datetime] = None
         self.lake_dir = ppss.lake_ss.lake_dir
-        self.file_reader = DuckDBFileReader(
-            ppss.lake_ss.lake_dir, ppss.lake_ss.seconds_between_parquet_exports
-        )
+        self.ppss = ppss
+        self.is_initial_data_loaded = False
+        self._fee_cost = None
+        self._file_reader = None
+        self.min_timestamp = None
+        self.max_timestamp = None
+        self.feeds_data = None
+        self.favourite_addresses = None
 
+    def initial_process(self) -> None:
+        # file reader
         self.min_timestamp, self.max_timestamp = (
             self.get_first_and_last_slot_timestamp()
         )
 
-        # fetch token prices
-        self.fee_cost = calculate_tx_gas_fee_cost_in_OCEAN(
-            ppss.web3_pp,
-            "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
-            fetch_token_prices(),
-        )
-
         # initial data loaded from database
         self.feeds_data = self._init_feeds_data()
+
         self.refresh_feeds_data()
         self.refresh_predictoors_data()
 
         valid_addresses = list(self.predictoors_data["user"].str.to_lowercase())
         self.favourite_addresses = [
-            addr for addr in ppss.predictoor_ss.my_addresses if addr in valid_addresses
+            addr
+            for addr in self.ppss.predictoor_ss.my_addresses
+            if addr in valid_addresses
         ]
+
+        self.is_initial_data_loaded = True
+
+    @property
+    def file_reader(self) -> DuckDBFileReader:
+        if self._file_reader is None:
+            self._file_reader = DuckDBFileReader(
+                self.ppss.lake_ss.lake_dir or "",
+                self.ppss.lake_ss.seconds_between_parquet_exports or 0,
+            )
+
+        return self._file_reader
+
+    @property
+    def fee_cost(self) -> float:
+        if self._fee_cost is None:
+            self._fee_cost = calculate_tx_gas_fee_cost_in_OCEAN(
+                self.ppss.web3_pp,
+                "0x18f54cc21b7a2fdd011bea06bba7801b280e3151",
+                fetch_token_prices(),
+            )
+
+        return self._fee_cost
 
     @property
     def start_date_ms(self) -> int:
@@ -653,3 +694,14 @@ class AppDataManager:
         hidden_columns = ["full_addr"]
 
         return (columns, hidden_columns), data
+
+    def get_feeds_for_favourite_predictoors(self, feed_data, predictoor_addrs):
+        feed_ids = self.feed_ids_based_on_predictoors(predictoor_addrs)
+
+        if not feed_ids:
+            return [], feed_data
+
+        feed_data = self.formatted_feeds_home_page_table_data.clone()
+        feed_data = feed_data.filter(feed_data["contract"].is_in(feed_ids))
+
+        return list(range(len(feed_ids))), feed_data
