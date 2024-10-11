@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 import time
@@ -17,8 +16,6 @@ from pdr_backend.lake.prediction import Prediction
 from pdr_backend.lake.test.resources import create_sample_etl, create_sample_raw_data
 from pdr_backend.pdr_dashboard.predictoor_dash import setup_app as setup_app_main
 from pdr_backend.ppss.ppss import mock_ppss
-
-logger = logging.getLogger(__name__)
 
 
 def _prepare_test_db(tmpdir, sample_data, table_name, my_addresses=None):
