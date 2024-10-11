@@ -686,3 +686,4 @@ class AppDataManager:
         feed_data = feed_data.filter(feed_data["contract"].is_in(feed_ids))
 
         return list(range(len(feed_ids))), feed_data
+
