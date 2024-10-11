@@ -46,7 +46,6 @@ def get_callbacks_home(app):
             ]
 
         selected_feeds, feed_data = app.data.get_feeds_for_favourite_predictoors(
-            app,
             feed_data,
             selected_predictoors_addrs,
         )
