@@ -676,13 +676,13 @@ class AppDataManager:
 
         return (columns, hidden_columns), data
 
-    def get_feeds_for_favourite_predictoors(self, feed_data, predictoor_addrs):
-        feed_ids = self.feed_ids_based_on_predictoors(predictoor_addrs)
+def get_feeds_for_favourite_predictoors(app, feed_data, predictoor_addrs):
+    feed_ids = app.data.feed_ids_based_on_predictoors(predictoor_addrs)
 
-        if not feed_ids:
-            return [], feed_data
+    if not feed_ids:
+        return [], feed_data
 
-        feed_data = self.formatted_feeds_home_page_table_data.clone()
-        feed_data = feed_data.filter(feed_data["contract"].is_in(feed_ids))
+    feed_data = app.data.formatted_feeds_home_page_table_data.clone()
+    feed_data = feed_data.filter(feed_data["contract"].is_in(feed_ids))
 
-        return list(range(len(feed_ids))), feed_data
+    return list(range(len(feed_ids))), feed_data

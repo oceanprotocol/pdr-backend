@@ -11,7 +11,7 @@ from pdr_backend.pdr_dashboard.util.helpers import (
     select_or_clear_all_by_table,
     check_data_loaded,
 )
-
+from pdr_backend.pdr_dashboard.util.db import get_feeds_for_favourite_predictoors
 
 # pylint: disable=too-many-statements
 def get_callbacks_home(app):
@@ -45,7 +45,8 @@ def get_callbacks_home(app):
                 app.data.predictoors_data[max_profit_predictoor_index, "user"]
             ]
 
-        selected_feeds, feed_data = app.data.get_feeds_for_favourite_predictoors(
+        selected_feeds, feed_data = get_feeds_for_favourite_predictoors(
+            app,
             feed_data,
             selected_predictoors_addrs,
         )
