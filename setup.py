@@ -9,9 +9,9 @@ from setuptools import find_packages, setup
 # Installed by pip install pdr-backend
 # or pip install -e .
 install_requirements = [
-    "black==24.8.0",
+    "black==24.10.0",
     "bumpversion",
-    "ccxt==4.4.14",
+    "ccxt==4.4.17",
     "coverage",
     "dash[testing]==2.18.1",
     "dash_bootstrap_components==1.6.0",
@@ -41,7 +41,7 @@ install_requirements = [
     "requests-mock==1.12.1",
     "scikit-learn==1.5.2",
     "statsmodels==0.14.4",
-    "time_machine==2.15.0",
+    "time_machine==2.16.0",
     "typeguard==4.3.0",
     "xgboost==2.1.1",
     "web3==6.20.2",
