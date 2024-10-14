@@ -97,7 +97,7 @@ def start_server_and_wait(dash_duo, app):
     radio_items = dash_duo.find_element("#general-lake-date-period-radio-items")
     radio_items.find_element(By.XPATH, "//label[4]").click()
 
-    time.sleep(1)
+    time.sleep(3)
 
 
 def _navigate_to_feeds_page(dash_duo):
