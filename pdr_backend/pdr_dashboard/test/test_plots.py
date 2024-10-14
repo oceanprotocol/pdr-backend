@@ -1,6 +1,6 @@
 import math
 from unittest.mock import patch
-import time
+
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed

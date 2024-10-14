@@ -14,7 +14,7 @@ from pdr_backend.pdr_dashboard.test.resources import (
 from pdr_backend.pdr_dashboard.test.test_callbacks_feeds import (
     _verify_table_data,
     _verify_table_data_order,
-    _save_table_data
+    _save_table_data,
 )
 
 
@@ -77,7 +77,7 @@ def test_predictoors_page_metrics_row(_sample_app, dash_duo):
         "Accuracy(avg)",
         "Staked",
         "Gross Income",
-        "Clipped Payout"
+        "Clipped Payout",
     ]
 
     for i, metric in enumerate(expected_metrics):
