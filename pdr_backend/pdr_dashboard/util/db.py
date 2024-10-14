@@ -328,20 +328,15 @@ class AppDataManager:
 
         # Constructing the SQL query
         query = f"""
-            SELECT LIST(DISTINCT p.contract) as feed_addrs
+            SELECT DISTINCT p.contract as feed_addr
             FROM {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
-            WHERE p.contract IN (
-                SELECT MIN(p.contract)
-                FROM {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
-                WHERE (
-                    {" OR ".join([f"p.user LIKE '%{item}%'" for item in predictoor_addrs])}
-                )
-                GROUP BY p.contract
+            WHERE (
+                {" OR ".join([f"p.user LIKE '%{item}%'" for item in predictoor_addrs])}
             );
         """
 
         # Execute the query
-        return self.file_reader._query_db(query, scalar=True)
+        return self.file_reader._query_db(query)["feed_addr"].to_list()
 
     @enforce_types
     def payouts_from_bronze_predictions(
