@@ -31,14 +31,28 @@ logger = logging.getLogger("dashboard_db")
 
 # pylint: disable=too-many-instance-attributes
 class AppDataManager:
+    _file_reader: Optional[DuckDBFileReader] = None
+    favourite_addresses: Optional[List[str]] = None
+    min_timestamp: Optional[UnixTimeS] = None
+    max_timestamp: Optional[UnixTimeS] = None
+    feeds_data: Optional[pl.DataFrame] = None
+    feeds_metrics_data: Optional[dict[str, Union[int, float]]] = None
+    feeds_payout_stats: Optional[pl.DataFrame] = None
+    feeds_subscriptions: Optional[pl.DataFrame] = None
+    feeds_table_data: Optional[pl.DataFrame] = None
+    raw_feeds_data: Optional[pl.DataFrame] = None
+    predictoors_metrics_data: Optional[dict[str, Union[int, float]]] = None
+    predictoors_data: Optional[pl.DataFrame] = None
+    predictoors_table_data: Optional[pl.DataFrame] = None
+    raw_predictoors_data: Optional[pl.DataFrame] = None
+    start_date: Optional[datetime] = None
+    is_initial_data_loaded: bool = False
+    _fee_cost: Optional[float] = None
+
     def __init__(self, ppss: PPSS):
         self.network_name = ppss.web3_pp.network
-        self.start_date: Optional[datetime] = None
         self.lake_dir = ppss.lake_ss.lake_dir
         self.ppss = ppss
-        self.is_initial_data_loaded = False
-        self._fee_cost = None
-        self._file_reader = None
 
     def initial_process(self) -> None:
         # file reader
@@ -309,20 +323,15 @@ class AppDataManager:
 
         # Constructing the SQL query
         query = f"""
-            SELECT LIST(DISTINCT p.contract) as feed_addrs
+            SELECT DISTINCT p.contract as feed_addr
             FROM {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
-            WHERE p.contract IN (
-                SELECT MIN(p.contract)
-                FROM {tbl_parquet_path(self.lake_dir, BronzePrediction)} p
-                WHERE (
-                    {" OR ".join([f"p.user LIKE '%{item}%'" for item in predictoor_addrs])}
-                )
-                GROUP BY p.contract
+            WHERE (
+                {" OR ".join([f"p.user LIKE '%{item}%'" for item in predictoor_addrs])}
             );
         """
 
         # Execute the query
-        return self.file_reader._query_db(query, scalar=True)
+        return self.file_reader._query_db(query)["feed_addr"].to_list()
 
     @enforce_types
     def payouts_from_bronze_predictions(
@@ -686,4 +695,3 @@ class AppDataManager:
         feed_data = feed_data.filter(feed_data["contract"].is_in(feed_ids))
 
         return list(range(len(feed_ids))), feed_data
-
