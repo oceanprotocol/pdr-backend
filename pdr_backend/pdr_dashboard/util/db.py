@@ -45,14 +45,19 @@ class AppDataManager:
     predictoors_data: Optional[pl.DataFrame] = None
     predictoors_table_data: Optional[pl.DataFrame] = None
     raw_predictoors_data: Optional[pl.DataFrame] = None
-    start_date: Optional[datetime] = None
-    is_initial_data_loaded: bool = False
-    _fee_cost: Optional[float] = None
 
     def __init__(self, ppss: PPSS):
         self.network_name = ppss.web3_pp.network
+        self.start_date: Optional[datetime] = None
         self.lake_dir = ppss.lake_ss.lake_dir
         self.ppss = ppss
+        self.is_initial_data_loaded = False
+        self._fee_cost = None
+        self._file_reader = None
+        self.min_timestamp = None
+        self.max_timestamp = None
+        self.feeds_data = None
+        self.favourite_addresses = None
 
     def initial_process(self) -> None:
         # file reader
@@ -66,12 +71,9 @@ class AppDataManager:
         self.refresh_feeds_data()
         self.refresh_predictoors_data()
 
-        valid_addresses = []
-        if self.predictoors_data is not None:
-            valid_addresses = list(
-                self.predictoors_data["user"].cast(pl.Utf8).str.to_lowercase()
-            )
-
+        predictoors_data = self.predictoors_data if self.predictoors_data is not None else pl.DataFrame()
+        
+        valid_addresses = list(predictoors_data["user"].str.to_lowercase())
         self.favourite_addresses = [
             addr
             for addr in self.ppss.predictoor_ss.my_addresses
@@ -84,8 +86,8 @@ class AppDataManager:
     def file_reader(self) -> DuckDBFileReader:
         if self._file_reader is None:
             self._file_reader = DuckDBFileReader(
-                self.ppss.lake_ss.lake_dir,
-                self.ppss.lake_ss.seconds_between_parquet_exports,
+                self.ppss.lake_ss.lake_dir or "",
+                self.ppss.lake_ss.seconds_between_parquet_exports or 0,
             )
 
         return self._file_reader
@@ -99,7 +101,7 @@ class AppDataManager:
                 fetch_token_prices(),
             )
 
-        return self._fee_cost
+        return self._fee_cost or 0.0
 
     @property
     def start_date_ms(self) -> int:
@@ -540,9 +542,6 @@ class AppDataManager:
     def _formatted_data_for_feeds_table(
         self,
     ) -> Tuple[pl.DataFrame, pl.DataFrame]:
-        if self.feeds_data is None:
-            return pl.DataFrame(), pl.DataFrame()
-
         df = self.feeds_data.clone()
         df = df.with_columns(
             pl.col("contract").alias("full_addr"),
@@ -558,13 +557,8 @@ class AppDataManager:
             pl.col("source").str.to_titlecase().alias("source"),
             pl.lit("").alias("sales_str"),
         )
-
-        if self.feeds_subscriptions:
-            df = df.join(self.feeds_payout_stats, on="contract")
-
-        if self.feeds_subscriptions:
-            df = df.join(self.feeds_subscriptions, on="contract")
-
+        df = df.join(self.feeds_payout_stats, on="contract")
+        df = df.join(self.feeds_subscriptions, on="contract")
         df = df.fill_null(0)
 
         columns = [col["id"] for col in FEEDS_TABLE_COLS]
@@ -580,9 +574,6 @@ class AppDataManager:
     def _formatted_data_for_predictoors_table(
         self,
     ) -> Tuple[pl.DataFrame, pl.DataFrame]:
-        if self.predictoors_data is None:
-            return pl.DataFrame(), pl.DataFrame()
-
         df = self.predictoors_data.clone()
         df = df.with_columns(
             pl.col("user").alias("full_addr"),
@@ -653,9 +644,6 @@ class AppDataManager:
         Returns:
             list: List of processed user payouts stats data.
         """
-        if self.predictoors_data is None:
-            return pl.DataFrame()
-
         df = self.predictoors_data.clone()
         df = df.with_columns(
             pl.col("user").alias("full_addr"),
@@ -670,24 +658,9 @@ class AppDataManager:
     @property
     @enforce_types
     def formatted_feeds_home_page_table_data(self) -> pl.DataFrame:
-        if self.feeds_data is None:
-            return pl.DataFrame()
-
         df = self.feeds_data.clone()
-
-        feed_payouts_stats = (
-            self.feeds_payout_stats.clone()
-            if self.feeds_payout_stats is not None
-            else pl.DataFrame()
-        )
-        feed_subscriptions = (
-            self.feeds_subscriptions.clone()
-            if self.feeds_subscriptions is not None
-            else pl.DataFrame()
-        )
-
-        df = df.join(feed_payouts_stats, on="contract")
-        df = df.join(feed_subscriptions, on="contract")
+        df = df.join(self.feeds_payout_stats, on="contract")
+        df = df.join(self.feeds_subscriptions, on="contract")
         df = df.fill_nan(0)
 
         columns = [col["id"] for col in FEEDS_HOME_PAGE_TABLE_COLS]
@@ -707,11 +680,7 @@ class AppDataManager:
     @property
     @enforce_types
     def homepage_predictoors_cols(self) -> Tuple[Tuple, pl.DataFrame]:
-        data = (
-            self.formatted_predictoors_home_page_table_data.clone()
-            if self.predictoors_data
-            else pl.DataFrame()
-        )
+        data = self.formatted_predictoors_home_page_table_data.clone()
 
         if self.favourite_addresses:
             df1 = data.filter(data["full_addr"].is_in(self.favourite_addresses))
