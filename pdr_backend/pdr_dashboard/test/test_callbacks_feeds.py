@@ -50,7 +50,6 @@ def _verify_table_data_order(
 def _verify_table_data(table, filename):
     table_data = _prepare_table_data_to_be_saved_as_json(table)
 
-    print(table_data)
     with open("pdr_backend/pdr_dashboard/test/json_fixtures/" + filename) as f:
         expected_data = json.load(f)
 

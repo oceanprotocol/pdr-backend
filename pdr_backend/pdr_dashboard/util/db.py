@@ -71,8 +71,12 @@ class AppDataManager:
         self.refresh_feeds_data()
         self.refresh_predictoors_data()
 
-        predictoors_data = self.predictoors_data if self.predictoors_data is not None else pl.DataFrame()
-        
+        predictoors_data = (
+            self.predictoors_data
+            if self.predictoors_data is not None
+            else pl.DataFrame()
+        )
+
         valid_addresses = list(predictoors_data["user"].str.to_lowercase())
         self.favourite_addresses = [
             addr
@@ -542,7 +546,7 @@ class AppDataManager:
     def _formatted_data_for_feeds_table(
         self,
     ) -> Tuple[pl.DataFrame, pl.DataFrame]:
-        df = self.feeds_data.clone()
+        df = self.feeds_data.clone() if self.feeds_data is not None else pl.DataFrame()
         df = df.with_columns(
             pl.col("contract").alias("full_addr"),
             pl.col("contract").alias("addr"),
@@ -557,8 +561,13 @@ class AppDataManager:
             pl.col("source").str.to_titlecase().alias("source"),
             pl.lit("").alias("sales_str"),
         )
-        df = df.join(self.feeds_payout_stats, on="contract")
-        df = df.join(self.feeds_subscriptions, on="contract")
+
+        if self.feeds_payout_stats is not None:
+            df = df.join(self.feeds_payout_stats, on="contract")
+
+        if self.feeds_subscriptions is not None:
+            df = df.join(self.feeds_subscriptions, on="contract")
+
         df = df.fill_null(0)
 
         columns = [col["id"] for col in FEEDS_TABLE_COLS]
@@ -574,7 +583,11 @@ class AppDataManager:
     def _formatted_data_for_predictoors_table(
         self,
     ) -> Tuple[pl.DataFrame, pl.DataFrame]:
-        df = self.predictoors_data.clone()
+        df = (
+            self.predictoors_data.clone()
+            if self.predictoors_data is not None
+            else pl.DataFrame()
+        )
         df = df.with_columns(
             pl.col("user").alias("full_addr"),
             pl.col("user").alias("addr"),
@@ -644,7 +657,11 @@ class AppDataManager:
         Returns:
             list: List of processed user payouts stats data.
         """
-        df = self.predictoors_data.clone()
+        df = (
+            self.predictoors_data.clone()
+            if self.predictoors_data is not None
+            else pl.DataFrame()
+        )
         df = df.with_columns(
             pl.col("user").alias("full_addr"),
             pl.col("user").alias("addr"),
@@ -658,9 +675,14 @@ class AppDataManager:
     @property
     @enforce_types
     def formatted_feeds_home_page_table_data(self) -> pl.DataFrame:
-        df = self.feeds_data.clone()
-        df = df.join(self.feeds_payout_stats, on="contract")
-        df = df.join(self.feeds_subscriptions, on="contract")
+        df = self.feeds_data.clone() if self.feeds_data is not None else pl.DataFrame()
+
+        if self.feeds_payout_stats is not None:
+            df = df.join(self.feeds_payout_stats, on="contract")
+
+        if self.feeds_subscriptions is not None:
+            df = df.join(self.feeds_subscriptions, on="contract")
+
         df = df.fill_nan(0)
 
         columns = [col["id"] for col in FEEDS_HOME_PAGE_TABLE_COLS]
