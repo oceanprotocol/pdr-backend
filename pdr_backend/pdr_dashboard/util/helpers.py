@@ -154,7 +154,7 @@ def get_date_period_text_for_selected_predictoors(payouts: pl.DataFrame) -> str:
 
 @enforce_types
 def get_date_period_text_header(start_date: UnixTimeS, end_date: UnixTimeS) -> str:
-    return _format_date_text(start_date.to_dt(), end_date.to_dt())
+    return _format_date_text(start_date.to_dt(), end_date.to_dt(), True)
 
 
 def get_empty_feeds_filters() -> List[Filter]:
