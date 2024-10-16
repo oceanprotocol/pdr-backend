@@ -1,14 +1,1 @@
-[
-  {
-    "": "",
-    "Addr": "0xac8...95f04",
-    "Apr": "11.58%",
-    "Accuracy": "48.46%",
-    "Number Of Feeds": "20",
-    "Staked (Ocean)": "660",
-    "Gross Income (Ocean)": "358.42",
-    "Stake Loss (Ocean)": "282",
-    "Tx Costs (Ocean)": "104",
-    "Profit (Ocean)": "-27.58"
-  }
-]
+[{"": "", "Addr": "0xac8...95f04", "Apr": "11.58%", "Accuracy": "48.46%", "Number Of Feeds": "20", "Staked (Ocean)": "660", "Gross Income (Ocean)": "358.42", "Stake Loss (Ocean)": "282", "Tx Costs (Ocean)": "520", "Profit (Ocean)": "-443.58"}]

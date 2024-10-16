@@ -4,6 +4,12 @@ from dash import dash_table, dcc, html
 from pdr_backend.pdr_dashboard.dash_components.view_elements import (
     get_metric,
     get_tooltip_and_button,
+    table_initial_spinner,
+)
+
+from pdr_backend.pdr_dashboard.util.format import (
+    PREDICTOORS_HOME_PAGE_TABLE_COLS,
+    FEEDS_HOME_PAGE_TABLE_COLS,
 )
 
 
@@ -35,12 +41,7 @@ class HomePage:
         return html.Div(
             [
                 self.get_graphs_column_metrics_row(),
-                dcc.Loading(
-                    className="loading",
-                    type="default",
-                    children=self.get_graphs_column_plots_row(),
-                    custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
-                ),
+                self.get_graphs_column_plots_row(),
             ],
             id="graphs_container",
             style={
@@ -53,41 +54,24 @@ class HomePage:
             },
         )
 
-    def get_feeds_for_favourite_predictoors(self, feed_data):
-        feed_ids = self.app.data.feed_ids_based_on_predictoors()
-
-        if not feed_ids:
-            return [], feed_data
-
-        feed_data = self.app.data.formatted_feeds_home_page_table_data.clone()
-        feed_data = feed_data.filter(feed_data["contract"].is_in(feed_ids))
-
-        return list(range(len(feed_ids))), feed_data
-
     def get_input_column(self):
-        feed_cols, feed_data = self.app.data.homepage_feeds_cols
-        predictoor_cols, predictoor_data = self.app.data.homepage_predictoors_cols
-
-        self.selected_predictoors = list(range(len(self.app.data.favourite_addresses)))
-        self.selected_feeds, feed_data = self.get_feeds_for_favourite_predictoors(
-            feed_data
-        )
-
         return html.Div(
             [
+                dcc.Store(id="is-initial-table-loaded", data=False),
+                dcc.Store(id="is-home-ready-to-fetch", data=None),
                 html.Div(
                     self.get_table(
                         table_id="predictoors_table",
-                        columns=predictoor_cols,
-                        data=predictoor_data.to_dicts(),
+                        columns=(PREDICTOORS_HOME_PAGE_TABLE_COLS, ["full_addr"]),
+                        data=[],
                     ),
                     id="predictoors_container",
                 ),
                 html.Div(
                     self.get_table(
                         table_id="feeds_table",
-                        columns=feed_cols,
-                        data=feed_data.to_dicts(),
+                        columns=(FEEDS_HOME_PAGE_TABLE_COLS, ["contract"]),
+                        data=[],
                     ),
                     id="feeds_container",
                     style={
@@ -110,17 +94,34 @@ class HomePage:
     def get_graphs_column_plots_row(self):
         return html.Div(
             [
-                html.Div(id="accuracy_chart"),
-                html.Div(id="profit_chart"),
+                html.Div(
+                    id="accuracy_chart",
+                    children=table_initial_spinner(),
+                    style={"height": "25vh"},
+                ),
+                html.Div(
+                    id="profit_chart",
+                    children=table_initial_spinner(),
+                    style={"height": "25vh"},
+                ),
                 html.Div(
                     [
-                        html.Div(id="cost_chart", style={"width": "48%"}),
-                        html.Div(id="stake_chart", style={"width": "48%"}),
+                        html.Div(
+                            style={"position": "relative", "width": "48%"},
+                            id="cost_chart",
+                            children=table_initial_spinner(),
+                        ),
+                        html.Div(
+                            style={"position": "relative", "width": "48%"},
+                            id="stake_chart",
+                            children=table_initial_spinner(),
+                        ),
                     ],
                     style={
                         "width": "100%",
                         "display": "flex",
                         "justifyContent": "space-between",
+                        "height": "25vh",
                     },
                 ),
             ],
@@ -136,10 +137,10 @@ class HomePage:
     def get_graphs_column_metrics_row(self):
         return html.Div(
             [
-                get_metric(label="Avg Accuracy", value=0.0, value_id="accuracy_metric"),
-                get_metric(label="Pred Profit", value=0, value_id="profit_metric"),
-                get_metric(label="Tx Costs", value=0.0, value_id="costs_metric"),
-                get_metric(label="Avg Stake", value=0, value_id="stake_metric"),
+                get_metric(label="Avg Accuracy", value_id="accuracy_metric"),
+                get_metric(label="Pred Profit", value_id="profit_metric"),
+                get_metric(label="Tx Costs", value_id="costs_metric"),
+                get_metric(label="Avg Stake", value_id="stake_metric"),
                 self.get_available_data_component(),
             ],
             id="metrics_container",
@@ -202,17 +203,13 @@ class HomePage:
         if table_id == "predictoors_table":
             table_name = "Predictoors"
             searchable_field = "user"
-            length = len(self.app.data.predictoors_data)
 
             toggle_switch = self.get_predictoors_switch()
-            selected_rows = self.selected_predictoors
         else:
             table_name = "Feeds"
             searchable_field = "pair"
-            length = len(self.app.data.feeds_data)
 
             toggle_switch = self.get_feeds_switch()
-            selected_rows = self.selected_feeds
 
         return html.Div(
             [
@@ -226,7 +223,7 @@ class HomePage:
                                 ),
                                 html.Span(
                                     id=f"table-rows-count-{table_id}",
-                                    children=f"({length})",
+                                    children="(0)",
                                     style={
                                         "fontSize": "16px",
                                         "color": "gray",
@@ -290,7 +287,7 @@ class HomePage:
                     hidden_columns=columns[1],
                     data=data,
                     row_selectable="multi",  # Can be 'multi' for multiple rows
-                    selected_rows=selected_rows,
+                    selected_rows=[],
                     sort_action="native",  # Enables data to be sorted
                     style_cell={"textAlign": "left"},
                     style_table={
@@ -300,6 +297,12 @@ class HomePage:
                         "marginTop": "5px",
                     },
                     fill_width=True,
+                ),
+                html.Div(
+                    id=f"home_page_table_control_{table_id}",
+                    children=[
+                        table_initial_spinner(),
+                    ],
                 ),
             ],
         )

@@ -1,40 +1,53 @@
 import dash
-from dash import Input, Output, State
+from dash import Input, Output, State, html
 
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
-from pdr_backend.pdr_dashboard.pages.predictoors import get_metric, key_id_name
+from pdr_backend.pdr_dashboard.pages.predictoors import key_id_name
 from pdr_backend.pdr_dashboard.util.filters import (
     check_conditions,
     filter_table_by_range,
 )
-from pdr_backend.pdr_dashboard.util.format import format_df
-from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
+from pdr_backend.pdr_dashboard.util.format import format_df, format_value
+from pdr_backend.pdr_dashboard.util.helpers import (
+    toggle_modal_helper,
+    check_data_loaded,
+)
 
 
 def get_callbacks_predictoors(app):
     @app.callback(
-        Output("predictoors_page_table", "data", allow_duplicate=True),
-        Output("predictoors_page_metrics_row", "children"),
-        [Input("start-date", "data")],
-        prevent_initial_call=True,
+        Output("predictoors_page_table", "data"),
+        Output("predictoors_page_predictoors_metric", "children"),
+        Output("predictoors_page_accuracy_metric", "children"),
+        Output("predictoors_page_staked_metric", "children"),
+        Output("predictoors_page_gross_income_metric", "children"),
+        Output("predictoors_page_clipped_payout_metric", "children"),
+        Output("predictoors_page_table_control", "children"),
+        [
+            Input("start-date", "data"),
+            Input("is-initial-data-loaded", "data"),
+        ],
     )
-    def update_page_data(_start_date):
+    @check_data_loaded(output_count=6)
+    def update_page_data(
+        _start_date,
+        _,
+    ):
         app.data.refresh_predictoors_data()
         stats = app.data.predictoors_metrics()
 
         metrics_children_data = [
-            get_metric(
-                label=key,
-                value=value,
-                value_id=key_id_name(key),
-            )
-            for key, value in stats.items()
+            format_value(value, key_id_name(key)) for key, value in stats.items()
         ]
 
-        return app.data.predictoors_table_data.to_dicts(), metrics_children_data
+        return (
+            app.data.predictoors_table_data.to_dicts(),
+            *metrics_children_data,
+            html.Div(),
+        )
 
     @app.callback(
-        Output("predictoors_page_table", "data"),
+        Output("predictoors_page_table", "data", allow_duplicate=True),
         [
             Input("apr_button", "n_clicks"),
             Input("p_avg_accuracy_button", "n_clicks"),

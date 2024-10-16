@@ -74,6 +74,7 @@ def test_feeds_table(_sample_app, dash_duo):
 
     table = dash_duo.find_element("#feeds_page_table table")
 
+    time.sleep(3)
     # Validate row and column count
     rows = table.find_elements(By.XPATH, ".//tr")
     assert len(rows) == 21

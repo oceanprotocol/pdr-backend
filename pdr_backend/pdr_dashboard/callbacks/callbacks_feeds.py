@@ -1,39 +1,63 @@
 import dash
-from dash import Input, Output, State
+from dash import Input, Output, State, html
 
 from pdr_backend.pdr_dashboard.dash_components.modal import ModalContent
-from pdr_backend.pdr_dashboard.pages.feeds import get_metric
 from pdr_backend.pdr_dashboard.util.filters import (
     check_conditions,
     filter_table_by_range,
 )
-from pdr_backend.pdr_dashboard.util.format import format_df
-from pdr_backend.pdr_dashboard.util.helpers import toggle_modal_helper
+from pdr_backend.pdr_dashboard.util.format import format_value, format_df
+from pdr_backend.pdr_dashboard.util.helpers import (
+    toggle_modal_helper,
+    produce_feeds_filter_options,
+    check_data_loaded,
+)
 
 
 def get_callbacks_feeds(app):
     @app.callback(
-        Output("feeds_page_table", "data", allow_duplicate=True),
-        Output("feeds_page_metrics_row", "children"),
-        [Input("start-date", "data")],
-        prevent_initial_call=True,
+        Output("feeds_page_table", "data"),
+        Output("feeds_page_Feeds_metric", "children"),
+        Output("feeds_page_Accuracy_metric", "children"),
+        Output("feeds_page_Volume_metric", "children"),
+        Output("feeds_page_Sales_metric", "children"),
+        Output("feeds_page_Revenue_metric", "children"),
+        Output("feeds_page_table_control", "children"),
+        Output("base_token", "options"),
+        Output("quote_token", "options"),
+        Output("source", "options"),
+        Output("timeframe", "options"),
+        [
+            Input("start-date", "data"),
+            Input("is-initial-data-loaded", "data"),
+        ],
     )
-    def update_page_data(_start_date):
+    @check_data_loaded(output_count=11)
+    def update_page_data(
+        _start_date,
+        _is_initial_data_loaded,
+    ):
         app.data.refresh_feeds_data()
 
+        filter_options = produce_feeds_filter_options(app.data.feeds_data.clone())
+
         metrics_children_data = [
-            get_metric(
-                label=key,
-                value=value,
-                value_id=f"feeds_page_{key}_metric",
-            )
+            format_value(value, f"feeds_page_{key}_metric")
             for key, value in app.data.feeds_metrics_data.items()
         ]
 
-        return app.data.feeds_table_data.to_dicts(), metrics_children_data
+        return (
+            app.data.feeds_table_data.to_dicts(),
+            *metrics_children_data,
+            html.Div(),
+            filter_options[0],
+            filter_options[1],
+            filter_options[2],
+            filter_options[3],
+        )
 
     @app.callback(
-        Output("feeds_page_table", "data"),
+        Output("feeds_page_table", "data", allow_duplicate=True),
         [
             Input("base_token", "value"),
             Input("quote_token", "value"),

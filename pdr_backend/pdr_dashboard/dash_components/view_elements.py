@@ -5,8 +5,6 @@ import dash_bootstrap_components as dbc
 import yaml
 from dash import dcc, html
 
-from pdr_backend.pdr_dashboard.util.format import format_value
-
 NAV_ITEMS = [
     {"text": "Home", "location": "/"},
     {"text": "Feeds", "location": "/feeds"},
@@ -37,7 +35,7 @@ def get_period_selection_radio_items(component_id: str):
             {"label": "1M", "value": "30"},
             {"label": "ALL", "value": "0"},
         ],
-        value="0",  # default selected value
+        value="30",  # default selected value
         labelStyle={"display": "inline-block", "margin-right": "10px"},
     )
 
@@ -57,7 +55,7 @@ def get_tooltip_and_button(value_id: str):
     )
 
 
-def get_metric(label, value, value_id):
+def get_metric(label, value_id):
     return html.Div(
         [
             html.Span(
@@ -71,18 +69,13 @@ def get_metric(label, value, value_id):
                     "alignItems": "center",
                 },
             ),
-            dcc.Loading(
-                className="loading",
-                type="default",
-                children=html.Span(
-                    format_value(value if value else 0, value_id),
-                    id=value_id,
-                    style={"fontWeight": "bold"},
-                ),
-                custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
+            html.Span(
+                id=value_id,
+                children=html.Div(className="initial_metric"),
+                className="metric_value",
             ),
         ],
-        style={"display": "flex", "flexDirection": "column", "font-size": "20px"},
+        className="metric_unit",
     )
 
 
@@ -90,6 +83,7 @@ def get_layout():
     return html.Div(
         [
             dcc.Location(id="url", refresh=False),
+            dcc.Store(id="is-initial-data-loaded"),
             dcc.Store(id="start-date"),
             get_header(),
             html.Div(id="page-content"),
@@ -177,3 +171,16 @@ def get_available_data_area_components():
         ],
         style={"display": "flex", "justifyContent": "center", "alignItems": "center"},
     )
+
+
+def div_with_loading(div_id: str, style=None):
+    return dcc.Loading(
+        id=f"loading_{div_id}",
+        type="default",
+        children=html.Div(id=div_id, style=style),
+        custom_spinner=html.H2(dbc.Spinner(), style={"height": "100%"}),
+    )
+
+
+def table_initial_spinner():
+    return html.Div(id="table_spinner")

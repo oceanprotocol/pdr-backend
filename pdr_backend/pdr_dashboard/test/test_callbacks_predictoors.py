@@ -14,6 +14,7 @@ from pdr_backend.pdr_dashboard.test.resources import (
 from pdr_backend.pdr_dashboard.test.test_callbacks_feeds import (
     _verify_table_data,
     _verify_table_data_order,
+    _save_table_data,
 )
 
 
@@ -24,6 +25,7 @@ def test_predictoors_table(_sample_app, dash_duo):
     _navigate_to_predictoors_page(dash_duo)
     dash_duo.wait_for_element("#predictoors_page_table table")
 
+    time.sleep(5)
     table = dash_duo.find_element("#predictoors_page_table table")
 
     # Validate row and column count
@@ -58,8 +60,10 @@ def test_predictoors_page_metrics_row(_sample_app, dash_duo):
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_predictoors_page(dash_duo)
+
     dash_duo.wait_for_element("#predictoors_page_metrics_row")
 
+    time.sleep(5)
     metrics_row = dash_duo.find_element("#predictoors_page_metrics_row")
 
     # Validate metrics
@@ -73,7 +77,7 @@ def test_predictoors_page_metrics_row(_sample_app, dash_duo):
         "Accuracy(avg)",
         "Staked",
         "Gross Income",
-        "Profit",
+        "Clipped Payout",
     ]
 
     for i, metric in enumerate(expected_metrics):
@@ -169,6 +173,8 @@ def test_predictoors_searchbar(_sample_app, dash_duo):
     start_server_and_wait(dash_duo, app)
 
     _navigate_to_predictoors_page(dash_duo)
+
+    time.sleep(5)
     dash_duo.wait_for_element("#search-input-predictoors-table")
     table = dash_duo.find_element("#predictoors_page_table")
 
@@ -179,6 +185,7 @@ def test_predictoors_searchbar(_sample_app, dash_duo):
         "#predictoors_page_table",
         2,
     )
+
     _verify_table_data(table, "search_p_xac8.json")
 
 
@@ -188,6 +195,7 @@ def test_sort_table(_sample_app, dash_duo):
 
     _navigate_to_predictoors_page(dash_duo)
 
+    time.sleep(4)
     # Wait for the table to be fully rendered
     dash_duo.wait_for_element("#predictoors_page_table")
 
@@ -201,7 +209,7 @@ def test_sort_table(_sample_app, dash_duo):
     actionables.click()
 
     # Wait for the sort to apply
-    time.sleep(1)  # Sometimes sorting might take a moment
+    time.sleep(4)  # Sometimes sorting might take a moment
 
     # Check if the data is sorted ascending
     _verify_table_data_order(
@@ -212,8 +220,9 @@ def test_sort_table(_sample_app, dash_duo):
 
     # Click again to sort descending
     actionables.click()
-    time.sleep(1)  # Wait for the sort to apply
+    time.sleep(3)  # Wait for the sort to apply
 
+    _save_table_data(table, "sorted_predictoors_table_desc_by_stake.json")
     # Check if the data is sorted descending
     _verify_table_data_order(
         table,

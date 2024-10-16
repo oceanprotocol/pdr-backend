@@ -16,7 +16,6 @@ from pdr_backend.util.time_types import UnixTimeS
 
 @enforce_types
 def test_process_payouts(_sample_app):
-
     ## convert List[Payout] to List[dict]
     payouts = _sample_app.data.payouts_from_bronze_predictions(None, None)
 

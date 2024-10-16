@@ -94,6 +94,11 @@ def start_server_and_wait(dash_duo, app):
     dash_duo.wait_for_element("#feeds_table tbody tr")
     dash_duo.wait_for_element("#predictoors_table tbody tr")
 
+    radio_items = dash_duo.find_element("#general-lake-date-period-radio-items")
+    radio_items.find_element(By.XPATH, "//label[4]").click()
+
+    time.sleep(3)
+
 
 def _navigate_to_feeds_page(dash_duo):
     dash_duo.wait_for_element("#feeds")
@@ -245,5 +250,6 @@ def _prepare_sample_app(tmpdir, include_my_addresses=False):
         return_value={"ROSE": 0.05612, "OCEAN": 0.48521312000000005},
     ):
         setup_app_main(app, etl.ppss)
+        app.data._fee_cost = 1.0
 
     return app

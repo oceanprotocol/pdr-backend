@@ -1,6 +1,6 @@
 import dash
 import polars as pl
-from dash import Input, Output, State
+from dash import Input, Output, State, html
 
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.pdr_dashboard.dash_components.plots import get_figures_and_metrics
@@ -9,11 +9,54 @@ from pdr_backend.pdr_dashboard.util.format import format_value
 from pdr_backend.pdr_dashboard.util.helpers import (
     get_date_period_text_for_selected_predictoors,
     select_or_clear_all_by_table,
+    check_data_loaded,
 )
 
 
 # pylint: disable=too-many-statements
 def get_callbacks_home(app):
+    @app.callback(
+        Output("feeds_table", "data"),
+        Output("feeds_table", "selected_rows"),
+        Output("predictoors_table", "data"),
+        Output("predictoors_table", "selected_rows"),
+        Output("is-initial-table-loaded", "data"),
+        Output("home_page_table_control_predictoors_table", "children"),
+        Output("home_page_table_control_feeds_table", "children"),
+        Output("table-rows-count-predictoors_table", "children"),
+        Output("table-rows-count-feeds_table", "children"),
+        [
+            Input("is-initial-data-loaded", "data"),
+        ],
+    )
+    @check_data_loaded(output_count=9)
+    def get_initial_data(_):
+        _, feed_data = app.data.homepage_feeds_cols
+        _, predictoor_data = app.data.homepage_predictoors_cols
+
+        selected_predictoors = list(range(len(app.data.favourite_addresses)))
+        selected_predictoors_addrs = app.data.favourite_addresses
+
+        selected_feeds, feed_data = app.data.get_feeds_for_favourite_predictoors(
+            feed_data,
+            selected_predictoors_addrs,
+        )
+
+        feeds_data_arr = feed_data.to_dicts()
+        predictoors_data_arr = predictoor_data.to_dicts()
+
+        return (
+            feeds_data_arr,
+            selected_feeds,
+            predictoors_data_arr,
+            selected_predictoors,
+            {"loaded": True},
+            html.Div(),
+            html.Div(),
+            f"({len(predictoors_data_arr)})",
+            f"({len(feeds_data_arr)})",
+        )
+
     @app.callback(
         Output("accuracy_chart", "children"),
         Output("profit_chart", "children"),
@@ -25,19 +68,23 @@ def get_callbacks_home(app):
         Output("stake_metric", "children"),
         Output("available_data_period_text", "children"),
         [
-            Input("feeds_table", "selected_rows"),
-        ],
-        [
             State("feeds_table", "data"),
             State("predictoors_table", "selected_rows"),
             State("predictoors_table", "data"),
         ],
+        [
+            Input("feeds_table", "selected_rows"),
+            Input("is-initial-data-loaded", "data"),
+        ],
+        prevent_initial_call=True,
     )
+    @check_data_loaded(output_count=9)
     def get_display_data_from_db(
-        feeds_table_selected_rows,
         feeds_table,
         predictoors_table_selected_rows,
         predictoors_table,
+        feeds_table_selected_rows,
+        _is_initial_data_loaded,
     ):
         # feeds_table_selected_rows is a list of ints
         # feeds_data is a list of dicts
@@ -154,10 +201,13 @@ def get_callbacks_home(app):
         filtered_data = pl.concat([selected_predictoors, filtered_data])
         selected_predictoor_indices = list(range(len(selected_predictoors)))
 
-        return (filtered_data.to_dicts(), selected_predictoor_indices)
+        return (
+            filtered_data.to_dicts(),
+            selected_predictoor_indices,
+        )
 
     @app.callback(
-        Output("feeds_table", "data"),
+        Output("feeds_table", "data", allow_duplicate=True),
         Output("feeds_table", "selected_rows", allow_duplicate=True),
         [
             Input("search-input-Feeds", "value"),
@@ -172,7 +222,6 @@ def get_callbacks_home(app):
         ],
         prevent_initial_call=True,
     )
-    # pylint: disable=unused-argument
     def update_feeds_table_on_search(
         search_value,
         predictoor_feeds_only,
@@ -182,6 +231,9 @@ def get_callbacks_home(app):
         feeds_table,
         stored_predictoors_addrs,
     ):
+        if feeds_table is None:
+            return dash.no_update, dash.no_update
+
         selected_feeds = [feeds_table[i]["contract"] for i in selected_rows]
         # Extract selected predictoor addresses
         predictoors_addrs = [
@@ -202,7 +254,19 @@ def get_callbacks_home(app):
 
         selected_feed_indices = list(range(len(selected_feeds)))
 
-        return filtered_data, selected_feed_indices
+        return (filtered_data, selected_feed_indices)
+
+    @app.callback(
+        Output("table-rows-count-feeds_table", "children", allow_duplicate=True),
+        Output("table-rows-count-predictoors_table", "children", allow_duplicate=True),
+        [
+            Input("feeds_table", "data"),
+            Input("predictoors_table", "data"),
+        ],
+        prevent_initial_call=True,
+    )
+    def update_table_rows_count(feeds_data, predictoors_data):
+        return f"({len(feeds_data)})", f"({len(predictoors_data)})"
 
     @app.callback(
         Output("feeds_table", "selected_rows", allow_duplicate=True),
@@ -274,13 +338,18 @@ def get_callbacks_home(app):
 
     @app.callback(
         Output("show-favourite-addresses", "value"),
-        Output("predictoors_table", "selected_rows"),
-        Output("feeds_table", "selected_rows"),
-        Input("predictoor-addrs-local-store", "data"),
+        Output("predictoors_table", "selected_rows", allow_duplicate=True),
+        Output("feeds_table", "selected_rows", allow_duplicate=True),
+        [
+            Input("predictoor-addrs-local-store", "data"),
+            Input("is-initial-data-loaded", "data"),
+        ],
         prevent_initial_call=True,
     )
+    @check_data_loaded(output_count=3)
     def update_show_favourite_check_and_selected_predictoor_rows(
         saved_predictoor_addrs,
+        _,
     ):
         if not saved_predictoor_addrs and not app.data.favourite_addresses:
             return (False, [], [])
