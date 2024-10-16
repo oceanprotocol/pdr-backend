@@ -31,7 +31,6 @@ def test_set_period_start_date(_sample_app_with_favourite_addresses, dash_duo):
     app = _sample_app_with_favourite_addresses
     start_server_and_wait(dash_duo, app)
 
-
     # Default page is Home
     dash_duo.wait_for_element_by_id("plots_container", timeout=10)
 
