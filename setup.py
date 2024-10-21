@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 install_requirements = [
     "black==24.10.0",
     "bumpversion",
-    "ccxt==4.4.17",
+    "ccxt==4.4.20",
     "coverage",
     "dash[testing]==2.18.1",
     "dash_bootstrap_components==1.6.0",
@@ -23,7 +23,7 @@ install_requirements = [
     "flask==3.0.3",
     "imblearn",
     "kaleido==0.2.1",
-    "mypy==1.11.2",
+    "mypy==1.12.1",
     "numpy==2.1.2",
     "numerize==0.12.0",
     "pandas==2.2.3",
