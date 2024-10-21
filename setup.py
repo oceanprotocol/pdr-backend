@@ -16,7 +16,7 @@ install_requirements = [
     "dash[testing]==2.18.1",
     "dash_bootstrap_components==1.6.0",
     "dateparser==1.2.0",
-    "duckdb==1.1.1",
+    "duckdb==1.1.2",
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.5.1",
