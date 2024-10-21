@@ -108,7 +108,7 @@ class AppDataManager:
         return self._fee_cost or 0.0
 
     @property
-    def start_date_ms(self) -> int:
+    def start_date_ms(self) -> Optional[int]:
         return UnixTimeMs.from_dt(self.start_date) if self.start_date else None
 
     @enforce_types
