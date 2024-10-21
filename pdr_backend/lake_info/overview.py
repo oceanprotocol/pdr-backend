@@ -274,9 +274,17 @@ class ValidationOverview:
 
                 query = query_duplicate_rows.replace("target_table", table_name)
                 rows_df: pl.DataFrame = self.db.query_data(query)
-                duplicate_rows = duplicate_rows.vstack(rows_df)
+                duplicate_rows = (
+                    duplicate_rows.vstack(rows_df)
+                    if duplicate_rows.shape[0] > 0
+                    else rows_df
+                )
 
-                duplicate_summary = duplicate_summary.vstack(summary_df)
+                duplicate_summary = (
+                    duplicate_summary.vstack(summary_df)
+                    if duplicate_summary.shape[0] > 0
+                    else summary_df
+                )
                 violations.append(f"Table {table_name} has duplicates.")
 
         if duplicate_summary.shape[0] == 0:
