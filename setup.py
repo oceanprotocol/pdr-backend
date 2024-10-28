@@ -19,7 +19,7 @@ install_requirements = [
     "duckdb==1.1.2",
     "enforce_typing",
     "eth-account==0.11.0",
-    "eth-keys==0.5.1",
+    "eth-keys==0.6.0",
     "flask==3.0.3",
     "imblearn",
     "kaleido==0.2.1",
