@@ -42,7 +42,7 @@ install_requirements = [
     "scikit-learn==1.5.2",
     "statsmodels==0.14.4",
     "time_machine==2.16.0",
-    "typeguard==4.4.0",
+    "typeguard==4.4.1",
     "xgboost==2.1.2",
     "web3==6.20.2",
     "sapphire.py==0.2.3",
