@@ -23,7 +23,7 @@ install_requirements = [
     "flask==3.0.3",
     "imblearn",
     "kaleido==0.2.1",
-    "mypy==1.12.1",
+    "mypy==1.13.0",
     "numpy==2.1.3",
     "numerize==0.12.0",
     "pandas==2.2.3",
