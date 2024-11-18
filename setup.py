@@ -20,7 +20,6 @@ install_requirements = [
     "enforce_typing",
     "eth-account==0.11.0",
     "eth-keys==0.6.0",
-    "flask==3.1.0",
     "imblearn",
     "kaleido==0.4.1",
     "mypy==1.13.0",
