@@ -22,7 +22,7 @@ install_requirements = [
     "eth-keys==0.6.0",
     "flask==3.0.3",
     "imblearn",
-    "kaleido==0.2.1",
+    "kaleido==0.4.1",
     "mypy==1.13.0",
     "numpy==2.1.3",
     "numerize==0.12.0",
