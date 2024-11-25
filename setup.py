@@ -43,7 +43,7 @@ install_requirements = [
     "time_machine==2.16.0",
     "typeguard==4.4.1",
     "xgboost==2.1.2",
-    "web3==6.20.2",
+    "web3==7.6.0",
     "sapphire.py==0.2.3",
     "stopit==1.1.2",
     "ta==0.11.0",
