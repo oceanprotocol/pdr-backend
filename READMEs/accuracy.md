@@ -93,7 +93,7 @@ Returns statistical data for all tracked prediction contracts.
 To run the service, use the following command:
 
 ```bash
-python -m pdr_backend.accuracy.app
+python pdr_backend/accuracy/app.py
 ```
 
 ## Error Handling
