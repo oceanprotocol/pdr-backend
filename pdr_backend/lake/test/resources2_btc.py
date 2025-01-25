@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 def get_large_BINANCE_BTC_DATA() -> list:
     # shaped like BINANCE_ETH_DATA, BINANCE_BTC_DATA, etc
     y = BTC_history()
