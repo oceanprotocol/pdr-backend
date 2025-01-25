@@ -1,4 +1,3 @@
-
 from dash import dcc, html
 from plotly.graph_objs import Figure
 

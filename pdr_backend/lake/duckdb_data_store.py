@@ -1,4 +1,3 @@
-
 # The DuckDBDataStore class is a subclass of the Base
 import glob
 import logging
