@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 from dataclasses import dataclass
 from typing import List, Optional
 from pdr_backend.deployer.util.models.SingleAgentConfig import SingleAgentConfig

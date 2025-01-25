@@ -1,8 +1,4 @@
 # pylint: disable=unused-argument
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 from unittest.mock import patch, MagicMock
 from pdr_backend.deployer.util.wallet import (
     Wallet,

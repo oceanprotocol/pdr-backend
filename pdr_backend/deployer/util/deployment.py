@@ -1,8 +1,4 @@
 # pylint: disable=line-too-long
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 import logging
 import shutil
 import time

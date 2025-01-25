@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 import webbrowser
 
 import dash_bootstrap_components as dbc

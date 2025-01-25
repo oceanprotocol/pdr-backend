@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 import os
 from pdr_backend.deployer.util.models.DeployFile import DeployFile
 from pdr_backend.deployer.util.models.DeploymentMethod import DeploymentMethod

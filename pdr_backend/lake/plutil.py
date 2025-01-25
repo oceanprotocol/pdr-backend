@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 """
 plutil: polars dataframe & csv/parquet utilities.
 These utilities are specific to the time-series dataframe columns we're using.

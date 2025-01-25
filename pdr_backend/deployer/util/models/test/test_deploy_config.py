@@ -1,8 +1,5 @@
 # pylint: disable=redefined-outer-name, unused-argument
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
+
 from unittest.mock import MagicMock, patch
 import pytest
 from pdr_backend.deployer.util.models.DeployConfig import DeployConfig

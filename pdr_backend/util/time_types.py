@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 from datetime import datetime, timezone, UTC
 from typing import Union
 from zoneinfo import available_timezones, ZoneInfo

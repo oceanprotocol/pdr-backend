@@ -1,8 +1,4 @@
 # pylint: disable=line-too-long, subprocess-run-check
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 from abc import ABC, abstractmethod
 import logging
 import subprocess

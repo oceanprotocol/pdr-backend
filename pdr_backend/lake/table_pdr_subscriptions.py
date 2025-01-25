@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 from polars import Int64, Utf8, Float32
 
 subscriptions_table_name = "pdr_subscriptions"
