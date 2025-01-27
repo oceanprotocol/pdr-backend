@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 from unittest.mock import patch
 import pytest
 from pdr_backend.deployer.deployer import main, get_provider

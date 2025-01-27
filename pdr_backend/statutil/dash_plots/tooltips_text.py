@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 TRANSITION_TOOLTIP = """
 If an autoregressive model of the last 1K candles is more accurate than the last 10K candles, this means that the model parameters change. That is, the data is non-stationary. This is a problem because it means we can't make use most historical data, and so our model accuracy is limited.
 

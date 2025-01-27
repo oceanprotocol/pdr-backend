@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 import logging
 from pdr_backend.subgraph.core_subgraph import query_subgraph
 from pdr_backend.util.time_types import UnixTimeS

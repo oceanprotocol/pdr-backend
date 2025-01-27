@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 import logging
 from enforce_typing import enforce_types
 from pdr_backend.exchange.exchange_mgr import ExchangeMgr

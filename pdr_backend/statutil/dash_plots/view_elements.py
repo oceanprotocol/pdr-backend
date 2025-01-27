@@ -1,7 +1,3 @@
-#
-# Copyright 2024 Ocean Protocol Foundation
-# SPDX-License-Identifier: Apache-2.0
-#
 import dash_bootstrap_components as dbc
 from dash import dcc, html, dash_table
 
