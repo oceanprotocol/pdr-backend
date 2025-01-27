@@ -30,8 +30,7 @@ ignore=
   LICENSE,
   Dockerfile,
   entrypoint.sh,
-  pdr_backend.egg-info,
-  copyright_template.tmpl
+  pdr_backend.egg-info
 
 # Add files or directories matching the regex patterns to the blacklist. The
 # regex matches against base names, not paths.

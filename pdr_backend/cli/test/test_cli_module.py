@@ -234,6 +234,16 @@ def test_do_trader(monkeypatch):
         do_trader(MockArgParser_APPROACH_PPSS_NETWORK(_APPROACH_BAD).parse_args())
 
 
+@enforce_types
+def test_do_multisim(monkeypatch):
+    mock_f = Mock()
+    monkeypatch.setattr(f"{_CLI_PATH}.MultisimEngine.run", mock_f)
+
+    ppss = MockArgParser_PPSS().parse_args()
+    do_multisim(ppss)
+
+    mock_f.assert_called()
+
 
 @enforce_types
 def test_do_ohlcv(monkeypatch):
