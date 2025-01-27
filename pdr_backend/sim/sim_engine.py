@@ -84,7 +84,6 @@ class SimEngine:
     @enforce_types
     def run_one_iter(self, test_i: int, mergedohlcv_df: pl.DataFrame):
         ppss, pdr_ss, st = self.ppss, self.ppss.predictoor_ss, self.st
-        transform = pdr_ss.aimodel_data_ss.transform
 
         testshift = ppss.sim_ss.test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
@@ -107,10 +106,7 @@ class SimEngine:
 
         cur_close = yraw[-2]
 
-        if transform == "None":
-            y_thr = cur_close
-        else:  # transform = "RelDiff"
-            y_thr = 0.0
+        y_thr = cur_close
         ytrue = ycont_to_ytrue(ytran, y_thr)
 
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]

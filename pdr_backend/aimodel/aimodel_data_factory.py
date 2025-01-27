@@ -32,17 +32,11 @@ class AimodelDataFactory:
       y -- 1d array of [sample_i]:value -- target outputs for model
 
       x_df -- *pandas* DataFrame.
-        If transform is "None", cols are like:
+        Cols are like:
           "binanceus:ETH-USDT:open:t-2",
           "binanceus:ETH-USDT:open:t-1",
           "binanceus:ETH-USDT:high:t-2",
           "binanceus:ETH-USDT:high:t-1",
-
-        or, if transform is "RelDiff", cols are like:
-          "binanceus:ETH-USDT:open:(z(t-2)-z(t-3))/z(t-3)",
-          "binanceus:ETH-USDT:open:(z(t-1)-z(t-2))/z(t-2)",
-          "binanceus:ETH-USDT:high:(z(t-2)-z(t-3))/z(t-3)",
-          "binanceus:ETH-USDT:high:(z(t-1)-z(t-2))/z(t-2)",
 
         ...
         (no "timestamp" or "datetime" column)
@@ -80,8 +74,7 @@ class AimodelDataFactory:
 
         @return
           X -- 2d array of [sample_i, var_i]:float -- model inputs
-          ytran -- 1d array of [sample_i]:float -- transformed regr outputs. Eg % chg
-          yraw -- 1d array of [sample_i]:float. Un-transformed outputs. Eg price
+          y -- 1d array of [sample_i]:float -- model outputs. Eg price
           x_df -- *pandas* DataFrame. See class docstring.
           xrecent -- [var_i]:value -- most recent X value. Bots use to predict
         """
@@ -114,7 +107,6 @@ class AimodelDataFactory:
         ss = self.ss.aimodel_data_ss
         N_train = ss.max_n_train
         x_dim_len = len(train_feeds_list) * ss.autoregressive_n
-        diff = 0 if ss.transform == "None" else 1
 
         # main work
         xcol_list = []  # [col_i] : name_str
@@ -127,10 +119,7 @@ class AimodelDataFactory:
         for hist_col in target_hist_cols:
             assert hist_col in mergedohlcv_df.columns, f"missing data col: {hist_col}"
             zraw_series = mergedohlcv_df[hist_col]
-            if diff == 0:
-                z = zraw_series.to_list()
-            else:
-                z = zraw_series.pct_change()[1:].to_list()
+            z = zraw_series.to_list()
             maxshift = testshift + ss.autoregressive_n
             if (maxshift + N_train) > len(z):
                 s = "Too little data. To fix:"
@@ -146,10 +135,7 @@ class AimodelDataFactory:
                 xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
 
                 ds1, ds11 = delayshift + 1, delayshift + 1 + 1
-                if diff == 0:
-                    x_col = hist_col + f":z(t-{ds1})"
-                else:
-                    x_col = hist_col + f":(z(t-{ds1})-z(t-{ds11}))/z(t-{ds11})"
+                x_col = hist_col + f":z(t-{ds1})"
                 xcol_list += [x_col]
 
         # convert x lists to dfs, all at once. Faster than building up df.
@@ -166,20 +152,12 @@ class AimodelDataFactory:
         # y is set from yval_{exch_str, signal_str, pair_str}
         hist_col = hist_col_name(predict_feed)
 
-        yraw_series = mergedohlcv_df[hist_col]
-        yraw_list = yraw_series.to_list()
-        yraw = np.array(_slice(yraw_list, -testshift - N_train - 1, -testshift))
-        assert X.shape[0] == yraw.shape[0]
-
-        if diff == 0:
-            ytran = yraw
-        else:
-            ytran_list = yraw_series.pct_change()[1:].to_list()
-            ytran = np.array(_slice(ytran_list, -testshift - N_train - 1, -testshift))
-        assert X.shape[0] == ytran.shape[0]
+        y_series = mergedohlcv_df[hist_col]
+        y_list = y_series.to_list()
+        y = np.array(_slice(y_list, -testshift - N_train - 1, -testshift))
 
         # postconditions
-        assert X.shape[0] == yraw.shape[0] == ytran.shape[0]
+        assert X.shape[0] == y.shape[0]
         assert X.shape[0] <= (N_train + 1)
         assert X.shape[1] == x_dim_len
         assert isinstance(x_df, pd.DataFrame)
@@ -191,7 +169,7 @@ class AimodelDataFactory:
         logger.debug("Create model X/y data: done.")
 
         # return
-        return X, ytran, yraw, x_df, xrecent
+        return X, y, x_df, xrecent
 
     def get_highlow(
         self, mergedohlcv_df: pl.DataFrame, feed: ArgFeed, testshift: int

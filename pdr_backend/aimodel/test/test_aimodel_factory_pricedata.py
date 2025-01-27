@@ -23,19 +23,17 @@ from pdr_backend.statutil.scoring import classif_acc
 
 @enforce_types
 @pytest.mark.parametrize(
-    "approach,autoregr_n,transform",
+    "approach,autoregr_n",
     [
-        ("ClassifLinearRidge", 1, "None"),
-        ("ClassifLinearRidge", 2, "None"),
-        ("ClassifLinearRidge", 2, "RelDiff"),
-        ("RegrLinearRidge", 1, "None"),
-        ("RegrLinearRidge", 2, "None"),
-        ("RegrLinearRidge", 2, "RelDiff"),
+        ("ClassifLinearRidge", 1),
+        ("ClassifLinearRidge", 2),
+        ("RegrLinearRidge", 1),
+        ("RegrLinearRidge", 2),
     ],
 )
-def test_aimodel_prices_static(approach: str, autoregr_n: int, transform: str):
+def test_aimodel_prices_static(approach: str, autoregr_n: int):
     max_n_train = 200  # 5000 for manual testing
-    pdr_ss = _get_predictoor_ss(approach, autoregr_n, max_n_train, transform)
+    pdr_ss = _get_predictoor_ss(approach, autoregr_n, max_n_train)
     mergedohlcv_df = _get_btc_data()
 
     # create X, y, x_df
@@ -49,7 +47,7 @@ def test_aimodel_prices_static(approach: str, autoregr_n: int, transform: str):
         predict_feed,
         train_feeds,
     )
-    _assert_cols_ok(x_df, autoregr_n, transform)
+    _assert_cols_ok(x_df, autoregr_n)
 
     # create train/test data
     N_train = max_n_train - 100
@@ -81,9 +79,7 @@ def test_aimodel_prices_static(approach: str, autoregr_n: int, transform: str):
     assert sum(imps) == approx(1.0, 0.01)
 
 
-@enforce_types
-@pytest.mark.parametrize("transform", ["None", "RelDiff"])
-def test_aimodel_prices_dynamic(transform: str):
+def test_aimodel_prices_dynamic():
     autoregr_n = 2
     max_n_train = 1000
     sim_test_n = 200
@@ -93,7 +89,6 @@ def test_aimodel_prices_dynamic(transform: str):
         yerr = _run_one_iter(
             autoregr_n,
             max_n_train,
-            transform,
             sim_test_n,
             test_i,
         )
@@ -101,13 +96,13 @@ def test_aimodel_prices_dynamic(transform: str):
 
 
 @enforce_types
-def _run_one_iter(autoregr_n, max_n_train, transform, sim_test_n, test_i) -> float:
+def _run_one_iter(autoregr_n, max_n_train, sim_test_n, test_i) -> float:
     """@return -- yerr"""
     mergedohlcv_df = _get_btc_data()
 
     # mimic sim_engine::run_one_iter()
     approach = "RegrLinearRidge"
-    pdr_ss = _get_predictoor_ss(approach, autoregr_n, max_n_train, transform)
+    pdr_ss = _get_predictoor_ss(approach, autoregr_n, max_n_train)
 
     testshift = sim_test_n - test_i - 1  # eg [99, 98, .., 2, 1, 0]
     data_f = AimodelDataFactory(pdr_ss)
@@ -160,21 +155,15 @@ def _run_one_iter(autoregr_n, max_n_train, transform, sim_test_n, test_i) -> flo
 
 
 @enforce_types
-def _assert_cols_ok(x_df, autoregr_n: int, transform: str):
+def _assert_cols_ok(x_df, autoregr_n: int):
     assert len(x_df.columns) == autoregr_n
     if autoregr_n != 2:
         return
 
-    if transform == "None":
-        target_x_df_columns = [
-            "binanceus:BTC/USDT:close:z(t-3)",
-            "binanceus:BTC/USDT:close:z(t-2)",
-        ]
-    else:
-        target_x_df_columns = [
-            "binanceus:BTC/USDT:close:(z(t-3)-z(t-4))/z(t-4)",
-            "binanceus:BTC/USDT:close:(z(t-2)-z(t-3))/z(t-3)",
-        ]
+    target_x_df_columns = [
+        "binanceus:BTC/USDT:close:z(t-3)",
+        "binanceus:BTC/USDT:close:z(t-2)",
+    ]
     assert list(x_df.columns) == target_x_df_columns
 
 
@@ -183,7 +172,6 @@ def _get_predictoor_ss(
     approach: str,
     autoregr_n: int,
     max_n_train: int,
-    transform: str,
 ) -> PredictoorSS:
     feedset_list = [
         {
@@ -196,7 +184,6 @@ def _get_predictoor_ss(
         aimodel_data_ss_dict=aimodel_data_ss_test_dict(
             max_n_train=max_n_train,
             autoregressive_n=autoregr_n,
-            transform=transform,
         ),
         aimodel_ss_dict=aimodel_ss_test_dict(
             approach=approach,

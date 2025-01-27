@@ -15,7 +15,6 @@ def test_aimodel_data_ss__default_values():
 
     assert ss.max_n_train == d["max_n_train"] == 7
     assert ss.autoregressive_n == d["autoregressive_n"] == 3
-    assert ss.transform == d["transform"] == "None"
 
     # str
     assert "AimodelDataSS" in str(ss)
@@ -32,9 +31,6 @@ def test_aimodel_data_ss__nondefault_values():
 
     ss = AimodelDataSS(aimodel_data_ss_test_dict(autoregressive_n=13))
     assert ss.autoregressive_n == 13
-
-    ss = AimodelDataSS(aimodel_data_ss_test_dict(transform="RelDiff"))
-    assert ss.transform == "RelDiff"
 
 
 @enforce_types
@@ -53,12 +49,6 @@ def test_aimodel_data_ss__bad_inputs():
 
     with pytest.raises(TypeError):
         AimodelDataSS(aimodel_data_ss_test_dict(autoregressive_n=np.inf))
-
-    with pytest.raises(ValueError):
-        AimodelDataSS(aimodel_data_ss_test_dict(transform="foo"))
-
-    with pytest.raises(TypeError):
-        AimodelDataSS(aimodel_data_ss_test_dict(transform=3.1))
 
 
 @enforce_types
@@ -81,9 +71,3 @@ def test_aimodel_data_ss__setters():
         ss.set_autoregressive_n(0)
     with pytest.raises(ValueError):
         ss.set_autoregressive_n(-5)
-
-    # transform
-    ss.set_transform("RelDiff")
-    assert ss.transform == "RelDiff"
-    with pytest.raises(ValueError):
-        ss.set_transform("foo")
