@@ -68,7 +68,7 @@ def test_mock_feed_ppss():
 
 @enforce_types
 def test_mock_ppss_simple():
-    ppss = mock_ppss(feedset_test_list())
+    _ = mock_ppss(feedset_test_list())
 
 
 @enforce_types

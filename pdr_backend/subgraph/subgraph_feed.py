@@ -22,7 +22,6 @@ class SubgraphFeed(StrMixin):  # pylint: disable=too-many-instance-attributes
         address: str,  # eg '0x123'
         symbol: str,  # eg 'binance-BTC/USDT-5m'
         seconds_per_subscription: int,  # eg 60 * 60 * 24
-        trueval_submit_timeout: int,  # eg 60
         owner: str,  # eg '0x456'
         pair: str,  # eg 'BTC/USDT'
         timeframe: str,  # eg '5m'
@@ -32,7 +31,6 @@ class SubgraphFeed(StrMixin):  # pylint: disable=too-many-instance-attributes
         self.address: str = address
         self.symbol: str = symbol
         self.seconds_per_subscription: int = seconds_per_subscription
-        self.trueval_submit_timeout: int = trueval_submit_timeout
         self.owner: str = owner
         self.pair: str = pair.replace("-", "/")
         self.timeframe: str = timeframe
@@ -94,7 +92,6 @@ def mock_feed(timeframe_str: str, exchange_str: str, pair_str: str) -> SubgraphF
         address=addr,
         symbol=f"SYM: {addr}",
         seconds_per_subscription=86400,
-        trueval_submit_timeout=60,
         owner="0xowner",
         pair=pair_str,
         timeframe=timeframe_str,

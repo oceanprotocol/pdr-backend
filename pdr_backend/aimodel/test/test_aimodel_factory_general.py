@@ -1,5 +1,3 @@
-from unittest.mock import Mock
-import os
 import numpy as np
 
 from enforce_typing import enforce_types
@@ -9,11 +7,7 @@ from pytest import approx
 
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.ycont_to_ytrue import ycont_to_ytrue
-from pdr_backend.ppss.aimodel_ss import (
-    AimodelSS,
-    aimodel_ss_test_dict,
-    APPROACH_OPTIONS,
-)
+from pdr_backend.ppss.aimodel_ss import AimodelSS, aimodel_ss_test_dict
 from pdr_backend.statutil.scoring import classif_acc
 
 
@@ -254,7 +248,6 @@ def test_aimodel_4vars_response(approach: str, target_n_classes: int):
     else:
         y_thr = 1000.0
     ytrue = ycont > y_thr
-    colnames = ["x0", "x1", "x3", "x4"]
 
     # build model
     model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)

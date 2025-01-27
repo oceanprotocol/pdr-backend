@@ -1,5 +1,3 @@
-import os
-
 from enforce_typing import enforce_types
 import pytest
 from pytest import approx

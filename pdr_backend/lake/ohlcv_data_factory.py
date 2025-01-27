@@ -8,7 +8,6 @@ from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
-from pdr_backend.cli.arg_threshold import ArgThreshold
 from pdr_backend.exchange.fetch_ohlcv import fetch_ohlcv
 from pdr_backend.lake.clean_raw_ohlcv import clean_raw_ohlcv
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
@@ -71,7 +70,7 @@ class OhlcvDataFactory:
         """
         logger.info("Get historical data, across many exchanges & pairs: begin.")
 
-        # Ss_timestamp is calculated dynamically if ss.fin_timestr = "now".
+        # ss_timestamp is calculated dynamically if ss.fin_timestr = "now".
         # But, we don't want fin_timestamp changing as we gather data here.
         # To solve, for a given call to this method, we make a constant fin_ut
         fin_ut = self.ss.fin_timestamp
@@ -82,18 +81,16 @@ class OhlcvDataFactory:
         asyncio.run(self._update_rawohlcv_files(fin_ut))
         logger.info("Update all rawohlcv files: done")
         rawohlcv_dfs = self._load_rawohlcv_files(fin_ut)
-        for feed in self.ss.feeds:
-            columns = [
-                "timestamp",
-                "open",
-                "high",
-                "low",
-                "close",
-                "volume",
-                "Cumulative Dollar Value",
-                "Cumulative Ticks",
-            ]
-            df = rawohlcv_dfs[str(feed.exchange)][str(feed.pair)]
+        # for feed in self.ss.feeds:
+        #     columns = [
+        #         "timestamp",
+        #         "open",
+        #         "high",
+        #         "low",
+        #         "close",
+        #         "volume",
+        #     ]
+        #     df = rawohlcv_dfs[str(feed.exchange)][str(feed.pair)]
 
         mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
         logger.info("Get historical data, across many exchanges & pairs: done.")

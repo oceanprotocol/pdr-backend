@@ -154,7 +154,6 @@ def mock_feed_ppss(
     exchange,
     pair,
     tmpdir=None,
-    pred_submitter_mgr: Optional[str] = None,
 ) -> Tuple[SubgraphFeed, PPSS]:
     feed = mock_feed(timeframe, exchange, pair)
     ppss = mock_ppss(
@@ -165,7 +164,6 @@ def mock_feed_ppss(
             }
         ],
         tmpdir,
-        pred_submitter_mgr=pred_submitter_mgr,
     )
     return (feed, ppss)
 
@@ -176,7 +174,6 @@ def mock_ppss(
     tmpdir: Optional[str] = None,
     st_timestr: Optional[str] = "2023-06-18",
     fin_timestr: Optional[str] = "2023-06-21",
-    pred_submitter_mgr: Optional[str] = None,
 ) -> PPSS:
     yaml_str = fast_test_yaml_str(tmpdir)
 

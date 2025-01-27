@@ -21,7 +21,6 @@ def test_feed():
     assert feed.address == "0x12345"
     assert feed.symbol == "SYM:TEST"
     assert feed.seconds_per_subscription == 60
-    assert feed.trueval_submit_timeout == 15
     assert feed.owner == "0xowner"
     assert feed.pair == "BTC/USDT"
     assert feed.timeframe == "5m"

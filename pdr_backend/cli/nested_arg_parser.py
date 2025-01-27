@@ -3,8 +3,6 @@ import ast
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.ppss import PPSS
-
 
 @enforce_types
 class NestedArgParser(argparse.ArgumentParser):

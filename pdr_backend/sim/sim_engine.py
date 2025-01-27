@@ -1,13 +1,10 @@
 import logging
 import os
 import uuid
-from typing import Optional, Dict
+from typing import Optional
 
-import numpy as np
 import polars as pl
 from enforce_typing import enforce_types
-from sklearn.metrics import log_loss, precision_recall_fscore_support
-from statsmodels.stats.proportion import proportion_confint
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
@@ -20,7 +17,6 @@ from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.sim.sim_trader import SimTrader
 from pdr_backend.sim.sim_state import SimState
-from pdr_backend.util.strutil import shift_one_earlier
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
@@ -94,17 +90,14 @@ class SimEngine:
         data_f = AimodelDataFactory(pdr_ss)  # type: ignore[arg-type]
         predict_feed = self.predict_train_feedset.predict
         train_feeds = self.predict_train_feedset.train_on
-        features = self.predict_train_feedset.ta_features
 
         # X, ycont, and x_df are all expressed in % change wrt prev candle
-        X, ytran, yraw, x_df, _ = data_f.create_xy(
+        X, ytran, yraw, _, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
             predict_feed,
             train_feeds,
-            ta_features=features,
         )
-        colnames = list(x_df.columns)
 
         st_, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
@@ -113,7 +106,6 @@ class SimEngine:
         cur_high, cur_low = data_f.get_highlow(mergedohlcv_df, predict_feed, testshift)
 
         cur_close = yraw[-2]
-        next_close = yraw[-1]
 
         if transform == "None":
             y_thr = cur_close
@@ -155,9 +147,6 @@ class SimEngine:
             cur_low,
         )
 
-        # observe true price
-        true_up = next_close > cur_close
-
         # update state
         st.probs_up.append(prob_up)
         st.profits.append(profit)
@@ -166,7 +155,7 @@ class SimEngine:
         self._log_line(test_i, ut)
 
         # save state
-        save_state, is_final_state = self.save_state(test_i, self.ppss.sim_ss.test_n)
+        self.save_state(test_i, self.ppss.sim_ss.test_n)
 
     def _log_line(self, test_i, ut):
         s = f"Iter #{test_i+1}/{self.ppss.sim_ss.test_n}"

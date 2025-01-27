@@ -1,7 +1,4 @@
-import os
 import copy
-from typing import Dict
-from unittest.mock import patch
 
 # Third-party imports
 import polars as pl
@@ -14,7 +11,6 @@ from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.lake.plutil import concat_next_df, initialize_rawohlcv_df, text_to_df
 from pdr_backend.ppss.lake_ss import LakeSS
-from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.util.time_types import UnixTimeMs
 

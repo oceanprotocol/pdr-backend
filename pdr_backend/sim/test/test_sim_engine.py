@@ -1,6 +1,5 @@
 import os
 
-import pytest
 from enforce_typing import enforce_types
 
 from pdr_backend.aimodel.aimodel import Aimodel
