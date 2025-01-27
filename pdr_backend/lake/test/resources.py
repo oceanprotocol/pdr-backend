@@ -10,21 +10,12 @@ from enforce_typing import enforce_types
 # Local application imports
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.lake.constants import TOHLCV_COLS, TOHLCV_SCHEMA_PL
-from pdr_backend.lake.etl import ETL
-from pdr_backend.lake.gql_data_factory import GQLDataFactory
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.lake.payout import Payout
 from pdr_backend.lake.plutil import concat_next_df, initialize_rawohlcv_df, text_to_df
-from pdr_backend.lake.prediction import Prediction
-from pdr_backend.lake.slot import Slot
-from pdr_backend.lake.subscription import Subscription
-from pdr_backend.lake.table import Table
-from pdr_backend.lake.trueval import Trueval
 from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
-from pdr_backend.ppss.web3_pp import mock_web3_pp
 from pdr_backend.util.time_types import UnixTimeMs
 
 
@@ -49,32 +40,6 @@ def _lake_ss_1feed(tmpdir, feed, st_timestr=None, fin_timestr=None):
     ss = _lake_ss(lake_dir, [feed], st_timestr, fin_timestr)
     ohlcv_data_factory = OhlcvDataFactory(ss)
     return ss, ohlcv_data_factory
-
-
-@enforce_types
-def _gql_data_factory(tmpdir, feed, st_timestr=None, fin_timestr=None):
-    network = "sapphire-mainnet"
-    ppss = mock_ppss(
-        [{"predict": feed, "train_on": feed}],
-        network,
-        str(tmpdir),
-        st_timestr,
-        fin_timestr,
-    )
-    ppss.web3_pp = mock_web3_pp(network)
-
-    # setup lake
-    lake_dir = str(tmpdir)
-    lake_ss = _lake_ss(lake_dir, [feed], st_timestr, fin_timestr)
-    ppss.lake_ss = lake_ss
-
-    gql_data_factory = GQLDataFactory(ppss)
-    return ppss, gql_data_factory
-
-
-def _filter_gql_tables_config(record_config: Dict, record_filter: str) -> Dict:
-    # Return a filtered version of record_config for testing
-    return {k: v for k, v in record_config["tables"].items() if k == record_filter}
 
 
 @enforce_types
@@ -196,118 +161,3 @@ RAW_DF4 = text_to_df(  # kraken ETH/USDT
 """
 )
 
-
-def create_sample_etl(
-    sample_raw_data,
-    get_test_DuckDB,
-    tmpdir,
-    st_timestr,
-    fin_timestr,
-    enforce_null_values,
-):
-    ppss = None
-    gql_data_factory = None
-
-    with patch(
-        "pdr_backend.lake.gql_data_factory.get_all_contract_ids_by_owner",
-        return_value=[],
-    ):
-        ppss, gql_data_factory = _gql_data_factory(
-            tmpdir,
-            "binanceus ETH/USDT h 5m",
-            st_timestr,
-            fin_timestr,
-        )
-
-    gql_tables = {
-        "pdr_predictions": Table.from_dataclass(Prediction),
-        "pdr_payouts": Table.from_dataclass(Payout),
-        "pdr_truevals": Table.from_dataclass(Trueval),
-        "pdr_subscriptions": Table.from_dataclass(Subscription),
-        "pdr_slots": Table.from_dataclass(Slot),
-    }
-
-    _sample_predictions = (
-        sample_raw_data["pdr_predictions"]
-        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
-
-    _sample_payouts = (
-        sample_raw_data["pdr_payouts"]
-        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
-
-    _sample_truevals = (
-        sample_raw_data["pdr_truevals"]
-        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
-
-    _sample_subscriptions = (
-        sample_raw_data["pdr_subscriptions"]
-        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
-
-    _sample_slots = (
-        sample_raw_data["pdr_slots"]
-        .filter(pl.col("timestamp") >= UnixTimeMs.from_timestr(st_timestr))
-        .filter(pl.col("timestamp") <= UnixTimeMs.from_timestr(fin_timestr))
-    )
-
-    if enforce_null_values is True:
-        _sample_predictions = _sample_predictions.with_columns(
-            pl.lit(None).alias("predvalue"),
-            pl.lit(None).alias("truevalue"),
-            pl.lit(None).alias("stake"),
-            pl.lit(None).alias("payout"),
-        )
-
-    gql_tables["pdr_predictions"].append_to_storage(_sample_predictions, ppss)
-    gql_tables["pdr_payouts"].append_to_storage(_sample_payouts, ppss)
-    gql_tables["pdr_truevals"].append_to_storage(_sample_truevals, ppss)
-    gql_tables["pdr_subscriptions"].append_to_storage(_sample_subscriptions, ppss)
-    gql_tables["pdr_slots"].append_to_storage(_sample_slots, ppss)
-
-    assert ppss.lake_ss.st_timestamp == UnixTimeMs.from_timestr(st_timestr)
-    assert ppss.lake_ss.fin_timestamp == UnixTimeMs.from_timestr(fin_timestr)
-
-    etl = ETL(ppss, gql_data_factory)
-    db = get_test_DuckDB(tmpdir)
-
-    return etl, db, gql_tables
-
-
-def create_sample_raw_data(path: str):
-    """
-    Load sample raw data for testing the ETL pipeline
-    """
-
-    test_dir = os.path.dirname(path)
-    predictions_df = pl.read_csv(os.path.join(test_dir, "pdr_predictions.csv"))
-    payouts_df = pl.read_csv(os.path.join(test_dir, "pdr_payouts.csv"))
-    truevals_df = pl.read_csv(os.path.join(test_dir, "pdr_truevals.csv"))
-    subscriptions_df = pl.read_csv(os.path.join(test_dir, "pdr_subscriptions.csv"))
-    slots_df = pl.read_csv(os.path.join(test_dir, "pdr_slots.csv"))
-
-    predictions_schema_order = list(Prediction.get_lake_schema().keys())
-    payouts_schema_order = list(Payout.get_lake_schema().keys())
-    truevals_schema_order = list(Trueval.get_lake_schema().keys())
-    subscriptions_schema_order = list(Subscription.get_lake_schema().keys())
-    slots_schema_order = list(Slot.get_lake_schema().keys())
-
-    predictions_df = predictions_df[predictions_schema_order]
-    payouts_df = payouts_df[payouts_schema_order]
-    truevals_df = truevals_df[truevals_schema_order]
-    subscriptions_df = subscriptions_df[subscriptions_schema_order]
-    slots_df = slots_df[slots_schema_order]
-
-    return {
-        "pdr_predictions": predictions_df,
-        "pdr_payouts": payouts_df,
-        "pdr_truevals": truevals_df,
-        "pdr_subscriptions": subscriptions_df,
-        "pdr_slots": slots_df,
-    }

@@ -23,24 +23,6 @@ class _PPSS_OBJ:
     )
 
 
-class _LOOKBACK:
-    LOOKBACK_HOURS = 24
-
-
-class _ST:
-    ST = "2023-06-22"
-
-
-class _END:
-    END = "2023-06-24"
-
-
-class _PQDIR:
-    PQDIR = "my_lake_data/"
-
-class _NUM:
-    NUM = 1
-
 class _Base:
     def __init__(self, *args, **kwargs):
         pass
@@ -49,46 +31,6 @@ class _Base:
 class MockArgParser_PPSS(_Base):
     def parse_args(self):
         class MockArgs(Namespace, _PPSS, _PPSS_OBJ):
-            pass
-
-        return MockArgs()
-
-
-class MockArgParser_APPROACH_PPSS(_Base):
-    def __init__(self, approach=_APPROACH):
-        self.approach = approach
-        super().__init__()
-
-    def parse_args(self):
-        class MockArgs(Namespace, self.approach, _PPSS, _PPSS_OBJ):
-            pass
-
-        return MockArgs()
-
-
-class MockArgParser_ST_END_PQDIR_PPSS_PDRS(_Base):
-    def parse_args(self):
-        class MockArgs(  # pylint: disable=too-many-ancestors
-            Namespace, _ST, _END, _PQDIR, _PPSS, _PDRS, _PPSS_OBJ
-        ):
-            pass
-
-        return MockArgs()
-
-
-class MockArgParser_ST_END_PQDIR_PPSS_FEEDS(_Base):
-    def parse_args(self):
-        class MockArgs(  # pylint: disable=too-many-ancestors
-            Namespace, _ST, _END, _PQDIR, _PPSS, _FEEDS, _PPSS_OBJ
-        ):
-            pass
-
-        return MockArgs()
-
-
-class MockArgParser_NUM(_Base):
-    def parse_args(self):
-        class MockArgs(Namespace, _NUM):
             pass
 
         return MockArgs()
@@ -119,7 +61,7 @@ def test_do_ohlcv(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.OhlcvDataFactory.get_mergedohlcv_df", mock_f)
 
-    do_ohlcv(MockArgParser_PPSS_NETWORK().parse_args())
+    do_ohlcv(MockArgParser_PPSS().parse_args())
     mock_f.assert_called()
 
 

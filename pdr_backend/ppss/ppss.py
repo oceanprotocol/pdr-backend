@@ -219,11 +219,6 @@ def mock_ppss(
         }
     )
 
-    assert hasattr(ppss, "trueval_ss")
-    assert "feeds" in ppss.trueval_ss.d  # type: ignore[attr-defined]
-    ppss.trueval_ss.d["feeds"] = predict_train_feedsets.feed_strs  # type: ignore[attr-defined]
-    )
-
     return ppss
 
 

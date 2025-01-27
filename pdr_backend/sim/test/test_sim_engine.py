@@ -16,7 +16,7 @@ from pdr_backend.sim.sim_engine import SimEngine
 # pylint: disable=unused-argument
 def test_sim_engine(tmpdir):
     s = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=s, network="development")
+    ppss = PPSS(yaml_str=s)
 
     # set feeds; we'll use them below
     feedset_list = [

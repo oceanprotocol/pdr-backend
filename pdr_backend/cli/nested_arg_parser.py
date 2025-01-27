@@ -22,13 +22,6 @@ class NestedArgParser(argparse.ArgumentParser):
                 if eq:  # Only proceed if '=' is found
                     self._process_nested_arg(key, value)
 
-        if hasattr(namespace, "PPSS_FILE") and hasattr(namespace, "NETWORK"):
-            namespace.PPSS = PPSS(
-                yaml_filename=namespace.PPSS_FILE,
-                network=namespace.NETWORK,
-                nested_override_args=self.nested_args,
-            )
-
         return namespace, self.nested_args
 
     def _process_nested_arg(self, key, value):

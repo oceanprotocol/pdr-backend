@@ -6,11 +6,6 @@ from pytest import approx
 
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
-from pdr_backend.aimodel.aimodel_plotdata import AimodelPlotdata
-from pdr_backend.aimodel.aimodel_plotter import (
-    plot_aimodel_response,
-    plot_aimodel_varimps,
-)
 from pdr_backend.aimodel.ycont_to_ytrue import ycont_to_ytrue
 from pdr_backend.lake.merge_df import merge_rawohlcv_dfs
 from pdr_backend.lake.test.resources import _df_from_raw_data
@@ -21,12 +16,7 @@ from pdr_backend.ppss.predictoor_ss import (
     PredictoorSS,
     predictoor_ss_test_dict,
 )
-from pdr_backend.statutil.dist_plotter import plot_dist
 from pdr_backend.statutil.scoring import classif_acc
-
-
-# set env variable as true to show plots
-SHOW_PLOT = os.getenv("SHOW_PLOT", "false").lower() == "true"
 
 
 # run a single test below with e.g.
@@ -88,32 +78,9 @@ def test_aimodel_prices_static(approach: str, autoregr_n: int, transform: str):
     if model.do_regr:
         _ = model.predict_ycont(X)
 
-    # plot model response
-    sweep_vars = [0, 1]
-    if autoregr_n == 1:
-        sweep_vars = [0]
-    plot_data = AimodelPlotdata(
-        model,
-        X,
-        ytrue,
-        ytran,
-        y_thr,
-        colnames=list(x_df.columns),
-        slicing_x=X[-1, :],  # arbitrary
-        sweep_vars=sweep_vars,
-    )
-    fig = plot_aimodel_response(plot_data)
-    if SHOW_PLOT:
-        fig.show()
-
     # test variable importances
     imps = model.importance_per_var()
     assert sum(imps) == approx(1.0, 0.01)
-
-    # plot variable importances
-    fig = plot_aimodel_varimps(plot_data)
-    if SHOW_PLOT:
-        fig.show()
 
 
 @enforce_types
@@ -133,11 +100,6 @@ def test_aimodel_prices_dynamic(transform: str):
             test_i,
         )
         yerrs.append(yerr)
-
-    fig = plot_dist(yerrs, True, False, False)
-    assert fig is not None
-    if SHOW_PLOT:
-        fig.show()
 
 
 @enforce_types

@@ -98,7 +98,6 @@ def test_mock_ppss_onefeed1(feed_str):
         {"predict": feed_str, "train_on": feed_str}
     ]
     assert ppss.trader_ss.d["feed"] == feed_str
-    assert ppss.dfbuyer_ss.d["feeds"] == [feed_str]
 
     ppss.verify_feed_dependencies()
 

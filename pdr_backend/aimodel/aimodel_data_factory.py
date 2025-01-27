@@ -10,7 +10,6 @@ import polars as pl
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.ppss.predictoor_ss import PredictoorSS
-from pdr_backend.technical_indicators import get_indicator
 from pdr_backend.util.mathutil import fill_nans, has_nan
 
 logger = logging.getLogger("aimodel_data_factory")
