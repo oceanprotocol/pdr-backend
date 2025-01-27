@@ -63,4 +63,3 @@ def do_ohlcv(args, nested_args=None):
     ohlcv_data_factory = OhlcvDataFactory(ppss.lake_ss)
     df = ohlcv_data_factory.get_mergedohlcv_df()
     print(df)
-

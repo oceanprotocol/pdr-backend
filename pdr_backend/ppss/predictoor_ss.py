@@ -17,6 +17,7 @@ from pdr_backend.ppss.aimodel_ss import (
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.strutil import StrMixin
 
+
 class PredictoorSS(StrMixin):
     __STR_OBJDIR__ = ["d"]
 

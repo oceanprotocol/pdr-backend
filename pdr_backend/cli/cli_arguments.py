@@ -50,12 +50,10 @@ class APPROACH_Mixin:
         self.add_argument("APPROACH", type=int, help="1|2|..")
 
 
-
 @enforce_types
 class PPSS_Mixin:
     def add_argument_PPSS(self):
         self.add_argument("PPSS_FILE", type=str, help="PPSS yaml settings file")
-
 
 
 # ========================================================================
@@ -87,7 +85,6 @@ class _ArgParser_APPROACH_PPSS(
     def __init__(self, description: str, command_name: str):
         super().__init__(description=description)
         self.add_arguments_bulk(command_name, ["APPROACH", "PPSS"])
-
 
 
 # ========================================================================
@@ -126,7 +123,6 @@ def print_args(arguments: Namespace, nested_args: dict):
 # tools list
 SimArgParser = _ArgParser_PPSS
 OHLCVArgParser = _ArgParser_PPSS
-
 
 
 # below, list each entry in defined_parsers in same order as HELP_LONG

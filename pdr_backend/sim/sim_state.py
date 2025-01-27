@@ -2,6 +2,7 @@ from typing import Dict, List, Optional, Union
 
 from enforce_typing import enforce_types
 
+
 # pylint: disable=too-many-instance-attributes
 @enforce_types
 class SimState:
@@ -27,10 +28,9 @@ class SimState:
     ) -> List[Union[int, float]]:
         """Return most recent aimodel metrics + profit metrics"""
         rm = {
-                "profit": self.profits[-1],
+            "profit": self.profits[-1],
         }
         if extras and "prob_up" in extras:
             rm["prob_up"] = self.probs_up[-1]
 
         return rm
-

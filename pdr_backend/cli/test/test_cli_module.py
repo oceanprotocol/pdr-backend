@@ -13,6 +13,7 @@ from pdr_backend.cli.cli_module import (
 )
 from pdr_backend.ppss.ppss import PPSS as PPSSClass
 
+
 class _PPSS:
     PPSS_FILE = os.path.abspath("ppss.yaml")
 
@@ -34,7 +35,6 @@ class MockArgParser_PPSS(_Base):
             pass
 
         return MockArgs()
-
 
 
 _CLI_PATH = "pdr_backend.cli.cli_module"
@@ -63,8 +63,6 @@ def test_do_ohlcv(monkeypatch):
 
     do_ohlcv(MockArgParser_PPSS().parse_args())
     mock_f.assert_called()
-
-
 
 
 @enforce_types

@@ -79,7 +79,6 @@ class LakeSS(MultiFeedMixin):
         """
         return UnixTimeMs.from_timestr(self.fin_timestr)
 
-
     @enforce_types
     def __str__(self) -> str:
         s = "LakeSS:\n"

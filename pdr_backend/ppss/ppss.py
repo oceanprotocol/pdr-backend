@@ -140,7 +140,7 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         s += f"predictoor_ss={self.predictoor_ss}\n"
         s += f"trader_ss={self.trader_ss}\n"
         s += f"exchange_mgr_ss={self.exchange_mgr_ss}\n"
-        
+
         return s
 
 

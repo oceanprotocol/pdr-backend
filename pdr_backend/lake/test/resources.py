@@ -160,4 +160,3 @@ RAW_DF4 = text_to_df(  # kraken ETH/USDT
 4|40.4|41.4
 """
 )
-

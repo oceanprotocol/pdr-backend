@@ -94,7 +94,7 @@ class OhlcvDataFactory:
                 "Cumulative Ticks",
             ]
             df = rawohlcv_dfs[str(feed.exchange)][str(feed.pair)]
-            
+
         mergedohlcv_df = merge_rawohlcv_dfs(rawohlcv_dfs)
         logger.info("Get historical data, across many exchanges & pairs: done.")
 
@@ -284,4 +284,3 @@ class OhlcvDataFactory:
         basename = f"volume_bar_{feed.exchange}_{pair_str}.parquet"
         filename = os.path.join(self.ss.lake_dir, basename)
         return filename
-

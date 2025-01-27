@@ -54,8 +54,9 @@ def test_aimodel_1var(approach: str, func: str):
     imps = model.importance_per_var()
     assert_array_equal(imps, np.array([1.0]))
 
+
 @enforce_types
-#@pytest.mark.parametrize("approach", APPROACH_OPTIONS)
+# @pytest.mark.parametrize("approach", APPROACH_OPTIONS)
 @pytest.mark.parametrize("approach", ["ClassifLinearRidge", "RegrLinearRidge"])
 def test_aimodel_2vars(approach: str):
     # settings, factory
@@ -269,8 +270,6 @@ def test_aimodel_4vars_response(approach: str, target_n_classes: int):
         assert imps[3] == approx(1.0 / 10.0, abs=0.2)
     else:
         assert min(imps) == max(imps) == 0.25
-
-
 
 
 @enforce_types

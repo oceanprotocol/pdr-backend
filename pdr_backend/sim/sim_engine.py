@@ -134,7 +134,7 @@ class SimEngine:
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))
         timeframe: ArgTimeframe = predict_feed.timeframe  # type: ignore
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
-        
+
         # predict price direction
         prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
         prob_down: float = 1.0 - prob_up
@@ -157,7 +157,7 @@ class SimEngine:
 
         # observe true price
         true_up = next_close > cur_close
-        
+
         # update state
         st.probs_up.append(prob_up)
         st.profits.append(profit)
@@ -175,14 +175,13 @@ class SimEngine:
         s += " ║"
 
         s += f" prob_up={self.st.probs_up[-1]:.3f}"
-        
+
         s += " ║"
-        
+
         s += f" tdr_profit=${self.st.profits[-1]:6.2f}"
         s += f" (cumul ${sum(self.st.profits):6.2f})"
 
         logger.info(s)
-
 
     @enforce_types
     def save_state(self, i: int, N: int):
