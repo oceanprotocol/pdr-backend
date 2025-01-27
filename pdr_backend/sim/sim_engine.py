@@ -91,7 +91,7 @@ class SimEngine:
         train_feeds = self.predict_train_feedset.train_on
 
         # X, ycont, and x_df are all expressed in % change wrt prev candle
-        X, ytran, yraw, _, _ = data_f.create_xy(
+        X, y, _, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
             predict_feed,
@@ -100,14 +100,14 @@ class SimEngine:
 
         st_, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
-        ytran_train, _ = ytran[st_:fin], ytran[fin : fin + 1]
+        y_train, _ = y[st_:fin], y[fin : fin + 1]
 
         cur_high, cur_low = data_f.get_highlow(mergedohlcv_df, predict_feed, testshift)
 
-        cur_close = yraw[-2]
+        cur_close = y[-2]
 
         y_thr = cur_close
-        ytrue = ycont_to_ytrue(ytran, y_thr)
+        ytrue = ycont_to_ytrue(y, y_thr)
 
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
 
@@ -116,7 +116,7 @@ class SimEngine:
             or st.iter_number % pdr_ss.aimodel_ss.train_every_n_epochs == 0
         ):
             model_f = AimodelFactory(pdr_ss.aimodel_ss)
-            self.model = model_f.build(X_train, ytrue_train, ytran_train, y_thr)
+            self.model = model_f.build(X_train, ytrue_train, y_train, y_thr)
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))

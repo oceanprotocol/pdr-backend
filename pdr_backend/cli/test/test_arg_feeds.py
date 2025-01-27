@@ -12,10 +12,6 @@ def test_ArgFeeds_from_str():
     assert ArgFeeds.from_str("binance ADA/USDT o") == target_feeds
     assert ArgFeeds.from_str("binance ADA-USDT o") == target_feeds
 
-    # 1 feed with volume threshold
-    target_feeds = [ArgFeed("binance", None, "ADA/USDT", "1s", "vb_201")]
-    assert ArgFeeds.from_str("binance ADA/USDT 1s vb_201") == target_feeds
-
     # >1 signal, so >1 feed
     target_feeds = [
         ArgFeed("binance", "open", "ADA/USDT"),
@@ -60,15 +56,6 @@ def test_ArgFeeds_from_str():
         ]
     )
     assert ArgFeeds.from_str("binance ADA/USDT,BTC/USDT oc 1h,5m") == target
-
-    # >1 volume threshold and >1 pair, so >1 feed
-    target = ArgFeeds(
-        [
-            ArgFeed("binance", None, "ADA/USDT", "1s", "vb_20"),
-            ArgFeed("binance", None, "BTC/USDT", "1s", "vb_190"),
-        ]
-    )
-    assert ArgFeeds.from_str("binance ADA/USDT,BTC/USDT 1s vb_20,vb_190") == target
 
     # unhappy paths. Verify section has way more, this is just for baseline
     strs = [

@@ -11,7 +11,6 @@ from pdr_backend.ppss.lake_ss import LakeSS
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.sim_ss import SimSS
 from pdr_backend.ppss.trader_ss import TraderSS
-from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed
 from pdr_backend.util.dictutil import recursive_update
 
 
@@ -146,26 +145,6 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
 # =========================================================================
 # utilities for testing
-
-
-@enforce_types
-def mock_feed_ppss(
-    timeframe,
-    exchange,
-    pair,
-    tmpdir=None,
-) -> Tuple[SubgraphFeed, PPSS]:
-    feed = mock_feed(timeframe, exchange, pair)
-    ppss = mock_ppss(
-        [
-            {
-                "train_on": f"{exchange} {pair} c {timeframe}",
-                "predict": f"{exchange} {pair} c {timeframe}",
-            }
-        ],
-        tmpdir,
-    )
-    return (feed, ppss)
 
 
 @enforce_types

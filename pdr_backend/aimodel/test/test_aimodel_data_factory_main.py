@@ -80,7 +80,7 @@ def test_create_xy_notransform_main():
     factory = AimodelDataFactory(predictoor_ss)
     predict_feed = predictoor_ss.predict_train_feedsets[0].predict
     train_feeds = predictoor_ss.predict_train_feedsets[0].train_on
-    X, y, _, x_df, xrecent = factory.create_xy(
+    X, y, x_df, xrecent = factory.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,
@@ -155,7 +155,7 @@ def test_create_xy_notransform__1exchange_1coin_1signal():
     target_xrecent = np.array([3.0, 2.0, 1.0])
 
     testshift = 0
-    X, y, _, x_df, xrecent = aimodel_data_factory.create_xy(
+    X, y, x_df, xrecent = aimodel_data_factory.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,
@@ -221,7 +221,7 @@ def test_create_xy_notransform__1exchange_1coin_1signal():
     target_xrecent = np.array([4.0, 3.0, 2.0])
 
     testshift = 1
-    X, y, _, x_df, xrecent = aimodel_data_factory.create_xy(
+    X, y, x_df, xrecent = aimodel_data_factory.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,
@@ -258,7 +258,7 @@ def test_create_xy_notransform__1exchange_1coin_1signal():
     predictoor_ss.aimodel_data_ss.d["max_n_train"] = 5
 
     testshift = 0
-    X, y, _, x_df, _ = aimodel_data_factory.create_xy(
+    X, y, x_df, _ = aimodel_data_factory.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,
@@ -306,7 +306,7 @@ def test_create_xy_notransform__2exchanges_2coins_2signals():
     predict_feed = predictoor_ss.predict_train_feedsets[0].predict
     train_feeds = predictoor_ss.predict_train_feedsets[0].train_on
     assert len(train_feeds) == 8
-    X, y, _, x_df, _ = aimodel_data_factory.create_xy(
+    X, y, x_df, _ = aimodel_data_factory.create_xy(
         mergedohlcv_df,
         testshift,
         predict_feed,

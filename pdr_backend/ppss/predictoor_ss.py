@@ -14,7 +14,6 @@ from pdr_backend.ppss.aimodel_ss import (
     AimodelSS,
     aimodel_ss_test_dict,
 )
-from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 from pdr_backend.util.strutil import StrMixin
 
 
@@ -49,40 +48,6 @@ class PredictoorSS(StrMixin):
             pair_str,
             timeframe_str,
         )
-
-    @enforce_types
-    def get_feed_from_candidates(
-        self,
-        cand_feeds: Dict[str, SubgraphFeed],
-    ) -> Dict[str, SubgraphFeed]:
-        """
-        @description
-          Filter down the input cand_feeds to the ones we're supposed to predict
-
-          More precisely: return a set of feeds as the intersection of
-          (1) candidate feeds read from chain, ie the input SubgraphFeeds,
-          and (2) self's feeds to predict, ie input by PPSS
-
-        @arguments
-          cand_feeds -- dict of [feed_addr] : SubgraphFeed
-
-        @return
-          filtered_feeds -- dict of [feed_addr] : SubgraphFeed
-        """
-        filtered_feeds: Dict[str, SubgraphFeed] = {}
-
-        allowed_tups = [
-            (str(feed.exchange), str(feed.pair), str(feed.timeframe))
-            for feed in self.predict_train_feedsets.feeds
-        ]
-
-        for feed_addr, feed in cand_feeds.items():
-            assert isinstance(feed, SubgraphFeed)
-
-            if (feed.source, feed.pair, feed.timeframe) in allowed_tups:
-                filtered_feeds[feed_addr] = feed
-
-        return filtered_feeds
 
 
 # =========================================================================

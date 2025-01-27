@@ -8,7 +8,6 @@ from enforce_typing import enforce_types
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
 from pdr_backend.ppss.ppss import (
     fast_test_yaml_str,
-    mock_feed_ppss,
     mock_ppss,
     PPSS,
 )
@@ -51,19 +50,6 @@ def _test_ppss(yaml_filename=None, yaml_str=None):
     assert "predictoor_ss" in s
     assert "trader_ss" in s
     assert "exchange_mgr_ss" in s
-
-
-@enforce_types
-def test_mock_feed_ppss():
-    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
-
-    assert feed.timeframe == "5m"
-    assert feed.source == "binance"
-    assert feed.pair == "BTC/USDT"
-
-    predict_feed0 = ppss.predictoor_ss.predict_train_feedsets[0].predict
-    assert str(predict_feed0) == "binance BTC/USDT c 5m"
-    assert ppss.lake_ss.feeds_strs == ["binance BTC/USDT c 5m"]
 
 
 @enforce_types
