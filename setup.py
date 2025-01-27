@@ -8,6 +8,7 @@ install_requirements = [
     "black==24.10.0",
     "bumpversion",
     "ccxt==4.4.33",
+    "coverage",
     "dateparser==1.2.0",
     "enforce_typing",
     "imblearn",
