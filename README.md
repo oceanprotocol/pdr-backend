@@ -2,9 +2,7 @@
 
 ## Run bots (agents)
 
-- **[Run trader bot](READMEs/trader.md)** - consume predictions, trade, make $
-
-(If you're a predictoor or trader, you can safely ignore the rest of this README.)
+- **[Run sim/trading](READMEs/sim.md)** - predict, trade, make $. Historical, live mock, or live real.
 
 ## Settings: PPSS
 

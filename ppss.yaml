@@ -1,7 +1,7 @@
 sim_ss:
+  tradetype: histmock # histmock | livemock | livereal
   log_dir: logs
   test_n: 26275 # ************ number of epochs to simulate. For 5m: 2y->210200ep; 1y->105100ep; 6mo->52550ep; 3mo->26275ep
-  tradetype: histmock # histmock | livemock | livereal
   
   # sim also relies on:
   # - lake_ss - what data to put into lake
