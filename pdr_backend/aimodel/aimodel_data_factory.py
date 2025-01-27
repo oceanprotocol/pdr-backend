@@ -58,7 +58,7 @@ class AimodelDataFactory:
         predict_feed: ArgFeed,
         train_feeds: Optional[ArgFeeds] = None,
         do_fill_nans: bool = True,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame, np.ndarray]:
         """
         @description
           Create X, y data for a regression setting
@@ -134,8 +134,7 @@ class AimodelDataFactory:
                 x_list += [pd.Series(_slice(z, -shift - N_train - 1, -shift))]
                 xrecent_list += [pd.Series(_slice(z, -shift, -shift + 1))]
 
-                ds1, ds11 = delayshift + 1, delayshift + 1 + 1
-                x_col = hist_col + f":z(t-{ds1})"
+                x_col = hist_col + f":z(t-{delayshift+1})"
                 xcol_list += [x_col]
 
         # convert x lists to dfs, all at once. Faster than building up df.

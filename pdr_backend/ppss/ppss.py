@@ -1,6 +1,6 @@
 import os
 import tempfile
-from typing import Optional, Tuple
+from typing import Optional
 
 import yaml
 from enforce_typing import enforce_types

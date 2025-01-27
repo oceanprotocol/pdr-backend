@@ -18,19 +18,3 @@ class SimState:
 
         # profits
         self.profits: List[float] = []  # [i] : trader_profit
-
-    @staticmethod
-    def recent_metrics_names() -> List[str]:
-        return ["profit"]
-
-    def recent_metrics(
-        self, extras: Optional[List[str]] = None
-    ) -> List[Union[int, float]]:
-        """Return most recent aimodel metrics + profit metrics"""
-        rm = {
-            "profit": self.profits[-1],
-        }
-        if extras and "prob_up" in extras:
-            rm["prob_up"] = self.probs_up[-1]
-
-        return rm
