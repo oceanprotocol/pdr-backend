@@ -35,10 +35,6 @@ class LakeSS(MultiFeedMixin):
             <= np.inf
         )
 
-        assert isinstance(self.export_db_data_to_parquet_files, bool)
-        assert isinstance(self.seconds_between_parquet_exports, int)
-        assert isinstance(self.number_of_files_after_which_re_export_db, int)
-
     # --------------------------------
     # yaml properties
     @property
@@ -83,17 +79,6 @@ class LakeSS(MultiFeedMixin):
         """
         return UnixTimeMs.from_timestr(self.fin_timestr)
 
-    @property
-    def export_db_data_to_parquet_files(self) -> str:
-        return self.d["export_db_data_to_parquet_files"]  # eg True, False
-
-    @property
-    def seconds_between_parquet_exports(self) -> str:
-        return self.d["seconds_between_parquet_exports"]  # eg 3600
-
-    @property
-    def number_of_files_after_which_re_export_db(self) -> str:
-        return self.d["number_of_files_after_which_re_export_db"]  # eg 100
 
     @enforce_types
     def __str__(self) -> str:
@@ -106,10 +91,6 @@ class LakeSS(MultiFeedMixin):
         s += f" -> fin_timestamp={self.fin_timestamp.pretty_timestr()}\n"
         s += f" -> n_exchs={self.n_exchs}\n"
         s += f"lake_dir={self.lake_dir}\n"
-        s += f"export_db_data_to_parquet_files={self.export_db_data_to_parquet_files}\n"
-        s += f"seconds_between_parquet_exports={self.seconds_between_parquet_exports}\n"
-        s += "number_of_files_after_which_re_export_db"
-        s += f"={self.number_of_files_after_which_re_export_db}\n"
         s += "-" * 10 + "\n"
         return s
 
@@ -126,9 +107,6 @@ def lake_ss_test_dict(
     st_timestr: Optional[str] = None,
     fin_timestr: Optional[str] = None,
     timeframe: Optional[str] = None,
-    export_db_data_to_parquet_files: Optional[bool] = None,
-    seconds_between_parquet_exports: Optional[bool] = None,
-    number_of_files_after_which_re_export_db: Optional[bool] = None,
 ):
     """Use this function's return dict 'd' to construct LakeSS(d)"""
     d = {
@@ -137,9 +115,5 @@ def lake_ss_test_dict(
         "st_timestr": st_timestr or "2023-06-18",
         "fin_timestr": fin_timestr or "2023-06-30",
         "timeframe": timeframe or "5m",
-        "export_db_data_to_parquet_files": export_db_data_to_parquet_files or True,
-        "seconds_between_parquet_exports": seconds_between_parquet_exports or 3600,
-        "number_of_files_after_which_re_export_db": number_of_files_after_which_re_export_db
-        or 100,
     }
     return d

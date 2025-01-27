@@ -1,8 +1,3 @@
-<!--
-Copyright 2024 Ocean Protocol Foundation
-SPDX-License-Identifier: Apache-2.0
--->
-
 # Run a Trader Bot
 
 This README takes shows how to earn $ by running a trader bot on mainnet, and beyond.
@@ -18,7 +13,7 @@ Then, you can [go beyond](#go-beyond): [optimize trading strategy](#optimize-tra
 
 Prerequisites:
 - Python 3.12. Earlier _will_ fail, e.g. can't find `UTC`. [Details](https://blog.miguelgrinberg.com/post/it-s-time-for-a-change-datetime-utcnow-is-now-deprecated)
-- Ubuntu MacOS. _Not_ Windows.
+- Ubuntu or MacOS. _Not_ Windows.
 
 
 In a new console:
@@ -95,8 +90,6 @@ pdr sim_plots
 
 The plots server will give a url, such as [http://127.0.0.1:8050](http://127.0.0.1:8050). Open that url in your browser to see plots update in real time.
 
-"Predict" actions are _two-sided_: it does one "up" prediction tx, and one "down" tx, with more stake to the higher-confidence direction. Two-sided is more profitable than one-sided prediction.
-
 By default, simulation uses a linear model inputting prices of the previous 2-10 epochs as inputs (autoregressive_n), just BTC close price as input, a simulated 0% trading fee, and a trading strategy of "buy if predict up; sell 5min later". You can play with different values in `my_ppss.yaml`.
 
 Profit isn't guaranteed: fees, slippage and more eats into them. Model accuracy makes a big difference too.
@@ -110,13 +103,11 @@ Select that unique id from the `sim_state` folder, and run `pdr sim_plots --run_
 
 You can run many instances of Dash at once, with different URLs. To run on different ports, use the `--port` argument.
 
-## Run Trader Bot on Sapphire Testnet
+## Run Trader Bot in Mock Mode (livemock)
 
 Predictoor contracts run on [Oasis Sapphire](https://docs.oasis.io/dapp/sapphire/) testnet and mainnet. Sapphire is a privacy-preserving EVM-compatible L1 chain.
 
 Let's get our bot running on testnet first.
-
-First, tokens! You need (fake) ROSE to pay for gas, and (fake) OCEAN to stake and earn. [Get them here](testnet-faucet.md).
 
 Then, copy & paste your private key as an envvar. In console:
 
@@ -127,7 +118,7 @@ export PRIVATE_KEY=<YOUR_PRIVATE_KEY>
 Then, run a simple trading bot. In console:
 
 ```console
-pdr trader 2 my_ppss.yaml sapphire-testnet
+pdr trader 2 my_ppss.yaml livemock (FIXME)
 ```
 
 Your bot is running, congrats! Sit back and watch it in action.
@@ -136,13 +127,9 @@ It logs to console, and to `logs/out_<time>.txt`. Like simulation, it uses Pytho
 
 To see trader CLI options: `pdr trader -h`
 
-You can track behavior at finer resolution by writing more logs to the [code](../pdr_backend/trader/trader_agent.py), or [querying Predictoor subgraph](subgraph.md).
+You can track behavior at finer resolution by writing more logs to the [code](../pdr_backend/trader/trader_agent.py)
 
-## Run Trader Bot on Sapphire Mainnet
-
-Time to make it real: let's get our bot running on Sapphire _mainnet_.
-
-First, real tokens! Get [ROSE via this guide](get-rose-on-sapphire.md) and [OCEAN via this guide](get-ocean-on-sapphire.md).
+## Run Trader Bot For Reals (livereal)
 
 Then, copy & paste your private key as an envvar. (You can skip this if it's same as testnet.) In console:
 
@@ -155,7 +142,7 @@ Update `my_ppss.yaml` as desired.
 Then, run the bot. In console:
 
 ```console
-pdr trader 2 my_ppss.yaml sapphire-mainnet
+pdr trader 2 my_ppss.yaml livereal (FIXME)
 ```
 
 This is where there's real $ at stake. Good luck!
@@ -190,10 +177,58 @@ By default `use_own_model` is set to `True`, and can be changed inside `my_ppss.
 
 To scale up compute or run without tying up your local machine, you can run bots remotely. Get started [here](remotebot.md).
 
-## Run Local Network
 
-To get extra-fast block iterations, you can run a local test network (with local bots). It does take a bit more up-front setup. Get started [here](barge.md).
+## Optimize model: Tuning
+Top-level tuning flow:
+1. Use `multisim` tool to find optimal parameters, via simulation runs
+1. Bring your model as a Trader bot to livemock then livereal
+
+**Detailed tuning flow.** First, specify your sweep parameters & respective values in `my_ppss.yaml`, section `multisim_ss`. Here's an example.
+```yaml
+multisim_ss:
+  approach: SimpleSweep # SimpleSweep | FastSweep (future) | ..
+  sweep_params:
+  - trader_ss.buy_amt: 1000 USD, 2000 USD
+  - predictoor_ss.aimodel_ss.max_n_train: 500, 1000, 1500
+  - predictoor_ss.aimodel_ss.input_feeds:
+    -
+      - binance BTC/USDT c 5m
+    -
+      - binance BTC/USDT ETH/USDT c 5m
+      - kraken BTC/USDT c 5m
+```
+
+In the example, three parameters are being swept:
+1. `trader_ss.buy_amt`, with two possible values: (i) `1000 USD` or (ii) `2000 USD`
+1. `predictoor_ss.aimodel_ss.max_n_train`, with three possible values: (i) `500`, (ii) `1000`, or (iii) `1500`
+1. `predictoor_ss.aimodel_ss.input_feeds`, with two possible values: (i) just binance BTC/USDT close price, or (ii) binance BTC/USDT & ETH/USDT close price, and kraken BTC/USDT close price.
+
+The total number of combinations is 2 x 3 x 2 = 12.
+
+Then, run `pdr multisim PPSS_FILE`.
+
+The multisim tool will run a separate simulation for each of the 12 combinations.
+
+As it runs, it will update a csv file summarizing results, as follows.
+- name is `multisim_metrics_UNIX-TIME-MS.csv`, where UNIX-TIME-MS is the unix time at the start of the multisim run, in milliseconds.
+- The columns of the csv are: run_number, performance metric 1, performance metric 2, ..., ppss setup parameter 1, setup parameter 2, ... .
+  - Performance metrics are currently: "acc_est" (model prediction accuracy at end), "acc_l" (lower-bound accuracy), "acc_u" (upper-bound accuracy), "f1", "precision", "recall".
+- The first row of the csv is the header. Each subsequent row is the results for a given run. For the example above, there will be 1+12 rows.
+
+**Go further: write code.** You can go beyond tuning parameters, by developing your own data or modeling. Here's how:
+1. Fork `pdr-backend` repo.
+1. Change code for data, modeling, or otherwise as you wish. Run multisim to tune further
+1. Bring your model as a Trader bot to livemock then livereal
+
+# Right-size trading
+
+The default trader bot approaches have a fixed-amount trade with a small default value. Yet the more you trade, the more you can earn, up to a point: if you trade too much then you encounter slippage, and too much slippage will make you lose $.
+
+So what's the right amount?
+
+See Kelly Criterion. (FIXME)
 
 ## Warning
 
 You will lose money trading if your $ out exceeds your $ in. Do account for trading fees, order book slippage, cost of prediction feeds, and more. Everything you do is your responsibility, at your discretion. None of this repo is financial advice.
+

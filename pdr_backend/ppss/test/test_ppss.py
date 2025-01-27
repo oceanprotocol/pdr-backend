@@ -22,48 +22,40 @@ def test_ppss_main_from_file(tmpdir):
     with open(yaml_filename, "a") as f:
         f.write(yaml_str)
 
-    _test_ppss(yaml_filename=yaml_filename, network="development")
+    _test_ppss(yaml_filename=yaml_filename)
 
 
 @enforce_types
 def test_ppss_main_from_str(tmpdir):
     yaml_str = fast_test_yaml_str(tmpdir)
-    _test_ppss(yaml_str=yaml_str, network="development")
+    _test_ppss(yaml_str=yaml_str)
 
 
 @enforce_types
-def _test_ppss(yaml_filename=None, yaml_str=None, network=None):
+def _test_ppss(yaml_filename=None, yaml_str=None):
     # construct
-    ppss = PPSS(yaml_filename, yaml_str, network)
+    ppss = PPSS(yaml_filename, yaml_str)
 
     # yaml properties - test lightly, since each *_pp and *_ss has its tests
     #  - so just do one test for each of this class's pp/ss attribute
-    assert ppss.trader_ss.timeframe_str in ["5m", "1h"]
+    assert isinstance(ppss.sim_ss.test_n, int) and ppss.sim_ss.test_n > 0
     assert isinstance(ppss.lake_ss.st_timestr, str)
-    assert ppss.dfbuyer_ss.weekly_spending_limit >= 0
     assert ppss.predictoor_ss.aimodel_ss.approach == "ClassifLinearRidge"
-    assert ppss.payout_ss.batch_size >= 0
-    assert 1 <= ppss.predictoor_ss.s_until_epoch_end <= 120
-    assert 0.0 <= ppss.trader_ss.fee_percent <= 0.99
-    assert "USD" in ppss.trader_ss.buy_amt_str
-    assert ppss.trueval_ss.batch_size >= 0
-    assert isinstance(ppss.web3_pp.address_file, str)
+    assert ppss.trader_ss.timeframe_str in ["5m", "1h"]
+    assert ppss.exchange_mgr_ss.timeout > 0
 
     # str
     s = str(ppss)
-    assert "lake_ss" in s
-    assert "dfbuyer_ss" in s
-    assert "payout_ss" in s
-    assert "predictoor_ss" in s
     assert "sim_ss" in s
+    assert "lake_ss" in s
+    assert "predictoor_ss" in s
     assert "trader_ss" in s
-    assert "trueval_ss" in s
-    assert "web3_pp" in s
+    assert "exchange_mgr_ss" in s
 
 
 @enforce_types
 def test_mock_feed_ppss():
-    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT", "sapphire-mainnet")
+    feed, ppss = mock_feed_ppss("5m", "binance", "BTC/USDT")
 
     assert feed.timeframe == "5m"
     assert feed.source == "binance"
@@ -72,19 +64,11 @@ def test_mock_feed_ppss():
     predict_feed0 = ppss.predictoor_ss.predict_train_feedsets[0].predict
     assert str(predict_feed0) == "binance BTC/USDT c 5m"
     assert ppss.lake_ss.feeds_strs == ["binance BTC/USDT c 5m"]
-    assert ppss.web3_pp.network == "sapphire-mainnet"
 
 
 @enforce_types
 def test_mock_ppss_simple():
-    ppss = mock_ppss(feedset_test_list(), "sapphire-mainnet")
-    assert ppss.web3_pp.network == "sapphire-mainnet"
-
-
-@enforce_types
-def test_mock_ppss_default_network_development():
     ppss = mock_ppss(feedset_test_list())
-    assert ppss.web3_pp.network == "development"
 
 
 @enforce_types
@@ -107,14 +91,13 @@ def test_mock_ppss_onefeed1(feed_str):
       feed_str -- eg "binance BTC/USDT c 5m"
     """
 
-    ppss = mock_ppss([{"predict": feed_str, "train_on": feed_str}], "sapphire-mainnet")
+    ppss = mock_ppss([{"predict": feed_str, "train_on": feed_str}])
 
     assert ppss.lake_ss.d["feeds"] == [feed_str]
     assert ppss.predictoor_ss.d["predict_train_feedsets"] == [
         {"predict": feed_str, "train_on": feed_str}
     ]
     assert ppss.trader_ss.d["feed"] == feed_str
-    assert ppss.trueval_ss.d["feeds"] == [feed_str]
     assert ppss.dfbuyer_ss.d["feeds"] == [feed_str]
 
     ppss.verify_feed_dependencies()
@@ -134,14 +117,12 @@ def test_mock_ppss_manyfeed():
             "train_on": "kraken BTC/USDT c 5m",
         },
     ]
-    ppss = mock_ppss(feedset_list, "sapphire-mainnet")
+    ppss = mock_ppss(feedset_list)
 
     feedsets = PredictTrainFeedsets.from_list_of_dict(feedset_list)
     assert ppss.lake_ss.d["feeds"] == feedsets.feed_strs
     assert ppss.predictoor_ss.d["predict_train_feedsets"] == feedset_list
     assert ppss.trader_ss.d["feed"] == feedsets.feed_strs[0]
-    assert ppss.trueval_ss.d["feeds"] == feedsets.feed_strs
-    assert ppss.dfbuyer_ss.d["feeds"] == feedsets.feed_strs
 
     ppss.verify_feed_dependencies()
 
@@ -149,10 +130,7 @@ def test_mock_ppss_manyfeed():
 @enforce_types
 def test_verify_feed_dependencies():
     # create ppss
-    ppss = mock_ppss(
-        feedset_test_list(),
-        "sapphire-mainnet",
-    )
+    ppss = mock_ppss(feedset_test_list())
     assert "predict_train_feedsets" in ppss.predictoor_ss.d
 
     # baseline should pass

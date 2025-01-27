@@ -15,15 +15,7 @@ from pdr_backend.ppss.aimodel_ss import (
     aimodel_ss_test_dict,
 )
 from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
-from pdr_backend.util.currency_types import Eth
 from pdr_backend.util.strutil import StrMixin
-
-# Approaches:
-#  1: Two-sided: Allocate up-vs-down stake equally (50-50). Baseline.
-#  2: Two-sided: Allocate up-vs-down stake on model prediction confidence.
-#  3: One sided: If up, allocate 2's up-minus-down stake. If down, vice versa.
-CAND_APPROACHES = [1, 2, 3]
-
 
 class PredictoorSS(StrMixin):
     __STR_OBJDIR__ = ["d"]
@@ -34,94 +26,12 @@ class PredictoorSS(StrMixin):
         self.aimodel_data_ss = AimodelDataSS(d["aimodel_data_ss"])
         self.aimodel_ss = AimodelSS(d["aimodel_ss"])
 
-        if self.approach not in CAND_APPROACHES:
-            s = f"Allowed approaches={CAND_APPROACHES}, got {self.approach}"
-            raise ValueError(s)
-
     # ------------------------------------------------------------------
     # yaml properties
     @property
     def predict_train_feedsets(self) -> PredictTrainFeedsets:
         feedset_list: List[dict] = self.d["predict_train_feedsets"]
         return PredictTrainFeedsets.from_list_of_dict(feedset_list)
-
-    @property
-    def approach(self) -> int:
-        return self.d["approach"]
-
-    @property
-    def stake_amount(self) -> Eth:
-        """
-        @description
-          Total bot stake amount, per epoch, per feed. In OCEAN.
-        """
-        return Eth(self.d["stake_amount"])
-
-    @property
-    def others_stake(self) -> Eth:
-        """
-        @description
-          How much all others' bots stake. Per epoch, per feed. In OCEAN.
-          Simulation only.
-        """
-        return Eth(self.d["sim_only"]["others_stake"])
-
-    @property
-    def others_accuracy(self) -> float:
-        """
-        @description
-          What % of others' bots stake is correct? Return val in range [0.0,1.0]
-          Simulation only.
-        """
-        return self.d["sim_only"]["others_accuracy"]
-
-    @property
-    def revenue(self) -> Eth:
-        """
-        @description
-          Sales revenue going towards predictoors. Per epoch, per feed. OCEAN.
-          Simulation only.
-        """
-        return Eth(self.d["sim_only"]["revenue"])
-
-    @property
-    def s_start_payouts(self) -> int:
-        if "s_start_payouts" not in self.d["bot_only"]:
-            return 0
-        return self.d["bot_only"]["s_start_payouts"]
-
-    @property
-    def s_until_epoch_end(self) -> int:
-        return self.d["bot_only"]["s_until_epoch_end"]
-
-    @property
-    def pred_submitter_mgr(self) -> str:
-        return self.d["bot_only"]["pred_submitter_mgr"]
-
-    @property
-    def payout_batch_size(self) -> int:
-        return self.d["bot_only"].get("payout_batch_size", 8)
-
-    @property
-    def min_payout_slots(self) -> int:
-        return self.d["bot_only"].get("min_payout_slots", 0)
-
-    @property
-    def my_addresses(self) -> List[str]:
-        return self.d.get("my_addresses", [])
-
-    # --------------------------------
-    # setters (add as needed)
-    @enforce_types
-    def set_approach(self, approach: int):
-        if approach not in CAND_APPROACHES:
-            s = f"Allowed approaches={CAND_APPROACHES}, got {self.approach}"
-            raise ValueError(s)
-        self.d["approach"] = approach
-
-    @enforce_types
-    def set_my_addresses(self, my_addresses: List[str]):
-        self.d["my_addresses"] = my_addresses
 
     # ------------------------------------------------------------------
     # 'predict_train_feedsets' workers
@@ -196,29 +106,14 @@ def feedset_test_list() -> list:
 @enforce_types
 def predictoor_ss_test_dict(
     feedset_list: Optional[List] = None,
-    pred_submitter_mgr="",
     aimodel_data_ss_dict: Optional[dict] = None,
     aimodel_ss_dict: Optional[dict] = None,
-    my_addresses: Optional[List] = None,
 ) -> dict:
     """Use this function's return dict 'd' to construct PredictoorSS(d)"""
     feedset_list = feedset_list or feedset_test_list()
     d = {
         "predict_train_feedsets": feedset_list,
-        "approach": 1,
-        "stake_amount": 1,
-        "sim_only": {
-            "others_stake": 2313.0,
-            "others_accuracy": 0.50001,
-            "revenue": 0.93007,
-        },
-        "bot_only": {
-            "pred_submitter_mgr": pred_submitter_mgr,
-            "s_until_epoch_end": 60,
-            "s_start_payouts": 0,
-        },
         "aimodel_data_ss": aimodel_data_ss_dict or aimodel_data_ss_test_dict(),
         "aimodel_ss": aimodel_ss_dict or aimodel_ss_test_dict(),
-        "my_addresses": my_addresses or [],
     }
     return d

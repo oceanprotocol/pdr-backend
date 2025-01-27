@@ -15,9 +15,6 @@ _D = {
     "lake_dir": "lake_data",
     "st_timestr": "2023-06-18",
     "fin_timestr": "2023-06-21",
-    "export_db_data_to_parquet_files": True,
-    "seconds_between_parquet_exports": 3600,
-    "number_of_files_after_which_re_export_db": 100,
 }
 
 
