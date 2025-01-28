@@ -1,5 +1,3 @@
-from typing import List
-
 from enforce_typing import enforce_types
 
 
@@ -7,14 +5,5 @@ from enforce_typing import enforce_types
 @enforce_types
 class SimState:
     def __init__(self):
-        self.init_loop_attributes()
         self.iter_number = 0
-
-    def init_loop_attributes(self):
-        # 'i' is iteration number i
-
-        # base data
-        self.probs_up: List[float] = []  # [i] : predicted-prob-up
-
-        # profits
-        self.profits: List[float] = []  # [i] : trader_profit
+        self.cum_profit = 0.0

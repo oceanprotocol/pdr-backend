@@ -63,8 +63,6 @@ class SimEngine:
         fh.setLevel(logging.INFO)
         logger.addHandler(fh)
 
-        self.st.init_loop_attributes()
-
     @enforce_types
     def run(self, mergedohlcv_df: Optional[pl.DataFrame] = None):
         logger.info("Start run")
@@ -144,41 +142,25 @@ class SimEngine:
         )
 
         # update state
-        st.probs_up.append(prob_up)
-        st.profits.append(profit)
+        self.st.cum_profit += profit
 
         # log
-        self._log_line(test_i, ut)
+        self._log_line(test_i, ut, prob_up, profit)
 
-        # save state
-        self.save_state(test_i, self.ppss.sim_ss.test_n)
+        # wrap up loop
+        st.iter_number += 1
 
-    def _log_line(self, test_i, ut):
+    def _log_line(self, test_i, ut, prob_up, profit):
         s = f"Iter #{test_i+1}/{self.ppss.sim_ss.test_n}"
         s += f" ut={ut}"
         s += f" dt={ut.to_timestr()[:-7]}"
         s += " ║"
 
-        s += f" prob_up={self.st.probs_up[-1]:.3f}"
+        s += f" prob_up={prob_up:.3f}"
 
         s += " ║"
 
-        s += f" tdr_profit=${self.st.profits[-1]:6.2f}"
-        s += f" (cumul ${sum(self.st.profits):6.2f})"
+        s += f" tdr_profit=${profit:6.2f}"
+        s += f" (cumul ${self.st.cum_profit:6.2f})"
 
         logger.info(s)
-
-    @enforce_types
-    def save_state(self, i: int, N: int):
-        "Save state on this iteration Y/N?"
-        if self.ppss.sim_ss.is_final_iter(i):
-            return True, True
-
-        # don't save first 5 iters -> not interesting
-        # then save the next 5 -> "stuff's happening!"
-        # then save every 5th iter, to balance "stuff's happening" w/ speed
-        do_update = i >= 5 and (i < 10 or i % 5 == 0 or (i + 1) == N)
-        if not do_update:
-            return False, False
-
-        return True, False
