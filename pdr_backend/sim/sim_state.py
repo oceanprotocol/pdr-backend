@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List
 
 from enforce_typing import enforce_types
 
