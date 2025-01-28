@@ -88,7 +88,6 @@ class SimEngine:
         predict_feed = self.predict_train_feedset.predict
         train_feeds = self.predict_train_feedset.train_on
 
-        # X, ycont, and x_df are all expressed in % change wrt prev candle
         X, y, _, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
