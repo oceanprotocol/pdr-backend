@@ -44,7 +44,7 @@ Main tools:
 ## Flows for core team
 
 - Backend-dev - for `pdr-backend` itself
-  - [Local dev flow](READMEs/dev.md)
+  - Local dev flow: see [sim](READMEs/sim.md)
   - [VPS dev flow](READMEs/vps.md)
   - [Dependency management](READMEs/dependencies.md)
 
