@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 install_requirements = [
     "black==24.10.0",
     "bumpversion",
-    "ccxt==4.4.33",
+    "ccxt==4.4.50",
     "coverage",
     "dateparser==1.2.0",
     "enforce_typing",
@@ -16,10 +16,10 @@ install_requirements = [
     "numpy==2.1.3",
     "pandas==2.2.3",
     "pathlib",
-    "polars==1.14.0",
+    "polars==1.21.0",
     "polars[timezone]",
-    "pyarrow==18.0.0",
-    "pylint==3.3.1",
+    "pyarrow==19.0.0",
+    "pylint==3.3.3",
     "pytest",
     "pytest-asyncio==0.21.1",
     "pytest-env",
@@ -30,7 +30,7 @@ install_requirements = [
     "statsmodels==0.14.4",
     "time_machine==2.16.0",
     "typeguard==4.4.1",
-    "xgboost==2.1.2",
+    "xgboost==2.1.3",
     "stopit==1.1.2",
 ]
 
