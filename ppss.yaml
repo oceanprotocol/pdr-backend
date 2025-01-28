@@ -1,7 +1,8 @@
 sim_ss:
   tradetype: histmock # histmock | livemock | livereal
   log_dir: logs
-  test_n: 26275 # ************ number of epochs to simulate. For 5m: 2y->210200ep; 1y->105100ep; 6mo->52550ep; 3mo->26275ep
+  test_n: 26275 # *** number of epochs to simulate. For 5m: 2y->210200ep; 1y->105100ep; 6mo->52550ep; 3mo->26275ep
+  transform: None # "None" | "center_on_recent"
   
   # sim also relies on:
   # - lake_ss - what data to put into lake
@@ -15,9 +16,8 @@ lake_ss:
   feeds:
     - binance BTC/USDT ETH/USDT 5m
   #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
-  #    - kraken BTC/USDT 5m
-  st_timestr: 750 days ago # starting date for data
-  fin_timestr: now # ending date for data
+  st_timestr: 2024-9-28 # starting date for data. eg "270 days ago", "2024-12-28", 2024-12-28 17:55"
+  fin_timestr: 2025-01-28 # ending date for data # ending date for data. eg "now", "2025-01-28"
 
 
 predictoor_ss:
@@ -27,14 +27,14 @@ predictoor_ss:
       - binance BTC/USDT c 5m
           
   aimodel_data_ss: # used by AimodelDataFactory
-    max_n_train: 5700 # ************ no. epochs to train model on. For 5m: 30d->8850ep, 20d->5700ep, 10d->2850ep, 1d->285ep
-    autoregressive_n: 12 # ************ no. epochs that model looks back, to predict next. For 5m: 1h->12ep, 4h->48ep, 8h->96ep, 24h->288ep. "spot a pattern"
+    max_n_train: 5700 # *** no. epochs to train model on. For 5m: 30d->8850ep, 20d->5700ep, 10d->2850ep, 1d->285ep
+    autoregressive_n: 12 # *** no. epochs that model looks back, to predict next. For 5m: 1h->12ep, 4h->48ep, 8h->96ep, 24h->288ep. "spot a pattern"
     
   aimodel_ss: # used by AimodelFactory
     approach: ClassifLinearRidge # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVM | ClassifGaussianProcess | ClassifXgboost | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrGaussianProcess | RegrXgboost | RegrConstant
-    weight_recent: 10x_5x # ************ 10x_5x | 10000x | None
+    weight_recent: None # *** 10x_5x | 10000x | None
     balance_classes: None # SMOTE | RandomOverSampler | None
-    calibrate_probs: CalibratedClassifierCV_Sigmoid # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
+    calibrate_probs: None  # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
     calibrate_regr: CurrentYval # CurrentYval | None
     train_every_n_epochs: 1
 
@@ -42,10 +42,10 @@ trader_ss:
   feed: binance BTC/USDT c 5m
   sim_only:
     buy_amt: 1000 USD # buy this amount in each epoch
-    fee_percent: 0.00025 # ************ simulated % fee, in decimal, where 1.0->100%, 0.1->10%, 0.01->1%, 0.001->0.1%, 0.00025->0.025%, 0.0001->0.01% 
-    confidence_threshold: 0.90 # ************ skip trade if confidence < this, in decimal, where 1.0 = 100%
-    stop_loss_percent: 0.002 # ************ sell if price drops by this %, in decimal,   where 1.0   = 100%,     1.0 = disabled;            0.1->10%, 0.01->1%, 0.001->0.1%
-    take_profit_percent: 0.002 # ************ sell if price rises by this %, in decimal, where 100.0 = 10000%, 100.0 = disabled; 1.0->100%, 0.1->10%, 0.01->1%, 0.001->0.1%
+    fee_percent: 0.000 # 0.00025 *** simulated % fee, in decimal, where 1.0->100%, 0.1->10%, 0.01->1%, 0.001->0.1%, 0.00025->0.025%, 0.0001->0.01% 
+    confidence_threshold: 0.0 # *** skip trade if confidence < this, in decimal, where 1.0 = 100%
+    stop_loss_percent: 0.002 # *** sell if price drops by this %, in decimal,   where 1.0   = 100%,     1.0 = disabled;            0.1->10%, 0.01->1%, 0.001->0.1%
+    take_profit_percent: 0.002 # *** sell if price rises by this %, in decimal, where 100.0 = 10000%, 100.0 = disabled; 1.0->100%, 0.1->10%, 0.01->1%, 0.001->0.1%
 
   bot_only:
     min_buffer: 30 # in s. only trade if there's > this time left

@@ -88,6 +88,9 @@ class SimEngine:
         predict_feed = self.predict_train_feedset.predict
         train_feeds = self.predict_train_feedset.train_on
 
+        # y is [sample_i]:float. Larger sample_i --> newer
+        # X is [sample_i,var_i]:float. Larger var_i --> newer
+
         X, y, _, _ = data_f.create_xy(
             mergedohlcv_df,
             testshift,
@@ -95,15 +98,23 @@ class SimEngine:
             train_feeds,
         )
 
+        cur_close = y[-2]
+        cur_high, cur_low = data_f.get_highlow(mergedohlcv_df, predict_feed, testshift)
+
+        if ppss.sim_ss.transform == "center_on_recent":
+            for sample_i in range(X.shape[0]):
+                sample_i_close = X[sample_i, -1]  # make everything rel. to this
+                X[sample_i, :] = (X[sample_i, :] - sample_i_close) / sample_i_close
+                y[sample_i] = (y[sample_i] - sample_i_close) / sample_i_close
+            X = X[:, :-1]  # remove the far-right column of zeroes
+            y_thr = 0.0
+        else:
+            y_thr = cur_close
+
         st_, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         y_train, _ = y[st_:fin], y[fin : fin + 1]
 
-        cur_high, cur_low = data_f.get_highlow(mergedohlcv_df, predict_feed, testshift)
-
-        cur_close = y[-2]
-
-        y_thr = cur_close
         ytrue = ycont_to_ytrue(y, y_thr)
 
         ytrue_train, _ = ytrue[st_:fin], ytrue[fin : fin + 1]
@@ -121,7 +132,7 @@ class SimEngine:
         ut = UnixTimeMs(recent_ut - testshift * timeframe.ms)
 
         # predict price direction
-        prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
+        prob_up: float = float(self.model.predict_ptrue(X_test)[0])  # in [0.0, 1.0]
         prob_down: float = 1.0 - prob_up
         conf_up = max(0, (prob_up - 0.5) * 2.0)  # to range [0,1]
         conf_down = max(0, (prob_down - 0.5) * 2.0)  # to range [0,1]

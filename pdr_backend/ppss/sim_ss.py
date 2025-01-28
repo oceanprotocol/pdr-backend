@@ -11,6 +11,8 @@ logger = logging.getLogger("sim_ss")
 
 TRADETYPE_OPTIONS = ["livemock", "livereal", "histmock"]
 
+TRANSFORM_OPTIONS = ["center_on_recent", "None"]
+
 
 @enforce_types
 class SimSS(StrMixin):
@@ -27,11 +29,19 @@ class SimSS(StrMixin):
             logger.warning(s)
 
         # validate data
-        self.validate_test_n(self.test_n)
         self.validate_tradetype(self.tradetype)
+        self.validate_test_n(self.test_n)
+        self.validate_transform(self.transform)
 
     # --------------------------------
     # validators
+    @staticmethod
+    def validate_tradetype(tradetype: str):
+        if not isinstance(tradetype, str):
+            raise TypeError(tradetype)
+        if tradetype not in TRADETYPE_OPTIONS:
+            raise ValueError(tradetype)
+
     @staticmethod
     def validate_test_n(test_n: int):
         if not isinstance(test_n, int):
@@ -40,11 +50,11 @@ class SimSS(StrMixin):
             raise ValueError(test_n)
 
     @staticmethod
-    def validate_tradetype(tradetype: str):
-        if not isinstance(tradetype, str):
-            raise TypeError(tradetype)
-        if tradetype not in TRADETYPE_OPTIONS:
-            raise ValueError(tradetype)
+    def validate_transform(transform: str):
+        if not isinstance(transform, str):
+            raise TypeError(transform)
+        if transform not in TRANSFORM_OPTIONS:
+            raise ValueError(transform)
 
     # --------------------------------
     # properties direct from yaml dict
@@ -57,16 +67,16 @@ class SimSS(StrMixin):
         return s
 
     @property
-    def test_n(self) -> int:
-        return self.d["test_n"]  # eg 200
-
-    @property
     def tradetype(self) -> str:
         return self.d.get("tradetype", "histmock")
 
     @property
-    def use_own_model(self) -> bool:
-        return self.d["use_own_model"]
+    def test_n(self) -> int:
+        return self.d["test_n"]  # eg 200
+
+    @property
+    def transform(self) -> str:
+        return self.d["transform"]
 
     # --------------------------------
     # derived methods
@@ -78,13 +88,13 @@ class SimSS(StrMixin):
 
     # --------------------------------
     # setters
-    def set_test_n(self, test_n: int):
-        self.validate_test_n(test_n)
-        self.d["test_n"] = test_n
-
     def set_tradetype(self, tradetype: str):
         self.validate_tradetype(tradetype)
         self.d["tradetype"] = tradetype
+
+    def set_test_n(self, test_n: int):
+        self.validate_test_n(test_n)
+        self.d["test_n"] = test_n
 
 
 # =========================================================================
@@ -94,14 +104,14 @@ class SimSS(StrMixin):
 @enforce_types
 def sim_ss_test_dict(
     log_dir: str,
-    use_own_model: Optional[bool] = True,
-    test_n: Optional[int] = None,
     tradetype: Optional[str] = None,
+    test_n: Optional[int] = None,
+    transform: Optional[str] = None,
 ) -> dict:
     d = {
-        "log_dir": log_dir,
-        "use_own_model": use_own_model,
-        "test_n": test_n or 10,
         "tradetype": tradetype or "histmock",
+        "log_dir": log_dir,
+        "test_n": test_n or 10,
+        "transform": transform or "None",
     }
     return d

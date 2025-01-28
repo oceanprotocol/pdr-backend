@@ -17,9 +17,10 @@ def test_sim_ss_defaults(tmpdir):
 
     # yaml properties
     assert isinstance(ss.log_dir, str)
+    assert ss.tradetype == "histmock"
     assert isinstance(ss.test_n, int)
     assert 1 <= ss.test_n <= 10000
-    assert ss.tradetype == "histmock"
+    assert ss.transform == "None"
 
     # str
     assert "SimSS" in str(ss)
@@ -29,15 +30,17 @@ def test_sim_ss_defaults(tmpdir):
 def test_sim_ss_specify_values(tmpdir):
     d = sim_ss_test_dict(
         log_dir=os.path.join(tmpdir, "mylogs"),
-        test_n=13,
         tradetype="livereal",
+        test_n=13,
+        transform="center_on_recent",
     )
     ss = SimSS(d)
 
     # yaml properties
+    assert ss.tradetype == "livereal"
     assert ss.log_dir == os.path.join(tmpdir, "mylogs")
     assert ss.test_n == 13
-    assert ss.tradetype == "livereal"
+    assert ss.transform == "center_on_recent"
 
     # str
     assert "SimSS" in str(ss)
@@ -109,6 +112,12 @@ def test_sim_ss_setters(tmpdir):
     d = sim_ss_test_dict(_logdir(tmpdir))
     ss = SimSS(d)
 
+    # tradetype
+    ss.set_tradetype("livereal")
+    assert ss.tradetype == "livereal"
+    with pytest.raises(ValueError):
+        ss.set_tradetype("foo")
+
     # test_n
     ss.set_test_n(32)
     assert ss.test_n == 32
@@ -116,12 +125,6 @@ def test_sim_ss_setters(tmpdir):
         ss.set_test_n(0)
     with pytest.raises(ValueError):
         ss.set_test_n(-5)
-
-    # tradetype
-    ss.set_tradetype("livereal")
-    assert ss.tradetype == "livereal"
-    with pytest.raises(ValueError):
-        ss.set_tradetype("foo")
 
 
 # ====================================================================
