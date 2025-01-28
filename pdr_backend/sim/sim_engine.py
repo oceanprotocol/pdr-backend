@@ -143,20 +143,26 @@ class SimEngine:
 
         # update state
         self.st.cum_profit += profit
+        self.st.num_trades += int(pred_up or pred_down)
 
         # log
-        self._log_line(test_i, ut, prob_up, profit)
+        self._log_line(test_i, ut, prob_up, conf_up, conf_down, profit)
 
         # wrap up loop
         st.iter_number += 1
 
-    def _log_line(self, test_i, ut, prob_up, profit):
+    def _log_line(self, test_i, ut, prob_up, conf_up, conf_down, profit):
         s = f"Iter #{test_i+1}/{self.ppss.sim_ss.test_n}"
         s += f" ut={ut}"
         s += f" dt={ut.to_timestr()[:-7]}"
         s += " ║"
 
         s += f" prob_up={prob_up:.3f}"
+        s += f" conf_up={conf_up:.3f}"
+        s += f" conf_down={conf_down:.3f}"
+
+        s += " ║"
+        s += f" # trades={self.st.num_trades:4d}"
 
         s += " ║"
 
