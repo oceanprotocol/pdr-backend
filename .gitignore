@@ -168,6 +168,8 @@ dir/
 # predictoor-specific
 out*.txt
 my_ppss.yaml
+my_ppss_profiling.yaml
+my_ppss_makemoney.yaml
 my_logging.yaml
 logs/
 csvs/
