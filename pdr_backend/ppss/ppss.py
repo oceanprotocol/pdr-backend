@@ -3,6 +3,7 @@ import tempfile
 from typing import Optional
 
 import yaml
+import yaml.constructor
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
@@ -63,8 +64,12 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
             yaml_filename or yaml_str and not (yaml_filename and yaml_str)
         ), "need to set yaml_filename_ or yaml_str but not both"
 
+        # Specify yaml.safe_load to _not_ convert strings to timestamps
+        c = yaml.constructor.SafeConstructor.yaml_constructors
+        c["tag:yaml.org,2002:timestamp"] = c["tag:yaml.org,2002:str"]
+
         # get d
-        if yaml_filename is not None:
+        if yaml_filename:
             with open(yaml_filename, "r") as f:
                 d = yaml.safe_load(f)
         else:

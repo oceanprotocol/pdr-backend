@@ -47,15 +47,21 @@ class LakeSS(MultiFeedMixin):
 
     @property
     def st_timestr(self) -> str:
-        return self.d["st_timestr"]  # eg "2019-09-13_04:00" (earliest)
+        s = self.d["st_timestr"]  # eg "2019-09-13_04:00" (earliest)
+        assert isinstance(s, str)
+        return s
 
     @property
     def fin_timestr(self) -> str:
-        return self.d["fin_timestr"]  # eg "now","2023-09-23_17:55","2023-09-23"
+        s = self.d["fin_timestr"]  # eg "now","2023-09-23_17:55","2023-09-23"
+        assert isinstance(s, str)
+        return s
 
     @property
     def api(self) -> str:
-        return self.d.get("api", "ccxt")
+        s = self.d.get("api", "ccxt")
+        assert isinstance(s, str)
+        return s
 
     # feeds defined in base
 
