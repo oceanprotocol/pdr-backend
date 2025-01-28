@@ -124,8 +124,8 @@ class SimEngine:
         # predict price direction
         prob_up: float = self.model.predict_ptrue(X_test)[0]  # in [0.0, 1.0]
         prob_down: float = 1.0 - prob_up
-        conf_up = (prob_up - 0.5) * 2.0  # to range [0,1]
-        conf_down = (prob_down - 0.5) * 2.0  # to range [0,1]
+        conf_up = max(0, (prob_up - 0.5) * 2.0)  # to range [0,1]
+        conf_down = max(0, (prob_down - 0.5) * 2.0)  # to range [0,1]
         conf_threshold = self.ppss.trader_ss.sim_confidence_threshold
         pred_up: bool = prob_up > 0.5 and conf_up > conf_threshold
         pred_down: bool = prob_up < 0.5 and conf_down > conf_threshold
@@ -143,7 +143,7 @@ class SimEngine:
 
         # update state
         self.st.cum_profit += profit
-        self.st.num_trades += int(pred_up or pred_down)
+        self.st.num_trades += int(profit != 0)
 
         # log
         self._log_line(test_i, ut, prob_up, conf_up, conf_down, profit)
