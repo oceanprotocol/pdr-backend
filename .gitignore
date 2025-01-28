@@ -187,3 +187,6 @@ validate_duplicate_rows.csv
 # agent deployer
 .keys.json
 .deployments/
+
+#profiling
+profile.stats

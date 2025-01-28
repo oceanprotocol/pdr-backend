@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+
+# settings
+n_lines_show = 20 # how many most-significant lines to show
+
+# actual work
+import pstats
+from pstats import SortKey
+p = pstats.Stats('profile.stats')
+
+# strip_dirs: remove extraneous path from all module names
+# SortKey.CUMULATIVE: sort cumulative time in a function
+p.strip_dirs().sort_stats(SortKey.CUMULATIVE).print_stats(n_lines_show)
