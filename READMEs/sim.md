@@ -93,7 +93,7 @@ pdr sim my_ppss.yaml
 Be careful, it's real $!
 
 
-# Optimize Profitability
+# 5. Optimize Profitability
 
 Complementary strategies:
 - Optimize data. Examples:
