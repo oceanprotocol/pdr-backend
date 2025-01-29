@@ -164,8 +164,9 @@ class SimEngine:
         s += f" conf_up={conf_up:.3f}"
         s += f" conf_down={conf_down:.3f}"
 
+        perc_trade = self.st.num_trades / (test_i+1)
         s += " ║"
-        s += f" # trades={self.st.num_trades:4d}"
+        s += f" # trades={self.st.num_trades:4d} ({perc_trade*100:6.2f}%)"
 
         s += " ║"
 
