@@ -91,7 +91,7 @@ class SimEngine:
             train_feeds,
         )
 
-        cur_close = y[-2]
+        cur_close, next_close = y[-2], y[-1]
         cur_high, cur_low = data_f.get_highlow(mergedohlcv_df, predict_feed, testshift)
 
         if ppss.sim_ss.transform == "center_on_recent":
@@ -143,33 +143,47 @@ class SimEngine:
             cur_high,
             cur_low,
         )
+        did_trade = profit != 0
+
+        # observe true
+        true_up = next_close > cur_close
 
         # update state
         self.st.cum_profit += profit
-        self.st.num_trades += int(profit != 0)
+        if did_trade:
+            self.st.num_trades += 1
+            self.st.num_correct_pred_in_trade += int(true_up == pred_up)
+        self.st.num_correct_pred_all += int(true_up == pred_up)
 
         # log
-        self._log_line(test_i, ut, prob_up, conf_up, conf_down, profit)
+        conf = max(conf_up, conf_down)
+        self._log_line(test_i, ut, prob_up, conf, profit)
 
         # wrap up loop
         st.iter_number += 1
 
-    def _log_line(self, test_i, ut, prob_up, conf_up, conf_down, profit):
+    def _log_line(self, test_i, ut, prob_up, conf, profit):
         s = f"Iter #{test_i+1}/{self.ppss.sim_ss.test_n}"
         s += f" ut={ut}"
         s += f" dt={ut.to_timestr()[:-7]}"
-        s += " ║"
 
+        s += " ║"
         s += f" prob_up={prob_up:.3f}"
-        s += f" conf_up={conf_up:.3f}"
-        s += f" conf_down={conf_down:.3f}"
+        s += f", conf={conf:.3f}"
 
-        perc_trade = self.st.num_trades / (test_i+1)
+        acc_all = self.st.num_correct_pred_all / (test_i + 1)
+        s += f",{acc_all*100:5.1f}% correct"
+        if self.st.num_trades > 0:
+            acc_trade = self.st.num_correct_pred_in_trade / self.st.num_trades
+            s += f" ({acc_trade*100:5.1f}% on trades)"
+        else:
+            s += f" ({'N/A':5s}% on trades)"
+
         s += " ║"
+        perc_trade = self.st.num_trades / (test_i + 1)
         s += f" # trades={self.st.num_trades:4d} ({perc_trade*100:6.2f}%)"
 
         s += " ║"
-
         s += f" tdr_profit=${profit:6.2f}"
         s += f" (cumul ${self.st.cum_profit:6.2f})"
 
