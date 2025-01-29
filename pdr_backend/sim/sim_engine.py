@@ -2,8 +2,9 @@ import logging
 import os
 from typing import Optional
 
-import polars as pl
 from enforce_typing import enforce_types
+import polars as pl
+from statsmodels.stats.proportion import proportion_confint as calc_CI
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
@@ -14,8 +15,8 @@ from pdr_backend.cli.arg_timeframe import ArgTimeframe
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedset
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
 from pdr_backend.ppss.ppss import PPSS
-from pdr_backend.sim.sim_trader import SimTrader
 from pdr_backend.sim.sim_state import SimState
+from pdr_backend.sim.sim_trader import SimTrader
 from pdr_backend.util.time_types import UnixTimeMs
 
 logger = logging.getLogger("sim_engine")
@@ -171,13 +172,16 @@ class SimEngine:
         s += f" prob_up={prob_up:.3f}"
         s += f", conf={conf:.3f}"
 
-        acc_all = self.st.num_correct_pred_all / (test_i + 1)
-        s += f",{acc_all*100:5.1f}% correct"
+        s += " ║"
+        count, nobs = self.st.num_correct_pred_all, (test_i + 1)
+        acc, (l, u) = count / nobs, calc_CI(count=count, nobs=nobs)
+        s += f" acc={acc*100:5.2f}% [{l*100:5.2f}%, {u*100:5.2f}%]"
         if self.st.num_trades > 0:
-            acc_trade = self.st.num_correct_pred_in_trade / self.st.num_trades
-            s += f" ({acc_trade*100:5.1f}% on trades)"
+            count, nobs = self.st.num_correct_pred_in_trade, self.st.num_trades
+            acc, (l, u) = count / nobs, calc_CI(count=count, nobs=nobs)
+            s += f", trades acc={acc*100:5.2f}% [{l*100:5.2f}%, {u*100:5.2f}%]"
         else:
-            s += f" ({'N/A':5s}% on trades)"
+            s += f", trades acc={'N/A':5s}% [{'N/A':5s}%, {'N/A':5s}%]"
 
         s += " ║"
         perc_trade = self.st.num_trades / (test_i + 1)
