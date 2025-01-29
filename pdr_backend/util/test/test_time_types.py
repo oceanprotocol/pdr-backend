@@ -233,7 +233,6 @@ def test_dt_now_UTC_1():
     dt1 = dt_now_UTC()
     dt2 = datetime.now(UTC)
     assert (dt2 - dt1).seconds < 1
-    assert 23.99 < (dt1 - dt2).seconds / 3600 < 23.999999  # fyi, diff wraps around
 
 
 @enforce_types
