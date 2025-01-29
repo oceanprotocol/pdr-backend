@@ -1,6 +1,5 @@
 import logging
 import os
-import uuid
 from typing import Optional
 
 import polars as pl
@@ -29,7 +28,6 @@ class SimEngine:
         self,
         ppss: PPSS,
         predict_train_feedset: PredictTrainFeedset,
-        multi_id: Optional[str] = None,
     ):
         self.predict_train_feedset = predict_train_feedset
         assert isinstance(self.predict_feed, ArgFeed)
@@ -41,11 +39,6 @@ class SimEngine:
         self.trader = SimTrader(ppss, self.predict_feed)
 
         self.logfile = ""
-
-        if multi_id:
-            self.multi_id = multi_id
-        else:
-            self.multi_id = str(uuid.uuid4())
 
         # timestamp -> prob up
         self.model: Optional[Aimodel] = None
