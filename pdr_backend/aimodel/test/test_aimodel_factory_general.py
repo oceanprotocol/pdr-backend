@@ -3,7 +3,6 @@ import numpy as np
 from enforce_typing import enforce_types
 from numpy.testing import assert_array_equal
 import pytest
-from pytest import approx
 
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
 from pdr_backend.aimodel.ycont_to_ytrue import ycont_to_ytrue
@@ -42,11 +41,7 @@ def test_aimodel_1var(approach: str, func: str):
     ytrue = ycont > y_thr
 
     # build model
-    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
-
-    # test variable importances
-    imps = model.importance_per_var()
-    assert_array_equal(imps, np.array([1.0]))
+    _ = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
 
 
 @enforce_types
@@ -87,12 +82,6 @@ def test_aimodel_2vars(approach: str):
         _ = factory.build(X, None, ycont, y_thr, show_warnings=False)
     else:
         _ = factory.build(X, ytrue, None, None, show_warnings=False)
-
-    # test variable importances
-    imps = model.importance_per_var()
-    assert sum(imps) == approx(1.0, 0.01)
-    assert imps[0] == approx(0.333, abs=0.3)
-    assert imps[1] == approx(0.667, abs=0.3)
 
     # test predict_ycont()
     if not model.do_regr:
@@ -212,12 +201,7 @@ def test_aimodel_5varmodel(approach: str):
     ytrue = ycont > y_thr
 
     # build model
-    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
-
-    # test variable importances
-    imps = model.importance_per_var()
-    assert len(imps) == 5
-    assert imps[0] < imps[1] < imps[2] < imps[3] < imps[4]
+    _ = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
 
 
 @enforce_types
@@ -250,19 +234,7 @@ def test_aimodel_4vars_response(approach: str, target_n_classes: int):
     ytrue = ycont > y_thr
 
     # build model
-    model = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
-
-    # test variable importances
-    imps = model.importance_per_var()
-    if model.do_regr or target_n_classes == 2:  # expect sane var impacts
-        assert imps[0] > imps[1] > imps[2] > imps[3] > 0.0
-        assert sum(imps) == approx(1.0, 0.01)
-        assert imps[0] == approx(4.0 / 10.0, abs=0.2)
-        assert imps[1] == approx(3.0 / 10.0, abs=0.2)
-        assert imps[2] == approx(2.0 / 10.0, abs=0.2)
-        assert imps[3] == approx(1.0 / 10.0, abs=0.2)
-    else:
-        assert min(imps) == max(imps) == 0.25
+    _ = factory.build(X, ytrue, ycont, y_thr, show_warnings=False)
 
 
 @enforce_types

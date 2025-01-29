@@ -126,10 +126,6 @@ class AimodelFactory:
             ycont_offset = current_yval - current_yvalhat
             model.set_ycont_offset(ycont_offset)
 
-        # variable importances
-        if self.ss.calc_imps:
-            model.set_importance_per_var(X, ycont)
-
         # return
         return model
 
@@ -216,10 +212,6 @@ class AimodelFactory:
 
         # model
         model = Aimodel(scaler, None, None, sk_classif)
-
-        # variable importances
-        if self.ss.calc_imps:
-            model.set_importance_per_var(X, ytrue)
 
         # return
         return model

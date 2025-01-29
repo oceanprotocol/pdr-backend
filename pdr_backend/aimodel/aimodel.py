@@ -2,8 +2,6 @@ from typing import Optional
 
 from enforce_typing import enforce_types
 import numpy as np
-from sklearn.calibration import CalibratedClassifierCV
-from sklearn.inspection import permutation_importance
 
 
 class Aimodel:
@@ -20,7 +18,6 @@ class Aimodel:
         self._sk_regrs = sk_regrs  # list of sklearn regressor model
         self._y_thr = y_thr  # threshold value for True vs False
         self._sk_classif = sk_classif  # sklearn classifier model
-        self._imps_tup = None  # tuple of (imps_avg, imps_stddev)
         self._ycont_offset = 0.0  # offset to the output of regression
 
     @property
@@ -117,124 +114,6 @@ class Aimodel:
     @enforce_types
     def set_ycont_offset(self, ycont_offset: float):
         self._ycont_offset = ycont_offset
-
-    @enforce_types
-    def importance_per_var(self, include_stddev: bool = False):
-        """
-        @description
-          Report relative importance of each input variable
-
-        @return
-          imps_avg - 1d array of [var_i]: rel_importance_float
-          (optional) imps_stddev -- array [var_i]: rel_stddev_float
-        """
-        assert self._imps_tup is not None
-        if include_stddev:
-            return self._imps_tup
-        return self._imps_tup[0]
-
-    @enforce_types
-    def set_importance_per_var(self, X: np.ndarray, y: np.ndarray):
-        """
-        @arguments
-          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
-          y -- 1d array of [sample_i]:value -- model outputs,
-            where value is bool for classif (ytrue), or float for regr (ycont)
-
-        @return
-          <<sets self._imps_tup>>
-        """
-        assert not self._imps_tup, "have already set importances"
-        self._imps_tup = self._calc_importance_per_var(X, y)
-
-    @enforce_types
-    def _calc_importance_per_var(self, X, y) -> tuple:
-        """
-        @arguments
-          X -- 2d array of [sample_i, var_i]:cont_value -- model inputs
-          y -- 1d array of [sample_i]:value -- model outputs
-
-        @return
-          imps_avg -- 1d array of [var_i]: rel_importance_float
-          imps_stddev -- array [var_i]: rel_stddev_float
-        """
-        n = X.shape[1]
-        flat_imps_avg = np.ones(n, dtype=float) / n
-        flat_imps_stddev = np.ones(n, dtype=float) / n
-
-        is_constant = min(y) == max(y)
-        if is_constant:
-            return flat_imps_avg, flat_imps_stddev
-
-        if self.do_regr:
-            skm = self
-            scoring = "neg_root_mean_squared_error"
-        else:
-            skm = self._sk_classif
-            scoring = "f1"
-
-        models: list = []
-        if self.do_regr:
-            assert self._sk_regrs is not None, "should have _sk_regrs"
-            models = self._sk_regrs
-        else:
-            if type(self._sk_classif) is CalibratedClassifierCV:
-                models = [i.estimator for i in self._sk_classif.calibrated_classifiers_]
-            else:
-                models = [self._sk_classif]
-
-        if all(hasattr(model, "coef_") for model in models):
-            if self.do_regr:
-                assert self._sk_regrs is not None, "should have _sk_regrs"
-                coefs = np.mean([np.abs(regr.coef_) for regr in self._sk_regrs], axis=0)
-            else:
-                coefs = np.mean([np.abs(clf.coef_[0]) for clf in models], axis=0)
-
-            if len(coefs.shape) == 1:
-                coefs = np.abs(coefs)
-            else:
-                coefs = np.mean(np.abs(coefs), axis=0)
-
-            imps_avg = coefs / np.sum(coefs)
-            imps_stddev = np.zeros_like(imps_avg)
-        else:
-            imps_bunch = permutation_importance(
-                skm,
-                X,
-                y,
-                scoring=scoring,
-                n_repeats=30,  # magic number
-            )
-            imps_avg = imps_bunch.importances_mean
-
-            if max(imps_avg) <= 0:  # all vars have negligible importance
-                return flat_imps_avg, flat_imps_stddev
-
-            imps_avg[imps_avg < 0.0] = 0.0  # some vars have negligible importance
-            assert max(imps_avg) > 0.0, "should have some vars with imp > 0"
-
-            imps_stddev = imps_bunch.importances_std
-
-            # normalize
-            _sum = sum(imps_avg)
-            imps_avg = np.array(imps_avg) / _sum
-            imps_stddev = np.array(imps_stddev) / _sum
-
-        # postconditions
-        assert imps_avg.shape == (n,)
-        assert imps_stddev.shape == (n,)
-        assert 1.0 - 1e-6 <= sum(imps_avg) <= 1.0 + 1e-6
-        assert min(imps_avg) >= 0.0
-        assert max(imps_avg) > 0
-        assert min(imps_stddev) >= 0.0
-
-        # return
-        imps_tup = (imps_avg, imps_stddev)
-        return imps_tup
-
-    # for permutation_importance()
-    def fit(self):
-        return
 
     def predict(self, X):
         return self.predict_ycont(X)
