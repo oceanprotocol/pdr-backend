@@ -7,7 +7,7 @@ import numpy as np
 
 from pdr_backend.util.strutil import pad_with_zeroes
 
-log = logging.getLog("xycsv")
+log = logging.getLogger("xycsv")
 
 
 class XycsvMgr:
