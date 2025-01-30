@@ -48,7 +48,7 @@ def test_sim_engine(tmpdir):
 
     # sim ss
     log_dir = os.path.join(tmpdir, "logs")
-    d = sim_ss_test_dict(log_dir, test_n=5)
+    d = sim_ss_test_dict(log_dir, test_n=5, xy_dir="xy_dir")
     ppss.sim_ss = SimSS(d)
 
     # go
@@ -58,3 +58,13 @@ def test_sim_engine(tmpdir):
     assert sim_engine.model is None
     sim_engine.run()
     assert isinstance(sim_engine.model, Aimodel)
+
+    # load some X,y data after
+    assert ppss.sim_ss.xy_dir != "None"
+    mgr = sim_engine.xycsv_mgr
+    assert os.path.exists(mgr.abs_xy_dir)
+    assert os.path.exists(mgr.abs_run_dir)
+    assert len(mgr.saved_iters) > 0
+    X, y = sim_engine.xycsv_mgr.load_xy(mgr.saved_iters[-1])
+    assert len(X.shape) == 2 and len(y.shape) == 1
+    assert X.shape[0] == y.shape[0]

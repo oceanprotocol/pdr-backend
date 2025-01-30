@@ -7,6 +7,7 @@ from pdr_backend.util.strutil import (
     compactSmallNum,
     dictStr,
     prettyBigNum,
+    pad_with_zeroes,
     separate_string_number,
     shift_one_earlier,
     StrMixin,
@@ -411,3 +412,9 @@ def test_shift_one_earlier():
 
     for input_s, target_s in pairs:
         assert shift_one_earlier(input_s) == target_s
+
+
+def test_pad_with_zeroes():
+    assert pad_with_zeroes(1, 10) == "0000000001"
+    assert pad_with_zeroes(100) == "0000000100"
+    assert pad_with_zeroes(1000) == "0000001000"

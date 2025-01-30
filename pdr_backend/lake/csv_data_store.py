@@ -5,16 +5,7 @@ import polars as pl
 from enforce_typing import enforce_types
 from polars._typing import SchemaDict
 
-
-@enforce_types
-def _pad_with_zeroes(number: int, length: int = 10) -> str:
-    """
-    Pads the given number with zeros to make it 10 digits long.
-    @args:
-        number: int - number to fill with zeros
-    """
-    number_str = str(number)
-    return number_str.rjust(length, "0")
+from pdr_backend.util.strutil import pad_with_zeroes
 
 
 @enforce_types
@@ -135,8 +126,8 @@ class CSVDataStore:
             start_time: int - start time of the data TIMESTAMP
             end_time: int - end time of the data TIMESTAMP
         """
-        start_time_str = _pad_with_zeroes(start_time)
-        end_time_str = _pad_with_zeroes(end_time) if end_time else ""
+        start_time_str = pad_with_zeroes(start_time)
+        end_time_str = pad_with_zeroes(end_time) if end_time else ""
 
         return f"{self.table_name}_from_{start_time_str}_to_{end_time_str}.csv"
 

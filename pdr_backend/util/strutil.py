@@ -157,3 +157,20 @@ def separate_string_number(s: str) -> List[str]:
     Ref: https://stackoverflow.com/a/68346827
     """
     return ["".join(g) for _, g in groupby(s, key=str.isdigit)]
+
+
+@enforce_types
+def pad_with_zeroes(number: int, length: int = 10) -> str:
+    """
+    @description
+      Pads the given number with zeros to make it 10 digits long.
+
+    @arguments
+      number -- number to fill with zeros
+      length -- target length of string
+
+    @return
+      the string, padded with zeros
+    """
+    number_str = str(number)
+    return number_str.rjust(length, "0")

@@ -5,7 +5,6 @@ import polars as pl
 from pdr_backend.lake.csv_data_store import (
     _get_from_value,
     _get_to_value,
-    _pad_with_zeroes,
 )
 
 
@@ -136,12 +135,6 @@ def test_write_append(_get_test_CSVDataStore, tmpdir):
     assert data["a"].to_list() == [1, 4, 11, 41]
     assert data["b"].to_list() == [2, 5, 21, 51]
     assert data["timestamp"].to_list() == [3, 6, 31, 61]
-
-
-def test_pad_with_zeroes():
-    assert _pad_with_zeroes(1, 10) == "0000000001"
-    assert _pad_with_zeroes(100) == "0000000100"
-    assert _pad_with_zeroes(1000) == "0000001000"
 
 
 def test_get_to_value():

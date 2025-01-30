@@ -1,8 +1,9 @@
 sim_ss:
   tradetype: histmock # histmock | livemock | livereal
-  log_dir: logs
   test_n: 26275 # *** number of epochs to simulate. For 5m: 2y->210200ep; 1y->105100ep; 6mo->52550ep; 3mo->26275ep
   transform: None # "None" | "center_on_recent"
+  log_dir: logs
+  xy_dir: xy_data # "None"=don't save, otherwise specify a string
   
   # sim also relies on:
   # - lake_ss - what data to put into lake
@@ -36,7 +37,7 @@ predictoor_ss:
     balance_classes: None # SMOTE | RandomOverSampler | None
     calibrate_probs: None  # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
     calibrate_regr: CurrentYval # CurrentYval | None
-    train_every_n_epochs: 1
+    train_every_n_epochs: 5000
 
 trader_ss:
   feed: binance BTC/USDT c 5m

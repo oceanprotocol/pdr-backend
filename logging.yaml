@@ -27,14 +27,8 @@ loggers:
 
     sim_engine:
         level: INFO
-
-    multisim_engine:
-        level: INFO
-
-    predictoor_agent:
-        level: INFO
-
-    trader_agent:
+        
+    xycsv:
         level: INFO
 
 # for a full list of loggers:

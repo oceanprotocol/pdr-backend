@@ -32,6 +32,7 @@ class SimSS(StrMixin):
         self.validate_tradetype(self.tradetype)
         self.validate_test_n(self.test_n)
         self.validate_transform(self.transform)
+        self.validate_xy_dir(self.xy_dir)  # engine creates log dir when needed
 
     # --------------------------------
     # validators
@@ -56,6 +57,11 @@ class SimSS(StrMixin):
         if transform not in TRANSFORM_OPTIONS:
             raise ValueError(transform)
 
+    @staticmethod
+    def validate_xy_dir(xy_dir: str):
+        if not isinstance(xy_dir, str):
+            raise TypeError(xy_dir)
+
     # --------------------------------
     # properties direct from yaml dict
     @property
@@ -77,6 +83,10 @@ class SimSS(StrMixin):
     @property
     def transform(self) -> str:
         return self.d["transform"]
+
+    @property
+    def xy_dir(self) -> str:
+        return self.d["xy_dir"]  # engine expands path when needed; not here
 
     # --------------------------------
     # derived methods
@@ -107,11 +117,13 @@ def sim_ss_test_dict(
     tradetype: Optional[str] = None,
     test_n: Optional[int] = None,
     transform: Optional[str] = None,
+    xy_dir: Optional[str] = None,
 ) -> dict:
     d = {
-        "tradetype": tradetype or "histmock",
         "log_dir": log_dir,
+        "tradetype": tradetype or "histmock",
         "test_n": test_n or 10,
         "transform": transform or "None",
+        "xy_dir": xy_dir or "None",
     }
     return d

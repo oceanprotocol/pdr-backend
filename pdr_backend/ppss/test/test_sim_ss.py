@@ -21,6 +21,7 @@ def test_sim_ss_defaults(tmpdir):
     assert isinstance(ss.test_n, int)
     assert 1 <= ss.test_n <= 10000
     assert ss.transform == "None"
+    assert ss.xy_dir == "None"
 
     # str
     assert "SimSS" in str(ss)
@@ -33,6 +34,7 @@ def test_sim_ss_specify_values(tmpdir):
         tradetype="livereal",
         test_n=13,
         transform="center_on_recent",
+        xy_dir="xy_data",
     )
     ss = SimSS(d)
 
@@ -41,6 +43,7 @@ def test_sim_ss_specify_values(tmpdir):
     assert ss.log_dir == os.path.join(tmpdir, "mylogs")
     assert ss.test_n == 13
     assert ss.transform == "center_on_recent"
+    assert ss.xy_dir == "xy_data"
 
     # str
     assert "SimSS" in str(ss)

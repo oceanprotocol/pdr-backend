@@ -9,6 +9,7 @@ from statsmodels.stats.proportion import proportion_confint as calc_CI
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.aimodel.aimodel_data_factory import AimodelDataFactory
 from pdr_backend.aimodel.aimodel_factory import AimodelFactory
+from pdr_backend.aimodel.xycsv import XycsvMgr
 from pdr_backend.aimodel.ycont_to_ytrue import ycont_to_ytrue
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_timeframe import ArgTimeframe
@@ -39,6 +40,8 @@ class SimEngine:
 
         self.trader = SimTrader(ppss, self.predict_feed)
 
+        self.runid = str(UnixTimeMs.now())  # eg "1738232779406"
+        self.xycsv_mgr = XycsvMgr(ppss.sim_ss.xy_dir, self.runid)
         self.logfile = ""
 
         # timestamp -> prob up
@@ -50,7 +53,7 @@ class SimEngine:
 
     @enforce_types
     def _init_loop_attributes(self):
-        filebase = f"out_{UnixTimeMs.now()}.txt"
+        filebase = f"out_{self.runid}.txt"
         self.logfile = os.path.join(self.ppss.sim_ss.log_dir, filebase)
 
         fh = logging.FileHandler(self.logfile)
@@ -104,6 +107,8 @@ class SimEngine:
             y_thr = 0.0
         else:
             y_thr = cur_close
+
+        self.xycsv_mgr.save_xy(X, y, st.iter_number)
 
         st_, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
@@ -163,6 +168,7 @@ class SimEngine:
         # wrap up loop
         st.iter_number += 1
 
+    @enforce_types
     def _log_line(self, test_i, ut, prob_up, conf, profit):
         s = f"Iter #{test_i+1}/{self.ppss.sim_ss.test_n}"
         s += f" ut={ut}"
