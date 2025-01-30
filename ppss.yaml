@@ -1,6 +1,8 @@
+# 5pm epochs legend: 6y->630600ep; 5y->525500; 4y->420400ep; 3y->315300ep; 2y->210200ep; 1y->105100ep; 6mo->52550ep; 3mo->26275ep; 2mo->17700ep; 30d->8850ep, 20d->5700ep, 10d->2850ep, 1d(24h)->288ep; 8h->96ep; 4h->48ep; 1h->12ep
+
 sim_ss:
   tradetype: histmock # histmock | livemock | livereal
-  test_n: 26275 # *** number of epochs to simulate. For 5m: 2y->210200ep; 1y->105100ep; 6mo->52550ep; 3mo->26275ep
+  test_n: 525500 # *** number of epochs to simulate. Typically 3mo to 5y
   transform: None # "None" | "center_on_recent"
   log_dir: logs
   xy_dir: xy_data # "None"=don't save, otherwise specify a string
@@ -28,16 +30,16 @@ predictoor_ss:
       - binance BTC/USDT c 5m
           
   aimodel_data_ss: # used by AimodelDataFactory
-    max_n_train: 5700 # *** no. epochs to train model on. For 5m: 30d->8850ep, 20d->5700ep, 10d->2850ep, 1d->285ep
-    autoregressive_n: 12 # *** no. epochs that model looks back, to predict next. For 5m: 1h->12ep, 4h->48ep, 8h->96ep, 24h->288ep. "spot a pattern"
+    max_n_train: 26275 # *** no. epochs to train model on. Typically 1d to 1y
+    autoregressive_n: 12 # *** no. epochs that model looks back, to predict next. For 5m, typically 1h to 1d. "spot a pattern"
     
   aimodel_ss: # used by AimodelFactory
-    approach: ClassifLinearRidge # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVM | ClassifGaussianProcess | ClassifXgboost | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrGaussianProcess | RegrXgboost | RegrConstant
+    approach: ClassifLinearLasso # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVM | ClassifGaussianProcess | ClassifXgboost | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrGaussianProcess | RegrXgboost | RegrConstant
     weight_recent: None # *** 10x_5x | 10000x | None
     balance_classes: None # SMOTE | RandomOverSampler | None
     calibrate_probs: None  # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
     calibrate_regr: CurrentYval # CurrentYval | None
-    train_every_n_epochs: 5000
+    train_every_n_epochs: 26275
 
 trader_ss:
   feed: binance BTC/USDT c 5m
