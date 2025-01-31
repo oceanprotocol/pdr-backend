@@ -23,7 +23,7 @@ def test_xycsv_2d(tmp_path):
     # setup
     X, y = _getxy_2d()
     xy_dir = str(tmp_path)
-    runid = 12345
+    runid = "12345"
     iter_number = 72
 
     # work
@@ -45,7 +45,7 @@ def test_xycsv_1d(tmp_path):
     # setup
     X, y = _getxy_1d()
     xy_dir = str(tmp_path)
-    runid = 12345
+    runid = "12345"
     iter_number = 72
 
     # work
@@ -67,7 +67,7 @@ def test_xycsv_dirs(tmp_path):
     # setup
     X, y = _getxy_2d()
     xy_dir = str(tmp_path)
-    runid = 12345
+    runid = "12345"
     iter_number = 72
     mgr = XycsvMgr(xy_dir, runid)
 
@@ -84,7 +84,7 @@ def test_xycsv_dirs(tmp_path):
     assert os.path.exists(yf)
 
     assert xy_dir in xf
-    assert str(runid) in xf
+    assert runid in xf
     assert str(iter_number) in xf
 
     assert xf.replace("X", "y") == yf

@@ -108,8 +108,6 @@ class SimEngine:
         else:
             y_thr = cur_close
 
-        self.xycsv_mgr.save_xy(X, y, st.iter_number)
-
         st_, fin = 0, X.shape[0] - 1
         X_train, X_test = X[st_:fin, :], X[fin : fin + 1, :]
         y_train, _ = y[st_:fin], y[fin : fin + 1]
@@ -124,6 +122,7 @@ class SimEngine:
         ):
             model_f = AimodelFactory(pdr_ss.aimodel_ss)
             self.model = model_f.build(X_train, ytrue_train, y_train, y_thr)
+            self.xycsv_mgr.save_xy(X, y, st.iter_number)
 
         # current time
         recent_ut = UnixTimeMs(int(mergedohlcv_df["timestamp"].to_list()[-1]))

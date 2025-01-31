@@ -13,14 +13,15 @@ log = logging.getLogger("xycsv")
 class XycsvMgr:
     """Save X,y to disk and load again"""
 
-    def __init__(self, xy_dir: str, runid: int):
+    def __init__(self, xy_dir: str, runid: str):
         self.xy_dir = xy_dir
         self.runid = runid
-        self.saved_iters = []
+        self.saved_iters: list[int] = []
 
     @enforce_types
-    def save_xy(self, X: np.ndarray, y: np.ndarray, iter_number: int) \
-            -> Tuple[str,str]:
+    def save_xy(
+        self, X: np.ndarray, y: np.ndarray, iter_number: int
+    ) -> Tuple[str, str]:
         if self.xy_dir == "None":
             return ("", "")
         assert X.shape[0] == y.shape[0]

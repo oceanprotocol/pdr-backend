@@ -86,6 +86,8 @@ logs/
 csvs/
 parquet_data/
 lake_data/
+xy_dir/
+xy_data/
 pdr_predictions.parquet 
 
 # pdr_backend accuracy output

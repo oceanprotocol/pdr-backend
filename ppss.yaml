@@ -34,7 +34,7 @@ predictoor_ss:
     autoregressive_n: 12 # *** no. epochs that model looks back, to predict next. For 5m, typically 1h to 1d. "spot a pattern"
     
   aimodel_ss: # used by AimodelFactory
-    approach: ClassifLinearLasso # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVM | ClassifGaussianProcess | ClassifXgboost | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrGaussianProcess | RegrXgboost | RegrConstant
+    approach: ClassifLinearRidge # ClassifLinearLasso | ClassifLinearLasso_Balanced | ClassifLinearRidge | ClassifLinearRidge_Balanced | ClassifLinearElasticNet | ClassifLinearElasticNet_Balanced | ClassifLinearSVM | ClassifGaussianProcess | ClassifXgboost | ClassifConstant | RegrLinearLS | RegrLinearLasso | RegrLinearRidge | RegrLinearElasticNet |  RegrGaussianProcess | RegrXgboost | RegrConstant
     weight_recent: None # *** 10x_5x | 10000x | None
     balance_classes: None # SMOTE | RandomOverSampler | None
     calibrate_probs: None  # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
