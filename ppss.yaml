@@ -17,9 +17,9 @@ sim_ss:
 lake_ss:
   lake_dir: lake_data
   feeds:
-    - binance BTC/USDT ETH/USDT 5m
+    - binance BTC/USDT 5m
   #    - binance BTC/USDT ETH/USDT BNB/USDT XRP/USDT ADA/USDT DOGE/USDT SOL/USDT LTC/USDT TRX/USDT DOT/USDT 5m
-  st_timestr: 2024-9-28 # starting date for data. eg "270 days ago", "2024-12-28", 2024-12-28 17:55"
+  st_timestr: 2018-1-1 # starting date for data. eg "270 days ago", "2024-12-28", 2024-12-28 17:55"
   fin_timestr: 2025-01-28 # ending date for data # ending date for data. eg "now", "2025-01-28"
 
 
@@ -39,7 +39,7 @@ predictoor_ss:
     balance_classes: None # SMOTE | RandomOverSampler | None
     calibrate_probs: None  # CalibratedClassifierCV_Sigmoid | CalibratedClassifierCV_Isotonic | None
     calibrate_regr: CurrentYval # CurrentYval | None
-    train_every_n_epochs: 26275
+    train_every_n_epochs: 52
 
 trader_ss:
   feed: binance BTC/USDT c 5m
