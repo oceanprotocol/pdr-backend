@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Set, Union
+from typing import List, Set, Union
 
 from enforce_typing import enforce_types
 
@@ -73,21 +73,3 @@ class ArgFeeds(List[ArgFeed]):
     @enforce_types
     def to_strs(self) -> List[str]:
         return _pack_feeds_str(self[:])
-
-    @staticmethod
-    def from_table_data(table_data: Optional[List[Dict]]) -> "ArgFeeds":
-        if not table_data:
-            return ArgFeeds([])
-
-        return ArgFeeds(
-            [
-                ArgFeed(
-                    pair=row["pair"],
-                    contract=row["contract"],
-                    exchange=row["source"],
-                    timeframe=row["timeframe"],
-                    threshold=row.get("threshold"),
-                )
-                for row in table_data
-            ]
-        )

@@ -1,8 +1,3 @@
-<!--
-Copyright 2024 Ocean Protocol Foundation
-SPDX-License-Identifier: Apache-2.0
--->
-
 # Dependency Management
 
 This is a document for devs to understand how dependencies are managed in the `pdr-backend` project.
@@ -14,9 +9,6 @@ It also serves users who want to understand any issues and caveats in the instal
 
 For more details, see the [the pytest-asyncio changelog](https://pytest-asyncio.readthedocs.io/en/latest/reference/changelog.html#id1), under Known Issues.
 The library itself recommends using version 0.21 until the issue is resolved.
-
-- `web3` is frozen at version 6.20.2. This is because of external dependencies with Barge and transactions. We are currently working on a solution to upgrade to the latest version.
-More details can be found [here](https://github.com/oceanprotocol/pdr-backend/issues/1592) in the issue.
 
 ## For new dependencies: Types Management
 
@@ -59,11 +51,6 @@ However, we do supress some errors in `pytest.ini`.
 These are due to the nature of the pytest tests and are not expected to be resolved.
 
 ### "Temporary" suppressions: check and remove
-
-#### Warnings related to selenium/dash-testing
-- `ignore:.*HTTPResponse.getheader\(\) is deprecated.*` -> due to usage of getheader in selenium
-
-If you upgrade selenium or dash[testing], you should check if these warnings are still present and remove the ignore statement in `pytest.ini` if they are not.
 
 #### Warnings related to plotly
 - `ignore:.*setDaemon\(\) is deprecated, set the daemon attribute instead.*:DeprecationWarning` -> due to usage of `kaleido` and `plotly`

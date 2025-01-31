@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+import pstats
+from pstats import SortKey
+
+# settings
+n_lines_show = 20 # how many most-significant lines to show
+
+# actual work
+p = pstats.Stats('profile.stats')
+
+# SortKey.CUMULATIVE: sort cumulative time in a function
+p.sort_stats(SortKey.CUMULATIVE).print_stats(n_lines_show)

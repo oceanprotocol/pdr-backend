@@ -1,8 +1,3 @@
-<!--
-Copyright 2024 Ocean Protocol Foundation
-SPDX-License-Identifier: Apache-2.0
--->
-
 # VPS Backend Dev
 
 This README shows how to
@@ -133,85 +128,6 @@ git clone https://github.com/oceanprotocol/barge
 cd barge
 ```
 
-## 3. In VPS, Run Predictoor Barge
-
-(If needed) SSH into VPS console:
-
-```console
-ssh -i ~/Desktop/myKey.pem azureuser@4.245.224.119
-# or
-ssh -i ~/Desktop/myKey.pem azureuser@74.234.16.165
-```
-
-In VPS console:
-
-```console
-# cleanup past barge
-cd ~/code/barge
-docker stop $(docker ps -a -q)
-./cleanup.sh
-rm -rf ~/.ocean
-docker system prune -a -f --volumes
-
-# run barge...
-# set ganache block time to 5 seconds, try increasing this value if barge is lagging
-export GANACHE_BLOCKTIME=5
-
-# pick just OPTION 1 or 2 below, depending on your goals
-
-# OPTION 1: for predictoor bot: run barge with all bots except predictoor. (Use this your first time through)
-./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph --with-pdr-trueval --with-pdr-trader --with-pdr-publisher --with-pdr-dfbuyer
-
-# OR, OPTION 2: for unit testing: run barge with just predictoor contracts, queryable, but no agents. (Use this for step 5 - unit tests)
-./start_ocean.sh --no-provider --no-dashboard --predictoor --with-thegraph
-```
-
-Track progress until the addresses are published:
-
-- open a new console
-- ssh into the VPS
-- then: `docker logs -f ocean_ocean-contracts_1`. Monitor until it says it's published.
-- then: `Ctrl-C`, and confirm via: `cat .ocean/ocean-contracts/artifacts/address.json |grep dev`. It should give one line.
-
-Then, copy VPS' `address.json` file to local. In local console:
-
-```console
-cd
-
-# OPTION 1: for predictoor bot
-scp -i ~/Desktop/myKey.pem azureuser@4.245.224.119:.ocean/ocean-contracts/artifacts/address.json barge-predictoor-bot.address.json
-
-# OR, OPTION 2: for unit testing
-scp -i ~/Desktop/myKey.pem azureuser@74.234.16.165:.ocean/ocean-contracts/artifacts/address.json barge-pytest.address.json
-```
-
-We give the address file a unique name, vs just "address.json". This keeps it distinct from the address file for _second_ Barge VM we run for pytest (details below).
-
-Confirm that `barge-predictoor-bot.address.json` has a "development" entry. In local console:
-
-```console
-grep development ~/barge-predictoor-bot.address.json
-# or
-grep development ~/barge-pytest.address.json
-```
-
-It should return:
-
-```text
-  "development": {
-```
-
-If it returns nothing, then contracts have not yet been deployed to ganache. It's either (i) you need to wait longer (ii) Barge had an issue and you need to restart it or debug.
-
-Further debugging:
-
-- List live docker processes: `docker ps`
-- List all docker processes: `docker ps -a`
-- List names of processes: `docker ps -a | cut -c 347-`. It lists `ocean_pdr-publisher_1`, `ocean_ocean-contracts_1`, `ocean_pdr-publisher_1`, ..
-- See log for publishing Ocean contracts: `docker logs ocean_ocean-contracts_1`. With realtime update: `docker logs -f ocean_ocean-contracts_1`
-- See log for publishing prediction feeds: `docker logs ocean_pdr-publisher_1`. With realtime update: `docker logs -f ocean_pdr-publisher_1`
-- Get detailed info about pdr-publisher image: `docker inspect ocean_pdr-publisher_1`
-
 ## 4. Locally, Run Predictoor Bot (OPTION 1)
 
 ### Set envvars
@@ -238,20 +154,20 @@ cp ppss.yaml my_ppss.yaml
 In `my_ppss.yaml` file, in `web3_pp` -> `development` section:
 
 - change the urls and addresses as needed to reflect your VPS
-- including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/barge-predictoor-bot.address.json|grep Ocean|sed -e 's/.*0x/export STAKE_TOKEN=0x/'| sed -e 's/",//'`. (Or get the value from `~/barge-predictoor-bot.address.json`, in `"development"` -> `"Ocean"` entry.)
 
-### Run pdr bot
 
-Then, run a bot with modeling-on-the fly (approach 2). In console:
+### Run trader bot
+
+In console:
 
 ```console
-pdr predictoor my_ppss.yaml development
+pdr trader my_ppss.yaml livemock
 ```
 
 Or, to be fancier: (a) add `nohup` so that the run keeps going if the ssh session closes, and (b) output to out.txt (c) observe output 
 ```console
 # start bot
-nohup pdr predictoor my_ppss.yaml development 1>out.txt 2>&1 &
+nohup pdr trader my_ppss.yaml livemock 1>out.txt 2>&1 &
 
 # observe output
 tail -f out.txt
@@ -259,49 +175,9 @@ tail -f out.txt
 
 Your bot is running, congrats! Sit back and watch it in action. It will loop continuously.
 
-- It has behavior to maximize accuracy without missing submission deadlines, as follows. 60 seconds before predictions are due, it will build a model then submit a prediction. It will repeat submissions every few seconds until the deadline.
-- It does this for every 5-minute epoch.
+You can track at finer resolution by writing more logs to the code.
 
-(You can track at finer resolution by writing more logs to the [code](../pdr_backend/predictoor/approach3/predictoor_agent3.py), or [querying Predictoor subgraph](subgraph.md).)
-
-## 5. Locally, Run Tests (OPTION 2)
-
-### Set up a second VPS / Barge
-
-In steps 2 & 3 above, we had set up a _first_ VPS & Barge, for predictoor bot.
-
-- Assume its IP address is 4.245.224.119
-
-Now, repeat 2 & 3 above, to up a _second_ VPS & Barge, for local testing.
-
-- Give it the same key as the first barge.
-- Assume its IP address is 74.234.16.165
-- The "OR" options in sections 2 above use this second IP address. Therefore you can go through the flow with simple copy-and-pastes.
-
-### Set envvars
-
-In local console:
-
-```console
-# set up virtualenv (if needed)
-cd ~/code/pdr-backend
-source venv/bin/activate
-export PATH=$PATH:.
-
-# same private key as 'run predictoor bot'
-export PRIVATE_KEY="0xc594c6e5def4bab63ac29eed19a134c130388f74f019bc74b8f4389df2837a58" # addr for key=0xc594.. is 0xe2DD09d719Da89e5a3D0F2549c7E24566e947260
-```
-
-### Set PPSS
-
-Whereas most READMEs copy `ppss.yaml` to `my_ppss.yaml`, for development we typically want to operate directly on the original one.
-
-In `ppss.yaml` file, in `web3_pp` -> `barge-pytest` section: (note the different barge section)
-
-- change the urls and addresses as needed to reflect your VPS
-- including: set the `stake_token` value to the output of the following: `grep --after-context=10 development ~/barge-pytest.address.json|grep Ocean|sed -e 's/.*0x/stake_token: \"0x/'| sed -e 's/",//'`. (Or get the value from `~/barge-pytest.address.json`, in `"development"` -> `"Ocean"` entry.)
-
-### Run tests
+## Locally, Run tests
 
 In work console, run tests:
 
@@ -314,9 +190,6 @@ pytest pdr_backend/util/test_noganache/test_util_constants.py::test_util_constan
 
 # run all tests in a file
 pytest pdr_backend/util/test_noganache/test_util_constants.py -s
-
-# run a single test that flexes network connection
-pytest pdr_backend/util/test_ganache/test_core_accounts.py::test_fund_accounts -s
 
 # run all regular tests; see details on pytest markers to select specific suites
 pytest
@@ -333,11 +206,4 @@ pylint *
 
 # auto-fix some pylint complaints like whitespace
 black ./
-```
-
-Check code coverage:
-
-```console
-coverage run --omit="*test*" -m pytest # Run all. For subset, add eg: pdr_backend/lake
-coverage report # show results
 ```

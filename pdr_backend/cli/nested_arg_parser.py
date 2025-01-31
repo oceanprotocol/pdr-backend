@@ -3,8 +3,6 @@ import ast
 
 from enforce_typing import enforce_types
 
-from pdr_backend.ppss.ppss import PPSS
-
 
 @enforce_types
 class NestedArgParser(argparse.ArgumentParser):
@@ -21,13 +19,6 @@ class NestedArgParser(argparse.ArgumentParser):
                 key, eq, value = arg[2:].partition("=")
                 if eq:  # Only proceed if '=' is found
                     self._process_nested_arg(key, value)
-
-        if hasattr(namespace, "PPSS_FILE") and hasattr(namespace, "NETWORK"):
-            namespace.PPSS = PPSS(
-                yaml_filename=namespace.PPSS_FILE,
-                network=namespace.NETWORK,
-                nested_override_args=self.nested_args,
-            )
 
         return namespace, self.nested_args
 

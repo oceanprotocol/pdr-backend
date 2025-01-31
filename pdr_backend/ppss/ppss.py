@@ -1,25 +1,17 @@
 import os
 import tempfile
-from typing import Optional, Tuple
+from typing import Optional
 
 import yaml
 import yaml.constructor
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
-from pdr_backend.ppss.dfbuyer_ss import DFBuyerSS
-from pdr_backend.ppss.lake_ss import LakeSS
-from pdr_backend.ppss.multisim_ss import MultisimSS
-from pdr_backend.ppss.payout_ss import PayoutSS
-from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
-from pdr_backend.ppss.publisher_ss import PublisherSS
-from pdr_backend.ppss.sim_ss import SimSS
-from pdr_backend.ppss.topup_ss import TopupSS
-from pdr_backend.ppss.trader_ss import TraderSS
-from pdr_backend.ppss.trueval_ss import TruevalSS
 from pdr_backend.ppss.exchange_mgr_ss import ExchangeMgrSS
-from pdr_backend.ppss.web3_pp import Web3PP
-from pdr_backend.subgraph.subgraph_feed import SubgraphFeed, mock_feed
+from pdr_backend.ppss.lake_ss import LakeSS
+from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
+from pdr_backend.ppss.sim_ss import SimSS
+from pdr_backend.ppss.trader_ss import TraderSS
 from pdr_backend.util.dictutil import recursive_update
 
 
@@ -30,7 +22,6 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
         self,
         yaml_filename: Optional[str] = None,
         yaml_str: Optional[str] = None,
-        network: Optional[str] = None,  # eg "development", "sapphire-testnet"
         nested_override_args: Optional[dict] = None,
         d: Optional[dict] = None,
     ):
@@ -47,25 +38,16 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
           - pass in 'yaml_filename' to load from a yaml file, or
           - pass in 'yaml_str' for contents like a yaml file
             (And optionally override some params with nested_override args)
-
-          Whether direct or indirect, 'network' can be input (or default used).
         """
         # get constructor dict 'd'
         if d is None:
             d = self.constructor_dict(yaml_filename, yaml_str, nested_override_args)
 
         # fill from constructor dict 'd'
+        self.sim_ss = SimSS(d["sim_ss"])  # type: ignore
         self.lake_ss = LakeSS(d["lake_ss"])
         self.predictoor_ss = PredictoorSS(d["predictoor_ss"])
         self.trader_ss = TraderSS(d["trader_ss"])
-        self.sim_ss = SimSS(d["sim_ss"])  # type: ignore
-        self.multisim_ss = MultisimSS(d["multisim_ss"])
-        self.publisher_ss = PublisherSS(d["publisher_ss"], network)
-        self.trueval_ss = TruevalSS(d["trueval_ss"])
-        self.dfbuyer_ss = DFBuyerSS(d["dfbuyer_ss"])
-        self.payout_ss = PayoutSS(d["payout_ss"])
-        self.web3_pp = Web3PP(d["web3_pp"], network)
-        self.topup_ss = TopupSS(d["topup_ss"])  # type: ignore
         self.exchange_mgr_ss = ExchangeMgrSS(d["exchange_mgr_ss"])
 
         # postconditions
@@ -157,14 +139,12 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
     def __str__(self):
         s = ""
+        s += f"sim_ss={self.sim_ss}\n"
         s += f"lake_ss={self.lake_ss}\n"
-        s += f"dfbuyer_ss={self.dfbuyer_ss}\n"
-        s += f"payout_ss={self.payout_ss}\n"
         s += f"predictoor_ss={self.predictoor_ss}\n"
         s += f"trader_ss={self.trader_ss}\n"
-        s += f"sim_ss={self.sim_ss}\n"
-        s += f"trueval_ss={self.trueval_ss}\n"
-        s += f"web3_pp={self.web3_pp}\n"
+        s += f"exchange_mgr_ss={self.exchange_mgr_ss}\n"
+
         return s
 
 
@@ -173,43 +153,15 @@ class PPSS:  # pylint: disable=too-many-instance-attributes
 
 
 @enforce_types
-def mock_feed_ppss(
-    timeframe,
-    exchange,
-    pair,
-    network: Optional[str] = None,
-    tmpdir=None,
-    pred_submitter_mgr: Optional[str] = None,
-) -> Tuple[SubgraphFeed, PPSS]:
-    feed = mock_feed(timeframe, exchange, pair)
-    ppss = mock_ppss(
-        [
-            {
-                "train_on": f"{exchange} {pair} c {timeframe}",
-                "predict": f"{exchange} {pair} c {timeframe}",
-            }
-        ],
-        network,
-        tmpdir,
-        pred_submitter_mgr=pred_submitter_mgr,
-    )
-    return (feed, ppss)
-
-
-@enforce_types
 def mock_ppss(
     feedset_list: list,
-    network: Optional[str] = None,
     tmpdir: Optional[str] = None,
     st_timestr: Optional[str] = "2023-06-18",
     fin_timestr: Optional[str] = "2023-06-21",
-    pred_submitter_mgr: Optional[str] = None,
-    my_addresses: Optional[list] = None,
 ) -> PPSS:
-    network = network or "development"
     yaml_str = fast_test_yaml_str(tmpdir)
 
-    ppss = PPSS(yaml_str=yaml_str, network=network)
+    ppss = PPSS(yaml_str=yaml_str)
     predict_train_feedsets = PredictTrainFeedsets.from_list_of_dict(feedset_list)
     if tmpdir is None:
         tmpdir = tempfile.mkdtemp()
@@ -221,17 +173,12 @@ def mock_ppss(
             "lake_dir": os.path.join(tmpdir, "lake_data"),
             "st_timestr": st_timestr,
             "fin_timestr": fin_timestr,
-            "export_db_data_to_parquet_files": True,
-            "seconds_between_parquet_exports": 3600,
-            "number_of_files_after_which_re_export_db": 100,
         }
     )
 
     assert hasattr(ppss, "predictoor_ss")
     d = predictoor_ss_test_dict(
         feedset_list=feedset_list,
-        pred_submitter_mgr=pred_submitter_mgr,
-        my_addresses=my_addresses,
     )
     ppss.predictoor_ss = PredictoorSS(d)
 
@@ -250,20 +197,6 @@ def mock_ppss(
                     "defaultType": "spot",
                 },
             },
-        }
-    )
-
-    assert hasattr(ppss, "trueval_ss")
-    assert "feeds" in ppss.trueval_ss.d  # type: ignore[attr-defined]
-    ppss.trueval_ss.d["feeds"] = predict_train_feedsets.feed_strs  # type: ignore[attr-defined]
-
-    assert hasattr(ppss, "dfbuyer_ss")
-    ppss.dfbuyer_ss = DFBuyerSS(
-        {
-            "feeds": predict_train_feedsets.feed_strs,
-            "batch_size": 20,
-            "consume_interval_seconds": 86400,
-            "weekly_spending_limit": 37000,
         }
     )
 

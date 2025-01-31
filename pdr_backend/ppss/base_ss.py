@@ -1,12 +1,11 @@
 import copy
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import List, Optional, Set, Tuple
 
 from enforce_typing import enforce_types
 
 from pdr_backend.cli.arg_feed import ArgFeed
 from pdr_backend.cli.arg_feeds import ArgFeeds
 from pdr_backend.cli.arg_pair import ArgPair
-from pdr_backend.subgraph.subgraph_feed import SubgraphFeed
 
 
 class MultiFeedMixin:
@@ -73,25 +72,6 @@ class MultiFeedMixin:
     def exchange_pair_tups(self) -> Set[Tuple[str, str]]:
         """Return set of unique (exchange_str, pair_str) tuples"""
         return set((str(feed.exchange), str(feed.pair)) for feed in self.feeds)
-
-    @enforce_types
-    def filter_feeds_from_candidates(
-        self, cand_feeds: Dict[str, SubgraphFeed]
-    ) -> Dict[str, SubgraphFeed]:
-        result: Dict[str, SubgraphFeed] = {}
-
-        allowed_tups = [
-            (str(feed.exchange), str(feed.pair), str(feed.timeframe))
-            for feed in self.feeds
-        ]
-
-        for sg_key, sg_feed in cand_feeds.items():
-            assert isinstance(sg_feed, SubgraphFeed)
-
-            if (sg_feed.source, sg_feed.pair, sg_feed.timeframe) in allowed_tups:
-                result[sg_key] = sg_feed
-
-        return result
 
 
 class SingleFeedMixin:
@@ -165,21 +145,3 @@ class SingleFeedMixin:
     def timeframe_m(self) -> float:
         """Returns timeframe, in minutes"""
         return self.feed.timeframe.m if self.feed.timeframe else 0
-
-    @enforce_types
-    def get_feed_from_candidates(
-        self, cand_feeds: Dict[str, SubgraphFeed]
-    ) -> Union[None, SubgraphFeed]:
-        allowed_tup = (
-            self.timeframe_str,
-            str(self.feed.exchange),
-            self.feed.pair,
-        )
-
-        for feed in cand_feeds.values():
-            assert isinstance(feed, SubgraphFeed)
-            feed_tup = (feed.timeframe, feed.source, feed.pair)
-            if feed_tup == allowed_tup:
-                return feed
-
-        return None

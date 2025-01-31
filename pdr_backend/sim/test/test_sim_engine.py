@@ -1,9 +1,6 @@
 import os
 
-import pytest
-from dash import Dash
 from enforce_typing import enforce_types
-from selenium.common.exceptions import NoSuchElementException  # type: ignore[import-untyped]
 
 from pdr_backend.aimodel.aimodel import Aimodel
 from pdr_backend.cli.predict_train_feedsets import PredictTrainFeedsets
@@ -11,16 +8,14 @@ from pdr_backend.ppss.lake_ss import LakeSS, lake_ss_test_dict
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
 from pdr_backend.ppss.predictoor_ss import PredictoorSS, predictoor_ss_test_dict
 from pdr_backend.ppss.sim_ss import SimSS, sim_ss_test_dict
-from pdr_backend.sim.dash_plots.callbacks import get_callbacks
-from pdr_backend.sim.dash_plots.view_elements import get_layout
 from pdr_backend.sim.sim_engine import SimEngine
 
 
 @enforce_types
 # pylint: disable=unused-argument
-def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
+def test_sim_engine(tmpdir):
     s = fast_test_yaml_str(tmpdir)
-    ppss = PPSS(yaml_str=s, network="development")
+    ppss = PPSS(yaml_str=s)
 
     # set feeds; we'll use them below
     feedset_list = [
@@ -53,7 +48,7 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
 
     # sim ss
     log_dir = os.path.join(tmpdir, "logs")
-    d = sim_ss_test_dict(log_dir, test_n=5)
+    d = sim_ss_test_dict(log_dir, test_n=5, xy_dir="xy_dir")
     ppss.sim_ss = SimSS(d)
 
     # go
@@ -64,39 +59,12 @@ def test_sim_engine(tmpdir, check_chromedriver, dash_duo):
     sim_engine.run()
     assert isinstance(sim_engine.model, Aimodel)
 
-    app = Dash("pdr_backend.sim.sim_dash")
-    app.config["suppress_callback_exceptions"] = True
-    app.run_id = sim_engine.multi_id
-    app.layout = get_layout()
-    get_callbacks(app)
-
-    dash_duo.start_server(app)
-    dash_duo.wait_for_text_to_equal(
-        "#sim_state_text", f"Simulation ID: {sim_engine.multi_id}", timeout=100
-    )
-
-    # default visibility: shows figure from first tab
-    dash_duo.find_element("#pdr_profit_vs_time")
-
-    # does not show figures from other tabs
-    with pytest.raises(NoSuchElementException):
-        dash_duo.find_element("#trader_profit_vs_time")
-
-    with pytest.raises(NoSuchElementException):
-        dash_duo.find_element("#model_performance_vs_time")
-
-    tabs = {
-        "predictor_profit_tab": ["pdr_profit_vs_time", "pdr_profit_vs_ptrue"],
-        "trader_profit_tab": ["trader_profit_vs_time", "trader_profit_vs_ptrue"],
-        "model_performance_tab": ["model_performance_vs_time"],
-        "model_response_tab": ["aimodel_response", "aimodel_varimps"],
-        "model_residuals_tab": ["prediction_residuals_other"],
-    }
-
-    for tab_name, figures in tabs.items():
-        # when tab is clicked, it shows its figures
-        tab = dash_duo.find_element(f".{tab_name}")
-        tab.click()
-        assert "tab--selected" in tab.get_attribute("class")
-        for figure_name in figures:
-            dash_duo.find_element(f"#{figure_name}")
+    # load some X,y data after
+    assert ppss.sim_ss.xy_dir != "None"
+    mgr = sim_engine.xycsv_mgr
+    assert os.path.exists(mgr.abs_xy_dir)
+    assert os.path.exists(mgr.abs_run_dir)
+    assert len(mgr.saved_iters) > 0
+    X, y = sim_engine.xycsv_mgr.load_xy(mgr.saved_iters[-1])
+    assert len(X.shape) == 2 and len(y.shape) == 1
+    assert X.shape[0] == y.shape[0]
