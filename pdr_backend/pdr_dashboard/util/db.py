@@ -361,11 +361,6 @@ class AppDataManager:
         Returns:
             list: List of predictions data.
         """
-        # Refresh the timestamps
-        self.min_timestamp, self.max_timestamp = (
-            self.get_first_and_last_slot_timestamp()
-        )
-
         # Start constructing the SQL query
         query = f"""SELECT * FROM
                 {tbl_parquet_path(self.lake_dir, BronzePrediction)}
@@ -408,11 +403,6 @@ class AppDataManager:
 
     @enforce_types
     def feeds_metrics(self) -> dict[str, Union[int, float]]:
-        # Refresh the timestamps
-        self.min_timestamp, self.max_timestamp = (
-            self.get_first_and_last_slot_timestamp()
-        )
-
         query_feeds = f"""
             SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
             FROM {tbl_parquet_path(self.lake_dir, Prediction)}
@@ -462,10 +452,6 @@ class AppDataManager:
 
     @enforce_types
     def predictoors_metrics(self) -> dict[str, Union[int, float]]:
-        # Refresh the timestamps
-        self.min_timestamp, self.max_timestamp = (
-            self.get_first_and_last_slot_timestamp()
-        )
 
         query_predictoors_metrics = f"""
                 SELECT
@@ -535,6 +521,11 @@ class AppDataManager:
 
     @enforce_types
     def refresh_feeds_data(self) -> None:
+        # Refresh the timestamps
+        self.min_timestamp, self.max_timestamp = (
+            self.get_first_and_last_slot_timestamp()
+        )
+
         self.feeds_metrics_data = self.feeds_metrics()
         self.feeds_payout_stats = self._init_feed_payouts_stats()
         self.feeds_subscriptions = self._init_feed_subscription_stats()
@@ -546,6 +537,11 @@ class AppDataManager:
 
     @enforce_types
     def refresh_predictoors_data(self) -> None:
+        # Refresh the timestamps
+        self.min_timestamp, self.max_timestamp = (
+            self.get_first_and_last_slot_timestamp()
+        )
+
         self.predictoors_metrics_data = self.predictoors_metrics()
         self.predictoors_data = self._init_predictoor_payouts_stats()
 
@@ -729,6 +725,11 @@ class AppDataManager:
         return (columns, hidden_columns), data
 
     def get_feeds_for_favourite_predictoors(self, feed_data, predictoor_addrs):
+        # Refresh the timestamps
+        self.min_timestamp, self.max_timestamp = (
+            self.get_first_and_last_slot_timestamp()
+        )
+
         feed_ids = self.feed_ids_based_on_predictoors(predictoor_addrs)
 
         if not feed_ids:
