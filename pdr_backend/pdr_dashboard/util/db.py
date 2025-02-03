@@ -361,6 +361,10 @@ class AppDataManager:
         Returns:
             list: List of predictions data.
         """
+        # Refresh the timestamps
+        self.min_timestamp, self.max_timestamp = (
+            self.get_first_and_last_slot_timestamp()
+        )
 
         # Start constructing the SQL query
         query = f"""SELECT * FROM
@@ -404,6 +408,11 @@ class AppDataManager:
 
     @enforce_types
     def feeds_metrics(self) -> dict[str, Union[int, float]]:
+        # Refresh the timestamps
+        self.min_timestamp, self.max_timestamp = (
+            self.get_first_and_last_slot_timestamp()
+        )
+
         query_feeds = f"""
             SELECT COUNT(DISTINCT(contract, pair, timeframe, source))
             FROM {tbl_parquet_path(self.lake_dir, Prediction)}
@@ -453,6 +462,11 @@ class AppDataManager:
 
     @enforce_types
     def predictoors_metrics(self) -> dict[str, Union[int, float]]:
+        # Refresh the timestamps
+        self.min_timestamp, self.max_timestamp = (
+            self.get_first_and_last_slot_timestamp()
+        )
+
         query_predictoors_metrics = f"""
                 SELECT
                     COUNT(DISTINCT(user)) AS predictoors,
