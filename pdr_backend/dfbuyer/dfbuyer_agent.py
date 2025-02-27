@@ -234,7 +234,7 @@ class DFBuyerAgent:
         return prices
 
     def _get_consume_so_far(self, ts: int) -> Dict[str, float]:
-        week_start = (math.floor(ts / WEEK)) * WEEK - 3 * 60 * 60
+        week_start = (math.floor(ts / WEEK)) * WEEK - 3 * 60 * 60 + 24 * 60 * 60 # start from friday / temporarily
         consume_so_far = get_consume_so_far_per_contract(
             self.config.subgraph_url,
             self.config.web3_config.owner,
