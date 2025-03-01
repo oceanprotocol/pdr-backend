@@ -245,7 +245,7 @@ class DFBuyerAgent:
 
     def _get_expected_amount_per_feed(self, ts: int):
         amount_per_feed_per_interval = self.config.amount_per_interval / len(self.feeds)
-        week_start = (math.floor(ts / WEEK)) * WEEK
+        week_start = (math.floor(ts / WEEK)) * WEEK + 24 * 60 * 60
         time_passed = ts - week_start
 
         # find out how many intervals has passed
