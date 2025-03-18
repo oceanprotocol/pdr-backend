@@ -7,6 +7,7 @@ name: Topup accounts
 on:
   schedule:
     - cron: "0 * * * *"
+  workflow_dispatch:
 
 jobs:
   topup-mainnet:
