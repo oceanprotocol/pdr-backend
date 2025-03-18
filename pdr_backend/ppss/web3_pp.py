@@ -228,6 +228,9 @@ class Web3PP(StrMixin):
         if self.network in d:  # eg "development", "oasis_sapphire"
             return d[self.network]
 
+        if self.network == "sapphire-mainnet":
+            return d["oasis_sapphire"]
+
         return None
 
     @property
