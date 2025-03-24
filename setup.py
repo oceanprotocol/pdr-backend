@@ -27,7 +27,7 @@ install_requirements = [
     "polars==1.21.0",
     "polars[timezone]",
     "pyarrow==19.0.0",
-    "pylint==3.3.3",
+    "pylint==3.3.6",
     "pytest",
     "pytest-asyncio==0.21.1",
     "pytest-env",
