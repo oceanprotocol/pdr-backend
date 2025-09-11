@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Any
 from datetime import datetime, timedelta, timezone
 from enforce_typing import enforce_types
 
@@ -19,10 +19,10 @@ def query_pending_payouts(
     addr = addr.lower()
 
     # payouts in "Paying", "Canceled" state
-    query1_results = []
+    query1_results: List[Dict[str, Any]] = []
 
     # payouts older than 3 days and pending
-    query2_results = []
+    query2_results: List[Dict[str, Any]] = []
 
     today_utc = datetime.now(timezone.utc).date()
     target_day = today_utc - timedelta(days=3)
@@ -30,7 +30,9 @@ def query_pending_payouts(
         target_day, datetime.min.time(), tzinfo=timezone.utc
     ).timestamp()
 
-    def _fetch_all_pages(subgraph_url, addr, slot_filter, chunk_size):
+    def _fetch_all_pages(
+        subgraph_url, addr, slot_filter, chunk_size
+    ) -> List[Dict[str, Any]]::
         """
         slot_filter: string inside slot_{ ... } e.g.
           'status_in: ["Paying","Canceled"]'
