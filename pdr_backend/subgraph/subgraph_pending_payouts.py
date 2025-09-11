@@ -11,7 +11,9 @@ logger = logging.getLogger("subgraph")
 
 
 @enforce_types
-def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[UnixTimeS]]:
+def query_pending_payouts(
+    subgraph_url: str, addr: str, query_old=False
+) -> Dict[str, List[UnixTimeS]]:
     chunk_size = 1000
     offset = 0
     pending_slots: Dict[str, List[UnixTimeS]] = {}
@@ -20,7 +22,6 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[UnixTi
     query1_results = []
     query2_results = []
 
-    
     today_utc = datetime.now(timezone.utc).date()
     target_day = today_utc - timedelta(days=3)
     ts_end = target_day.timestamp()
@@ -50,11 +51,16 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[UnixTi
                 }
               }
             }
-            """ % (addr, slot_filter, chunk_size, offset)
-    
+            """ % (
+                addr,
+                slot_filter,
+                chunk_size,
+                offset,
+            )
+
             if logging_has_stdout():
                 print(".", end="", flush=True)
-    
+
             try:
                 result = query_subgraph(subgraph_url, query)
                 if "data" not in result or not result["data"]:
@@ -63,7 +69,7 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[UnixTi
                 page = result["data"].get("predictPredictions", [])
                 if not page:
                     break
-    
+
                 results.extend(page)
                 offset += len(page)
                 if len(page) < chunk_size:
@@ -71,7 +77,7 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[UnixTi
             except Exception as e:
                 logger.warning("An error occured: %s", e)
                 break
-    
+
         return results
 
     query1_results = _fetch_all_pages(
@@ -80,12 +86,16 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[UnixTi
         slot_filter='status_in: ["Paying", "Canceled"]',
         chunk_size=chunk_size,
     )
-    query2_results = _fetch_all_pages(
-        subgraph_url=subgraph_url,
-        addr=addr,
-        slot_filter='status_in: ["Paying", "Canceled", "Pending"], slot_lt: %d' % (ts_end),
-        chunk_size=chunk_size,
-    )
+
+    query2_results = []
+    if query_old:
+        query2_results = _fetch_all_pages(
+            subgraph_url=subgraph_url,
+            addr=addr,
+            slot_filter='status_in: ["Paying", "Canceled", "Pending"], slot_lt: %d'
+            % (ts_end),
+            chunk_size=chunk_size,
+        )
 
     merged = query1_results + query2_results
     for prediction in merged:
