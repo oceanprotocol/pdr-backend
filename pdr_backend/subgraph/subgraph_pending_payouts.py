@@ -24,7 +24,9 @@ def query_pending_payouts(
 
     today_utc = datetime.now(timezone.utc).date()
     target_day = today_utc - timedelta(days=3)
-    ts_end = datetime.combine(target_day, datetime.min.time(), tzinfo=timezone.utc).timestamp()
+    ts_end = datetime.combine(
+        target_day, datetime.min.time(), tzinfo=timezone.utc
+    ).timestamp()
 
     def _fetch_all_pages(subgraph_url, addr, slot_filter, chunk_size):
         """
