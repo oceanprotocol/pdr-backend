@@ -15,7 +15,6 @@ def query_pending_payouts(
     subgraph_url: str, addr: str, query_old=False
 ) -> Dict[str, List[UnixTimeS]]:
     chunk_size = 1000
-    offset = 0
     pending_slots: Dict[str, List[UnixTimeS]] = {}
     addr = addr.lower()
 
