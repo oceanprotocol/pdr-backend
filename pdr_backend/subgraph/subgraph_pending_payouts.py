@@ -23,7 +23,7 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[UnixTi
     
     today_utc = datetime.now(timezone.utc).date()
     target_day = today_utc - timedelta(days=3)
-    day_start = target_day.timestamp()
+    ts_end = target_day.timestamp()
 
     def _fetch_all_pages(subgraph_url, addr, slot_filter, chunk_size):
         """
@@ -83,7 +83,7 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[UnixTi
     query2_results = _fetch_all_pages(
         subgraph_url=subgraph_url,
         addr=addr,
-        slot_filter='status_in: ["Paying", "Canceled", "Pending"], slot_gte: %d, slot_lt: %d' % (day_start, day_end),
+        slot_filter='status_in: ["Paying", "Canceled", "Pending"], slot_lt: %d' % (ts_end),
         chunk_size=chunk_size,
     )
 
