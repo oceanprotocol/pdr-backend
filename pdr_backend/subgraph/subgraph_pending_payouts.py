@@ -98,7 +98,7 @@ def query_pending_payouts(
         query2_results = _fetch_all_pages(
             subgraph_url=subgraph_url,
             addr=addr,
-            slot_filter='status_in: ["Paying", "Canceled", "Pending"], slot_lt: %d'
+            slot_filter='status_in: ["Pending"], slot_lt: %d'
             % (ts_end),
             chunk_size=chunk_size,
         )
