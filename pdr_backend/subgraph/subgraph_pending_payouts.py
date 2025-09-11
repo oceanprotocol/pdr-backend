@@ -19,7 +19,10 @@ def query_pending_payouts(
     pending_slots: Dict[str, List[UnixTimeS]] = {}
     addr = addr.lower()
 
+    # payouts in "Paying", "Canceled" state
     query1_results = []
+
+    # payouts older than 3 days and pending
     query2_results = []
 
     today_utc = datetime.now(timezone.utc).date()
