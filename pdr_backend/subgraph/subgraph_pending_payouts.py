@@ -95,7 +95,7 @@ def query_pending_payouts(
     )
 
     query2_results = []
-    if query_old:
+    if query_old_slots:
         query2_results = _fetch_subgraph_payouts(
             subgraph_url=subgraph_url,
             addr=addr,
