@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, List
-
+from datetime import datetime, timedelta, timezone
 from enforce_typing import enforce_types
 
 from pdr_backend.subgraph.core_subgraph import query_subgraph
@@ -24,7 +24,7 @@ def query_pending_payouts(
 
     today_utc = datetime.now(timezone.utc).date()
     target_day = today_utc - timedelta(days=3)
-    ts_end = target_day.timestamp()
+    ts_end = datetime.combine(target_day, datetime.min.time(), tzinfo=timezone.utc).timestamp()
 
     def _fetch_all_pages(subgraph_url, addr, slot_filter, chunk_size):
         """
