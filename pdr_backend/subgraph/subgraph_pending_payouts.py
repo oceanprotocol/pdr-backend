@@ -17,47 +17,80 @@ def query_pending_payouts(subgraph_url: str, addr: str) -> Dict[str, List[UnixTi
     pending_slots: Dict[str, List[UnixTimeS]] = {}
     addr = addr.lower()
 
-    while True:
-        query = """
-        {
-                predictPredictions(
-                    where: {user: "%s", payout: null, slot_: {status_in: ["Paying", "Canceled"]} }, first: %s, skip: %s
-                ) {
-                    id
-                    timestamp
-                    slot {
-                        id
-                        slot
-                        predictContract {
-                            id
-                        }
-                    }
+    query1_results = []
+    query2_results = []
+
+    
+    today_utc = datetime.now(timezone.utc).date()
+    target_day = today_utc - timedelta(days=3)
+    day_start = target_day.timestamp()
+
+    def _fetch_all_pages(subgraph_url, addr, slot_filter, chunk_size):
+        """
+        slot_filter: string inside slot_{ ... } e.g.
+          'status_in: ["Paying","Canceled"]'
+          or 'status_in: ["Paying","Canceled","Pending"], slot_gte: %d, slot_lt: %d' % (a,b)
+        """
+        results = []
+        offset = 0
+        while True:
+            query = """
+            {
+              predictPredictions(
+                where: { user: "%s", payout: null, slot_: { %s } },
+                first: %d,
+                skip: %d
+              ) {
+                id
+                timestamp
+                slot {
+                  id
+                  slot
+                  predictContract { id }
                 }
-        }
-        """ % (
-            addr,
-            chunk_size,
-            offset,
-        )
-        offset += chunk_size
-
-        if logging_has_stdout():
-            print(".", end="", flush=True)
-
-        try:
-            result = query_subgraph(subgraph_url, query)
-            if "data" not in result or not result["data"]:
-                logger.warning("No data in result")
+              }
+            }
+            """ % (addr, slot_filter, chunk_size, offset)
+    
+            if logging_has_stdout():
+                print(".", end="", flush=True)
+    
+            try:
+                result = query_subgraph(subgraph_url, query)
+                if "data" not in result or not result["data"]:
+                    logger.warning("No data in result")
+                    break
+                page = result["data"].get("predictPredictions", [])
+                if not page:
+                    break
+    
+                results.extend(page)
+                offset += len(page)
+                if len(page) < chunk_size:
+                    break
+            except Exception as e:
+                logger.warning("An error occured: %s", e)
                 break
-            predict_predictions = result["data"].get("predictPredictions", [])
-            if not predict_predictions:
-                break
-            for prediction in predict_predictions:
-                contract_address = prediction["slot"]["predictContract"]["id"]
-                timestamp = UnixTimeS(prediction["slot"]["slot"])
-                pending_slots.setdefault(contract_address, []).append(timestamp)
-        except Exception as e:
-            logger.warning("An error occured: %s", e)
-            break
+    
+        return results
+
+    query1_results = _fetch_all_pages(
+        subgraph_url=subgraph_url,
+        addr=addr,
+        slot_filter='status_in: ["Paying", "Canceled"]',
+        chunk_size=chunk_size,
+    )
+    query2_results = _fetch_all_pages(
+        subgraph_url=subgraph_url,
+        addr=addr,
+        slot_filter='status_in: ["Paying", "Canceled", "Pending"], slot_gte: %d, slot_lt: %d' % (day_start, day_end),
+        chunk_size=chunk_size,
+    )
+
+    merged = query1_results + query2_results
+    for prediction in merged:
+        contract_address = prediction["slot"]["predictContract"]["id"]
+        timestamp = UnixTimeS(prediction["slot"]["slot"])
+        pending_slots.setdefault(contract_address, []).append(timestamp)
 
     return pending_slots
