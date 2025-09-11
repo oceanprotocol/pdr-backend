@@ -69,7 +69,7 @@ def test_ocean_payout_test(mock_wait_until_subgraph_syncs, caplog):
         assert "Payout done" in caplog.text
 
         # Additional assertions
-        mock_query_pending_payouts.assert_called_with(mock_web3_pp.subgraph_url, "0x1")
+        mock_query_pending_payouts.assert_called_with(mock_web3_pp.subgraph_url, "0x1", True)
         print(mock_contract.get_payout.call_args_list)
         mock_contract.get_payout.assert_any_call([1, 2, 3], ["0x1"])
         mock_contract.get_payout.assert_any_call([5, 6, 7], ["0x2"])
