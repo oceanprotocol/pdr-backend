@@ -72,16 +72,16 @@ def test_query_pending_payouts_query_old():
 
     PATH = "pdr_backend.subgraph.subgraph_pending_payouts"
 
-    # Test query_old=False
+    # Test query_old_slots=False
     call_count = 0
     with patch(f"{PATH}.query_subgraph", mock_query_subgraph):
-        query_pending_payouts(subgraph_url="foo", addr="0x123", query_old=False)
+        query_pending_payouts(subgraph_url="foo", addr="0x123", query_old_slots=False)
 
     assert call_count == 1
 
-    # Test query_old=True
+    # Test query_old_slots=True
     call_count = 0
     with patch(f"{PATH}.query_subgraph", mock_query_subgraph):
-        query_pending_payouts(subgraph_url="foo", addr="0x123", query_old=True)
+        query_pending_payouts(subgraph_url="foo", addr="0x123", query_old_slots=True)
 
     assert call_count == 2
