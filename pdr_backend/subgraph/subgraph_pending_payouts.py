@@ -10,9 +10,66 @@ from pdr_backend.util.time_types import UnixTimeS
 logger = logging.getLogger("subgraph")
 
 
+def _fetch_subgraph_payouts(
+    subgraph_url: str, addr: str, slot_filter: str, chunk_size: int
+) -> List[Dict[str, Any]]:
+    """
+    slot_filter: string inside slot_{ ... } e.g.
+        'status_in: ["Paying","Canceled"]'
+        or 'status_in: ["Paying","Canceled","Pending"], slot_gte: %d, slot_lt: %d' % (a,b)
+    """
+    results = []
+    offset = 0
+    while True:
+        query = """
+        {
+            predictPredictions(
+            where: { user: "%s", payout: null, slot_: { %s } },
+            first: %d,
+            skip: %d
+            ) {
+            id
+            timestamp
+            slot {
+                id
+                slot
+                predictContract { id }
+            }
+            }
+        }
+        """ % (
+            addr,
+            slot_filter,
+            chunk_size,
+            offset,
+        )
+
+        if logging_has_stdout():
+            print(".", end="", flush=True)
+
+        try:
+            result = query_subgraph(subgraph_url, query)
+            if "data" not in result or not result["data"]:
+                logger.warning("No data in result")
+                break
+            page = result["data"].get("predictPredictions", [])
+            if not page:
+                break
+
+            results.extend(page)
+            offset += len(page)
+            if len(page) < chunk_size:
+                break
+        except Exception as e:
+            logger.warning("An error occured: %s", e)
+            break
+
+    return results
+
+
 @enforce_types
 def query_pending_payouts(
-    subgraph_url: str, addr: str, query_old=False
+    subgraph_url: str, addr: str, query_old_slots=False
 ) -> Dict[str, List[UnixTimeS]]:
     chunk_size = 1000
     pending_slots: Dict[str, List[UnixTimeS]] = {}
@@ -30,63 +87,7 @@ def query_pending_payouts(
         target_day, datetime.min.time(), tzinfo=timezone.utc
     ).timestamp()
 
-    def _fetch_all_pages(
-        subgraph_url, addr, slot_filter, chunk_size
-    ) -> List[Dict[str, Any]]:
-        """
-        slot_filter: string inside slot_{ ... } e.g.
-          'status_in: ["Paying","Canceled"]'
-          or 'status_in: ["Paying","Canceled","Pending"], slot_gte: %d, slot_lt: %d' % (a,b)
-        """
-        results = []
-        offset = 0
-        while True:
-            query = """
-            {
-              predictPredictions(
-                where: { user: "%s", payout: null, slot_: { %s } },
-                first: %d,
-                skip: %d
-              ) {
-                id
-                timestamp
-                slot {
-                  id
-                  slot
-                  predictContract { id }
-                }
-              }
-            }
-            """ % (
-                addr,
-                slot_filter,
-                chunk_size,
-                offset,
-            )
-
-            if logging_has_stdout():
-                print(".", end="", flush=True)
-
-            try:
-                result = query_subgraph(subgraph_url, query)
-                if "data" not in result or not result["data"]:
-                    logger.warning("No data in result")
-                    break
-                page = result["data"].get("predictPredictions", [])
-                if not page:
-                    break
-
-                results.extend(page)
-                offset += len(page)
-                if len(page) < chunk_size:
-                    break
-            except Exception as e:
-                logger.warning("An error occured: %s", e)
-                break
-
-        return results
-
-    query1_results = _fetch_all_pages(
+    query1_results = _fetch_subgraph_payouts(
         subgraph_url=subgraph_url,
         addr=addr,
         slot_filter='status_in: ["Paying", "Canceled"]',
@@ -95,7 +96,7 @@ def query_pending_payouts(
 
     query2_results = []
     if query_old:
-        query2_results = _fetch_all_pages(
+        query2_results = _fetch_subgraph_payouts(
             subgraph_url=subgraph_url,
             addr=addr,
             slot_filter='status_in: ["Paying", "Canceled", "Pending"], slot_lt: %d'
