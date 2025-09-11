@@ -55,15 +55,17 @@ def request_payout_batches(
 
 
 @enforce_types
-def find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss):
+def find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss, query_old=False):
     # we only need to query in one direction, since both predict on the same slots
+    # query_old is by default false to improve bot speed,
+    # running the command line argument will set it to true
     up_addr = pred_submitter_mgr.pred_submitter_up_address()
     web3_config = ppss.web3_pp.web3_config
     subgraph_url: str = ppss.web3_pp.subgraph_url
     logger.info("Starting payout")
     wait_until_subgraph_syncs(web3_config, subgraph_url)
     logger.info("Finding pending payouts")
-    pending_slots = query_pending_payouts(subgraph_url, up_addr)
+    pending_slots = query_pending_payouts(subgraph_url, up_addr, query_old)
     payout_batch_size = ppss.predictoor_ss.payout_batch_size
     shared_slots = find_shared_slots(pending_slots, payout_batch_size)
     unique_slots = count_unique_slots(shared_slots)
@@ -95,7 +97,7 @@ def do_ocean_payout(ppss: PPSS, check_network: bool = True):
     pred_submitter_mgr_addr = ppss.predictoor_ss.pred_submitter_mgr
     pred_submitter_mgr = PredSubmitterMgr(ppss.web3_pp, pred_submitter_mgr_addr)
 
-    find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss)
+    find_slots_and_payout_with_mgr(pred_submitter_mgr, ppss, True)
 
 
 @enforce_types
