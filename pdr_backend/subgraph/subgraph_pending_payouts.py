@@ -32,7 +32,7 @@ def query_pending_payouts(
 
     def _fetch_all_pages(
         subgraph_url, addr, slot_filter, chunk_size
-    ) -> List[Dict[str, Any]]::
+    ) -> List[Dict[str, Any]]:
         """
         slot_filter: string inside slot_{ ... } e.g.
           'status_in: ["Paying","Canceled"]'
