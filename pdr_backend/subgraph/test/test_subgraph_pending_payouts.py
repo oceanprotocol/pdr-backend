@@ -59,3 +59,29 @@ def test_query_pending_payouts_edge_cases():
             subgraph_url="foo",
             addr="0x123",
         )
+
+
+@enforce_types
+def test_query_pending_payouts_query_old():
+    call_count = 0
+
+    def mock_query_subgraph(subgraph_url, query):  # pylint:disable=unused-argument
+        nonlocal call_count
+        call_count += 1
+        return {"data": {"predictPredictions": []}}
+
+    PATH = "pdr_backend.subgraph.subgraph_pending_payouts"
+
+    # Test query_old_slots=False
+    call_count = 0
+    with patch(f"{PATH}.query_subgraph", mock_query_subgraph):
+        query_pending_payouts(subgraph_url="foo", addr="0x123", query_old_slots=False)
+
+    assert call_count == 1
+
+    # Test query_old_slots=True
+    call_count = 0
+    with patch(f"{PATH}.query_subgraph", mock_query_subgraph):
+        query_pending_payouts(subgraph_url="foo", addr="0x123", query_old_slots=True)
+
+    assert call_count == 2
