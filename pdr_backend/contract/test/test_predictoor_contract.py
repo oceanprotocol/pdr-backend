@@ -117,11 +117,11 @@ def test_get_trueValSubmitTimeout(feed_contract1):
 @enforce_types
 def test_submit_prediction_trueval_payout(
     feed_contract1,
-    OCEAN: Token,
+    prediction_token: Token,
 ):
     w3 = feed_contract1.config.w3
     owner_addr = feed_contract1.config.owner
-    OCEAN_before = OCEAN.balanceOf(owner_addr).to_eth()
+    OCEAN_before = prediction_token.balanceOf(owner_addr).to_eth()
     cur_epoch = feed_contract1.get_current_epoch_ts()
     soonest_ts = feed_contract1.soonest_timestamp_to_predict(cur_epoch)
     predval = True
@@ -134,7 +134,7 @@ def test_submit_prediction_trueval_payout(
     )
     assert receipt["status"] == 1
 
-    OCEAN_after = OCEAN.balanceOf(owner_addr).to_eth()
+    OCEAN_after = prediction_token.balanceOf(owner_addr).to_eth()
     assert (OCEAN_before.amt_eth - OCEAN_after.amt_eth) == approx(
         stake_amt.amt_eth, 1e-8
     )
@@ -159,7 +159,7 @@ def test_submit_prediction_trueval_payout(
 
     receipt = feed_contract1.payout(soonest_ts, wait_for_receipt=True)
     assert receipt["status"] == 1
-    OCEAN_final = OCEAN.balanceOf(owner_addr).to_eth()
+    OCEAN_final = prediction_token.balanceOf(owner_addr).to_eth()
     assert OCEAN_before.amt_eth == approx(OCEAN_final.amt_eth, 2.0)  # + sub revenue
 
 

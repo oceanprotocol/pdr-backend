@@ -122,8 +122,8 @@ def test_submit_truevals_contracts(
 
 
 @enforce_types
-def test_consume_multiple(feed_contract1, OCEAN, predictoor_batcher):
-    owner = OCEAN.config.owner
+def test_consume_multiple(feed_contract1, prediction_token, predictoor_batcher):
+    owner = prediction_token.config.owner
 
     price = feed_contract1.get_price()
     print(price)
@@ -131,14 +131,14 @@ def test_consume_multiple(feed_contract1, OCEAN, predictoor_batcher):
     times = 10
     cost = Wei(times * price.amt_wei)
 
-    OCEAN.approve(predictoor_batcher.contract_address, cost)
-    balance_before = OCEAN.balanceOf(owner)
+    prediction_token.approve(predictoor_batcher.contract_address, cost)
+    balance_before = prediction_token.balanceOf(owner)
 
     predictoor_batcher.consume_multiple(
-        [feed_contract1.contract_address], [times], OCEAN.contract_address
+        [feed_contract1.contract_address], [times], prediction_token.contract_address
     )
 
-    balance_after = OCEAN.balanceOf(owner)
+    balance_after = prediction_token.balanceOf(owner)
     assert balance_after + cost == balance_before
 
 
