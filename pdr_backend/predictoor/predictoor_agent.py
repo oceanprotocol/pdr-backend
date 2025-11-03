@@ -69,10 +69,10 @@ class PredictoorAgent:
         feed_addrs: List[str] = list(self.feeds.keys())
         feed_addrs = self._to_checksum(feed_addrs)
 
-        logger.info("Approving tokens...")
+        logger.info("Approving %s...", self.OCEAN.symbol())
         self.OCEAN.approve(self.pred_submitter_mgr.contract_address, MAX_WEI)
         self.pred_submitter_mgr.approve_ocean(feed_addrs)
-        logger.info("Tokens approved")
+        logger.info("%s approved", self.OCEAN.symbol())
 
         # ensure ohlcv data cache is up to date
         if self.use_ohlcv_data():

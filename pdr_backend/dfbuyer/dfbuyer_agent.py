@@ -57,7 +57,7 @@ class DFBuyerAgent:
             self.predictoor_batcher.contract_address,
         )
         if allowance < MAX_UINT - 10**50:
-            logger.info("Approving tokens for predictoor_batcher")
+            logger.info("Approving %s for predictoor_batcher", OCEAN.symbol())
             tx = OCEAN.approve(
                 self.predictoor_batcher.contract_address, int(MAX_UINT), True
             )

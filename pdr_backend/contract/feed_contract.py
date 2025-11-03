@@ -24,10 +24,21 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
 
         # return Wei(0) for unknown keys
         self.last_allowance: Dict[str, Wei] = defaultdict(lambda: Wei(0))
+        
+        # cache token symbol for logging
+        self._token_symbol: str = None
 
     def set_token(self, web3_pp):
         stake_token = self.get_stake_token()
         self.token = Token(web3_pp, stake_token)
+        self._token_symbol = None  # reset symbol cache
+
+    @property
+    def token_symbol(self) -> str:
+        """Get the symbol of the stake token (e.g., 'OCEAN', 'ROSE')"""
+        if self._token_symbol is None:
+            self._token_symbol = self.token.symbol()
+        return self._token_symbol
 
     def is_valid_subscription(self):
         """Does this account have a subscription to this feed yet?"""
@@ -56,12 +67,12 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         # get datatoken price
         exchange = FixedRate(self.web3_pp, exchange_addr)
         (baseTokenAmt_wei, _, _, _) = exchange.get_dt_price(exchangeId)
-        logger.info("Price of feed: %s OCEAN", baseTokenAmt_wei.to_eth())
+        logger.info("Price of feed: %s %s", baseTokenAmt_wei.to_eth(), self.token_symbol)
 
         # approve
-        logger.info("Approve spend OCEAN: begin")
+        logger.info("Approve spend %s: begin", self.token_symbol)
         self.token.approve(self.contract_instance.address, baseTokenAmt_wei)
-        logger.info("Approve spend OCEAN: done")
+        logger.info("Approve spend %s: done", self.token_symbol)
 
         # buy 1 DT
         call_params = self.web3_pp.tx_call_params()
@@ -292,7 +303,9 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
                 self.last_allowance[self.config.owner] = Wei(MAX_UINT)
             except Exception as e:
                 logger.error(
-                    "Error while approving the contract to spend tokens: %s", e
+                    "Error while approving the contract to spend %s: %s", 
+                    self.token_symbol, 
+                    e
                 )
                 return None
 

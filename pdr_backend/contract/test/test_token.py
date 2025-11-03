@@ -16,6 +16,11 @@ def test_token(web3_pp, web3_config):
     owner_addr = web3_config.owner
     alice = accounts[1]
 
+    # test symbol
+    symbol = token.symbol()
+    assert isinstance(symbol, str)
+    assert len(symbol) > 0
+
     call_params = web3_pp.tx_call_params()
     token.contract_instance.functions.mint(owner_addr, 1000000000).transact(call_params)
 
