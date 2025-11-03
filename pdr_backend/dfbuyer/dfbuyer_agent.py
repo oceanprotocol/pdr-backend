@@ -51,7 +51,7 @@ class DFBuyerAgent:
 
         # Check allowance and approve if necessary
         logger.info("Checking allowance...")
-        OCEAN = ppss.web3_pp.OCEAN_Token
+        OCEAN = ppss.web3_pp.prediction_token
         allowance = OCEAN.allowance(
             ppss.web3_pp.web3_config.owner,
             self.predictoor_batcher.contract_address,

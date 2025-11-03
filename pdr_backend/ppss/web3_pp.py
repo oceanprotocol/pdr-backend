@@ -238,7 +238,7 @@ class Web3PP(StrMixin):
         return self.get_address("Ocean")
 
     @property
-    def OCEAN_Token(self) -> Token:
+    def prediction_token(self) -> Token:
         return Token(self, self.OCEAN_address)
 
     @property

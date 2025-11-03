@@ -179,7 +179,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
 
     logger.info("Checking account balances")
 
-    OCEAN = web3_pp.OCEAN_Token
+    OCEAN = web3_pp.prediction_token
 
     addresses = get_opf_addresses(web3_pp.network)
     for name, address in addresses.items():

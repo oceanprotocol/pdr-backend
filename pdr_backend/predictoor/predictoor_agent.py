@@ -284,7 +284,7 @@ class PredictoorAgent:
 
     @property
     def OCEAN(self) -> Token:
-        return self.ppss.web3_pp.OCEAN_Token
+        return self.ppss.web3_pp.prediction_token
 
     @property
     def ROSE(self) -> NativeToken:
