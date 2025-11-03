@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from unittest.mock import Mock
 
 from enforce_typing import enforce_types
@@ -26,7 +26,7 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         self.last_allowance: Dict[str, Wei] = defaultdict(lambda: Wei(0))
 
         # cache token symbol for logging
-        self._token_symbol: str = None
+        self._token_symbol: Optional[str] = None
 
     def set_token(self, web3_pp):
         stake_token = self.get_stake_token()
