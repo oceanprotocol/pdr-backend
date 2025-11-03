@@ -179,15 +179,15 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
 
     logger.info("Checking account balances")
 
-    OCEAN = web3_pp.prediction_token
+    prediction_token = web3_pp.prediction_token
 
     addresses = get_opf_addresses(web3_pp.network)
     for name, address in addresses.items():
-        ocean_bal = OCEAN.balanceOf(address)
+        ocean_bal = prediction_token.balanceOf(address)
         native_bal = Wei(web3_pp.get_token_balance(address))
 
         ocean_warning = (
-            " LOW OCEAN BALANCE!"
+            " LOW PREDICTION TOKEN BALANCE!"
             if ocean_bal < Eth(10).to_wei() and name != "trueval"
             else ""
         )
