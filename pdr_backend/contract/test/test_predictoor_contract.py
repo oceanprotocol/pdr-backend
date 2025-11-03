@@ -58,7 +58,7 @@ def test_get_exchanges(feed_contract1):
 @enforce_types
 def test_get_stake_token(feed_contract1, web3_pp):
     stake_token = feed_contract1.get_stake_token()
-    assert stake_token == web3_pp.OCEAN_address
+    assert stake_token == web3_pp.prediction_token_address
 
 
 @enforce_types

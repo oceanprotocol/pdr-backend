@@ -16,15 +16,15 @@ def mock_send_encrypted_sapphire_tx(monkeypatch):
 
 @enforce_types
 def test_base_contract(web3_pp, web3_config):
-    OCEAN_address = web3_pp.OCEAN_address
+    prediction_token_address = web3_pp.prediction_token_address
 
     # success
-    Token(web3_pp, OCEAN_address)
+    Token(web3_pp, prediction_token_address)
 
     # catch failure
     web3_config = web3_pp.web3_config
     with pytest.raises(ValueError):
-        Token(web3_config, OCEAN_address)
+        Token(web3_config, prediction_token_address)
 
 
 @enforce_types
@@ -33,8 +33,8 @@ def test_send_encrypted_tx(
     OCEAN,
     web3_pp,
 ):
-    OCEAN_address = web3_pp.OCEAN_address
-    contract = Token(web3_pp, OCEAN_address)
+    prediction_token_address = web3_pp.prediction_token_address
+    contract = Token(web3_pp, prediction_token_address)
 
     # Set up dummy return value for the mocked function
     mock_send_encrypted_sapphire_tx.return_value = (

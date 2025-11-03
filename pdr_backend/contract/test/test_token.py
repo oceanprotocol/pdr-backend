@@ -9,7 +9,7 @@ from pdr_backend.util.currency_types import Wei
 
 @enforce_types
 def test_token(web3_pp, web3_config):
-    token_address = web3_pp.OCEAN_address
+    token_address = web3_pp.prediction_token_address
     token = Token(web3_pp, token_address)
 
     accounts = web3_config.w3.eth.accounts

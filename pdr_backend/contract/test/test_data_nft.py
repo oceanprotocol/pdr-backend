@@ -27,7 +27,7 @@ def test_set_ddo(web3_pp, web3_config):
         private_key=private_key
     )
     factory = Erc721Factory(web3_pp)
-    ocean_address = web3_pp.OCEAN_address
+    ocean_address = web3_pp.prediction_token_address
     fre_address = web3_pp.get_address("FixedPrice")
 
     feeCollector = owner.address

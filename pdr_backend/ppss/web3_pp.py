@@ -234,12 +234,14 @@ class Web3PP(StrMixin):
         return None
 
     @property
-    def OCEAN_address(self) -> str:
-        return self.get_address("Ocean")
+    def prediction_token_address(self) -> str:
+        # TODO this should be USDC now
+        # make sure this exists in the addresses.json file
+        return self.get_address("prediction_token")
 
     @property
     def prediction_token(self) -> Token:
-        return Token(self, self.OCEAN_address)
+        return Token(self, self.prediction_token_address)
 
     @property
     def NativeToken(self) -> NativeToken:

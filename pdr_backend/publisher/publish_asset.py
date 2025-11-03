@@ -29,7 +29,7 @@ def publish_asset(
     pair = str(feed.pair)
     trueval_timeout = 60 * 60 * 24 * 3
     owner = web3_config.owner
-    ocean_address = web3_pp.OCEAN_address
+    ocean_address = web3_pp.prediction_token_address
     fre_address = web3_pp.get_address("FixedPrice")
     factory = Erc721Factory(web3_pp)
 
