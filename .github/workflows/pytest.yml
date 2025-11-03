@@ -55,6 +55,16 @@ jobs:
             [ -f "$HOME/.ocean/ocean-contracts/artifacts/ready" ] && break
             done
 
+      - name: Add prediction_token to address.json
+        run: |
+          ADDRESS_FILE="$HOME/.ocean/ocean-contracts/artifacts/address.json"
+          # Get the Ocean token address from the development network
+          OCEAN_ADDR=$(jq -r '.development.Ocean' "$ADDRESS_FILE")
+          # Add prediction_token as an alias to Ocean address in the development network
+          jq '.development.prediction_token = .development.Ocean' "$ADDRESS_FILE" > "${ADDRESS_FILE}.tmp"
+          mv "${ADDRESS_FILE}.tmp" "$ADDRESS_FILE"
+          echo "Added prediction_token=$OCEAN_ADDR to address.json"
+
       - name: Test with pytest
         id: pytest
         run: |
