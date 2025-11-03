@@ -60,8 +60,12 @@ def test_approve(
     assert prediction_token.allowance(pmdown, pc2).amt_wei == 2**256 - 1
 
 
-def test_transfer_erc20(pred_submitter_mgr: PredSubmitterMgr, prediction_token, web3_config):
-    prediction_token.transfer(pred_submitter_mgr.contract_address, Wei(100), web3_config.owner)
+def test_transfer_erc20(
+    pred_submitter_mgr: PredSubmitterMgr, prediction_token, web3_config
+):
+    prediction_token.transfer(
+        pred_submitter_mgr.contract_address, Wei(100), web3_config.owner
+    )
     assert prediction_token.balanceOf(pred_submitter_mgr.contract_address) == Wei(100)
     before = prediction_token.balanceOf(web3_config.owner)
     pred_submitter_mgr.transfer_erc20(
@@ -90,7 +94,9 @@ def test_transfer(pred_submitter_mgr: PredSubmitterMgr, web3_config):
     assert web3_config.w3.eth.get_balance(pred_submitter_mgr.contract_address) == 0
 
 
-def test_claim_dfrewards(pred_submitter_mgr: PredSubmitterMgr, web3_pp, prediction_token):
+def test_claim_dfrewards(
+    pred_submitter_mgr: PredSubmitterMgr, web3_pp, prediction_token
+):
     dfrewards_addr = web3_pp.get_address("DFRewards")
     dfrewards = DFRewards(web3_pp, dfrewards_addr)
 
@@ -113,7 +119,9 @@ def test_claim_dfrewards(pred_submitter_mgr: PredSubmitterMgr, web3_pp, predicti
     before_down = prediction_token.balanceOf(pmdown)
 
     # claim rewards
-    pred_submitter_mgr.claim_dfrewards(prediction_token.contract_address, dfrewards_addr)
+    pred_submitter_mgr.claim_dfrewards(
+        prediction_token.contract_address, dfrewards_addr
+    )
 
     # record after balances
     after_up = prediction_token.balanceOf(pmup)
@@ -132,7 +140,9 @@ def test_submit_prediction_and_payout(
     prediction_token,
 ):
     # the user approves 100 OCEAN tokens to the prediction manager
-    prediction_token.approve(pred_submitter_mgr.contract_address, Wei(100), web3_config.owner)
+    prediction_token.approve(
+        pred_submitter_mgr.contract_address, Wei(100), web3_config.owner
+    )
 
     # get the next prediction epoch
     current_epoch = feed_contract1.get_current_epoch_ts()

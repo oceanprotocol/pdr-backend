@@ -24,7 +24,7 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
 
         # return Wei(0) for unknown keys
         self.last_allowance: Dict[str, Wei] = defaultdict(lambda: Wei(0))
-        
+
         # cache token symbol for logging
         self._token_symbol: str = None
 
@@ -67,7 +67,9 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         # get datatoken price
         exchange = FixedRate(self.web3_pp, exchange_addr)
         (baseTokenAmt_wei, _, _, _) = exchange.get_dt_price(exchangeId)
-        logger.info("Price of feed: %s %s", baseTokenAmt_wei.to_eth(), self.token_symbol)
+        logger.info(
+            "Price of feed: %s %s", baseTokenAmt_wei.to_eth(), self.token_symbol
+        )
 
         # approve
         logger.info("Approve spend %s: begin", self.token_symbol)
@@ -303,9 +305,9 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
                 self.last_allowance[self.config.owner] = Wei(MAX_UINT)
             except Exception as e:
                 logger.error(
-                    "Error while approving the contract to spend %s: %s", 
-                    self.token_symbol, 
-                    e
+                    "Error while approving the contract to spend %s: %s",
+                    self.token_symbol,
+                    e,
                 )
                 return None
 
