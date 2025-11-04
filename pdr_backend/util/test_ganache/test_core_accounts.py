@@ -17,7 +17,7 @@ def test_fund_accounts_with_OCEAN(monkeypatch):
 
     web3_pp = Mock(spec=Web3PP)
     web3_pp.network = "development"
-    web3_pp.prediction_token = Mock(spec=Token)
+    web3_pp.stake_token = Mock(spec=Token)
     web3_pp.web3_config = Mock()
     web3_pp.web3_config.owner = "0x123"
 

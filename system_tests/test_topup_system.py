@@ -34,7 +34,7 @@ def test_topup(caplog):
     mock_token_rose.transfer.return_value = True
     mock_token_rose.name = "ROSE"
 
-    mock_web3_pp.prediction_token = mock_token
+    mock_web3_pp.stake_token = mock_token
     mock_web3_pp.NativeToken = mock_token_rose
 
     opf_addresses = {

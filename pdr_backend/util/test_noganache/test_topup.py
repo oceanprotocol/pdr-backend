@@ -60,7 +60,7 @@ def test_topup_main(mock_token_, mock_native_token_, mock_get_opf_addresses_, tm
 
     mock_web3_pp = MagicMock(spec=Web3PP)
     mock_web3_pp.network = "sapphire-testnet"
-    mock_web3_pp.prediction_token = mock_token_
+    mock_web3_pp.stake_token = mock_token_
     mock_web3_pp.NativeToken = mock_native_token_
 
     ppss.web3_pp = mock_web3_pp

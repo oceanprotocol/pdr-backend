@@ -38,7 +38,7 @@ class DFBuyerAgent:
 
         # addresses
         batcher_addr = ppss.web3_pp.get_address("PredictoorHelper")
-        self.prediction_token_address = ppss.web3_pp.get_address("prediction_token")
+        self.stake_token_address = ppss.web3_pp.get_address("stake_token")
 
         # set attribs to track progress
         self.last_consume_ts = 0
@@ -51,7 +51,7 @@ class DFBuyerAgent:
 
         # Check allowance and approve if necessary
         logger.info("Checking allowance...")
-        OCEAN = ppss.web3_pp.prediction_token
+        OCEAN = ppss.web3_pp.stake_token
         allowance = OCEAN.allowance(
             ppss.web3_pp.web3_config.owner,
             self.predictoor_batcher.contract_address,
@@ -184,7 +184,7 @@ class DFBuyerAgent:
                 tx = self.predictoor_batcher.consume_multiple(
                     addresses_to_consume,
                     times_to_consume,
-                    self.prediction_token_address,
+                    self.stake_token_address,
                     True,
                 )
                 tx_hash = tx["transactionHash"].hex()

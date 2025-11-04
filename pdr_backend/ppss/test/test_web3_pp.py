@@ -212,13 +212,13 @@ def test_get_addresses():
     # Work 1: validate network can't be found
     with patch.object(web3_pp, "get_addresses", return_value=None):
         with pytest.raises(ValueError) as excinfo:
-            web3_pp.prediction_token_address  # pylint: disable=pointless-statement
+            web3_pp.stake_token_address  # pylint: disable=pointless-statement
 
     assert 'Cannot find network "development"' in str(excinfo.value)
 
     return_value = {
         "Ocean": "0x1234567890123456789012345678901234567890",
-        "prediction_token": "0x1234567890123456789012345678901234567890",
+        "stake_token": "0x1234567890123456789012345678901234567890",
     }
     with patch.object(web3_pp, "get_addresses", return_value=return_value):
         with pytest.raises(ValueError) as excinfo:
@@ -228,6 +228,6 @@ def test_get_addresses():
 
     with patch.object(web3_pp, "get_addresses", return_value=return_value):
         assert (
-            web3_pp.prediction_token_address
+            web3_pp.stake_token_address
             == "0x1234567890123456789012345678901234567890"
         )

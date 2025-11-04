@@ -36,16 +36,16 @@ def test_approve(
     pred_submitter_mgr: PredSubmitterMgr,
     feed_contract1,
     feed_contract2,
-    prediction_token,
+    stake_token,
 ):
     pmup = pred_submitter_mgr.pred_submitter_up_address()
     pmdown = pred_submitter_mgr.pred_submitter_down_address()
     pc1 = feed_contract1.contract_address
     pc2 = feed_contract2.contract_address
-    assert prediction_token.allowance(pmup, pc1) == 0
-    assert prediction_token.allowance(pmup, pc2) == 0
-    assert prediction_token.allowance(pmdown, pc2) == 0
-    assert prediction_token.allowance(pmdown, pc2) == 0
+    assert stake_token.allowance(pmup, pc1) == 0
+    assert stake_token.allowance(pmup, pc2) == 0
+    assert stake_token.allowance(pmdown, pc2) == 0
+    assert stake_token.allowance(pmdown, pc2) == 0
 
     contract_addrs = [
         pc1,
@@ -54,26 +54,26 @@ def test_approve(
     tx_receipt = pred_submitter_mgr.approve_ocean(contract_addrs, True)
     assert tx_receipt.status == 1, "Transaction failed"
 
-    assert prediction_token.allowance(pmup, pc1).amt_wei == 2**256 - 1
-    assert prediction_token.allowance(pmup, pc2).amt_wei == 2**256 - 1
-    assert prediction_token.allowance(pmdown, pc1).amt_wei == 2**256 - 1
-    assert prediction_token.allowance(pmdown, pc2).amt_wei == 2**256 - 1
+    assert stake_token.allowance(pmup, pc1).amt_wei == 2**256 - 1
+    assert stake_token.allowance(pmup, pc2).amt_wei == 2**256 - 1
+    assert stake_token.allowance(pmdown, pc1).amt_wei == 2**256 - 1
+    assert stake_token.allowance(pmdown, pc2).amt_wei == 2**256 - 1
 
 
 def test_transfer_erc20(
-    pred_submitter_mgr: PredSubmitterMgr, prediction_token, web3_config
+    pred_submitter_mgr: PredSubmitterMgr, stake_token, web3_config
 ):
-    prediction_token.transfer(
+    stake_token.transfer(
         pred_submitter_mgr.contract_address, Wei(100), web3_config.owner
     )
-    assert prediction_token.balanceOf(pred_submitter_mgr.contract_address) == Wei(100)
-    before = prediction_token.balanceOf(web3_config.owner)
+    assert stake_token.balanceOf(pred_submitter_mgr.contract_address) == Wei(100)
+    before = stake_token.balanceOf(web3_config.owner)
     pred_submitter_mgr.transfer_erc20(
-        prediction_token.contract_address, web3_config.owner, Wei(100)
+        stake_token.contract_address, web3_config.owner, Wei(100)
     )
-    after = prediction_token.balanceOf(web3_config.owner)
+    after = stake_token.balanceOf(web3_config.owner)
     assert Wei(after.amt_wei - before.amt_wei) == Wei(100)
-    assert prediction_token.balanceOf(pred_submitter_mgr.contract_address) == 0
+    assert stake_token.balanceOf(pred_submitter_mgr.contract_address) == 0
 
 
 def test_transfer(pred_submitter_mgr: PredSubmitterMgr, web3_config):
@@ -95,7 +95,7 @@ def test_transfer(pred_submitter_mgr: PredSubmitterMgr, web3_config):
 
 
 def test_claim_dfrewards(
-    pred_submitter_mgr: PredSubmitterMgr, web3_pp, prediction_token
+    pred_submitter_mgr: PredSubmitterMgr, web3_pp, stake_token
 ):
     dfrewards_addr = web3_pp.get_address("DFRewards")
     dfrewards = DFRewards(web3_pp, dfrewards_addr)
@@ -104,28 +104,28 @@ def test_claim_dfrewards(
     pmdown = pred_submitter_mgr.pred_submitter_down_address()
 
     # approve rewards
-    prediction_token.approve(dfrewards_addr, Wei(200), web3_pp.web3_config.owner)
+    stake_token.approve(dfrewards_addr, Wei(200), web3_pp.web3_config.owner)
 
     # allocate rewards
     tx = dfrewards.contract_instance.functions.allocate(
         [pmup, pmdown],
         [100, 100],
-        prediction_token.contract_address,
+        stake_token.contract_address,
     ).transact(web3_pp.tx_call_params())
     web3_pp.web3_config.w3.eth.wait_for_transaction_receipt(tx)
 
     # record before balances
-    before_up = prediction_token.balanceOf(pmup)
-    before_down = prediction_token.balanceOf(pmdown)
+    before_up = stake_token.balanceOf(pmup)
+    before_down = stake_token.balanceOf(pmdown)
 
     # claim rewards
     pred_submitter_mgr.claim_dfrewards(
-        prediction_token.contract_address, dfrewards_addr
+        stake_token.contract_address, dfrewards_addr
     )
 
     # record after balances
-    after_up = prediction_token.balanceOf(pmup)
-    after_down = prediction_token.balanceOf(pmdown)
+    after_up = stake_token.balanceOf(pmup)
+    after_down = stake_token.balanceOf(pmdown)
 
     # assert
     assert after_up - before_up == Wei(100)
@@ -137,10 +137,10 @@ def test_submit_prediction_and_payout(
     web3_config,
     feed_contract1: FeedContract,
     feed_contract2,
-    prediction_token,
+    stake_token,
 ):
     # the user approves 100 OCEAN tokens to the prediction manager
-    prediction_token.approve(
+    stake_token.approve(
         pred_submitter_mgr.contract_address, Wei(100), web3_config.owner
     )
 
@@ -151,7 +151,7 @@ def test_submit_prediction_and_payout(
     prediction_epoch = UnixTimeS(current_epoch + S_PER_EPOCH * 3)
 
     # get the OCEAN balance of the owner before submitting
-    bal_before = prediction_token.balanceOf(web3_config.owner)
+    bal_before = stake_token.balanceOf(web3_config.owner)
     assert bal_before > Wei(100), "Not enough balance to execute the test"
 
     feed_addrs = [
@@ -175,7 +175,7 @@ def test_submit_prediction_and_payout(
     assert tx_receipt.status == 1, "Transaction failed"
 
     # get the OCEAN balance of the contract after submitting
-    bal_after = prediction_token.balanceOf(web3_config.owner)
+    bal_after = stake_token.balanceOf(web3_config.owner)
     assert bal_before - bal_after == Wei(100), "Should have spent 100 OCEAN"
 
     # fast forward time to get payout
@@ -191,13 +191,13 @@ def test_submit_prediction_and_payout(
     # time to claim payouts
 
     # get the OCEAN balance of the contract before claiming
-    bal_before = prediction_token.balanceOf(web3_config.owner)
+    bal_before = stake_token.balanceOf(web3_config.owner)
 
     # claim
     pred_submitter_mgr.get_payout([prediction_epoch], feed_addrs, wait_for_receipt=True)
 
     # get the OCEAN balance of the owner after claiming
-    bal_after = prediction_token.balanceOf(web3_config.owner)
+    bal_after = stake_token.balanceOf(web3_config.owner)
 
     assert bal_after - bal_before == Wei(100), "Payout should be 100 OCEAN"
 

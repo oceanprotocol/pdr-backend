@@ -179,11 +179,11 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
 
     logger.info("Checking account balances")
 
-    prediction_token = web3_pp.prediction_token
+    stake_token = web3_pp.stake_token
 
     addresses = get_opf_addresses(web3_pp.network)
     for name, address in addresses.items():
-        prediction_bal = prediction_token.balanceOf(address)
+        prediction_bal = stake_token.balanceOf(address)
         native_bal = Wei(web3_pp.get_token_balance(address))
 
         ocean_warning = (

@@ -30,7 +30,7 @@ def fund_accounts_with_OCEAN(web3_pp: Web3PP):
         ("PDR_MM_USER", Eth(10000.0)),
     ]
 
-    OCEAN = web3_pp.prediction_token
+    OCEAN = web3_pp.stake_token
     _fund_accounts(accounts_to_fund, web3_pp.web3_config.owner, OCEAN)
     logger.info("Done funding.")
 
