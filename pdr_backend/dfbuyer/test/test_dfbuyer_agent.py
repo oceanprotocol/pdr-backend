@@ -27,7 +27,7 @@ def test_dfbuyer_agent_constructor(  # pylint: disable=unused-argument
 
     agent = DFBuyerAgent(mock_ppss)
 
-    mock_token.assert_called_with(mock_ppss.web3_pp, agent.OCEAN_addr)
+    mock_token.assert_called_with(mock_ppss.web3_pp, agent.prediction_token_address)
     mock_token_instance = mock_token()
     mock_token_instance.approve.assert_called_with(
         agent.predictoor_batcher.contract_address, int(MAX_UINT), True

@@ -38,7 +38,7 @@ class DFBuyerAgent:
 
         # addresses
         batcher_addr = ppss.web3_pp.get_address("PredictoorHelper")
-        self.OCEAN_addr = ppss.web3_pp.get_address("Ocean")
+        self.prediction_token_address = ppss.web3_pp.get_address("prediction_token")
 
         # set attribs to track progress
         self.last_consume_ts = 0
@@ -184,7 +184,7 @@ class DFBuyerAgent:
                 tx = self.predictoor_batcher.consume_multiple(
                     addresses_to_consume,
                     times_to_consume,
-                    self.OCEAN_addr,
+                    self.prediction_token_address,
                     True,
                 )
                 tx_hash = tx["transactionHash"].hex()
