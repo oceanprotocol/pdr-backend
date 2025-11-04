@@ -228,6 +228,5 @@ def test_get_addresses():
 
     with patch.object(web3_pp, "get_addresses", return_value=return_value):
         assert (
-            web3_pp.stake_token_address
-            == "0x1234567890123456789012345678901234567890"
+            web3_pp.stake_token_address == "0x1234567890123456789012345678901234567890"
         )

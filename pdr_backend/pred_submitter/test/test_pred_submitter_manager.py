@@ -60,9 +60,7 @@ def test_approve(
     assert stake_token.allowance(pmdown, pc2).amt_wei == 2**256 - 1
 
 
-def test_transfer_erc20(
-    pred_submitter_mgr: PredSubmitterMgr, stake_token, web3_config
-):
+def test_transfer_erc20(pred_submitter_mgr: PredSubmitterMgr, stake_token, web3_config):
     stake_token.transfer(
         pred_submitter_mgr.contract_address, Wei(100), web3_config.owner
     )
@@ -94,9 +92,7 @@ def test_transfer(pred_submitter_mgr: PredSubmitterMgr, web3_config):
     assert web3_config.w3.eth.get_balance(pred_submitter_mgr.contract_address) == 0
 
 
-def test_claim_dfrewards(
-    pred_submitter_mgr: PredSubmitterMgr, web3_pp, stake_token
-):
+def test_claim_dfrewards(pred_submitter_mgr: PredSubmitterMgr, web3_pp, stake_token):
     dfrewards_addr = web3_pp.get_address("DFRewards")
     dfrewards = DFRewards(web3_pp, dfrewards_addr)
 
@@ -119,9 +115,7 @@ def test_claim_dfrewards(
     before_down = stake_token.balanceOf(pmdown)
 
     # claim rewards
-    pred_submitter_mgr.claim_dfrewards(
-        stake_token.contract_address, dfrewards_addr
-    )
+    pred_submitter_mgr.claim_dfrewards(stake_token.contract_address, dfrewards_addr)
 
     # record after balances
     after_up = stake_token.balanceOf(pmup)
