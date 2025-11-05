@@ -30,7 +30,7 @@ def test_base_contract(web3_pp, web3_config):
 @enforce_types
 def test_send_encrypted_tx(
     mock_send_encrypted_sapphire_tx,  # pylint: disable=redefined-outer-name
-    OCEAN,
+    stake_token,
     web3_pp,
 ):
     stake_token_address = web3_pp.stake_token_address
