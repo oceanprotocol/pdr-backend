@@ -103,7 +103,11 @@ def test_check_network_main(  # pylint: disable=unused-argument
         "some_other_address": "0xSomeOtherAddress",
     }
     mock_query_subgraph.return_value = {"data": {"predictContracts": []}}
-    mock_token.return_value.balanceOf.return_value = Eth(1000).to_wei()
+    
+    # Mock the stake_token property
+    mock_stake_token = Mock()
+    mock_stake_token.balanceOf.return_value = Eth(1000).to_wei()
+    ppss.web3_pp.stake_token = mock_stake_token
 
     mock_w3 = Mock()  # pylint: disable=not-callable
     mock_w3.eth.get_balance.return_value = 1000.0 * 1e18
@@ -134,6 +138,15 @@ def test_check_network_others(  # pylint: disable=unused-argument
         str(tmpdir),
     )
     mock_query_subgraph = Mock()
+
+    # Mock the stake_token property
+    mock_stake_token = Mock()
+    mock_stake_token.balanceOf.return_value = Eth(1000).to_wei()
+    ppss.web3_pp.stake_token = mock_stake_token
+    
+    mock_get_opf_addresses.return_value = {
+        "dfbuyer": "0xdfBuyerAddress",
+    }
 
     # test if predictoor contracts are found, iterates through them
     with patch(f"{PATH}.query_subgraph") as mock_query_subgraph:
@@ -175,6 +188,15 @@ def test_check_network_without_mock(  # pylint: disable=unused-argument
         "sapphire-mainnet",
         str(tmpdir),
     )
+
+    # Mock the stake_token property
+    mock_stake_token = Mock()
+    mock_stake_token.balanceOf.return_value = Eth(1000).to_wei()
+    ppss.web3_pp.stake_token = mock_stake_token
+    
+    mock_get_opf_addresses.return_value = {
+        "dfbuyer": "0xdfBuyerAddress",
+    }
 
     check_network_main(ppss, lookback_hours=1)
     assert mock_check_dfbuyer.call_count == 1
