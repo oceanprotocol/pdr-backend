@@ -105,9 +105,9 @@ def test_check_network_main(  # pylint: disable=unused-argument
     mock_query_subgraph.return_value = {"data": {"predictContracts": []}}
     
     # Mock the stake_token property
-    mock_stake_token = Mock()
-    mock_stake_token.balanceOf.return_value = Eth(1000).to_wei()
-    ppss.web3_pp.stake_token = mock_stake_token
+    mock_stake_token_instance = Mock()
+    mock_stake_token_instance.balanceOf.return_value = Eth(1000).to_wei()
+    mock_token.return_value = mock_stake_token_instance
 
     mock_w3 = Mock()  # pylint: disable=not-callable
     mock_w3.eth.get_balance.return_value = 1000.0 * 1e18
@@ -140,9 +140,9 @@ def test_check_network_others(  # pylint: disable=unused-argument
     mock_query_subgraph = Mock()
 
     # Mock the stake_token property
-    mock_stake_token = Mock()
-    mock_stake_token.balanceOf.return_value = Eth(1000).to_wei()
-    ppss.web3_pp.stake_token = mock_stake_token
+    mock_stake_token_instance = Mock()
+    mock_stake_token_instance.balanceOf.return_value = Eth(1000).to_wei()
+    mock_token.return_value = mock_stake_token_instance
     
     mock_get_opf_addresses.return_value = {
         "dfbuyer": "0xdfBuyerAddress",
@@ -182,7 +182,6 @@ def test_check_network_without_mock(  # pylint: disable=unused-argument
     tmpdir,
     monkeypatch,
 ):
-    mock_token.balanceOf.return_value = Wei(1000e18)
     ppss = mock_ppss(
         [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
@@ -190,9 +189,9 @@ def test_check_network_without_mock(  # pylint: disable=unused-argument
     )
 
     # Mock the stake_token property
-    mock_stake_token = Mock()
-    mock_stake_token.balanceOf.return_value = Eth(1000).to_wei()
-    ppss.web3_pp.stake_token = mock_stake_token
+    mock_stake_token_instance = Mock()
+    mock_stake_token_instance.balanceOf.return_value = Eth(1000).to_wei()
+    mock_token.return_value = mock_stake_token_instance
     
     mock_get_opf_addresses.return_value = {
         "dfbuyer": "0xdfBuyerAddress",
