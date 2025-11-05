@@ -113,6 +113,8 @@ def test_check_network_main(  # pylint: disable=unused-argument
     mock_w3.eth.get_balance.return_value = 1000.0 * 1e18
     ppss.web3_pp.web3_config.w3 = mock_w3
     ppss.web3_pp.w3.eth.block_number = 100
+    # prevent get_address from trying to read addresses.json
+    monkeypatch.setattr(ppss.web3_pp, "get_address", lambda name: "0xStakeToken")
     check_network_main(ppss, lookback_hours=24)
 
     mock_get_opf_addresses.assert_called_once_with("sapphire-mainnet")
@@ -148,6 +150,8 @@ def test_check_network_others(  # pylint: disable=unused-argument
         "dfbuyer": "0xdfBuyerAddress",
     }
 
+    # prevent get_address from trying to read addresses.json
+    monkeypatch.setattr(ppss.web3_pp, "get_address", lambda name: "0xStakeToken")
     # test if predictoor contracts are found, iterates through them
     with patch(f"{PATH}.query_subgraph") as mock_query_subgraph:
         mock_query_subgraph.return_value = {
@@ -196,6 +200,8 @@ def test_check_network_without_mock(  # pylint: disable=unused-argument
     mock_get_opf_addresses.return_value = {
         "dfbuyer": "0xdfBuyerAddress",
     }
+    # prevent get_address from trying to read addresses.json
+    monkeypatch.setattr(ppss.web3_pp, "get_address", lambda name: "0xStakeToken")
 
     check_network_main(ppss, lookback_hours=1)
     assert mock_check_dfbuyer.call_count == 1
