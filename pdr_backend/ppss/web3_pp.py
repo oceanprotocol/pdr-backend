@@ -235,7 +235,6 @@ class Web3PP(StrMixin):
 
     @property
     def stake_token_address(self) -> str:
-        # TODO this should be USDC now
         # make sure this exists in the addresses.json file
         return self.get_address("stake_token")
 
