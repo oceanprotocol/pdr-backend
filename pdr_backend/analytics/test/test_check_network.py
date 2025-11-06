@@ -12,7 +12,7 @@ from pdr_backend.analytics.check_network import (
 )
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
-from pdr_backend.util.currency_types import Eth, Wei
+from pdr_backend.util.currency_types import Eth
 
 PATH = "pdr_backend.analytics.check_network"
 
