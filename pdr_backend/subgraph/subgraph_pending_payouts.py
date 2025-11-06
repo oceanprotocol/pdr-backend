@@ -24,7 +24,7 @@ def _fetch_subgraph_payouts(
         query = """
         {
             predictPredictions(
-            where: { user: "%s", payout: null, slot_: { %s } },
+            where: { user: "%s", payout: null, slot_: { %s, predictContract_: {paused: false} } },
             first: %d,
             skip: %d
             ) {

@@ -41,6 +41,7 @@ def get_predict_slots_query(
                 slot_lte: %s
                 slot_gte: %s
                 predictContract_in: %s
+                predictContract_: {paused: false}
             },
             orderBy: slot,
             orderDirection: asc
