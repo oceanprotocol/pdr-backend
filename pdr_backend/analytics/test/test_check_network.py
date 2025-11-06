@@ -99,7 +99,7 @@ def test_check_network_main(  # pylint: disable=unused-argument
     )
 
     mock_get_opf_addresses.return_value = {
-        "dfbuyer": "0xdfBuyerAddress",
+        "dfbuyer": "0x0000000000000000000000000000000000000000",
         "some_other_address": "0xSomeOtherAddress",
     }
     mock_query_subgraph.return_value = {"data": {"predictContracts": []}}
@@ -147,7 +147,7 @@ def test_check_network_others(  # pylint: disable=unused-argument
     mock_token.return_value = mock_stake_token_instance
     
     mock_get_opf_addresses.return_value = {
-        "dfbuyer": "0xdfBuyerAddress",
+        "dfbuyer": "0x0000000000000000000000000000000000000000",
     }
 
     # prevent get_address from trying to read addresses.json
@@ -198,7 +198,7 @@ def test_check_network_without_mock(  # pylint: disable=unused-argument
     mock_token.return_value = mock_stake_token_instance
     
     mock_get_opf_addresses.return_value = {
-        "dfbuyer": "0xdfBuyerAddress",
+        "dfbuyer": "0x0000000000000000000000000000000000000000",
     }
     # prevent get_address from trying to read addresses.json
     monkeypatch.setattr(ppss.web3_pp, "get_address", lambda name: "0xStakeToken")
