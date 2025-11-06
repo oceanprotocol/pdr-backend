@@ -139,8 +139,8 @@ class SimPlotter:
     @enforce_types
     def plot_pdr_profit_vs_time(self):
         y = list(np.cumsum(self.st.pdr_profits_OCEAN))
-        ylabel = "predictoor profit (OCEAN)"
-        title = f"Predictoor profit vs time. Current: {y[-1]:.2f} OCEAN"
+        ylabel = "predictoor profit (USDC)"
+        title = f"Predictoor profit vs time. Current: {y[-1]:.2f} USDC"
         fig = make_subplots(rows=1, cols=1, subplot_titles=(title,))
         self._add_subplot_y_vs_time(fig, y, ylabel, "lines", row=1, col=1)
         return fig

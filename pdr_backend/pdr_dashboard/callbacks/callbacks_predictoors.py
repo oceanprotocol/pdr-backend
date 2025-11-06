@@ -117,9 +117,9 @@ def get_callbacks_predictoors(app):
             ("range", "gross_income", gross_income_min, gross_income_max),
             ("range", "feed_count", nr_feeds_min, nr_feeds_max),
             ("range", "total_stake", staked_min, staked_max),
-            ("range", "tx_costs_(OCEAN)", tx_costs_min, tx_costs_max),
+            ("range", "tx_costs_(stake_token)", tx_costs_min, tx_costs_max),
             ("range", "stake_loss", stake_loss_min, stake_loss_max),
-            ("range", "profit_(OCEAN)", profit_min, profit_max),
+            ("range", "profit_(stake_token)", profit_min, profit_max),
             ("search", None, search_input_value),
         ]
 

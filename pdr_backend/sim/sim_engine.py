@@ -245,8 +245,8 @@ class SimEngine:
             tot_stake_correct = others_stake_correct + stake_down
             percent_to_me = stake_down / tot_stake_correct
             acct_down_profit += (revenue + tot_stake) * percent_to_me
-        pdr_profit_OCEAN = acct_up_profit + acct_down_profit
-        st.pdr_profits_OCEAN.append(pdr_profit_OCEAN)
+        pdr_profit_USDC = acct_up_profit + acct_down_profit
+        st.pdr_profits_OCEAN.append(pdr_profit_USDC)
 
         SimLogLine(ppss, st, test_i, ut, acct_up_profit, acct_down_profit).log_line()
 

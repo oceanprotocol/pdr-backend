@@ -51,14 +51,14 @@ class DFBuyerAgent:
 
         # Check allowance and approve if necessary
         logger.info("Checking allowance...")
-        OCEAN = ppss.web3_pp.stake_token
-        allowance = OCEAN.allowance(
+        stake_token = ppss.web3_pp.stake_token
+        allowance = stake_token.allowance(
             ppss.web3_pp.web3_config.owner,
             self.predictoor_batcher.contract_address,
         )
         if allowance < MAX_UINT - 10**50:
-            logger.info("Approving %s for predictoor_batcher", OCEAN.symbol())
-            tx = OCEAN.approve(
+            logger.info("Approving %s for predictoor_batcher", stake_token.symbol())
+            tx = stake_token.approve(
                 self.predictoor_batcher.contract_address, int(MAX_UINT), True
             )
             logger.info("Done: %s", tx["transactionHash"].hex())
