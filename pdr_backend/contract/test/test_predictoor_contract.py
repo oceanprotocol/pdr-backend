@@ -160,7 +160,9 @@ def test_submit_prediction_trueval_payout(
     receipt = feed_contract1.payout(soonest_ts, wait_for_receipt=True)
     assert receipt["status"] == 1
     stake_token_final = stake_token.balanceOf(owner_addr).to_eth()
-    assert stake_token_before.amt_eth == approx(stake_token_final.amt_eth, 2.0)  # + sub revenue
+    assert stake_token_before.amt_eth == approx(
+        stake_token_final.amt_eth, 2.0
+    )  # + sub revenue
 
 
 @enforce_types
