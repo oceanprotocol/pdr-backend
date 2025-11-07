@@ -74,7 +74,7 @@ Main bots & user tools:
 - `predictoor` - submit individual predictions
 - `trader` - buy aggregated predictions, then trade
 - `sim` - experiments / simulation flow
-- `payout` - prediction & ROSE payout
+- `payout` - USDC & ROSE payout
 
 OPF-run bots & higher-level tools:
 
