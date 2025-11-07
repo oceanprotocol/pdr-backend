@@ -7,7 +7,7 @@ from pdr_backend.util.time_types import UnixTimeS
 
 def test_paused_contracts_are_filtered_out(
     web3_pp,
-    predictoor_contract,
+    feed_contract1,
 ):
     """
     Integration test that verifies paused contracts are filtered out.
@@ -20,7 +20,7 @@ def test_paused_contracts_are_filtered_out(
     5. Query subgraph again - should NOT include our contract
     """
 
-    contract_address = predictoor_contract.contract_instance.address
+    contract_address = feed_contract1.contract_instance.address
     subgraph_url = web3_pp.subgraph_url
 
     # Step 1: Verify contract appears in feed contracts query (not paused)
@@ -44,13 +44,13 @@ def test_paused_contracts_are_filtered_out(
 
     # Step 3: Pause the contract
     # Note: This requires owner permissions
-    tx = predictoor_contract.contract_instance.functions.pause().transact(
+    tx = feed_contract1.contract_instance.functions.pause().transact(
         web3_pp.tx_call_params()
     )
     web3_pp.w3.eth.wait_for_transaction_receipt(tx)
 
     # Verify contract is paused
-    is_paused = predictoor_contract.contract_instance.functions.paused().call()
+    is_paused = feed_contract1.contract_instance.functions.paused().call()
     assert is_paused, "Contract should be paused"
 
     # Step 4: Wait for subgraph to sync
