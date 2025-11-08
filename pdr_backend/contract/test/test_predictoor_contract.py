@@ -135,9 +135,7 @@ def test_submit_prediction_trueval_payout(
     assert receipt["status"] == 1
 
     USDC_after = USDC.balanceOf(owner_addr).to_eth()
-    assert (USDC_before.amt_eth - USDC_after.amt_eth) == approx(
-        stake_amt.amt_eth, 1e-8
-    )
+    assert (USDC_before.amt_eth - USDC_after.amt_eth) == approx(stake_amt.amt_eth, 1e-8)
 
     pred_tup = feed_contract1.get_prediction(
         soonest_ts,
@@ -160,9 +158,7 @@ def test_submit_prediction_trueval_payout(
     receipt = feed_contract1.payout(soonest_ts, wait_for_receipt=True)
     assert receipt["status"] == 1
     USDC_final = USDC.balanceOf(owner_addr).to_eth()
-    assert USDC_before.amt_eth == approx(
-        USDC_final.amt_eth, 2.0
-    )  # + sub revenue
+    assert USDC_before.amt_eth == approx(USDC_final.amt_eth, 2.0)  # + sub revenue
 
 
 @enforce_types

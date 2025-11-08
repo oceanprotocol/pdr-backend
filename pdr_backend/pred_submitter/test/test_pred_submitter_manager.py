@@ -61,9 +61,7 @@ def test_approve(
 
 
 def test_transfer_erc20(pred_submitter_mgr: PredSubmitterMgr, USDC, web3_config):
-    USDC.transfer(
-        pred_submitter_mgr.contract_address, Wei(100), web3_config.owner
-    )
+    USDC.transfer(pred_submitter_mgr.contract_address, Wei(100), web3_config.owner)
     assert USDC.balanceOf(pred_submitter_mgr.contract_address) == Wei(100)
     before = USDC.balanceOf(web3_config.owner)
     pred_submitter_mgr.transfer_erc20(
@@ -134,9 +132,7 @@ def test_submit_prediction_and_payout(
     USDC,
 ):
     # the user approves 100 OCEAN tokens to the prediction manager
-    USDC.approve(
-        pred_submitter_mgr.contract_address, Wei(100), web3_config.owner
-    )
+    USDC.approve(pred_submitter_mgr.contract_address, Wei(100), web3_config.owner)
 
     # get the next prediction epoch
     current_epoch = feed_contract1.get_current_epoch_ts()

@@ -227,6 +227,4 @@ def test_get_addresses():
     assert 'Cannot find contract "ERCUnknown"' in str(excinfo.value)
 
     with patch.object(web3_pp, "get_addresses", return_value=return_value):
-        assert (
-            web3_pp.USDC_address == "0x1234567890123456789012345678901234567890"
-        )
+        assert web3_pp.USDC_address == "0x1234567890123456789012345678901234567890"
