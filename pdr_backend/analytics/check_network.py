@@ -196,7 +196,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
         lfunc = logger.error if ocean_warning or native_warning else logger.info
 
         lfunc(
-            "%s: Prediction: %.2f%s, Native: %.2f%s",
+            "%s: USDC: %.2f%s, Native: %.2f%s",
             name,
             USDC_bal.to_eth(),
             ocean_warning,
