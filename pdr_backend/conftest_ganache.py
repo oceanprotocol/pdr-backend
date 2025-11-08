@@ -55,8 +55,8 @@ def _ppss():
 
 
 @pytest.fixture(scope="session")
-def stake_token() -> Token:
-    token_address = _web3_pp().get_address("stake_token")
+def USDC() -> Token:
+    token_address = _web3_pp().get_address("USDC")
     return Token(_web3_pp(), token_address)
 
 

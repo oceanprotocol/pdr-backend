@@ -38,7 +38,7 @@ class DFBuyerAgent:
 
         # addresses
         batcher_addr = ppss.web3_pp.get_address("PredictoorHelper")
-        self.stake_token_address = ppss.web3_pp.get_address("stake_token")
+        self.USDC_address = ppss.web3_pp.get_address("USDC")
 
         # set attribs to track progress
         self.last_consume_ts = 0
@@ -51,14 +51,14 @@ class DFBuyerAgent:
 
         # Check allowance and approve if necessary
         logger.info("Checking allowance...")
-        stake_token = ppss.web3_pp.stake_token
-        allowance = stake_token.allowance(
+        USDC = ppss.web3_pp.USDC
+        allowance = USDC.allowance(
             ppss.web3_pp.web3_config.owner,
             self.predictoor_batcher.contract_address,
         )
         if allowance < MAX_UINT - 10**50:
-            logger.info("Approving %s for predictoor_batcher", stake_token.symbol())
-            tx = stake_token.approve(
+            logger.info("Approving %s for predictoor_batcher", USDC.symbol())
+            tx = USDC.approve(
                 self.predictoor_batcher.contract_address, int(MAX_UINT), True
             )
             logger.info("Done: %s", tx["transactionHash"].hex())
@@ -184,7 +184,7 @@ class DFBuyerAgent:
                 tx = self.predictoor_batcher.consume_multiple(
                     addresses_to_consume,
                     times_to_consume,
-                    self.stake_token_address,
+                    self.USDC_address,
                     True,
                 )
                 tx_hash = tx["transactionHash"].hex()

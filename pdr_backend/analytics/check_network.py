@@ -179,16 +179,16 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
 
     logger.info("Checking account balances")
 
-    stake_token = web3_pp.stake_token
+    USDC = web3_pp.USDC
 
     addresses = get_opf_addresses(web3_pp.network)
     for name, address in addresses.items():
-        stake_token_bal = stake_token.balanceOf(address)
+        USDC_bal = USDC.balanceOf(address)
         native_bal = Wei(web3_pp.get_token_balance(address))
 
         ocean_warning = (
             " LOW STAKE TOKEN BALANCE!"
-            if stake_token_bal < Eth(10).to_wei() and name != "trueval"
+            if USDC_bal < Eth(10).to_wei() and name != "trueval"
             else ""
         )
         native_warning = " LOW NATIVE BALANCE!" if native_bal < Eth(10).to_wei() else ""
@@ -198,7 +198,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
         lfunc(
             "%s: Prediction: %.2f%s, Native: %.2f%s",
             name,
-            stake_token_bal.to_eth(),
+            USDC_bal.to_eth(),
             ocean_warning,
             native_bal.to_eth(),
             native_warning,

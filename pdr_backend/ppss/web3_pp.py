@@ -234,13 +234,13 @@ class Web3PP(StrMixin):
         return None
 
     @property
-    def stake_token_address(self) -> str:
+    def USDC_address(self) -> str:
         # make sure this exists in the addresses.json file
-        return self.get_address("stake_token")
+        return self.get_address("USDC")
 
     @property
-    def stake_token(self) -> Token:
-        return Token(self, self.stake_token_address)
+    def USDC(self) -> Token:
+        return Token(self, self.USDC_address)
 
     @property
     def NativeToken(self) -> NativeToken:

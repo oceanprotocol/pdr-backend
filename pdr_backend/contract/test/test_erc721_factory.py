@@ -12,7 +12,7 @@ def test_Erc721Factory(web3_pp, web3_config):
     factory = Erc721Factory(web3_pp)
     assert factory is not None
 
-    ocean_address = web3_pp.stake_token_address
+    ocean_address = web3_pp.USDC_address
     fre_address = web3_pp.get_address("FixedPrice")
 
     rate = Eth(3).to_wei().amt_wei

@@ -27,7 +27,7 @@ def test_dfbuyer_agent_constructor(  # pylint: disable=unused-argument
 
     agent = DFBuyerAgent(mock_ppss)
 
-    mock_token.assert_called_with(mock_ppss.web3_pp, agent.stake_token_address)
+    mock_token.assert_called_with(mock_ppss.web3_pp, agent.USDC_address)
     mock_token_instance = mock_token()
     mock_token_instance.approve.assert_called_with(
         agent.predictoor_batcher.contract_address, int(MAX_UINT), True
@@ -140,7 +140,7 @@ def test_dfbuyer_agent_get_missing_consumes(  # pylint: disable=unused-argument
     feeds = {address: MagicMock() for address in addresses}
     ppss.web3_pp.query_feed_contracts = MagicMock()
     ppss.web3_pp.query_feed_contracts.return_value = feeds
-    ppss.web3_pp.stake_token.allowance.return_value = MAX_UINT
+    ppss.web3_pp.USDC.allowance.return_value = MAX_UINT
 
     ppss.dfbuyer_ss = MagicMock(spec=DFBuyerSS)
     ppss.dfbuyer_ss.batch_size = 3

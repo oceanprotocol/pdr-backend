@@ -56,9 +56,9 @@ def test_get_exchanges(feed_contract1):
 
 
 @enforce_types
-def test_get_stake_token(feed_contract1, web3_pp):
-    stake_token = feed_contract1.get_stake_token()
-    assert stake_token == web3_pp.stake_token_address
+def test_get_USDC(feed_contract1, web3_pp):
+    USDC = feed_contract1.get_USDC()
+    assert USDC == web3_pp.USDC_address
 
 
 @enforce_types
@@ -117,11 +117,11 @@ def test_get_trueValSubmitTimeout(feed_contract1):
 @enforce_types
 def test_submit_prediction_trueval_payout(
     feed_contract1,
-    stake_token: Token,
+    USDC: Token,
 ):
     w3 = feed_contract1.config.w3
     owner_addr = feed_contract1.config.owner
-    stake_token_before = stake_token.balanceOf(owner_addr).to_eth()
+    USDC_before = USDC.balanceOf(owner_addr).to_eth()
     cur_epoch = feed_contract1.get_current_epoch_ts()
     soonest_ts = feed_contract1.soonest_timestamp_to_predict(cur_epoch)
     predval = True
@@ -134,8 +134,8 @@ def test_submit_prediction_trueval_payout(
     )
     assert receipt["status"] == 1
 
-    stake_token_after = stake_token.balanceOf(owner_addr).to_eth()
-    assert (stake_token_before.amt_eth - stake_token_after.amt_eth) == approx(
+    USDC_after = USDC.balanceOf(owner_addr).to_eth()
+    assert (USDC_before.amt_eth - USDC_after.amt_eth) == approx(
         stake_amt.amt_eth, 1e-8
     )
 
@@ -159,9 +159,9 @@ def test_submit_prediction_trueval_payout(
 
     receipt = feed_contract1.payout(soonest_ts, wait_for_receipt=True)
     assert receipt["status"] == 1
-    stake_token_final = stake_token.balanceOf(owner_addr).to_eth()
-    assert stake_token_before.amt_eth == approx(
-        stake_token_final.amt_eth, 2.0
+    USDC_final = USDC.balanceOf(owner_addr).to_eth()
+    assert USDC_before.amt_eth == approx(
+        USDC_final.amt_eth, 2.0
     )  # + sub revenue
 
 

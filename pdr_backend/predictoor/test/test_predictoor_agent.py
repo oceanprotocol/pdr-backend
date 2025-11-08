@@ -85,7 +85,7 @@ def _test_predictoor_agent_main(
         mock_token = Mock()
         mock_token.balanceOf.return_value = Eth(1000).to_wei()
         ppss.web3_pp = MagicMock(spec=Web3PP)
-        ppss.web3_pp.stake_token = mock_token
+        ppss.web3_pp.USDC = mock_token
         ppss.web3_pp.NativeToken = mock_token
         ppss.web3_pp.get_single_contract.return_value = _mock_pdr_contract
         ppss.web3_pp.query_feed_contracts.return_value = feed_contracts
@@ -334,7 +334,7 @@ def test_balance_check(tmpdir, monkeypatch, OCEAN, ROSE, expected, pred_submitte
     mock_ROSE = Mock()
     mock_ROSE.balanceOf.return_value = ROSE
     ppss.web3_pp = Mock(spec=Web3PP)
-    ppss.web3_pp.stake_token = mock_OCEAN
+    ppss.web3_pp.USDC = mock_OCEAN
     ppss.web3_pp.NativeToken = mock_ROSE
     ppss.web3_pp.query_feed_contracts.return_value = feed_contracts
 

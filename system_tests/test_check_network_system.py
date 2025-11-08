@@ -27,7 +27,7 @@ def test_check_network(mock_print_stats, mock_check_dfbuyer, caplog):
     mock_token.balanceOf.return_value = Wei(int(5e18))
     mock_token.transfer.return_value = True
 
-    mock_web3_pp.stake_token = mock_token
+    mock_web3_pp.USDC = mock_token
     mock_web3_pp.NativeToken = mock_token
     mock_web3_pp.get_token_balance.return_value = 100
     mock_web3_pp.w3.eth.block_number = 100

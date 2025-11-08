@@ -29,8 +29,8 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         self._token_symbol: Optional[str] = None
 
     def set_token(self, web3_pp):
-        stake_token = self.get_stake_token()
-        self.token = Token(web3_pp, stake_token)
+        USDC = self.get_USDC()
+        self.token = Token(web3_pp, USDC)
         self._token_symbol = None  # reset symbol cache
 
     @property
@@ -162,7 +162,7 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         """
         return self.contract_instance.functions.getFixedRates().call()
 
-    def get_stake_token(self):
+    def get_USDC(self):
         """Returns the token used for staking & purchases. Eg OCEAN."""
         return self.contract_instance.functions.stakeToken().call()
 

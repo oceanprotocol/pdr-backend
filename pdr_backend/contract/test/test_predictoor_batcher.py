@@ -122,8 +122,8 @@ def test_submit_truevals_contracts(
 
 
 @enforce_types
-def test_consume_multiple(feed_contract1, stake_token, predictoor_batcher):
-    owner = stake_token.config.owner
+def test_consume_multiple(feed_contract1, USDC, predictoor_batcher):
+    owner = USDC.config.owner
 
     price = feed_contract1.get_price()
     print(price)
@@ -131,14 +131,14 @@ def test_consume_multiple(feed_contract1, stake_token, predictoor_batcher):
     times = 10
     cost = Wei(times * price.amt_wei)
 
-    stake_token.approve(predictoor_batcher.contract_address, cost)
-    balance_before = stake_token.balanceOf(owner)
+    USDC.approve(predictoor_batcher.contract_address, cost)
+    balance_before = USDC.balanceOf(owner)
 
     predictoor_batcher.consume_multiple(
-        [feed_contract1.contract_address], [times], stake_token.contract_address
+        [feed_contract1.contract_address], [times], USDC.contract_address
     )
 
-    balance_after = stake_token.balanceOf(owner)
+    balance_after = USDC.balanceOf(owner)
     assert balance_after + cost == balance_before
 
 
