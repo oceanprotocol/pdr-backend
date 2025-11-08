@@ -47,7 +47,7 @@ Main tools:
 
 ## Atomic READMEs
 
-- [Get tokens](READMEs/get-tokens.md): [testnet faucet](READMEs/testnet-faucet.md), [mainnet ROSE](READMEs/get-rose-on-sapphire.md) & [](READMEs/get-ocean-on-sapphire.md)
+- [Get tokens](READMEs/get-tokens.md): [testnet faucet](READMEs/testnet-faucet.md), [mainnet ROSE](READMEs/get-rose-on-sapphire.md) & [USDC](READMEs/get-usdc-on-sapphire.md)
 - [Claim payout for predictoor bot](READMEs/payout.md)
 - [Predictoor subgraph](READMEs/subgraph.md). [Subgraph filters](READMEs/filters.md)
 - [Run barge locally](READMEs/barge.md)
