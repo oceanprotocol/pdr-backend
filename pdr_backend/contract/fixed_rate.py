@@ -14,7 +14,7 @@ class FixedRate(BaseContract):
     def get_dt_price(self, exchangeId) -> Tuple[Wei, Wei, Wei, Wei]:
         """
         @description
-          # stake token needed to buy 1 datatoken
+          # USDC needed to buy 1 datatoken
 
         @arguments
            exchangeId - a unique exchange identifier. Typically a string.

@@ -187,7 +187,7 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
         native_bal = Wei(web3_pp.get_token_balance(address))
 
         ocean_warning = (
-            " LOW STAKE TOKEN BALANCE!"
+            " LOW USDC BALANCE!"
             if USDC_bal < Eth(10).to_wei() and name != "trueval"
             else ""
         )
