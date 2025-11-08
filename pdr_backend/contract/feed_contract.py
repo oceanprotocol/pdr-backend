@@ -278,7 +278,7 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
 
         @arguments
           predicted_value: The predicted value (True or False)
-          stake_amt: The amount of stake token to stake in prediction (in ETH, not wei)
+          stake_amt: The amount of tokens to stake in prediction (in ETH, not wei)
           prediction_ts: The prediction timestamp == start a candle.
           wait_for_receipt:
             If True, waits for tx receipt after submission.

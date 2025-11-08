@@ -277,7 +277,7 @@ def plot_slot_daily_statistics(slots_df: pl.DataFrame, pq_dir: str) -> None:
     dates = slots_daily_df["datetime"].to_list()
     ticks = int(len(dates) / 5) if len(dates) > 5 else 2
 
-    # draw daily predictoor stake in tokens
+    # draw daily predictoor stake in USDC
     chart_path = os.path.join(charts_dir, "daily_average_stake.png")
 
     fig = go.Figure(
@@ -288,15 +288,15 @@ def plot_slot_daily_statistics(slots_df: pl.DataFrame, pq_dir: str) -> None:
         )
     )
 
-    fig.update_layout(xaxis_title="Date", yaxis_title="Average tokens Staked")
-    fig.update_layout(title="Daily average tokens staked per slot, across all Feeds")
+    fig.update_layout(xaxis_title="Date", yaxis_title="Average USDC Staked")
+    fig.update_layout(title="Daily average USDC staked per slot, across all Feeds")
     fig.update_layout(xaxis={"tickmode": "array", "tickvals": dates[::ticks]})
 
     fig.write_image(chart_path)
 
     logger.info("Chart created: %s", chart_path)
 
-    # draw daily predictoor payouts in tokens
+    # draw daily predictoor payouts in USDC
     chart_path = os.path.join(charts_dir, "daily_slot_average_predictoors.png")
     fig = go.Figure(
         go.Scatter(
