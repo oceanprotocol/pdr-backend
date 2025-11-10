@@ -38,7 +38,7 @@ class DFBuyerAgent:
 
         # addresses
         batcher_addr = ppss.web3_pp.get_address("PredictoorHelper")
-        self.USDC_address = ppss.web3_pp.get_address("USDC")
+        self.USDC_addr = ppss.web3_pp.get_address("USDC")
 
         # set attribs to track progress
         self.last_consume_ts = 0
@@ -184,7 +184,7 @@ class DFBuyerAgent:
                 tx = self.predictoor_batcher.consume_multiple(
                     addresses_to_consume,
                     times_to_consume,
-                    self.USDC_address,
+                    self.USDC_addr,
                     True,
                 )
                 tx_hash = tx["transactionHash"].hex()
