@@ -88,7 +88,7 @@ def query_pending_payouts(
     query_old_slots (bool): Whether to query old slots (older than 3 days).
     include_paused (bool): Whether to include paused contracts in the query.
         Returns:
-    Dict[str, List[UnixTimeS]]: A dictionary mapping contract addresses to lists of pending slot timestamps.
+    Dict[str, List[UnixTimeS]]: contract addresses to lists of pending slot timestamps.
     """
     chunk_size = 1000
     pending_slots: Dict[str, List[UnixTimeS]] = {}
