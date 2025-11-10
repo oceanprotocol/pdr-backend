@@ -22,7 +22,7 @@ Ensure you pause or stop any ongoing prediction submissions. You can use `Ctrl-C
 From console:
 
 ```console
-pdr claim_OCEAN ppss.yaml
+pdr claim_payouts ppss.yaml
 ```
 
 ### 3. Completion

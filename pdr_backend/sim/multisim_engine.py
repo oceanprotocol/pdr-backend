@@ -97,7 +97,7 @@ class MultisimEngine:
             "recall": np.mean(st.aim.recalls[1:]),
             "loss": np.mean(st.aim.losses[1:]),
             "yerr": np.mean(st.aim.yerrs[1:]),
-            "pdr_profit_OCEAN": np.sum(st.pdr_profits_OCEAN),
+            "pdr_profit_USDC": np.sum(st.pdr_profits_OCEAN),
             "trader_profit_USD": np.sum(st.trader_profits_USD),
         }
         run_metrics_list = list(run_metrics.values())

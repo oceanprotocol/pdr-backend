@@ -53,12 +53,12 @@ def test_ocean_payout_test(mock_wait_until_subgraph_syncs, caplog):
         "pdr_backend.payout.payout.PredSubmitterMgr", return_value=mock_contract
     ):
         # Mock sys.argv
-        sys.argv = ["pdr", "claim_OCEAN", "ppss.yaml"]
+        sys.argv = ["pdr", "claim_payouts", "ppss.yaml"]
 
         cli_module._do_main()
 
         # Verifying outputs
-        assert "pdr claim_OCEAN: Begin" in caplog.text
+        assert "pdr claim_payouts: Begin" in caplog.text
         assert "Arguments:" in caplog.text
         assert "PPSS_FILE=ppss.yaml" in caplog.text
         assert "Starting payout" in caplog.text

@@ -39,7 +39,7 @@ class SimLogLine:
         s += " pdr_profit="
         s += f"{compactSmallNum(self.acct_up_profit)} up"
         s += f" + {compactSmallNum(self.acct_down_profit)} down"
-        s += f" = {compactSmallNum(self.pdr_profit_OCEAN)} OCEAN"
+        s += f" = {compactSmallNum(self.pdr_profit_USDC)} OCEAN"
         s += f" (cumul {compactSmallNum(sum(self.st.pdr_profits_OCEAN))} OCEAN)"
         s += " ║"
 

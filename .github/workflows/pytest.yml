@@ -55,13 +55,19 @@ jobs:
             [ -f "$HOME/.ocean/ocean-contracts/artifacts/ready" ] && break
             done
 
+      - name: Add USDC to address.json
+        run: |
+          ADDRESS_FILE="$HOME/.ocean/ocean-contracts/artifacts/address.json"
+          # Get the Ocean token address from the development network
+          OCEAN_ADDR=$(jq -r '.development.Ocean' "$ADDRESS_FILE")
+          # Add USDC as an alias to Ocean address in the development network
+          jq '.development.USDC = .development.Ocean' "$ADDRESS_FILE" > "${ADDRESS_FILE}.tmp"
+          mv "${ADDRESS_FILE}.tmp" "$ADDRESS_FILE"
+          echo "Added USDC=$OCEAN_ADDR to address.json"
+
       - name: Test with pytest
         id: pytest
         run: |
           coverage run --source=pdr_backend --omit=*/test/*,*/test_ganache/*,*/test_noganache/* -m pytest
           coverage report
           coverage xml
-      - name: Publish code coverage
-        uses: paambaati/codeclimate-action@v5.0.0
-        env:
-          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}

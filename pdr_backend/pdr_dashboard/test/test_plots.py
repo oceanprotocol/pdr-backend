@@ -187,9 +187,9 @@ def test_get_figures_and_metrics(_sample_app):
     assert fig_stakes.layout["title"] == "Stakes"
 
     assert fig_accuracy.layout["yaxis"]["title"] == "Accuracy(%)"
-    assert fig_profit.layout["yaxis"]["title"] == "Profit(OCEAN)"
-    assert fig_costs.layout["yaxis"]["title"] == "Fees(OCEAN)"
-    assert fig_stakes.layout["yaxis"]["title"] == "Stake(OCEAN)"
+    assert fig_profit.layout["yaxis"]["title"] == "Profit(USDC)"
+    assert fig_costs.layout["yaxis"]["title"] == "Fees(USDC)"
+    assert fig_stakes.layout["yaxis"]["title"] == "Stake(USDC)"
 
     assert fig_accuracy.update_layout_called == 1
     assert fig_profit.update_layout_called == 1

@@ -169,7 +169,7 @@ class ValidationOverview:
         gap_pct = (
             (
                 counts_per_timedelta.group_by(["pair", "timeframe"])
-                .agg([(pl.sum("total_count").alias("sum_total_count"))])
+                .agg([pl.sum("total_count").alias("sum_total_count")])
                 .join(
                     counts_per_timedelta,
                     on=["pair", "timeframe"],

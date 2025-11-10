@@ -29,25 +29,25 @@ class FeedModalFigures(ModalFigures):
         fig_config = {
             "sales_fig": {
                 "title": "Sales",
-                "yaxis_title": "Daily Sales (OCEAN)",
+                "yaxis_title": "Daily Sales (USDC)",
                 "show_legend": False,
                 "ticker_format": "%m-%d",
             },
             "revenues_fig": {
                 "title": "Revenues",
-                "yaxis_title": "Daily Revenues (OCEAN)",
+                "yaxis_title": "Daily Revenues (USDC)",
                 "show_legend": False,
                 "ticker_format": "%m-%d",
             },
             "accuracies_fig": {
                 "title": "Accuracy",
-                "yaxis_title": "Avg Accuracy (OCEAN)",
+                "yaxis_title": "Avg Accuracy (USDC)",
                 "show_legend": False,
                 "yaxis_range": [40, 70],
             },
             "stakes_fig": {
                 "title": "Stakes",
-                "yaxis_title": "Stake (OCEAN)",
+                "yaxis_title": "Stake (USDC)",
                 "show_legend": False,
             },
             "predictions_fig": {
@@ -57,7 +57,7 @@ class FeedModalFigures(ModalFigures):
             },
             "profits_fig": {
                 "title": "Profits",
-                "yaxis_title": "Pdr Profit (OCEAN)",
+                "yaxis_title": "Pdr Profit (USDC)",
                 "show_legend": False,
             },
         }
@@ -116,24 +116,24 @@ class PredictoorModalFigures(ModalFigures):
         fig_config = {
             "incomes_fig": {
                 "title": "Incomes",
-                "yaxis_title": "Gross Income (OCEAN)",
+                "yaxis_title": "Gross Income (USDC)",
                 "show_legend": False,
                 "ticker_format": "%m-%d",
             },
             "accuracies_fig": {
                 "title": "Accuracy",
-                "yaxis_title": "Avg Accuracy (OCEAN)",
+                "yaxis_title": "Avg Accuracy (USDC)",
                 "show_legend": False,
                 "yaxis_range": [40, 70],
             },
             "stakes_fig": {
                 "title": "Stakes",
-                "yaxis_title": "Stake (OCEAN)",
+                "yaxis_title": "Stake (USDC)",
                 "show_legend": False,
             },
             "profits_fig": {
                 "title": "Total Profit over time",
-                "yaxis_title": "Profit (OCEAN)",
+                "yaxis_title": "Profit (USDC)",
                 "show_legend": False,
             },
             "nr_of_feeds_fig": {
@@ -221,7 +221,7 @@ class FiguresAndMetricsResult:
                 "fig_attr": "fig_profit",
                 "args": {
                     "title": "Profit",
-                    "yaxis_title": "Profit(OCEAN)",
+                    "yaxis_title": "Profit(USDC)",
                     "show_legend": False,
                 },
             },
@@ -230,7 +230,7 @@ class FiguresAndMetricsResult:
                 "fig_attr": "fig_costs",
                 "args": {
                     "title": "Costs",
-                    "yaxis_title": "Fees(OCEAN)",
+                    "yaxis_title": "Fees(USDC)",
                     "show_legend": False,
                     "use_default_tick_format": True,
                 },
@@ -240,7 +240,7 @@ class FiguresAndMetricsResult:
                 "fig_attr": "fig_stakes",
                 "args": {
                     "title": "Stakes",
-                    "yaxis_title": "Stake(OCEAN)",
+                    "yaxis_title": "Stake(USDC)",
                     "show_legend": False,
                 },
             },

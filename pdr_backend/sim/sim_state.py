@@ -89,7 +89,7 @@ class SimState:
     @staticmethod
     def recent_metrics_names() -> List[str]:
         return AimodelMetrics.recent_metrics_names() + [
-            "pdr_profit_OCEAN",
+            "pdr_profit_USDC",
             "trader_profit_USD",
         ]
 
@@ -100,7 +100,7 @@ class SimState:
         rm = self.aim.recent_metrics().copy()
         rm.update(
             {
-                "pdr_profit_OCEAN": self.pdr_profits_OCEAN[-1],
+                "pdr_profit_USDC": self.pdr_profits_OCEAN[-1],
                 "trader_profit_USD": self.trader_profits_USD[-1],
             }
         )

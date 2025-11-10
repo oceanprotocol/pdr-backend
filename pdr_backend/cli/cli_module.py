@@ -123,7 +123,7 @@ def do_trader(args, nested_args=None):
 
 
 @enforce_types
-def do_claim_OCEAN(args, nested_args=None):
+def do_claim_payouts(args, nested_args=None):
     ppss = PPSS(
         yaml_filename=args.PPSS_FILE,
         network="sapphire-mainnet",

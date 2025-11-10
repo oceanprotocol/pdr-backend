@@ -24,7 +24,7 @@ Main tools:
   pdr predictoor PPSS_FILE NETWORK
   pdr dashboard PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
-  pdr claim_OCEAN PPSS_FILE
+  pdr claim_payouts PPSS_FILE
   pdr claim_ROSE PPSS_FILE
 """
 
@@ -647,7 +647,7 @@ defined_parsers = {
     "do_sim": SimArgParser("Run simulation", "sim"),
     "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
     "do_trader": TraderArgParser("Run a trader bot", "trader"),
-    "do_claim_OCEAN": ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN"),
+    "do_claim_payouts": ClaimOceanArgParser("Claim payouts", "claim_payouts"),
     "do_claim_ROSE": ClaimRoseArgParser("Claim ROSE", "claim_ROSE"),
     # power tools
     "do_multisim": MultisimArgParser("Run >1 simulations", "multisim"),
@@ -684,7 +684,7 @@ defined_parsers = {
     "do_trueval": TruevalArgParser("Run trueval bot", "trueval"),
     "do_dfbuyer": DfbuyerArgParser("Run dfbuyer bot", "dfbuyer"),
     "do_publisher": PublisherArgParser("Publish feeds", "publisher"),
-    "do_topup": TopupArgParser("Topup OCEAN and ROSE in dfbuyer, trueval, ..", "topup"),
+    "do_topup": TopupArgParser("Topup USDC and ROSE in dfbuyer, trueval, ..", "topup"),
     "do_sim_plots": SimPlotsArgParser("Visualize simulation data", "sim_plots"),
     "do_arima_plots": ArimaPlotsArgParser("Visualize ARIMA data", "arima_plots"),
     "do_dashboard": PredictoorDashboardArgParser(

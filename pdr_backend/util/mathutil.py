@@ -15,7 +15,7 @@ def round_sig(x: Union[int, float], sig: int) -> Union[int, float]:
 
 @enforce_types
 def all_nan(
-    x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame, pl.Series]
+    x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame, pl.Series],
 ) -> bool:
     """Returns True if all entries in x have a nan _or_ a None"""
     if isinstance(x, np.ndarray):
@@ -47,7 +47,7 @@ def all_nan(
 
 @enforce_types
 def has_nan(
-    x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame, pl.Series]
+    x: Union[np.ndarray, pd.DataFrame, pd.Series, pl.DataFrame, pl.Series],
 ) -> bool:
     """Returns True if any entry in x has a nan _or_ a None"""
     if isinstance(x, np.ndarray):
@@ -68,7 +68,7 @@ def has_nan(
 
 @enforce_types
 def fill_nans(
-    df: Union[pd.DataFrame, pl.DataFrame]
+    df: Union[pd.DataFrame, pl.DataFrame],
 ) -> Union[pd.DataFrame, pl.DataFrame]:
     """Interpolate the nans using Linear method available in pandas.
     It ignores the index and treat the values as equally spaced.
