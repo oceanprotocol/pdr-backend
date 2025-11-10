@@ -24,7 +24,7 @@ Main tools:
   pdr predictoor PPSS_FILE NETWORK
   pdr dashboard PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
-  pdr claim_payouts PPSS_FILE
+  pdr claim_payouts PPSS_FILE [--include_paused]
   pdr claim_ROSE PPSS_FILE
 """
 
@@ -273,6 +273,17 @@ class NATIVE_TOKEN_Mixin:
             action="store_true",
             default=False,
             help="If --NATIVE_TOKEN then transact with ROSE otherwise use OCEAN",
+        )
+
+
+@enforce_types
+class INCLUDE_PAUSED_Mixin:
+    def add_argument_INCLUDE_PAUSED(self):
+        self.add_argument(
+            "--include_paused",
+            action="store_true",
+            default=False,
+            help="Include paused contracts when querying for payouts",
         )
 
 
@@ -554,7 +565,15 @@ def print_args(arguments: Namespace, nested_args: dict):
 SimArgParser = _ArgParser_PPSS
 PredictoorArgParser = _ArgParser_PPSS_NETWORK
 TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
-ClaimOceanArgParser = _ArgParser_PPSS
+
+
+@enforce_types
+class ClaimOceanArgParser(CustomArgParser, PPSS_Mixin, INCLUDE_PAUSED_Mixin):
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_arguments_bulk(command_name, ["PPSS", "INCLUDE_PAUSED"])
+
+
 ClaimRoseArgParser = _ArgParser_PPSS
 
 # power tools
