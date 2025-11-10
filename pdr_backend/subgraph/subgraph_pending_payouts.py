@@ -80,6 +80,16 @@ def _fetch_subgraph_payouts(
 def query_pending_payouts(
     subgraph_url: str, addr: str, query_old_slots=False, include_paused=False
 ) -> Dict[str, List[UnixTimeS]]:
+    """
+    Fetch pending payouts for a given address.
+        Parameters:
+    subgraph_url (str): The URL of the subgraph to query.
+    addr (str): The address to fetch pending payouts for.
+    query_old_slots (bool): Whether to query old slots (older than 3 days).
+    include_paused (bool): Whether to include paused contracts in the query.
+        Returns:
+    Dict[str, List[UnixTimeS]]: A dictionary mapping contract addresses to lists of pending slot timestamps.
+    """
     chunk_size = 1000
     pending_slots: Dict[str, List[UnixTimeS]] = {}
     addr = addr.lower()
