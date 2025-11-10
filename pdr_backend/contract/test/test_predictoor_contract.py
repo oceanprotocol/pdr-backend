@@ -57,8 +57,8 @@ def test_get_exchanges(feed_contract1):
 
 @enforce_types
 def test_get_USDC(feed_contract1, web3_pp):
-    USDC = feed_contract1.get_USDC()
-    assert USDC == web3_pp.USDC_address
+    stake_token = feed_contract1.get_stake_token()
+    assert stake_token == web3_pp.OCEAN_address
 
 
 @enforce_types

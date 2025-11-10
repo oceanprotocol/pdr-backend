@@ -162,7 +162,7 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         """
         return self.contract_instance.functions.getFixedRates().call()
 
-    def get_USDC(self):
+    def get_stake_token(self):
         """Returns the token used for staking & purchases. Eg OCEAN."""
         return self.contract_instance.functions.stakeToken().call()
 
