@@ -11,7 +11,11 @@ logger = logging.getLogger("subgraph")
 
 
 def _fetch_subgraph_payouts(
-    subgraph_url: str, addr: str, slot_filter: str, chunk_size: int, include_paused: bool = False
+    subgraph_url: str,
+    addr: str,
+    slot_filter: str,
+    chunk_size: int,
+    include_paused: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     slot_filter: string inside slot_{ ... } e.g.
@@ -24,7 +28,7 @@ def _fetch_subgraph_payouts(
     while True:
         # Conditionally add the paused filter
         paused_filter = "" if include_paused else ", predictContract_: {paused: false}"
-        
+
         query = """
         {
             predictPredictions(

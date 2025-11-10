@@ -92,7 +92,9 @@ def find_slots_and_payout_with_mgr(
 
 
 @enforce_types
-def do_ocean_payout(ppss: PPSS, check_network: bool = True, include_paused: bool = False):
+def do_ocean_payout(
+    ppss: PPSS, check_network: bool = True, include_paused: bool = False
+):
     web3_config = ppss.web3_pp.web3_config
     if check_network:
         assert ppss.web3_pp.network == "sapphire-mainnet"
