@@ -41,7 +41,8 @@ def get_payout_query(
                 {
                     timestamp_gte: %s,
                     timestamp_lte: %s,
-                    prediction_contains: "%s"
+                    prediction_contains: "%s",
+                    prediction_: {slot_: {predictContract_: {paused: false}}}
                 }
             """
             % (start_ts, end_ts, asset_id)

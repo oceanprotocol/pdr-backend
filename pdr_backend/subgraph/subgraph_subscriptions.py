@@ -51,9 +51,9 @@ def fetch_filtered_subscriptions(
 
     # pylint: disable=line-too-long
     if len(contracts) > 0:
-        where_clause = f", where: {{predictContract_: {{id_in: {json.dumps(contracts)}}}, timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
+        where_clause = f", where: {{predictContract_: {{id_in: {json.dumps(contracts)}, paused: false}}, timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
     else:
-        where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}}}"
+        where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}, predictContract_: {{paused: false}}}}"
 
     # pylint: disable=line-too-long
     query = f"""

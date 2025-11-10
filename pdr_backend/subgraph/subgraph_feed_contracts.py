@@ -40,7 +40,7 @@ def query_feed_contracts(
     while True:
         query = """
         {
-            predictContracts(skip:%s, first:%s){
+            predictContracts(where: {paused: false}, skip:%s, first:%s){
                 id
                 token {
                     id

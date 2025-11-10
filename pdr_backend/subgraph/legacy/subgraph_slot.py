@@ -58,6 +58,7 @@ def get_predict_slots_query(
                 slot_lte: {initial_slot}
                 slot_gte: {last_slot}
                 predictContract_in: {asset_ids_str}
+                predictContract_: {{paused: false}}
             }}
                 ) {{
                 id

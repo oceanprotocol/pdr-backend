@@ -13,7 +13,7 @@ logger = logging.getLogger("subgraph")
 def block_number_is_synced(subgraph_url: str, block_number: int) -> bool:
     query = """
         {
-            predictContracts(block:{number:%s}){
+            predictContracts(block:{number:%s}, where: {paused: false}){
                 id
             }
         }

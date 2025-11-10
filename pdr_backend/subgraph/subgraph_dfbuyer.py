@@ -17,7 +17,7 @@ def get_consume_so_far(
     while True:  # pylint: disable=too-many-nested-blocks
         query = """
         {
-            predictContracts(skip:%s, first:%s){
+            predictContracts(where: {paused: false}, skip:%s, first:%s){
                 id
                 token{
                     orders(where: {createdTimestamp_gt:%s, consumer_in:["%s"]}){

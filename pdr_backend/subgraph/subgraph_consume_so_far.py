@@ -24,7 +24,7 @@ def get_consume_so_far_per_contract(
     while True:
         query = """
         {
-            predictSubscriptions(where: {timestamp_gt:%s, user_:{id: "%s"}}, first: %s, skip: %s){
+            predictSubscriptions(where: {timestamp_gt:%s, user_:{id: "%s"}, predictContract_: {paused: false}}, first: %s, skip: %s){
                 id
                 timestamp
                 user {

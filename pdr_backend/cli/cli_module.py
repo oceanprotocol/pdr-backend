@@ -129,7 +129,8 @@ def do_claim_payouts(args, nested_args=None):
         network="sapphire-mainnet",
         nested_override_args=nested_args,
     )
-    do_ocean_payout(ppss)
+    include_paused = args.include_paused
+    do_ocean_payout(ppss, include_paused=include_paused)
 
 
 @enforce_types

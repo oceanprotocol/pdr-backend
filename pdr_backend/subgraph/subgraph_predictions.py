@@ -71,7 +71,7 @@ def fetch_filtered_predictions(
     filters = [f.lower() for f in addresses]
 
     # pylint: disable=line-too-long
-    where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}, slot_: {{predictContract_in: {json.dumps(filters)}}}}}"
+    where_clause = f", where: {{timestamp_gt: {start_ts}, timestamp_lt: {end_ts}, slot_: {{predictContract_in: {json.dumps(filters)}, predictContract_: {{paused: false}}}}}}"
 
     query = f"""
         {{
@@ -242,6 +242,7 @@ def fetch_contract_id_and_spe(
         {
             predictContracts(where: {
                 id_in: %s
+                paused: false
             }){
                 id
                 secondsPerEpoch
