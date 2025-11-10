@@ -11,7 +11,7 @@ from pdr_backend.cli.cli_module import (
     do_sim,
     do_predictoor,
     do_trader,
-    do_claim_OCEAN,
+    do_claim_payouts,
     do_claim_ROSE,
     # power tools
     do_multisim,
@@ -259,11 +259,11 @@ def test_do_trader(monkeypatch):
 
 
 @enforce_types
-def test_do_claim_OCEAN(monkeypatch):
+def test_do_claim_payouts(monkeypatch):
     mock_f = Mock()
     monkeypatch.setattr(f"{_CLI_PATH}.do_ocean_payout", mock_f)
 
-    do_claim_OCEAN(MockArgParser_PPSS().parse_args())
+    do_claim_payouts(MockArgParser_PPSS().parse_args())
     mock_f.assert_called()
 
 

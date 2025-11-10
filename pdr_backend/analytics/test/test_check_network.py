@@ -12,7 +12,7 @@ from pdr_backend.analytics.check_network import (
 )
 from pdr_backend.ppss.ppss import mock_ppss
 from pdr_backend.util.constants import S_PER_DAY, S_PER_WEEK
-from pdr_backend.util.currency_types import Eth, Wei
+from pdr_backend.util.currency_types import Eth
 
 PATH = "pdr_backend.analytics.check_network"
 
@@ -99,16 +99,22 @@ def test_check_network_main(  # pylint: disable=unused-argument
     )
 
     mock_get_opf_addresses.return_value = {
-        "dfbuyer": "0xdfBuyerAddress",
+        "dfbuyer": "0x0000000000000000000000000000000000000000",
         "some_other_address": "0xSomeOtherAddress",
     }
     mock_query_subgraph.return_value = {"data": {"predictContracts": []}}
-    mock_token.return_value.balanceOf.return_value = Eth(1000).to_wei()
+
+    # Mock the USDC property
+    mock_USDC_instance = Mock()
+    mock_USDC_instance.balanceOf.return_value = Eth(1000).to_wei()
+    mock_token.return_value = mock_USDC_instance
 
     mock_w3 = Mock()  # pylint: disable=not-callable
     mock_w3.eth.get_balance.return_value = 1000.0 * 1e18
     ppss.web3_pp.web3_config.w3 = mock_w3
     ppss.web3_pp.w3.eth.block_number = 100
+    # prevent get_address from trying to read addresses.json
+    monkeypatch.setattr(ppss.web3_pp, "get_address", lambda name: "0xStakeToken")
     check_network_main(ppss, lookback_hours=24)
 
     mock_get_opf_addresses.assert_called_once_with("sapphire-mainnet")
@@ -135,6 +141,17 @@ def test_check_network_others(  # pylint: disable=unused-argument
     )
     mock_query_subgraph = Mock()
 
+    # Mock the USDC property
+    mock_USDC_instance = Mock()
+    mock_USDC_instance.balanceOf.return_value = Eth(1000).to_wei()
+    mock_token.return_value = mock_USDC_instance
+
+    mock_get_opf_addresses.return_value = {
+        "dfbuyer": "0x0000000000000000000000000000000000000000",
+    }
+
+    # prevent get_address from trying to read addresses.json
+    monkeypatch.setattr(ppss.web3_pp, "get_address", lambda name: "0xStakeToken")
     # test if predictoor contracts are found, iterates through them
     with patch(f"{PATH}.query_subgraph") as mock_query_subgraph:
         mock_query_subgraph.return_value = {
@@ -169,12 +186,22 @@ def test_check_network_without_mock(  # pylint: disable=unused-argument
     tmpdir,
     monkeypatch,
 ):
-    mock_token.balanceOf.return_value = Wei(1000e18)
     ppss = mock_ppss(
         [{"predict": "binance BTC/USDT c 5m", "train_on": "binance BTC/USDT c 5m"}],
         "sapphire-mainnet",
         str(tmpdir),
     )
+
+    # Mock the USDC property
+    mock_USDC_instance = Mock()
+    mock_USDC_instance.balanceOf.return_value = Eth(1000).to_wei()
+    mock_token.return_value = mock_USDC_instance
+
+    mock_get_opf_addresses.return_value = {
+        "dfbuyer": "0x0000000000000000000000000000000000000000",
+    }
+    # prevent get_address from trying to read addresses.json
+    monkeypatch.setattr(ppss.web3_pp, "get_address", lambda name: "0xStakeToken")
 
     check_network_main(ppss, lookback_hours=1)
     assert mock_check_dfbuyer.call_count == 1

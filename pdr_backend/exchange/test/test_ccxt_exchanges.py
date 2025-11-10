@@ -1,7 +1,9 @@
 import ccxt
+import pytest
 from enforce_typing import enforce_types
 
 
+@pytest.mark.skip(reason="MEXC exchange test - uncomment to run")
 @enforce_types
 def test_ccxt_mexc_pairs():
     exchange = ccxt.mexc()

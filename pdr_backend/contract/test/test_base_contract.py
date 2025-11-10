@@ -16,25 +16,25 @@ def mock_send_encrypted_sapphire_tx(monkeypatch):
 
 @enforce_types
 def test_base_contract(web3_pp, web3_config):
-    OCEAN_address = web3_pp.OCEAN_address
+    USDC_address = web3_pp.USDC_address
 
     # success
-    Token(web3_pp, OCEAN_address)
+    Token(web3_pp, USDC_address)
 
     # catch failure
     web3_config = web3_pp.web3_config
     with pytest.raises(ValueError):
-        Token(web3_config, OCEAN_address)
+        Token(web3_config, USDC_address)
 
 
 @enforce_types
 def test_send_encrypted_tx(
     mock_send_encrypted_sapphire_tx,  # pylint: disable=redefined-outer-name
-    OCEAN,
+    USDC,
     web3_pp,
 ):
-    OCEAN_address = web3_pp.OCEAN_address
-    contract = Token(web3_pp, OCEAN_address)
+    USDC_address = web3_pp.USDC_address
+    contract = Token(web3_pp, USDC_address)
 
     # Set up dummy return value for the mocked function
     mock_send_encrypted_sapphire_tx.return_value = (
@@ -75,7 +75,7 @@ def test_send_encrypted_tx(
         rpc_url,
         value,
         gasLimit,
-        OCEAN.contract_instance.encode_abi(fn_name=function_name, args=args),
+        USDC.contract_instance.encode_abi(fn_name=function_name, args=args),
         gasCost,
         nonce,
     )

@@ -19,7 +19,7 @@ def test_compact_num(tmpdir, caplog):
     st = Mock(spec=SimState)
     st.ytrues = [True, False, True, False, True]
     st.recent_metrics.return_value = {
-        "pdr_profit_OCEAN": 1.0,
+        "pdr_profit_USDC": 1.0,
         "trader_profit_USD": 2.0,
         "prob_up": 0.5,
         "acc_est": 0.6,

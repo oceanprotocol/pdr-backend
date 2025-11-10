@@ -56,9 +56,9 @@ def test_get_exchanges(feed_contract1):
 
 
 @enforce_types
-def test_get_stake_token(feed_contract1, web3_pp):
+def test_get_USDC(feed_contract1, web3_pp):
     stake_token = feed_contract1.get_stake_token()
-    assert stake_token == web3_pp.OCEAN_address
+    assert stake_token == web3_pp.USDC_address
 
 
 @enforce_types
@@ -117,11 +117,11 @@ def test_get_trueValSubmitTimeout(feed_contract1):
 @enforce_types
 def test_submit_prediction_trueval_payout(
     feed_contract1,
-    OCEAN: Token,
+    USDC: Token,
 ):
     w3 = feed_contract1.config.w3
     owner_addr = feed_contract1.config.owner
-    OCEAN_before = OCEAN.balanceOf(owner_addr).to_eth()
+    USDC_before = USDC.balanceOf(owner_addr).to_eth()
     cur_epoch = feed_contract1.get_current_epoch_ts()
     soonest_ts = feed_contract1.soonest_timestamp_to_predict(cur_epoch)
     predval = True
@@ -134,10 +134,8 @@ def test_submit_prediction_trueval_payout(
     )
     assert receipt["status"] == 1
 
-    OCEAN_after = OCEAN.balanceOf(owner_addr).to_eth()
-    assert (OCEAN_before.amt_eth - OCEAN_after.amt_eth) == approx(
-        stake_amt.amt_eth, 1e-8
-    )
+    USDC_after = USDC.balanceOf(owner_addr).to_eth()
+    assert (USDC_before.amt_eth - USDC_after.amt_eth) == approx(stake_amt.amt_eth, 1e-8)
 
     pred_tup = feed_contract1.get_prediction(
         soonest_ts,
@@ -159,8 +157,8 @@ def test_submit_prediction_trueval_payout(
 
     receipt = feed_contract1.payout(soonest_ts, wait_for_receipt=True)
     assert receipt["status"] == 1
-    OCEAN_final = OCEAN.balanceOf(owner_addr).to_eth()
-    assert OCEAN_before.amt_eth == approx(OCEAN_final.amt_eth, 2.0)  # + sub revenue
+    USDC_final = USDC.balanceOf(owner_addr).to_eth()
+    assert USDC_before.amt_eth == approx(USDC_final.amt_eth, 2.0)  # + sub revenue
 
 
 @enforce_types

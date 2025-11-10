@@ -35,10 +35,10 @@ def print_balances(addr: str, web3_pp: Web3PP):
     @notes
       Does *not* use logger.info on purpose. We want output to be compact.
     """
-    ROSE, OCEAN = web3_pp.NativeToken, web3_pp.OCEAN_Token
+    ROSE, USDC = web3_pp.NativeToken, web3_pp.USDC
     ROSE_bal: float = ROSE.balanceOf(addr).to_eth().amount
-    OCEAN_bal: float = OCEAN.balanceOf(addr).to_eth().amount
-    print(f"{ROSE_bal} ROSE, {OCEAN_bal} OCEAN")
+    USDC_bal: float = USDC.balanceOf(addr).to_eth().amount
+    print(f"{ROSE_bal} ROSE, {USDC_bal} USDC")
 
 
 @enforce_types
@@ -57,7 +57,7 @@ def fund_accounts(
         logger.error("Unknown network %s", web3_pp.network)
         sys.exit(1)
 
-    token = web3_pp.NativeToken if is_native_token else web3_pp.OCEAN_Token
+    token = web3_pp.NativeToken if is_native_token else web3_pp.USDC
 
     assert hasattr(token, "name")
     assert hasattr(token, "transfer")

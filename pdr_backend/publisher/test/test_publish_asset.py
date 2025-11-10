@@ -44,6 +44,6 @@ def test_publish_asset(web3_pp, web3_config):
     )
     assert contract.get_price().amt_wei / 1e18 == approx(3 * (1.201))
 
-    assert contract.get_stake_token() == web3_pp.OCEAN_address
+    assert contract.get_stake_token() == web3_pp.USDC_address
 
     assert contract.get_trueValSubmitTimeout() == 3 * 24 * 60 * 60

@@ -9,7 +9,7 @@ def test_dfrewards(web3_pp, web3_config):
     dfrewards_addr = web3_pp.get_address("DFRewards")
     assert isinstance(dfrewards_addr, str)
 
-    ocean_addr = web3_pp.OCEAN_address
+    ocean_addr = web3_pp.USDC_address
     assert isinstance(dfrewards_addr, str)
 
     contract = DFRewards(web3_pp, dfrewards_addr)
