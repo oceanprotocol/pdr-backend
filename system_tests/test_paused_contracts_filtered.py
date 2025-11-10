@@ -131,14 +131,3 @@ def test_paused_contracts_are_filtered_out(
             f"Paused contract {contract_address} SHOULD be in pending "
             "payouts when include_paused=True"
         )
-
-    print(
-        f"✓ Verified paused contract {contract_address} is filtered "
-        "from queries by default"
-    )
-    print(
-        f"✓ Verified paused contract {contract_address} is included "
-        "when include_paused=True"
-    )
-        f"✓ Verified paused contract {contract_address} is included when include_paused=True"
-    )
