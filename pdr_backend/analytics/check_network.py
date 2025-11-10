@@ -179,11 +179,11 @@ def check_network_main(ppss: PPSS, lookback_hours: int):
 
     logger.info("Checking account balances")
 
-    USDC = web3_pp.USDC
+    USDC_token = web3_pp.USDC
 
     addresses = get_opf_addresses(web3_pp.network)
     for name, address in addresses.items():
-        USDC_bal = USDC.balanceOf(address)
+        USDC_bal = USDC_token.balanceOf(address)
         native_bal = Wei(web3_pp.get_token_balance(address))
 
         ocean_warning = (
