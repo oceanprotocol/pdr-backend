@@ -29,8 +29,8 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         self._token_symbol: Optional[str] = None
 
     def set_token(self, web3_pp):
-        USDC = self.get_USDC()
-        self.token = Token(web3_pp, USDC)
+        stake_token = self.get_stake_token()
+        self.token = Token(web3_pp, stake_token)
         self._token_symbol = None  # reset symbol cache
 
     @property
@@ -72,7 +72,7 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         )
 
         # approve
-        logger.info("Approve spend %s: begin", self.token_symbol)
+        logger.info("Approve spend USDC: begin")
         self.token.approve(self.contract_instance.address, baseTokenAmt_wei)
         logger.info("Approve spend %s: done", self.token_symbol)
 
@@ -169,10 +169,10 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
     def get_price(self) -> Wei:
         """
         @description
-          # OCEAN needed to buy 1 datatoken
+          # USDC needed to buy 1 datatoken
 
         @return
-           baseTokenAmt_wei - # OCEAN needed, in wei
+           baseTokenAmt_wei - # USDC needed, in wei
 
         @notes
            Assumes consumeMktSwapFeeAmt = 0
@@ -278,7 +278,7 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
 
         @arguments
           predicted_value: The predicted value (True or False)
-          stake_amt: The amount of tokens to stake in prediction (in ETH, not wei)
+          stake_amt: The amount of USDC to stake in prediction (in ETH, not wei)
           prediction_ts: The prediction timestamp == start a candle.
           wait_for_receipt:
             If True, waits for tx receipt after submission.

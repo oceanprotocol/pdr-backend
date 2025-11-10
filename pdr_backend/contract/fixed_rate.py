@@ -43,7 +43,7 @@ class FixedRate(BaseContract):
         """
         @description
            Given an exact target # datatokens, calculates # basetokens
-           (tokens) needed to get it, and fee amounts too.
+           (USDC) needed to get it, and fee amounts too.
 
         @arguments
            exchangeId - a unique exchange identifier. Typically a string.
@@ -51,7 +51,7 @@ class FixedRate(BaseContract):
            consumeMktSwapFeeAmt - fee amount for consume market
 
         @return
-           baseTokenAmt_wei - # tokens needed, in wei
+           baseTokenAmt_wei - # USDC needed, in wei
            oceanFeeAmt_wei - fee to Ocean community (OPC)
            publishMktFeeAmt_wei - fee to publish market
            consumeMktFeeAmt_wei - fee to consume market
