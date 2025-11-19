@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 This README describes how to:
 
 - [Get fake ROSE on Sapphire testnet](#get-fake-rose-on-sapphire-testnet)
-- [Get fake OCEAN on Sapphire testnet](#get-fake-ocean-on-sapphire-testnet)
+- [Get fake USDC on Sapphire testnet](#get-fake-usdc-on-sapphire-testnet)
 
 If you need, [create a new EVM account](#create-new-evm-account) first.
 
@@ -18,11 +18,11 @@ If you need, [create a new EVM account](#create-new-evm-account) first.
 3. Fill in your address and request test tokens.
 4. (Optional) Confirm receipt via [Sapphire testnet explorer](https://testnet.explorer.sapphire.oasis.dev/)
 
-## Get fake OCEAN on Sapphire testnet
+## Get fake USDC on Sapphire testnet
 
-1. Go to the [OCEAN faucet for Sapphire testnet](https://faucet.sapphire.oceanprotocol.com/).
-2. Fill in your address and click `Get 1000 OCEAN`.
-3. (Optional) In your wallet, add the OCEAN token. If needed, specify the OCEAN address as: 0x973e69303259B0c2543a38665122b773D28405fB
+1. Go to the [USDC faucet for Sapphire testnet](https://faucet.usdc-sapphire.oceanprotocol.com).
+2. Fill in your address and click `Get 1000 USDC`.
+3. (Optional) In your wallet, add the USDC token. If needed, specify the USDC address as: 0x9159984c4B7E1B5c1e120ED63132846599696327
 4. (Optional) Confirm receipt via [Sapphire testnet explorer](https://testnet.explorer.sapphire.oasis.dev/)
 
 ## Create new EVM account
