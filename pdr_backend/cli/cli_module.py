@@ -24,6 +24,7 @@ from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract
 from pdr_backend.predictoor.predictoor_agent import PredictoorAgent
+from pdr_backend.publisher.pause_predictions import pause_predictions
 from pdr_backend.publisher.publish_assets import publish_assets
 from pdr_backend.sim.multisim_engine import MultisimEngine
 from pdr_backend.sim.sim_dash import sim_dash
@@ -309,3 +310,11 @@ def do_arima_plots(args, nested_args=None):
 # pylint: disable=unused-argument
 def do_dashboard(args, nested_args=None):
     predictoor_dash(args.PPSS, args.debug_mode)
+
+
+@enforce_types
+# pylint: disable=unused-argument
+def do_pause_predictions(args, nested_args=None):
+    ppss = args.PPSS
+    addresses = args.ACCOUNTS
+    pause_predictions(ppss.web3_pp, addresses)

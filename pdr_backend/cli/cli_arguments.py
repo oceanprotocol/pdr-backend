@@ -26,6 +26,7 @@ Main tools:
   pdr trader APPROACH PPSS_FILE NETWORK
   pdr claim_payouts PPSS_FILE [--include_paused]
   pdr claim_ROSE PPSS_FILE
+  pdr pause_predictions ADDRESSES PPSS_FILE NETWORK
 """
 
 HELP_HELP = """
@@ -660,6 +661,19 @@ class PredictoorDashboardArgParser(
         )
 
 
+class PausePredictionsArgParser(
+    CustomArgParser, ACCOUNTS_Mixin, PPSS_Mixin, NETWORK_Mixin
+):
+    # pylint: disable=unused-argument
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+
+        self.add_arguments_bulk(
+            command_name,
+            ["ACCOUNTS", "PPSS", "NETWORK"],
+        )
+
+
 # below, list each entry in defined_parsers in same order as HELP_LONG
 defined_parsers = {
     # main tools
@@ -708,6 +722,9 @@ defined_parsers = {
     "do_arima_plots": ArimaPlotsArgParser("Visualize ARIMA data", "arima_plots"),
     "do_dashboard": PredictoorDashboardArgParser(
         "Visualize Predictoor data", "dashboard"
+    ),
+    "do_pause_predictions": PausePredictionsArgParser(
+        "Pause predictions for multiple contracts", "pause_predictions"
     ),
 }
 

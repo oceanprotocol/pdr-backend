@@ -386,6 +386,23 @@ class FeedContract(BaseContract):  # pylint: disable=too-many-public-methods
         """What's the ERC721 address from which this ERC20 feed was created?"""
         return self.contract_instance.functions.getERC721Address().call()
 
+    def pause_predictions(self, wait_for_receipt=True):
+        """Pause predictions for this feed. Can only be called by the owner."""
+        call_params = self.web3_pp.tx_call_params()
+        try:
+            tx = self.contract_instance.functions.pausePredictions().transact(
+                call_params
+            )
+            logger.info("Pause predictions: txhash=%s", tx.hex())
+
+            if not wait_for_receipt:
+                return tx
+
+            return self.config.w3.eth.wait_for_transaction_receipt(tx)
+        except Exception as e:
+            logger.error(e)
+            return None
+
 
 # =========================================================================
 # utilities for testing
