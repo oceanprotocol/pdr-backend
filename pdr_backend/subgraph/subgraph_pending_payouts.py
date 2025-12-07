@@ -11,20 +11,28 @@ logger = logging.getLogger("subgraph")
 
 
 def _fetch_subgraph_payouts(
-    subgraph_url: str, addr: str, slot_filter: str, chunk_size: int
+    subgraph_url: str,
+    addr: str,
+    slot_filter: str,
+    chunk_size: int,
+    include_paused: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     slot_filter: string inside slot_{ ... } e.g.
         'status_in: ["Paying","Canceled"]'
         or 'status_in: ["Paying","Canceled","Pending"], slot_gte: %d, slot_lt: %d' % (a,b)
+    include_paused: if True, include paused contracts in the query
     """
     results = []
     offset = 0
     while True:
+        # Conditionally add the paused filter
+        paused_filter = "" if include_paused else ", predictContract_: {paused: false}"
+
         query = """
         {
             predictPredictions(
-            where: { user: "%s", payout: null, slot_: { %s } },
+            where: { user: "%s", payout: null, slot_: { %s%s } },
             first: %d,
             skip: %d
             ) {
@@ -40,6 +48,7 @@ def _fetch_subgraph_payouts(
         """ % (
             addr,
             slot_filter,
+            paused_filter,
             chunk_size,
             offset,
         )
@@ -69,8 +78,18 @@ def _fetch_subgraph_payouts(
 
 @enforce_types
 def query_pending_payouts(
-    subgraph_url: str, addr: str, query_old_slots=False
+    subgraph_url: str, addr: str, query_old_slots=False, include_paused=False
 ) -> Dict[str, List[UnixTimeS]]:
+    """
+    Fetch pending payouts for a given address.
+        Parameters:
+    subgraph_url (str): The URL of the subgraph to query.
+    addr (str): The address to fetch pending payouts for.
+    query_old_slots (bool): Whether to query old slots (older than 3 days).
+    include_paused (bool): Whether to include paused contracts in the query.
+        Returns:
+    Dict[str, List[UnixTimeS]]: contract addresses to lists of pending slot timestamps.
+    """
     chunk_size = 1000
     pending_slots: Dict[str, List[UnixTimeS]] = {}
     addr = addr.lower()
@@ -92,6 +111,7 @@ def query_pending_payouts(
         addr=addr,
         slot_filter='status_in: ["Paying", "Canceled"]',
         chunk_size=chunk_size,
+        include_paused=include_paused,
     )
 
     query2_results = []
@@ -101,6 +121,7 @@ def query_pending_payouts(
             addr=addr,
             slot_filter='status_in: ["Pending"], slot_lt: %d' % (ts_end),
             chunk_size=chunk_size,
+            include_paused=include_paused,
         )
 
     merged = query1_results + query2_results

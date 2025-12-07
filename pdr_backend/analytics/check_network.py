@@ -114,7 +114,7 @@ def do_query_network(subgraph_url: str, lookback_hours: int):
     start_ut = cur_ut - lookback_hours * 60 * 60
     query = """
             {
-                predictContracts{
+                predictContracts(where: {paused: false}){
                     id
                     token{
                         name

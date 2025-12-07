@@ -9,7 +9,7 @@ from pdr_backend.util.currency_types import Eth
 
 logger = logging.getLogger("publisher")
 _CUT = Eth(0.2)
-_RATE = Eth(3 / (1 + float(_CUT) + 0.001))  # token price
+_RATE = Eth(1 / (1 + float(_CUT) + 0.001))  # token price
 _S_PER_SUBSCRIPTION = 60 * 60 * 24
 
 

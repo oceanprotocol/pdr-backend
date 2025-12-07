@@ -24,8 +24,9 @@ Main tools:
   pdr predictoor PPSS_FILE NETWORK
   pdr dashboard PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
-  pdr claim_payouts PPSS_FILE
+  pdr claim_payouts PPSS_FILE [--include_paused]
   pdr claim_ROSE PPSS_FILE
+  pdr pause_predictions ADDRESSES PPSS_FILE NETWORK
 """
 
 HELP_HELP = """
@@ -273,6 +274,17 @@ class NATIVE_TOKEN_Mixin:
             action="store_true",
             default=False,
             help="If --NATIVE_TOKEN then transact with ROSE otherwise use OCEAN",
+        )
+
+
+@enforce_types
+class INCLUDE_PAUSED_Mixin:
+    def add_argument_INCLUDE_PAUSED(self):
+        self.add_argument(
+            "--include_paused",
+            action="store_true",
+            default=False,
+            help="Include paused contracts when querying for payouts",
         )
 
 
@@ -554,7 +566,15 @@ def print_args(arguments: Namespace, nested_args: dict):
 SimArgParser = _ArgParser_PPSS
 PredictoorArgParser = _ArgParser_PPSS_NETWORK
 TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
-ClaimOceanArgParser = _ArgParser_PPSS
+
+
+@enforce_types
+class ClaimOceanArgParser(CustomArgParser, PPSS_Mixin, INCLUDE_PAUSED_Mixin):
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+        self.add_arguments_bulk(command_name, ["PPSS", "INCLUDE_PAUSED"])
+
+
 ClaimRoseArgParser = _ArgParser_PPSS
 
 # power tools
@@ -641,6 +661,19 @@ class PredictoorDashboardArgParser(
         )
 
 
+class PausePredictionsArgParser(
+    CustomArgParser, ACCOUNTS_Mixin, PPSS_Mixin, NETWORK_Mixin
+):
+    # pylint: disable=unused-argument
+    def __init__(self, description: str, command_name: str):
+        super().__init__(description=description)
+
+        self.add_arguments_bulk(
+            command_name,
+            ["ACCOUNTS", "PPSS", "NETWORK"],
+        )
+
+
 # below, list each entry in defined_parsers in same order as HELP_LONG
 defined_parsers = {
     # main tools
@@ -689,6 +722,9 @@ defined_parsers = {
     "do_arima_plots": ArimaPlotsArgParser("Visualize ARIMA data", "arima_plots"),
     "do_dashboard": PredictoorDashboardArgParser(
         "Visualize Predictoor data", "dashboard"
+    ),
+    "do_pause_predictions": PausePredictionsArgParser(
+        "Pause predictions for multiple contracts", "pause_predictions"
     ),
 }
 

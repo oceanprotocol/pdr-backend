@@ -110,6 +110,14 @@ class _NATIVE_TOKEN:
     NATIVE_TOKEN = True
 
 
+class _INCLUDE_PAUSED:
+    include_paused = False
+
+
+class _INCLUDE_PAUSED_TRUE:
+    include_paused = True
+
+
 class _Base:
     def __init__(self, *args, **kwargs):
         pass
@@ -117,7 +125,15 @@ class _Base:
 
 class MockArgParser_PPSS(_Base):
     def parse_args(self):
-        class MockArgs(Namespace, _PPSS, _PPSS_OBJ):
+        class MockArgs(Namespace, _PPSS, _PPSS_OBJ, _INCLUDE_PAUSED):
+            pass
+
+        return MockArgs()
+
+
+class MockArgParser_PPSS_WITH_PAUSED(_Base):
+    def parse_args(self):
+        class MockArgs(Namespace, _PPSS, _PPSS_OBJ, _INCLUDE_PAUSED_TRUE):
             pass
 
         return MockArgs()
@@ -265,6 +281,19 @@ def test_do_claim_payouts(monkeypatch):
 
     do_claim_payouts(MockArgParser_PPSS().parse_args())
     mock_f.assert_called()
+    # Verify it was called with include_paused=False by default
+    assert mock_f.call_args[1]["include_paused"] is False
+
+
+@enforce_types
+def test_do_claim_payouts_with_include_paused(monkeypatch):
+    mock_f = Mock()
+    monkeypatch.setattr(f"{_CLI_PATH}.do_ocean_payout", mock_f)
+
+    do_claim_payouts(MockArgParser_PPSS_WITH_PAUSED().parse_args())
+    mock_f.assert_called()
+    # Verify it was called with include_paused=True
+    assert mock_f.call_args[1]["include_paused"] is True
 
 
 @enforce_types
