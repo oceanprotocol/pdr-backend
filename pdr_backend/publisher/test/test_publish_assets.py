@@ -35,7 +35,7 @@ def _test_barge(network, monkeypatch):
         feed=ArgFeed("binance", "close", "ETH/USDT", "5m"),
         trueval_submitter_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
         feeCollector_addr="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260",
-        rate=Eth(3 / (1 + 0.2 + 0.001)),
+        rate=Eth(1 / (1 + 0.2 + 0.001)),
         cut=Eth(0.2),
         web3_pp=web3_pp,
     )
