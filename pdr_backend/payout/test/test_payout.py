@@ -10,6 +10,7 @@ from pdr_backend.payout.payout import (
     batchify,
     do_ocean_payout,
     do_rose_payout,
+    do_usdc_payout,
     request_payout_batches,
 )
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
@@ -121,6 +122,49 @@ def test_do_rose_payout(tmpdir):
         )
         mock_wrose.balanceOf.assert_called()
         mock_wrose.withdraw.assert_called_with(Eth(100).to_wei())
+
+
+@enforce_types
+def test_do_usdc_payout(tmpdir):
+    ppss = _ppss(tmpdir)
+    web3_config = ppss.web3_pp.web3_config
+
+    mock_contract = Mock(spec=PredSubmitterMgr)
+    mock_contract.get_claimable_rewards = Mock()
+    mock_contract.get_claimable_rewards.return_value = Eth(100)
+    mock_contract.contract_address = "0x0"
+    mock_contract.claim_dfrewards = Mock()
+    mock_contract.claim_dfrewards.return_value = {
+        "transactionHash": b"0x1",
+        "status": 1,
+    }
+    mock_contract.transfer_erc20 = Mock()
+    mock_contract.transfer_erc20.return_value = {"transactionHash": b"0x1", "status": 1}
+    mock_contract.pred_submitter_up_address.return_value = "0x1"
+    mock_contract.pred_submitter_down_address.return_value = "0x2"
+
+    mock_usdc = Mock(spec=WrappedToken)
+    mock_usdc.balanceOf = Mock()
+    mock_usdc.balanceOf.return_value = Eth(100).to_wei()
+
+    with patch("pdr_backend.payout.payout.time"), patch(
+        "pdr_backend.payout.payout.WrappedToken", return_value=mock_usdc
+    ), patch("pdr_backend.payout.payout.DFRewards", return_value=mock_contract), patch(
+        "pdr_backend.payout.payout.PredSubmitterMgr", return_value=mock_contract
+    ):
+        do_usdc_payout(ppss, check_network=False)
+        mock_contract.claim_dfrewards.assert_called_with(
+            "0x2c2E3812742Ab2DA53a728A09F5DE670Aba584b6",
+            "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0",
+            True,
+        )
+        mock_contract.transfer_erc20.assert_called_with(
+            "0x2c2E3812742Ab2DA53a728A09F5DE670Aba584b6",
+            web3_config.owner,
+            Eth(100).to_wei(),
+            True,
+        )
+        mock_usdc.balanceOf.assert_called()
 
 
 @enforce_types
