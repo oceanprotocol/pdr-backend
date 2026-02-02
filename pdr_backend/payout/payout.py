@@ -169,3 +169,66 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
         wROSE.withdraw(wROSE_bal)
 
     logger.info("ROSE reward claim done")
+
+
+@enforce_types
+def do_usdc_payout(ppss: PPSS, check_network: bool = True):
+    web3_config = ppss.web3_pp.web3_config
+
+    if check_network:
+        assert ppss.web3_pp.network == "sapphire-mainnet"
+        assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
+
+    web3_config = ppss.web3_pp.web3_config
+    pred_submitter_mgr_addr = ppss.predictoor_ss.pred_submitter_mgr
+    pred_submitter_mgr = PredSubmitterMgr(ppss.web3_pp, pred_submitter_mgr_addr)
+    up_addr = pred_submitter_mgr.pred_submitter_up_address()
+    down_addr = pred_submitter_mgr.pred_submitter_down_address()
+
+    dfrewards_addr = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
+    usdc_addr = "0x2c2E3812742Ab2DA53a728A09F5DE670Aba584b6"
+    usdc = WrappedToken(ppss.web3_pp, usdc_addr)
+
+    dfrewards_contract = DFRewards(ppss.web3_pp, dfrewards_addr)
+    claimable_rewards_up = dfrewards_contract.get_claimable_rewards(up_addr, usdc_addr)
+    claimable_rewards_down = dfrewards_contract.get_claimable_rewards(
+        down_addr, usdc_addr
+    )
+    total_claimable = claimable_rewards_up + claimable_rewards_down
+    logger.info("Found %s USDC available to claim", total_claimable.to_eth().amt_eth)
+
+    if total_claimable > Eth(0):
+        logger.info("Claiming USDC rewards from the manager contract...")
+        receipt = pred_submitter_mgr.claim_dfrewards(usdc_addr, dfrewards_addr, True)
+        if receipt["status"] != 1:
+            logger.warning(
+                "Failed to claim USDC rewards from the contract, tx: %s",
+                receipt["transactionHash"],
+            )
+            return
+        time.sleep(4)
+    else:
+        logger.warning("No rewards available to claim")
+
+    def _transfer_usdc(instance_address, instance_name):
+        balance = usdc.balanceOf(instance_address)
+        if balance > 0:
+            instance = PredSubmitterMgr(ppss.web3_pp, instance_address)
+            receipt = instance.transfer_erc20(
+                usdc_addr, web3_config.owner, balance, True
+            )
+            if receipt["status"] != 1:
+                logger.warning(
+                    "Failed to transfer USDC tokens to the owner from %s, tx: %s",
+                    instance_name,
+                    receipt["transactionHash"],
+                )
+            time.sleep(4)
+
+    logger.info("Transferring USDC to owner")
+
+    _transfer_usdc(up_addr, "up predictoor")
+    _transfer_usdc(down_addr, "down predictoor")
+    _transfer_usdc(pred_submitter_mgr.contract_address, "manager")
+
+    logger.info("USDC reward claim done")
