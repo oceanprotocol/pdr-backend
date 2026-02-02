@@ -20,7 +20,7 @@ from pdr_backend.dfbuyer.dfbuyer_agent import DFBuyerAgent
 from pdr_backend.cli.cli_arguments_lake import LAKE_SUBCOMMANDS
 from pdr_backend.cli.cli_module_lake import do_lake_subcommand
 from pdr_backend.lake.ohlcv_data_factory import OhlcvDataFactory
-from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout
+from pdr_backend.payout.payout import do_ocean_payout, do_rose_payout, do_usdc_payout
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.pred_submitter.deploy import deploy_pred_submitter_mgr_contract
 from pdr_backend.predictoor.predictoor_agent import PredictoorAgent
@@ -140,6 +140,16 @@ def do_claim_ROSE(args, nested_args=None):
         nested_override_args=nested_args,
     )
     do_rose_payout(ppss)
+
+
+@enforce_types
+def do_claim_USDC(args, nested_args=None):
+    ppss = PPSS(
+        yaml_filename=args.PPSS_FILE,
+        network="sapphire-mainnet",
+        nested_override_args=nested_args,
+    )
+    do_usdc_payout(ppss)
 
 
 @enforce_types
