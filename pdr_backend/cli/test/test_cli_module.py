@@ -11,6 +11,7 @@ from pdr_backend.cli.cli_module import (
     do_sim,
     do_predictoor,
     do_trader,
+    do_claim_USDC,
     do_claim_OCEAN,
     do_claim_ROSE,
     # power tools
@@ -273,6 +274,15 @@ def test_do_claim_ROSE(monkeypatch):
     monkeypatch.setattr(f"{_CLI_PATH}.do_rose_payout", mock_f)
 
     do_claim_ROSE(MockArgParser_PPSS().parse_args())
+    mock_f.assert_called()
+
+
+@enforce_types
+def test_do_claim_USDC(monkeypatch):
+    mock_f = Mock()
+    monkeypatch.setattr(f"{_CLI_PATH}.do_usdc_payout", mock_f)
+
+    do_claim_USDC(MockArgParser_PPSS().parse_args())
     mock_f.assert_called()
 
 
