@@ -14,6 +14,11 @@ from pdr_backend.payout.payout import (
     request_payout_batches,
 )
 from pdr_backend.ppss.ppss import PPSS, fast_test_yaml_str
+from pdr_backend.util.constants import (
+    DFREWARDS_ADDR,
+    USDC_TOKEN_ADDR,
+    WROSE_TOKEN_ADDR,
+)
 from pdr_backend.util.currency_types import Eth
 
 
@@ -110,12 +115,12 @@ def test_do_rose_payout(tmpdir):
     ):
         do_rose_payout(ppss, check_network=False)
         mock_contract.claim_dfrewards.assert_called_with(
-            "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3",
-            "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0",
+            WROSE_TOKEN_ADDR,
+            DFREWARDS_ADDR,
             True,
         )
         mock_contract.transfer_erc20.assert_called_with(
-            "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3",
+            WROSE_TOKEN_ADDR,
             web3_config.owner,
             Eth(100).to_wei(),
             True,
@@ -154,12 +159,12 @@ def test_do_usdc_payout(tmpdir):
     ):
         do_usdc_payout(ppss, check_network=False)
         mock_contract.claim_dfrewards.assert_called_with(
-            "0x2c2E3812742Ab2DA53a728A09F5DE670Aba584b6",
-            "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0",
+            USDC_TOKEN_ADDR,
+            DFREWARDS_ADDR,
             True,
         )
         mock_contract.transfer_erc20.assert_called_with(
-            "0x2c2E3812742Ab2DA53a728A09F5DE670Aba584b6",
+            USDC_TOKEN_ADDR,
             web3_config.owner,
             Eth(100).to_wei(),
             True,
