@@ -24,6 +24,7 @@ Main tools:
   pdr predictoor PPSS_FILE NETWORK
   pdr dashboard PPSS_FILE NETWORK
   pdr trader APPROACH PPSS_FILE NETWORK
+  pdr claim_USDC PPSS_FILE
   pdr claim_OCEAN PPSS_FILE
   pdr claim_ROSE PPSS_FILE
 """
@@ -556,6 +557,7 @@ PredictoorArgParser = _ArgParser_PPSS_NETWORK
 TraderArgParser = _ArgParser_APPROACH_PPSS_NETWORK
 ClaimOceanArgParser = _ArgParser_PPSS
 ClaimRoseArgParser = _ArgParser_PPSS
+ClaimUsdcArgParser = _ArgParser_PPSS
 
 # power tools
 MultisimArgParser = _ArgParser_PPSS
@@ -647,6 +649,7 @@ defined_parsers = {
     "do_sim": SimArgParser("Run simulation", "sim"),
     "do_predictoor": PredictoorArgParser("Run a predictoor bot", "predictoor"),
     "do_trader": TraderArgParser("Run a trader bot", "trader"),
+    "do_claim_USDC": ClaimUsdcArgParser("Claim USDC", "claim_USDC"),
     "do_claim_OCEAN": ClaimOceanArgParser("Claim OCEAN", "claim_OCEAN"),
     "do_claim_ROSE": ClaimRoseArgParser("Claim ROSE", "claim_ROSE"),
     # power tools

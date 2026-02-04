@@ -9,7 +9,29 @@ This README describes how you can claim the $ based on running a predictoor bot.
 
 First, congratulations on your participation and progress in making predictions! Whether you've made accurate or erroneous predictions, it's now time to claim your earnings from correct predictions.
 
-There are two sections below: to claim OCEAN payout, and ROSE payout, respectively.
+There are three sections below: to claim USDC payout, OCEAN payout, and ROSE payout, respectively.
+
+## Steps to Request USDC Rewards
+
+### 1. Preparation
+
+Ensure you pause or stop any ongoing prediction submissions. You can use `Ctrl-C` to stop the predictions. This is crucial as active submissions can interfere with the payout process.
+
+### 2. Execute Payout
+
+From console:
+
+```console
+pdr claim_USDC ppss.yaml
+```
+
+### 3. Completion
+
+Once the payout module concludes its operation, your balance will reflect the updated amount.
+
+### 4. Verification
+
+It's good practice to run the payout module again. This ensures any failed blockchain calls from the previous attempt are addressed and verifies that all eligible payouts have been claimed.
 
 ## Steps to Request OCEAN Rewards
 
@@ -33,7 +55,7 @@ Once the payout module concludes its operation, your balance will reflect the up
 
 It's good practice to run the payout module again. This ensures any failed blockchain calls from the previous attempt are addressed and verifies that all eligible payouts have been claimed.
 
-### Steps to Request ROSE Rewards
+## Steps to Request ROSE Rewards
 
 - 1. Preparation
 

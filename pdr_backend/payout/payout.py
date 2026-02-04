@@ -16,7 +16,12 @@ from pdr_backend.predictoor.util import (
 from pdr_backend.ppss.ppss import PPSS
 from pdr_backend.subgraph.subgraph_pending_payouts import query_pending_payouts
 from pdr_backend.subgraph.subgraph_sync import wait_until_subgraph_syncs
-from pdr_backend.util.constants import SAPPHIRE_MAINNET_CHAINID
+from pdr_backend.util.constants import (
+    DFREWARDS_ADDR,
+    SAPPHIRE_MAINNET_CHAINID,
+    USDC_TOKEN_ADDR,
+    WROSE_TOKEN_ADDR,
+)
 from pdr_backend.util.currency_types import Eth, Wei
 
 logger = logging.getLogger("payout")
@@ -114,21 +119,23 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
     up_addr = pred_submitter_mgr.pred_submitter_up_address()
     down_addr = pred_submitter_mgr.pred_submitter_down_address()
 
-    dfrewards_addr = "0xc37F8341Ac6e4a94538302bCd4d49Cf0852D30C0"
-    wROSE_addr = "0x8Bc2B030b299964eEfb5e1e0b36991352E56D2D3"
-    wROSE = WrappedToken(ppss.web3_pp, wROSE_addr)
+    wROSE = WrappedToken(ppss.web3_pp, WROSE_TOKEN_ADDR)
 
-    dfrewards_contract = DFRewards(ppss.web3_pp, dfrewards_addr)
-    claimable_rewards_up = dfrewards_contract.get_claimable_rewards(up_addr, wROSE_addr)
+    dfrewards_contract = DFRewards(ppss.web3_pp, DFREWARDS_ADDR)
+    claimable_rewards_up = dfrewards_contract.get_claimable_rewards(
+        up_addr, WROSE_TOKEN_ADDR
+    )
     claimable_rewards_down = dfrewards_contract.get_claimable_rewards(
-        down_addr, wROSE_addr
+        down_addr, WROSE_TOKEN_ADDR
     )
     total_claimable = claimable_rewards_up + claimable_rewards_down
     logger.info("Found %s wROSE available to claim", total_claimable.to_eth().amt_eth)
 
     if total_claimable > Eth(0):
         logger.info("Claiming wROSE rewards from the manager contract...")
-        receipt = pred_submitter_mgr.claim_dfrewards(wROSE_addr, dfrewards_addr, True)
+        receipt = pred_submitter_mgr.claim_dfrewards(
+            WROSE_TOKEN_ADDR, DFREWARDS_ADDR, True
+        )
         if receipt["status"] != 1:
             logger.warning(
                 "Failed to claim wROSE rewards from the contract, tx: %s",
@@ -144,7 +151,7 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
         if balance > 0:
             instance = PredSubmitterMgr(ppss.web3_pp, instance_address)
             receipt = instance.transfer_erc20(
-                wROSE_addr, web3_config.owner, balance, True
+                WROSE_TOKEN_ADDR, web3_config.owner, balance, True
             )
             if receipt["status"] != 1:
                 logger.warning(
@@ -169,3 +176,68 @@ def do_rose_payout(ppss: PPSS, check_network: bool = True):
         wROSE.withdraw(wROSE_bal)
 
     logger.info("ROSE reward claim done")
+
+
+@enforce_types
+def do_usdc_payout(ppss: PPSS, check_network: bool = True):
+    web3_config = ppss.web3_pp.web3_config
+
+    if check_network:
+        assert ppss.web3_pp.network == "sapphire-mainnet"
+        assert web3_config.w3.eth.chain_id == SAPPHIRE_MAINNET_CHAINID
+
+    web3_config = ppss.web3_pp.web3_config
+    pred_submitter_mgr_addr = ppss.predictoor_ss.pred_submitter_mgr
+    pred_submitter_mgr = PredSubmitterMgr(ppss.web3_pp, pred_submitter_mgr_addr)
+    up_addr = pred_submitter_mgr.pred_submitter_up_address()
+    down_addr = pred_submitter_mgr.pred_submitter_down_address()
+
+    usdc = WrappedToken(ppss.web3_pp, USDC_TOKEN_ADDR)
+
+    dfrewards_contract = DFRewards(ppss.web3_pp, DFREWARDS_ADDR)
+    claimable_rewards_up = dfrewards_contract.get_claimable_rewards(
+        up_addr, USDC_TOKEN_ADDR
+    )
+    claimable_rewards_down = dfrewards_contract.get_claimable_rewards(
+        down_addr, USDC_TOKEN_ADDR
+    )
+    total_claimable = claimable_rewards_up + claimable_rewards_down
+    logger.info("Found %s USDC available to claim", total_claimable.to_eth().amt_eth)
+
+    if total_claimable > Eth(0):
+        logger.info("Claiming USDC rewards from the manager contract...")
+        receipt = pred_submitter_mgr.claim_dfrewards(
+            USDC_TOKEN_ADDR, DFREWARDS_ADDR, True
+        )
+        if receipt["status"] != 1:
+            logger.warning(
+                "Failed to claim USDC rewards from the contract, tx: %s",
+                receipt["transactionHash"],
+            )
+            return
+        time.sleep(4)
+    else:
+        logger.warning("No rewards available to claim")
+
+    def _transfer_usdc(instance_address, instance_name):
+        balance = usdc.balanceOf(instance_address)
+        if balance > 0:
+            instance = PredSubmitterMgr(ppss.web3_pp, instance_address)
+            receipt = instance.transfer_erc20(
+                USDC_TOKEN_ADDR, web3_config.owner, balance, True
+            )
+            if receipt["status"] != 1:
+                logger.warning(
+                    "Failed to transfer USDC tokens to the owner from %s, tx: %s",
+                    instance_name,
+                    receipt["transactionHash"],
+                )
+            time.sleep(4)
+
+    logger.info("Transferring USDC to owner")
+
+    _transfer_usdc(up_addr, "up predictoor")
+    _transfer_usdc(down_addr, "down predictoor")
+    _transfer_usdc(pred_submitter_mgr.contract_address, "manager")
+
+    logger.info("USDC reward claim done")
