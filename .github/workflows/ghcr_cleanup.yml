@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKERHUB_IMAGE: ${{ 'oceanprotocol/ocean-node' }}
-  GHCR_IMAGE: ${{ 'ghcr.io/oceanprotocol/ocean-node' }}
+  DOCKERHUB_IMAGE: ${{ 'oceanprotocol/pdr-backend' }}
+  GHCR_IMAGE: ${{ 'ghcr.io/oceanprotocol/pdr-backend' }}
 
 jobs:
   ghcr_cleanup:
