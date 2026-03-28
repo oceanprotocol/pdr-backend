@@ -33,7 +33,9 @@ Once the payout module concludes its operation, your balance will reflect the up
 
 It's good practice to run the payout module again. This ensures any failed blockchain calls from the previous attempt are addressed and verifies that all eligible payouts have been claimed.
 
-## Steps to Request OCEAN Rewards
+## [Legacy] Steps to Request OCEAN Rewards
+
+- Note: OCEAN rewards are now migrated to USDC
 
 ### 1. Preparation
 
@@ -55,7 +57,9 @@ Once the payout module concludes its operation, your balance will reflect the up
 
 It's good practice to run the payout module again. This ensures any failed blockchain calls from the previous attempt are addressed and verifies that all eligible payouts have been claimed.
 
-## Steps to Request ROSE Rewards
+## [Legacy] Steps to Request ROSE Rewards
+
+- Note: ROSE rewards concluded at the end of DF Round 169
 
 - 1. Preparation
 
