@@ -17,7 +17,7 @@ def get_opf_addresses(network_name: str) -> Dict[str, str]:
 
     if network_name == "sapphire-mainnet":
         return {
-            "predictoor20": "0x784b52987A894d74E37d494F91eD03a5Ab37aB36",
+            "predictoor20": "0x9Da89c642Cf740638947a7Ad76F0eeED6A64804b",
             "predictoor21": "0x74c52ce6c26780B78140D183596F6a8Dfa135BE3",
             "trueval": "0x886A892670A7afc719Dcf36eF92c798203F74B67",
             "websocket": "0x6Cc4Fe9Ba145AbBc43227b3D4860FA31AFD225CB",
